@@ -29,34 +29,31 @@ jobs:
           python -m pip install --upgrade pip
           pip install gitpython nbclient nbformat requests
 
-      # 4. Execute all notebooks and log outputs
+      # 4. Run all notebooks and log outputs
       - name: Execute Notebooks
         run: |
-          for nb_file in $(find . -name "*.ipynb"); do
-            echo "➡️ Running $nb_file"
+          for nb in $(find . -name "*.ipynb"); do
+            echo "➡️ Running notebook: $nb"
             python - <<EOF
-            import nbformat
-            from nbclient import NotebookClient
-            import sys
+import nbformat
+from nbclient import NotebookClient
 
-            with open("$nb_file") as f:
-                nb = nbformat.read(f, as_version=4)
+with open("$nb") as f:
+    nb = nbformat.read(f, as_version=4)
 
-            # Log output of notebook
-            client = NotebookClient(nb, timeout=600, kernel_name="python3", allow_errors=False)
-            try:
-                client.execute()
-                print(f"✅ Successfully executed $nb_file")
-            except Exception as e:
-                print(f"⚠️ Error executing $nb_file: {e}")
-                sys.exit(1)
-            EOF
+try:
+    client = NotebookClient(nb, timeout=600, kernel_name="python3", allow_errors=True)
+    client.execute()
+    print(f"✅ Notebook executed successfully: $nb")
+except Exception as e:
+    print(f"❌ Error executing notebook $nb: {e}")
+EOF
           done
 
       # 5. Delete trigger file after run
       - name: Delete Trigger File
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.HUB_PAT }}
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"

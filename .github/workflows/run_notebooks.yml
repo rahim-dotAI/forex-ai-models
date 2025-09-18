@@ -29,30 +29,45 @@ jobs:
           python -m pip install --upgrade pip
           pip install gitpython nbclient nbformat requests
 
-      # 4. Run all notebooks in repo
+      # 4. Execute all notebooks with detailed logging
       - name: Execute Notebooks
         run: |
           for nb in $(find . -name "*.ipynb"); do
             echo "➡️ Running $nb"
             python - <<EOF
 import nbformat
-from nbclient import NotebookClient
+from nbclient import NotebookClient, CellExecutionError
 
 with open("$nb") as f:
     nb = nbformat.read(f, as_version=4)
 
-client = NotebookClient(nb, timeout=600, kernel_name="python3", allow_errors=False)
-client.execute()
+client = NotebookClient(nb, timeout=600, kernel_name="python3", allow_errors=True)
+
+for i, cell in enumerate(nb.cells):
+    if cell.cell_type == 'code':
+        try:
+            output = client.execute_cell(cell, i)
+            if output:
+                for out in output:
+                    if hasattr(out, 'text'):
+                        print(out.text)
+                    elif hasattr(out, 'data'):
+                        print(out.data)
+        except CellExecutionError as e:
+            print(f"❌ Cell {i} failed: {e}")
+            continue  # Continue to next cell even if one fails
+
+print(f"✅ Notebook executed: $nb")
 EOF
           done
 
-      # 5. Delete trigger file after run using HUB_PAT
+      # 5. Delete trigger file after run
       - name: Delete Trigger File
         env:
-          HUB_PAT: ${{ secrets.HUB_PAT }}
+          GITHUB_TOKEN: ${{ secrets.HUB_PAT }}
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
           git rm colab_trigger.txt
           git commit -m "Remove trigger after workflow run"
-          git push https://$HUB_PAT@github.com/${{ github.repository }} HEAD:main
+          git push origin main

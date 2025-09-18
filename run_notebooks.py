@@ -1,38 +1,42 @@
-#!/usr/bin/env python3
-import nbformat
 import os
 import sys
+import nbformat
 from nbclient import NotebookClient
 
-def find_notebooks(base_path="."):
-    """Recursively find all .ipynb files in the repo"""
-    for root, _, files in os.walk(base_path):
-        for f in files:
-            if f.endswith(".ipynb"):
-                yield os.path.join(root, f)
+NOTEBOOK_DIR = "."  # Change if your notebooks are in a subfolder
+TIMEOUT = 600       # Max seconds per notebook
 
-def execute_notebook(path):
-    """Execute a notebook with cell-by-cell logging"""
-    print(f"➡️ Starting notebook: {path}")
-    with open(path) as f:
+def run_notebook(path):
+    print(f"\n➡️ Running notebook: {path}")
+    with open(path, "r", encoding="utf-8") as f:
         nb = nbformat.read(f, as_version=4)
-
-    client = NotebookClient(nb, timeout=600, kernel_name="python3", allow_errors=False)
+    
+    client = NotebookClient(nb, timeout=TIMEOUT, kernel_name="python3", allow_errors=True)
+    
     try:
         client.execute()
-        print(f"✅ Notebook executed successfully: {path}")
+        # Print cell outputs
+        for cell in nb.cells:
+            if "outputs" in cell:
+                for output in cell.get("outputs", []):
+                    if "text" in output:
+                        print(output["text"])
+                    elif "data" in output and "text/plain" in output["data"]:
+                        print(output["data"]["text/plain"])
+        print(f"✅ Successfully executed: {path}")
     except Exception as e:
-        print(f"⚠️ Error executing notebook {path}: {e}")
+        print(f"⚠️ Error executing {path}: {e}")
         sys.exit(1)
 
 def main():
-    notebooks = list(find_notebooks("."))
+    notebooks = [os.path.join(dp, f) for dp, dn, filenames in os.walk(NOTEBOOK_DIR)
+                 for f in filenames if f.endswith(".ipynb")]
     if not notebooks:
         print("ℹ️ No notebooks found to execute.")
-        sys.exit(0)
+        return
 
     for nb_file in notebooks:
-        execute_notebook(nb_file)
+        run_notebook(nb_file)
 
 if __name__ == "__main__":
     main()

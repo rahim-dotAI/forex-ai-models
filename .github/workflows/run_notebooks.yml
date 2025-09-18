@@ -46,13 +46,13 @@ client.execute()
 EOF
           done
 
-      # 5. Delete trigger file after run
+      # 5. Delete trigger file after run using HUB_PAT
       - name: Delete Trigger File
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HUB_PAT: ${{ secrets.HUB_PAT }}
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
           git rm colab_trigger.txt
           git commit -m "Remove trigger after workflow run"
-          git push origin main
+          git push https://$HUB_PAT@github.com/${{ github.repository }} HEAD:main

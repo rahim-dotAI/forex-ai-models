@@ -12,43 +12,31 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout the repo
       - name: Checkout Repo
         uses: actions/checkout@v3
 
+      # 2. Set up Python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: 3.11
 
+      # 3. Install dependencies
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install gitpython nbclient nbformat requests
 
+      # 4. Execute all notebooks
       - name: Execute Notebooks
         run: |
-          for nb_file in $(find . -name "*.ipynb"); do
-            echo "➡️ Running $nb_file"
-            NB_PATH="$nb_file" python3 - <<'PYTHON_EOF'
-import os
-from nbformat import read
-from nbclient import NotebookClient
-
-nb_file = os.environ['NB_PATH']
-
-with open(nb_file) as f:
-    nb = read(f, as_version=4)
-
-client = NotebookClient(nb, timeout=600, kernel_name="python3", allow_errors=False)
-try:
-    client.execute()
-    print(f"✅ Successfully executed {nb_file}")
-except Exception as e:
-    print(f"⚠️ Error executing {nb_file}: {e}")
-    raise SystemExit(1)
-PYTHON_EOF
+          for nb in $(find . -name "*.ipynb"); do
+            echo "➡️ Running $nb"
+            python -m nbclient --timeout=600 --kernel_name=python3 "$nb"
           done
 
+      # 5. Delete trigger file after run
       - name: Delete Trigger File
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

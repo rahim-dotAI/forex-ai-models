@@ -29,24 +29,26 @@ jobs:
           python -m pip install --upgrade pip
           pip install gitpython nbclient nbformat requests
 
-      # 4. Run all notebooks and log outputs
+      # 4. Execute all notebooks and log outputs
       - name: Execute Notebooks
         run: |
-          for nb in $(find . -name "*.ipynb"); do
-            echo "➡️ Running notebook: $nb"
+          for nb_file in $(find . -name "*.ipynb"); do
+            echo "➡️ Running $nb_file"
             python - <<EOF
 import nbformat
 from nbclient import NotebookClient
+import sys
 
-with open("$nb") as f:
+with open("$nb_file") as f:
     nb = nbformat.read(f, as_version=4)
 
 try:
-    client = NotebookClient(nb, timeout=600, kernel_name="python3", allow_errors=True)
+    client = NotebookClient(nb, timeout=600, kernel_name="python3", allow_errors=False)
     client.execute()
-    print(f"✅ Notebook executed successfully: $nb")
+    print(f"✅ Successfully executed $nb_file")
 except Exception as e:
-    print(f"❌ Error executing notebook $nb: {e}")
+    print(f"⚠️ Error executing $nb_file: {e}")
+    sys.exit(1)
 EOF
           done
 

@@ -1,6 +1,5 @@
 name: Run Notebooks on Trigger
 
-# Trigger workflow when colab_trigger.txt is created/updated
 on:
   push:
     paths:
@@ -27,23 +26,24 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install nbclient nbformat
+          pip install nbclient nbformat requests
 
-      # 4. Execute notebooks via run_notebooks.py
-      - name: Run Notebooks
-        run: |
-          python run_notebooks.py
+      # 4. Run notebooks
+      - name: Execute Notebooks
+        run: python run_notebooks.py
 
       # 5. Delete trigger file safely
       - name: Delete Trigger File
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -e  # exit if any command fails
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
-          if [ -f colab_trigger.txt ]; then
+          if [ -f "colab_trigger.txt" ]; then
             git rm colab_trigger.txt
-            git commit -m "Remove trigger after workflow run" || echo "⚠️ Nothing to commit"
-            git push origin main || echo "⚠️ Push failed"
+            git commit -m "Remove trigger after workflow run"
+            git push origin main
           else
-            echo "ℹ️ Trigger file not found, skipping delete"
+            echo "ℹ️ No trigger file found to delete."
+          fi

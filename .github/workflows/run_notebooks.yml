@@ -1,6 +1,5 @@
 name: Run Notebooks on Trigger
 
-# Trigger workflow when colab_trigger.txt is created/updated
 on:
   push:
     paths:
@@ -34,28 +33,43 @@ jobs:
         run: |
           for nb_file in $(find . -name "*.ipynb"); do
             echo "➡️ Running $nb_file"
-            python - <<EOF
-import nbformat
-from nbclient import NotebookClient
+            NB_PATH="$nb_file" python3 - <<'PYTHON_EOF'
+import os
 import sys
 
-with open("$nb_file") as f:
-    nb = nbformat.read(f, as_version=4)
+nb_file = os.environ['NB_PATH']
 
 try:
-    client = NotebookClient(nb, timeout=600, kernel_name="python3", allow_errors=False)
+    import nbformat
+except ImportError:
+    import subprocess
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "nbformat"])
+    import nbformat
+
+try:
+    from nbclient import NotebookClient
+except ImportError:
+    import subprocess
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "nbclient"])
+    from nbclient import NotebookClient
+
+with open(nb_file) as f:
+    nb = nbformat.read(f, as_version=4)
+
+client = NotebookClient(nb, timeout=600, kernel_name="python3", allow_errors=False)
+try:
     client.execute()
-    print(f"✅ Successfully executed $nb_file")
+    print(f"✅ Successfully executed {nb_file}")
 except Exception as e:
-    print(f"⚠️ Error executing $nb_file: {e}")
+    print(f"⚠️ Error executing {nb_file}: {e}")
     sys.exit(1)
-EOF
+PYTHON_EOF
           done
 
       # 5. Delete trigger file after run
       - name: Delete Trigger File
         env:
-          GITHUB_TOKEN: ${{ secrets.HUB_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"

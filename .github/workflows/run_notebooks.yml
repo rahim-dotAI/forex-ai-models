@@ -28,39 +28,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install gitpython nbclient nbformat requests
 
-      # 4. Execute notebooks with detailed logging
-      - name: Execute Notebooks with Logs
+      # 4. Execute all notebooks via script
+      - name: Execute Notebooks
+        run: python run_notebooks.py
+
+      # 5. Delete trigger file after run
+      - name: Delete Trigger File
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          for nb in $(find . -name "*.ipynb"); do
-            echo "➡️ Running $nb"
-            python - <<'EOF'
-import nbformat
-from nbclient import NotebookClient
-from nbclient.exceptions import CellExecutionError
-import sys
-
-nb_path = "$nb"
-with open(nb_path) as f:
-    nb = nbformat.read(f, as_version=4)
-
-client = NotebookClient(nb, timeout=600, kernel_name="python3")
-
-try:
-    for i, cell in enumerate(nb.cells):
-        if cell.cell_type == "code":
-            print(f"\n🔹 Running cell {i}:\n{cell.source}\n")
-            client.execute_cell(cell, i)
-            # print outputs
-            for output in cell.get("outputs", []):
-                if output.output_type == "stream":
-                    print(output.text)
-                elif output.output_type == "execute_result":
-                    print(output["data"].get("text/plain", ""))
-                elif output.output_type == "error":
-                    print("❌ ERROR:", output.evalue)
-    print(f"✅ Finished running {nb_path}")
-except CellExecutionError as e:
-    print(f"⚠️ Notebook execution failed: {e}")
-    sys.exit(1)
-EOF
-          done
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git rm colab_trigger.txt
+          git commit -m "Remove trigger after workflow run"
+          git push origin main

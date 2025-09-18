@@ -1,6 +1,5 @@
 name: Run Notebooks on Trigger
 
-# Trigger workflow when colab_trigger.txt is created/updated
 on:
   push:
     paths:
@@ -13,58 +12,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout the repo
       - name: Checkout Repo
         uses: actions/checkout@v3
 
-      # 2. Set up Python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: 3.11
 
-      # 3. Install dependencies
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install gitpython nbclient nbformat requests
 
-      # 4. Execute all notebooks with detailed logging
       - name: Execute Notebooks
         run: |
           for nb in $(find . -name "*.ipynb"); do
             echo "➡️ Running $nb"
-            python - <<EOF
+            python - <<PYTHON
 import nbformat
-from nbclient import NotebookClient, CellExecutionError
+from nbclient import NotebookClient
 
 with open("$nb") as f:
     nb = nbformat.read(f, as_version=4)
 
-client = NotebookClient(nb, timeout=600, kernel_name="python3", allow_errors=True)
-
-for i, cell in enumerate(nb.cells):
-    if cell.cell_type == 'code':
-        try:
-            output = client.execute_cell(cell, i)
-            if output:
-                for out in output:
-                    if hasattr(out, 'text'):
-                        print(out.text)
-                    elif hasattr(out, 'data'):
-                        print(out.data)
-        except CellExecutionError as e:
-            print(f"❌ Cell {i} failed: {e}")
-            continue  # Continue to next cell even if one fails
-
-print(f"✅ Notebook executed: $nb")
-EOF
+client = NotebookClient(nb, timeout=600, kernel_name="python3", allow_errors=False)
+client.execute()
+PYTHON
           done
 
-      # 5. Delete trigger file after run
       - name: Delete Trigger File
         env:
-          GITHUB_TOKEN: ${{ secrets.HUB_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"

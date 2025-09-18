@@ -2,13 +2,14 @@
 """
 run_notebooks.py
 
-Execute all Jupyter notebooks in a repo and log cell-by-cell outputs.
+Execute all Jupyter notebooks in a repo and log outputs cell by cell.
+Compatible with nbclient 0.7+
 """
 
 import os
 import sys
 import nbformat
-from nbclient import NotebookClient, CellExecutionError
+from nbclient import NotebookClient  # Removed CellExecutionError
 
 NOTEBOOK_DIR = "."  # Change if your notebooks are in a subfolder
 TIMEOUT = 600       # Maximum seconds per notebook
@@ -24,13 +25,12 @@ def execute_notebook(path):
     try:
         client.execute()
         print(f"✅ Successfully executed: {path}")
-    except CellExecutionError as e:
+    except Exception as e:
         print(f"⚠️ Error in notebook '{path}': {e}")
         if not ALLOW_ERRORS:
             sys.exit(1)
 
 def main():
-    # Find all notebooks recursively
     notebooks = [os.path.join(dp, f) for dp, dn, filenames in os.walk(NOTEBOOK_DIR) for f in filenames if f.endswith(".ipynb")]
     if not notebooks:
         print("ℹ️ No notebooks found to execute.")

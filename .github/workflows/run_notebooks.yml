@@ -3,10 +3,10 @@ name: Run Notebooks on Trigger
 # Trigger workflow when colab_trigger.txt is created/updated
 on:
   push:
-    branches:
-      - main
     paths:
       - colab_trigger.txt
+    branches:
+      - main
 
 jobs:
   run-notebooks:
@@ -29,21 +29,28 @@ jobs:
           python -m pip install --upgrade pip
           pip install gitpython nbclient nbformat requests
 
-      # 4. Run all notebooks in repo and log output
+      # 4. Execute all notebooks and log outputs
       - name: Execute Notebooks
         run: |
-          for nb in $(find . -name "*.ipynb"); do
-            echo "➡️ Running $nb"
+          for nb_file in $(find . -name "*.ipynb"); do
+            echo "➡️ Running $nb_file"
             python - <<EOF
-import nbformat
-from nbclient import NotebookClient
+            import nbformat
+            from nbclient import NotebookClient
+            import sys
 
-with open("$nb") as f:
-    nb = nbformat.read(f, as_version=4)
+            with open("$nb_file") as f:
+                nb = nbformat.read(f, as_version=4)
 
-client = NotebookClient(nb, timeout=600, kernel_name="python3", allow_errors=False)
-client.execute()
-EOF
+            # Log output of notebook
+            client = NotebookClient(nb, timeout=600, kernel_name="python3", allow_errors=False)
+            try:
+                client.execute()
+                print(f"✅ Successfully executed $nb_file")
+            except Exception as e:
+                print(f"⚠️ Error executing $nb_file: {e}")
+                sys.exit(1)
+            EOF
           done
 
       # 5. Delete trigger file after run

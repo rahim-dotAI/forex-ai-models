@@ -1,43 +1,38 @@
 #!/usr/bin/env python3
-"""
-run_notebooks.py
-
-Execute all Jupyter notebooks in a repo and log outputs cell by cell.
-Compatible with nbclient 0.7+
-"""
-
+import nbformat
 import os
 import sys
-import nbformat
-from nbclient import NotebookClient  # Removed CellExecutionError
+from nbclient import NotebookClient
 
-NOTEBOOK_DIR = "."  # Change if your notebooks are in a subfolder
-TIMEOUT = 600       # Maximum seconds per notebook
-ALLOW_ERRORS = False
+def find_notebooks(base_path="."):
+    """Recursively find all .ipynb files in the repo"""
+    for root, _, files in os.walk(base_path):
+        for f in files:
+            if f.endswith(".ipynb"):
+                yield os.path.join(root, f)
 
 def execute_notebook(path):
-    print(f"\n➡️ Executing notebook: {path}")
+    """Execute a notebook with cell-by-cell logging"""
+    print(f"➡️ Starting notebook: {path}")
     with open(path) as f:
         nb = nbformat.read(f, as_version=4)
 
-    client = NotebookClient(nb, timeout=TIMEOUT, kernel_name="python3", allow_errors=ALLOW_ERRORS)
-    
+    client = NotebookClient(nb, timeout=600, kernel_name="python3", allow_errors=False)
     try:
         client.execute()
-        print(f"✅ Successfully executed: {path}")
+        print(f"✅ Notebook executed successfully: {path}")
     except Exception as e:
-        print(f"⚠️ Error in notebook '{path}': {e}")
-        if not ALLOW_ERRORS:
-            sys.exit(1)
+        print(f"⚠️ Error executing notebook {path}: {e}")
+        sys.exit(1)
 
 def main():
-    notebooks = [os.path.join(dp, f) for dp, dn, filenames in os.walk(NOTEBOOK_DIR) for f in filenames if f.endswith(".ipynb")]
+    notebooks = list(find_notebooks("."))
     if not notebooks:
         print("ℹ️ No notebooks found to execute.")
         sys.exit(0)
 
-    for nb_path in notebooks:
-        execute_notebook(nb_path)
+    for nb_file in notebooks:
+        execute_notebook(nb_file)
 
 if __name__ == "__main__":
     main()

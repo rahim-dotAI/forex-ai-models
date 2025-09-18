@@ -1,51 +1,44 @@
-#!/usr/bin/env python3
 import os
 import sys
 import nbformat
-from nbclient import NotebookClient
+from nbformat import NotebookNode
+from nbconvert.preprocessors import ExecutePreprocessor
 
-def execute_notebook(nb_path):
-    """Execute a notebook and log output cell by cell."""
-    print(f"\n➡️ Starting execution: {nb_path}\n{'='*60}")
+# Timeout per cell in seconds
+TIMEOUT = 600
+
+# Find all notebooks in the repo
+notebooks = []
+for root, dirs, files in os.walk("."):
+    for file in files:
+        if file.endswith(".ipynb"):
+            notebooks.append(os.path.join(root, file))
+
+if not notebooks:
+    print("ℹ️ No notebooks found to execute.")
+    sys.exit(0)
+
+for nb_file in notebooks:
+    print(f"➡️ Running notebook: {nb_file}")
     try:
-        with open(nb_path) as f:
+        with open(nb_file, "r", encoding="utf-8") as f:
             nb = nbformat.read(f, as_version=4)
 
-        client = NotebookClient(nb, timeout=600, kernel_name="python3", allow_errors=True)
+        ep = ExecutePreprocessor(timeout=TIMEOUT, kernel_name="python3")
 
-        for i, cell in enumerate(nb.cells):
-            if cell.cell_type == 'code':
-                print(f"\n--- Executing cell {i} ---")
+        # Execute notebook with cell-by-cell logging
+        for cell_index, cell in enumerate(nb.cells):
+            if cell.cell_type == "code":
+                print(f"\n💡 Executing cell {cell_index}...")
                 try:
-                    client.execute_cell(cell, i)
-                    outputs = cell.get("outputs", [])
-                    for output in outputs:
-                        if "text" in output:
-                            print(output["text"])
-                        elif "data" in output and "text/plain" in output["data"]:
-                            print(output["data"]["text/plain"])
-                        elif "ename" in output and "evalue" in output:
-                            print(f"Error: {output['ename']}: {output['evalue']}")
+                    ep.preprocess_cell(cell, {}, cell_index)
+                    print("✅ Cell executed successfully.")
                 except Exception as e:
-                    print(f"⚠️ Exception in cell {i}: {e}")
-        print(f"\n✅ Finished notebook: {nb_path}\n{'='*60}")
+                    print(f"⚠️ Cell {cell_index} failed: {e}")
+                    raise
+
+        print(f"✅ Notebook {nb_file} executed successfully.")
+
     except Exception as e:
-        print(f"❌ Failed to execute notebook {nb_path}: {e}")
+        print(f"❌ Error executing notebook {nb_file}: {e}")
         sys.exit(1)
-
-def main():
-    notebook_files = []
-    for root, dirs, files in os.walk("."):
-        for file in files:
-            if file.endswith(".ipynb"):
-                notebook_files.append(os.path.join(root, file))
-
-    if not notebook_files:
-        print("ℹ️ No notebooks found to execute.")
-        return
-
-    for nb_file in notebook_files:
-        execute_notebook(nb_file)
-
-if __name__ == "__main__":
-    main()

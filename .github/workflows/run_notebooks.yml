@@ -27,21 +27,26 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install nbclient nbformat requests
+          pip install nbformat nbclient
 
-      # 4. Execute all notebooks with logging
-      - name: Run Notebooks
+      # 4. Execute notebooks
+      - name: Execute Notebooks
         run: python run_notebooks.py
 
-      # 5. Delete trigger file after notebooks run
+      # 5. Delete trigger file safely via token
       - name: Delete Trigger File
         env:
-          HUB_PAT: ${{ secrets.HUB_PAT }}
+          COLAB_TRIGGER_TOKEN: ${{ secrets.colab-trigger-token }}
+          REPO: ${{ github.repository }}
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
-          # Use PAT for push
-          git remote set-url origin https://$HUB_PAT@github.com/${{ github.repository }}.git
-          git rm colab_trigger.txt
-          git commit -m "Remove trigger after workflow run"
-          git push origin main
+          # Force Git to authenticate via token
+          git remote set-url origin https://$COLAB_TRIGGER_TOKEN@github.com/$REPO.git
+          if [ -f "colab_trigger.txt" ]; then
+            git rm colab_trigger.txt
+            git commit -m "Remove trigger after workflow run"
+            git push origin main
+          else
+            echo "ℹ️ No trigger file found to delete."
+          fi

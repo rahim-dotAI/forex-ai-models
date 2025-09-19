@@ -1,32 +1,49 @@
 name: Trigger Colab Notebook
 
 on:
-  workflow_dispatch:  # Manual trigger
   push:
     paths:
-      - colab_trigger.txt  # Optional: can also trigger on push to this file
+      - "colab_trigger.txt"   # Only run when Pipedream updates this file
 
 jobs:
-  trigger-colab:
+  run-colab:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Install dependencies
-        run: pip install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
 
-      - name: Create trigger file in repo
-        env:
-          HUB_PAT: ${{ secrets.HUB_PAT }}  # GitHub personal access token stored as secret
+      - name: Install deps
         run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "actions@github.com"
-          
-          # Create trigger file
-          echo "Trigger Colab Notebook" > colab_trigger.txt
-          
-          git add colab_trigger.txt
-          git commit -m "Add trigger for Colab notebook"
-          git push https://$HUB_PAT@github.com/${GITHUB_REPOSITORY}.git main
+          pip install requests google-auth google-auth-oauthlib google-auth-httplib2
+
+      - name: Trigger Colab Notebook
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+          HUB_PAT: ${{ secrets.HUB_PAT }}
+        run: |
+          import os, requests, json
+
+          # Colab notebook ID (from your URL)
+          NOTEBOOK_ID = "1Oc2NdawiNabuPFTADUnDdT5cxcsusNGP"
+
+          # GitHub commit info (just for traceability)
+          headers = {
+              "Authorization": f"token {os.environ['HUB_PAT']}",
+              "Accept": "application/vnd.github+json"
+          }
+
+          print("📌 Triggering Colab notebook...")
+
+          # --- OPTION A: Colab Polling ---
+          # If your Colab notebook has a polling loop, just updating colab_trigger.txt is enough.
+          # In that case, we don't need to call Colab API here.
+          # This step is just a placeholder.
+
+          print(f"✅ Trigger committed. Colab notebook {NOTEBOOK_ID} should pick it up via polling.")
+        shell: python

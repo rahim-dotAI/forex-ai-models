@@ -1,38 +1,32 @@
-name: Run Colab Notebooks
+name: Trigger Colab Notebook
 
-# Trigger workflow when colab_trigger.txt is created/updated
 on:
+  workflow_dispatch:  # Manual trigger
   push:
     paths:
-      - colab_trigger.txt
-    branches:
-      - main
+      - colab_trigger.txt  # Optional: can also trigger on push to this file
 
 jobs:
-  run-notebooks:
+  trigger-colab:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout repository
-      - name: Checkout Repo
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2. Set up Python
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.11
-
-      # 3. Install dependencies
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install nbclient nbformat requests
+        run: pip install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
 
-      # 4. Run notebooks using the external Python script
-      - name: Execute Notebooks
+      - name: Create trigger file in repo
         env:
-          HUB_PAT: ${{ secrets.HUB_PAT }}
-          GITHUB_REPO: ${{ github.repository }}
-          BRANCH: main
-        run: python run_notebooks.py
+          HUB_PAT: ${{ secrets.HUB_PAT }}  # GitHub personal access token stored as secret
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          
+          # Create trigger file
+          echo "Trigger Colab Notebook" > colab_trigger.txt
+          
+          git add colab_trigger.txt
+          git commit -m "Add trigger for Colab notebook"
+          git push https://$HUB_PAT@github.com/${GITHUB_REPOSITORY}.git main

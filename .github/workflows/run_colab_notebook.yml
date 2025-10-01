@@ -1,0 +1,26 @@
+name: Trigger Colab Notebook
+
+on:
+  push:
+    paths:
+      - "colab_trigger.txt"
+  workflow_dispatch:
+
+jobs:
+  trigger-colab:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Update Colab Trigger
+        run: |
+          echo "$(date)" > colab_trigger.txt
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add colab_trigger.txt
+          git commit -m "Trigger Colab notebook run"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

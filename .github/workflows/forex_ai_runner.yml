@@ -1,72 +1,47 @@
-name: Forex AI Notebook Runner
+name: Run Forex AI Notebook
 
-# Trigger workflow manually or on schedule (daily UTC times for Forex zones)
+# Trigger manually or schedule
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: "0 8 * * *"    # London Open 08:00 UTC
-    - cron: "30 13 * * *"  # New York Open 13:30 UTC
-    - cron: "30 13 * * *"  # London/NY overlap start at 13:30 UTC
+  workflow_dispatch:   # Manual trigger
+  schedule:           # Optional: run at specific UTC times
+    - cron: '0 8,13 * * 1-5'  # London Open (08:00 UTC) & NY Open (13:00 UTC), Mon-Fri
 
 jobs:
-  run-forex-notebook:
+  run-notebook:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
 
     steps:
-    # -------------------------------
-    # 1️⃣ Checkout repo
-    # -------------------------------
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0  # ensures full repo history for LFS
-        lfs: true       # fetch LFS files like CSV, PKL
+      # 1️⃣ Checkout repo
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true  # Make sure Git LFS files are pulled
 
-    # -------------------------------
-    # 2️⃣ Install Python & dependencies
-    # -------------------------------
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.11
+      # 2️⃣ Set up Python
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install \
-          papermill \
-          ipykernel \
-          pandas numpy matplotlib seaborn plotly \
-          ta yfinance pyppeteer nest_asyncio \
-          lightgbm scikit-learn joblib tqdm mplfinance firebase-admin dropbox beautifulsoup4 alpha_vantage
+      # 3️⃣ Install dependencies
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install papermill
 
-    # -------------------------------
-    # 3️⃣ Register python3 kernel
-    # -------------------------------
-    - name: Set up Jupyter kernel
-      run: |
-        python -m ipykernel install --name python3 --display-name "Python 3"
+      # 4️⃣ Create output folder
+      - name: Create output folder
+        run: mkdir -p output
 
-    # -------------------------------
-    # 4️⃣ Prepare output folder
-    # -------------------------------
-    - name: Prepare output folder
-      run: mkdir -p output
+      # 5️⃣ Execute notebook
+      - name: Run Forex AI notebook
+        run: |
+          papermill "AI_Forex_Brain 2.ipynb" "output/AI_Forex_Brain_Executed.ipynb"
 
-    # -------------------------------
-    # 5️⃣ Run notebook via Papermill
-    # -------------------------------
-    - name: Execute Forex Notebook
-      run: |
-        python -c "import nest_asyncio; nest_asyncio.apply()"
-        papermill "AI_Forex_Brain 2.ipynb" "output/AI_Forex_Brain_Executed.ipynb" -k python3
-
-    # -------------------------------
-    # 6️⃣ Upload output notebook as artifact
-    # -------------------------------
-    - name: Upload output notebook
-      uses: actions/upload-artifact@v4
-      with:
-        name: AI_Forex_Brain_Executed
-        path: output/AI_Forex_Brain_Executed.ipynb
+      # 6️⃣ Upload executed notebook as artifact
+      - name: Upload executed notebook
+        uses: actions/upload-artifact@v4
+        with:
+          name: executed-notebook
+          path: output/AI_Forex_Brain_Executed.ipynb

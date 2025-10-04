@@ -1,42 +1,45 @@
-name: Forex AI Notebook Runner
+name: Run Forex AI Notebook
 
 on:
-  workflow_dispatch: # Manual trigger
   schedule:
-    # Example: every day at 08:00 UTC
+    # Run at London open (08:00 UTC) and NY open (13:30 UTC)
     - cron: '0 8 * * *'
+    - cron: '30 13 * * *'
+  workflow_dispatch:  # Allows manual trigger
 
 jobs:
   run-notebook:
     runs-on: ubuntu-latest
-
     steps:
-      # 1️⃣ Checkout your repository
-      - name: Checkout Repository
+      # 1️⃣ Checkout repo with LFS support
+      - name: Checkout Repo
         uses: actions/checkout@v4
-
-      # 2️⃣ Setup Python
-      - name: Setup Python
-        uses: actions/setup-python@v5
         with:
-          python-version: 3.11  # or your preferred version
+          lfs: true
+
+      # 2️⃣ Set up Python
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
 
       # 3️⃣ Install dependencies
-      - name: Install Dependencies
+      - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install jupyter nbconvert
+          pip install --upgrade pip
+          pip install mplfinance firebase-admin dropbox requests beautifulsoup4 pandas numpy ta yfinance pyppeteer nest_asyncio lightgbm joblib matplotlib alpha_vantage tqdm scikit-learn
 
-      # 4️⃣ Execute the notebook
-      - name: Execute Notebook
-        run: |
-          mkdir -p output
-          jupyter nbconvert --to notebook --execute "AI_Forex_Brain 2.ipynb" --output "output/AI_Forex_Brain_output_$(date +'%Y-%m-%d_%H%M').ipynb"
+      # 4️⃣ Run the notebook
+      - name: Run Notebook
+        uses: nbconvert/nbconvert@v1
+        with:
+          input: 'AI_Forex_Brain 2.ipynb'
+          execute: true
+          to: notebook
 
-      # 5️⃣ Upload the executed notebook as artifact
-      - name: Upload Notebook Artifact
+      # 5️⃣ Upload output notebook
+      - name: Upload Notebook
         uses: actions/upload-artifact@v4
         with:
           name: executed-notebook
-          path: output/
+          path: 'AI_Forex_Brain 2.nbconvert.ipynb'

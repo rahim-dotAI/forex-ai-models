@@ -31,10 +31,14 @@ jobs:
 
     - name: Install Python dependencies
       run: |
-        # Install papermill first
-        pip install papermill
-        # Then install rest of your dependencies if requirements.txt exists
+        # Install Papermill and Jupyter kernel
+        pip install papermill ipykernel
+        # Install other packages from requirements.txt if it exists
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Register Python 3 kernel
+      run: |
+        python -m ipykernel install --name python3 --display-name "Python 3"
 
     - name: Create output folder
       run: mkdir -p output

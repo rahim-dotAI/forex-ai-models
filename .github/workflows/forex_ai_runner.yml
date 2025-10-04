@@ -2,10 +2,10 @@ name: Run Forex AI Notebook
 
 on:
   schedule:
-    # Run at London open (08:00 UTC) and NY open (13:30 UTC)
+    # London Open (08:00 UTC) & New York Open (13:30 UTC)
     - cron: '0 8 * * *'
     - cron: '30 13 * * *'
-  workflow_dispatch:  # Allows manual trigger
+  workflow_dispatch:  # Manual trigger
 
 jobs:
   run-notebook:
@@ -26,20 +26,22 @@ jobs:
       # 3️⃣ Install dependencies
       - name: Install dependencies
         run: |
-          pip install --upgrade pip
-          pip install mplfinance firebase-admin dropbox requests beautifulsoup4 pandas numpy ta yfinance pyppeteer nest_asyncio lightgbm joblib matplotlib alpha_vantage tqdm scikit-learn
+          python -m pip install --upgrade pip
+          pip install mplfinance firebase-admin dropbox requests beautifulsoup4 pandas numpy ta yfinance pyppeteer nest_asyncio lightgbm joblib matplotlib alpha_vantage tqdm scikit-learn papermill
 
-      # 4️⃣ Run the notebook
-      - name: Run Notebook
-        uses: nbconvert/nbconvert@v1
-        with:
-          input: 'AI_Forex_Brain 2.ipynb'
-          execute: true
-          to: notebook
+      # 4️⃣ Create output directory
+      - name: Create output folder
+        run: |
+          mkdir -p output
 
-      # 5️⃣ Upload output notebook
+      # 5️⃣ Run the notebook with papermill
+      - name: Execute Notebook
+        run: |
+          papermill "AI_Forex_Brain 2.ipynb" "output/AI_Forex_Brain_Executed.ipynb"
+
+      # 6️⃣ Upload executed notebook as artifact
       - name: Upload Notebook
         uses: actions/upload-artifact@v4
         with:
           name: executed-notebook
-          path: 'AI_Forex_Brain 2.nbconvert.ipynb'
+          path: output/AI_Forex_Brain_Executed.ipynb

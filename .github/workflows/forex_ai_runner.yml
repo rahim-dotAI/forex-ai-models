@@ -1,54 +1,55 @@
 name: Run AI Forex Notebook
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
-  schedule:
-    - cron: '0 6 * * *' # Daily at 6:00 UTC
 
 jobs:
   run-notebook:
     runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_PAT }}  # Make sure your PAT is in GitHub Secrets
+      GIT_USER_EMAIL: nakatonabira3@gmail.com
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      # 1️⃣ Checkout repo
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.11
+      # 2️⃣ Set up Python
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
 
-    - name: Install system packages
-      run: |
-        sudo apt-get update -qq
-        sudo apt-get install -y git git-lfs
-        git lfs install
+      # 3️⃣ Upgrade pip
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
 
-    - name: Upgrade pip
-      run: python -m pip install --upgrade pip
+      # 4️⃣ Install dependencies
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade wheel setuptools
+          pip install jupyter papermill ipykernel pandas numpy matplotlib seaborn scikit-learn
 
-    - name: Install Python dependencies
-      run: |
-        # Install Papermill and Jupyter kernel
-        pip install papermill ipykernel
-        # Install other packages from requirements.txt if it exists
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      # 5️⃣ Register Python kernel (user directory, avoids permission issues)
+      - name: Register Python 3 kernel
+        run: python -m ipykernel install --user --name python3 --display-name "Python 3"
 
-    - name: Register Python 3 kernel
-      run: |
-        python -m ipykernel install --name python3 --display-name "Python 3"
+      # 6️⃣ Create output folder
+      - name: Create output folder
+        run: mkdir -p output
 
-    - name: Create output folder
-      run: mkdir -p output
+      # 7️⃣ Run the notebook with papermill
+      - name: Execute AI_Forex_Brain notebook
+        run: |
+          papermill "AI_Forex_Brain 2.ipynb" "output/AI_Forex_Brain_Executed.ipynb" -k python3
 
-    - name: Run notebook with Papermill
-      run: |
-        papermill "AI_Forex_Brain 2.ipynb" "output/AI_Forex_Brain_Executed.ipynb"
-
-    - name: Upload executed notebook as artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: executed-notebook
-        path: output/AI_Forex_Brain_Executed.ipynb
+      # 8️⃣ Upload executed notebook as artifact
+      - name: Upload executed notebook
+        uses: actions/upload-artifact@v4
+        with:
+          name: AI_Forex_Brain_Executed
+          path: output/AI_Forex_Brain_Executed.ipynb

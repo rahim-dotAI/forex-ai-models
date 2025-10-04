@@ -13,8 +13,8 @@ jobs:
     env:
       GITHUB_USERNAME: rahim-dotAI
       GITHUB_REPO: forex-ai-models
-      GITHUB_PAT: ${{ secrets.GITHUB_PAT }}  # Store your PAT in GitHub Secrets
-      GIT_USER_EMAIL: youremail@example.com
+      GITHUB_PAT: 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
+      GIT_USER_EMAIL: nakatonabira3@gmail.com
 
     steps:
     - name: Checkout repo
@@ -32,7 +32,7 @@ jobs:
 
     - name: Install Python dependencies
       run: |
-        pip install papermill jupyter nbformat pandas numpy matplotlib scikit-learn
+        pip install papermill jupyter nbformat pandas numpy matplotlib scikit-learn gitpython
 
     - name: Create output folder
       run: mkdir -p output
@@ -42,7 +42,7 @@ jobs:
         papermill "AI_Forex_Brain 2.ipynb" "output/AI_Forex_Brain_Executed.ipynb"
 
     - name: Upload Executed Notebook as Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: executed-notebook
         path: output/AI_Forex_Brain_Executed.ipynb

@@ -1,6 +1,5 @@
 name: Forex AI Notebook Runner
 
-# Run manually or on schedule
 on:
   workflow_dispatch:       # manual trigger
   schedule:               # scheduled runs
@@ -36,9 +35,9 @@ jobs:
         mkdir -p output
         jupyter nbconvert --to notebook --execute "AI_Forex_Brain 2.ipynb" --output "output/AI_Forex_Brain_output_$(date +'%Y-%m-%d_%H%M').ipynb"
 
-    # 5️⃣ Optional: Upload executed notebook as artifact
+    # 5️⃣ Upload executed notebook as artifact
     - name: Upload Notebook Output
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: executed-notebook
         path: output/

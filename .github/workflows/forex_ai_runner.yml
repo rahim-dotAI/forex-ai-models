@@ -1,43 +1,42 @@
 name: Forex AI Notebook Runner
 
 on:
-  workflow_dispatch:       # manual trigger
-  schedule:               # scheduled runs
-    # London Open 08:00 UTC daily
-    - cron:  "0 8 * * *"
-    # NY Open 13:30 UTC daily
-    - cron:  "30 13 * * *"
+  workflow_dispatch: # Manual trigger
+  schedule:
+    # Example: every day at 08:00 UTC
+    - cron: '0 8 * * *'
 
 jobs:
   run-notebook:
     runs-on: ubuntu-latest
 
     steps:
-    # 1️⃣ Checkout repo
-    - name: Checkout Repository
-      uses: actions/checkout@v3
+      # 1️⃣ Checkout your repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-    # 2️⃣ Set up Python
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.11
+      # 2️⃣ Setup Python
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.11  # or your preferred version
 
-    # 3️⃣ Install dependencies
-    - name: Install Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      # 3️⃣ Install dependencies
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install jupyter nbconvert
 
-    # 4️⃣ Run Jupyter Notebook
-    - name: Execute Notebook
-      run: |
-        mkdir -p output
-        jupyter nbconvert --to notebook --execute "AI_Forex_Brain 2.ipynb" --output "output/AI_Forex_Brain_output_$(date +'%Y-%m-%d_%H%M').ipynb"
+      # 4️⃣ Execute the notebook
+      - name: Execute Notebook
+        run: |
+          mkdir -p output
+          jupyter nbconvert --to notebook --execute "AI_Forex_Brain 2.ipynb" --output "output/AI_Forex_Brain_output_$(date +'%Y-%m-%d_%H%M').ipynb"
 
-    # 5️⃣ Upload executed notebook as artifact
-    - name: Upload Notebook Output
-      uses: actions/upload-artifact@v4
-      with:
-        name: executed-notebook
-        path: output/
+      # 5️⃣ Upload the executed notebook as artifact
+      - name: Upload Notebook Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: executed-notebook
+          path: output/

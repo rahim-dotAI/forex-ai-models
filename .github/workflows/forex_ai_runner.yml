@@ -1,0 +1,52 @@
+name: Forex AI Notebook Runner
+
+# Run on schedule (UTC)
+on:
+  schedule:
+    # Runs at 08:00 UTC and 13:30 UTC daily
+    - cron: '0 8 * * *'    # London open
+    - cron: '30 13 * * *'  # NY open / overlap
+  workflow_dispatch:       # Allows manual trigger
+
+jobs:
+  run-notebook:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout repo
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # Step 2: Setup Python
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    # Step 3: Install dependencies
+    - name: Install dependencies
+      run: pip install --upgrade pip && pip install -r requirements.txt
+
+    # Step 4: Run notebook
+    - name: Run AI Forex Notebook
+      uses: nbdev/nbdev_run@v1
+      with:
+        notebook: "AI_Forex_Brain 2.ipynb"
+
+    # Step 5: Optionally save output
+    - name: Save executed notebook
+      run: |
+        TIMESTAMP=$(date -u +"%Y-%m-%d_%H%M")
+        mkdir -p outputs
+        cp "AI_Forex_Brain 2.ipynb" "outputs/AI_Forex_Brain_output_${TIMESTAMP}.ipynb"
+
+    # Step 6: Optionally push results back to repo
+    - name: Commit output notebook
+      run: |
+        git config --local user.email "actions@github.com"
+        git config --local user.name "GitHub Actions"
+        git add outputs/
+        git commit -m "Automated notebook run at $TIMESTAMP" || echo "No changes to commit"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

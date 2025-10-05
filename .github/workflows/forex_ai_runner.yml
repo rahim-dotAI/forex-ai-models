@@ -1,64 +1,87 @@
-name: AI Forex Brain Auto Executor
+name: Run AI Forex Notebook
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
-  schedule:
-    - cron: "0 5 * * 1-5"
 
 jobs:
-  run_notebook:
+  run-notebook:
     runs-on: ubuntu-latest
-
     env:
-      GIT_USER_EMAIL: nakatonabira3@gmail.com
-      GIT_USER_NAME: "Abdul Rahim"
       FOREX_PAT: ${{ secrets.FOREX_PAT }}
+      BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}
+      GIT_USER_EMAIL: nakatonabira3@gmail.com
+      PYTHONIOENCODING: utf-8
 
     steps:
-      - name: Checkout Repository
+      # 1️⃣ Checkout repository
+      - name: Checkout repository
         uses: actions/checkout@v4
+
+      # 2️⃣ Set up Python 3.11
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
         with:
-          persist-credentials: false  # disable GITHUB_TOKEN default
+          python-version: "3.11"
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+      # 3️⃣ Upgrade pip
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
 
-      - name: Install Dependencies
+      # 4️⃣ Install dependencies
+      - name: Install Python dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install papermill notebook pandas numpy yfinance matplotlib ta seaborn tqdm scikit-learn joblib
+          pip install --upgrade wheel setuptools
+          pip install jupyter papermill ipykernel pandas numpy matplotlib seaborn scikit-learn yfinance requests
 
-      - name: Create Colab /content Path Symlink
+      # 5️⃣ Register Python 3 kernel
+      - name: Register Python 3 kernel
+        run: python -m ipykernel install --user --name python3 --display-name "Python 3"
+
+      # 6️⃣ ✅ Colab-style `/content` symlink fix
+      - name: Create /content symlink for Colab paths
         run: |
-          echo "🔗 Creating Colab-style /content path..."
           sudo mkdir -p /content
-          sudo chmod 777 /content
-          ln -s "$(pwd)" /content || true
+          sudo ln -sf "$(pwd)" /content
+          echo "✅ Symlink created: /content -> $(pwd)"
 
-      - name: Execute Notebook
+      # 7️⃣ Create output folder
+      - name: Create output folder
+        run: mkdir -p output
+
+      # 8️⃣ Run the notebook with papermill (retry-safe)
+      - name: Execute AI_Forex_Brain notebook (with retry)
         run: |
-          mkdir -p output
-          echo "🚀 Running AI_Forex_Brain 2.ipynb..."
-          papermill "AI_Forex_Brain 2.ipynb" "output/AI_Forex_Brain_Executed.ipynb" -k python3
+          MAX_RETRIES=3
+          COUNT=0
+          until [ $COUNT -ge $MAX_RETRIES ]
+          do
+            echo "🚀 Attempt $((COUNT+1)) to execute notebook..."
+            papermill "AI_Forex_Brain 2.ipynb" "output/AI_Forex_Brain_Executed.ipynb" -k python3 && break
+            COUNT=$((COUNT+1))
+            echo "⚠️ Notebook failed, retrying in 10 seconds... ($COUNT/$MAX_RETRIES)"
+            sleep 10
+          done
+          if [ $COUNT -eq $MAX_RETRIES ]; then
+            echo "❌ Notebook failed after $MAX_RETRIES retries."
+            exit 1
+          fi
 
-      - name: Upload Executed Notebook
+      # 9️⃣ Upload executed notebook as artifact
+      - name: Upload executed notebook
         uses: actions/upload-artifact@v4
         with:
-          name: executed-notebook
+          name: AI_Forex_Brain_Executed
           path: output/AI_Forex_Brain_Executed.ipynb
 
-      - name: Commit and Push Results
-        if: success() || failure()
+      # 🔟 Commit results (optional, keeps repo updated automatically)
+      - name: Commit results to repo (optional)
+        if: success()
         run: |
-          echo "📝 Setting up Git user..."
-          git config --global user.name "${GIT_USER_NAME}"
-          git config --global user.email "${GIT_USER_EMAIL}"
-
-          echo "🧩 Adding updated files..."
-          git add -A || true
-          git commit -m "📈 Auto-run update at $(date)" || echo "No changes to commit"
-
-          echo "🚀 Pushing to repo using personal token..."
-          git push https://${{ secrets.FOREX_PAT }}@github.com/rahim-dotAI/forex-ai-models.git main || echo "❌ Push failed, will retry next run"
+          git config user.name "github-actions[bot]"
+          git config user.email "${{ env.GIT_USER_EMAIL }}"
+          git add output/*.ipynb || true
+          git commit -m "🤖 Auto-update: executed AI_Forex_Brain notebook [$(date)]" || echo "No changes to commit."
+          git push || echo "No push needed."

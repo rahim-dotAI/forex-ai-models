@@ -10,8 +10,8 @@ jobs:
   run-notebook:
     runs-on: ubuntu-latest
     env:
-      FOREX_PAT: ${{ secrets.FOREX_PAT }}            # Your GitHub PAT for repo access
-      BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}  # Your Browserless token
+      FOREX_PAT: ${{ secrets.FOREX_PAT }}
+      BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}
       GIT_USER_EMAIL: nakatonabira3@gmail.com
 
     steps:
@@ -33,9 +33,9 @@ jobs:
       - name: Install Python dependencies
         run: |
           pip install --upgrade wheel setuptools
-          pip install jupyter papermill ipykernel pandas numpy matplotlib seaborn scikit-learn joblib requests
+          pip install jupyter papermill ipykernel pandas numpy matplotlib seaborn scikit-learn
 
-      # 5️⃣ Register Python kernel (avoids permission issues)
+      # 5️⃣ Register Python kernel
       - name: Register Python 3 kernel
         run: python -m ipykernel install --user --name python3 --display-name "Python 3"
 
@@ -43,12 +43,21 @@ jobs:
       - name: Create output folder
         run: mkdir -p output
 
-      # 7️⃣ Run the notebook with papermill
+      # 7️⃣ Create writable /content folder and symlink
+      - name: Create /content symlink
+        run: |
+          mkdir -p ${{ github.workspace }}/content
+          sudo ln -s ${{ github.workspace }}/content /content || true
+
+      # 8️⃣ Run the notebook with Papermill
       - name: Execute AI_Forex_Brain notebook
         run: |
           papermill "AI_Forex_Brain 2.ipynb" "output/AI_Forex_Brain_Executed.ipynb" -k python3
+        env:
+          FOREX_PAT: ${{ secrets.FOREX_PAT }}
+          BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}
 
-      # 8️⃣ Upload executed notebook as artifact
+      # 9️⃣ Upload executed notebook as artifact
       - name: Upload executed notebook
         uses: actions/upload-artifact@v4
         with:

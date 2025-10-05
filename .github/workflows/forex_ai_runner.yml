@@ -20,7 +20,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ System-level updates (safe fail)
+      # 2️⃣ Verify required secrets
+      - name: Check required secrets
+        run: |
+          if [ -z "${FOREX_PAT}" ]; then
+            echo "❌ FOREX_PAT secret is missing!"
+            exit 1
+          fi
+          if [ -z "${BROWSERLESS_TOKEN}" ]; then
+            echo "⚠️ BROWSERLESS_TOKEN secret is missing. Live prices will be skipped."
+          fi
+
+      # 3️⃣ System update & Git LFS setup
       - name: System update & Git LFS setup
         run: |
           sudo apt-get update || echo "⚠️ Could not update apt, skipping"
@@ -28,21 +39,17 @@ jobs:
           git lfs install || echo "⚠️ Git LFS already initialized"
           git lfs track "*.csv" "*.pkl" || echo "✅ CSV & PKL already tracked"
 
-      # 3️⃣ Set up Python 3.11
+      # 4️⃣ Set up Python 3.11
       - name: Set up Python 3.11
         uses: actions/setup-python@v4
         with:
           python-version: "3.11"
 
-      # 4️⃣ Upgrade pip
-      - name: Upgrade pip
-        run: python -m pip install --upgrade pip
-
-      # 5️⃣ Install dependencies
-      - name: Install dependencies
+      # 5️⃣ Upgrade pip & install dependencies
+      - name: Install Python dependencies
         run: |
-          pip install --upgrade wheel setuptools
-          pip install jupyter papermill ipykernel pandas numpy matplotlib seaborn scikit-learn yfinance requests joblib
+          python -m pip install --upgrade pip wheel setuptools
+          pip install jupyter papermill ipykernel pandas numpy matplotlib seaborn scikit-learn yfinance requests joblib ta
 
       # 6️⃣ Register Python 3 kernel
       - name: Register Python 3 kernel
@@ -59,7 +66,7 @@ jobs:
       - name: Create output folder
         run: mkdir -p output
 
-      # 9️⃣ Execute AI_Forex_Brain notebook (with retry)
+      # 9️⃣ Execute AI_Forex_Brain notebook with retry
       - name: Execute AI_Forex_Brain notebook
         run: |
           MAX_RETRIES=3
@@ -91,8 +98,8 @@ jobs:
           GIT_AUTH_TOKEN: ${{ secrets.FOREX_PAT }}
         run: |
           git config user.name "Rahim AI Bot"
-          git config user.email "nakatonabira3@gmail.com"
-          git add output/*.ipynb || true
-          git commit -m "🤖 Auto-update: executed AI_Forex_Brain notebook [$(date)]" || echo "No changes to commit."
+          git config user.email "${GIT_USER_EMAIL}"
+          git add output/*.ipynb || echo "⚠️ No notebook changes to add"
+          git diff --staged --quiet || git commit -m "🤖 Auto-update: executed AI_Forex_Brain notebook [$(date)]"
           git remote set-url origin https://x-access-token:${GIT_AUTH_TOKEN}@github.com/${{ github.repository }}.git
-          git push origin main || echo "✅ No new changes to push."
+          git push origin main && echo "✅ Notebook committed and pushed successfully" || echo "⚠️ No new changes to push."

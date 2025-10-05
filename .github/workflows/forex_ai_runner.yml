@@ -10,9 +10,9 @@ jobs:
   run-notebook:
     runs-on: ubuntu-latest
     env:
-      GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
+      FOREX_PAT: ${{ secrets.GITHUB_PAT }}          # Token for Git access in notebook
+      BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}  # Optional if notebook uses browserless
       GIT_USER_EMAIL: nakatonabira3@gmail.com
-      BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}   # <-- set this in GitHub Secrets
 
     steps:
       # 1️⃣ Checkout repo
@@ -33,9 +33,9 @@ jobs:
       - name: Install Python dependencies
         run: |
           pip install --upgrade wheel setuptools
-          pip install jupyter papermill ipykernel pandas numpy matplotlib seaborn scikit-learn joblib requests
+          pip install jupyter papermill ipykernel pandas numpy matplotlib seaborn scikit-learn ta requests joblib
 
-      # 5️⃣ Register Python kernel
+      # 5️⃣ Register Python kernel (user directory, avoids permission issues)
       - name: Register Python 3 kernel
         run: python -m ipykernel install --user --name python3 --display-name "Python 3"
 

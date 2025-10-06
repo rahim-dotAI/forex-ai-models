@@ -1,110 +1,122 @@
-name: 🔁 Auto Notebook Runner
+name: Run AI Forex Notebook
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
-  schedule:
-    - cron: "0 0 * * *"  # every day at midnight UTC
 
 jobs:
   run-notebook:
     runs-on: ubuntu-latest
     env:
+      FOREX_PAT: ${{ secrets.FOREX_PAT }}
+      BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}
       GIT_USER_NAME: "Rahim AI Bot"
       GIT_USER_EMAIL: "nakatonabira3@gmail.com"
-      GIT_AUTH_TOKEN: ${{ secrets.FOREX_PAT }}
+      PYTHONIOENCODING: utf-8
 
     steps:
-      # -----------------------------
-      # 1️⃣ Checkout repo without bot credentials
-      # -----------------------------
-      - name: Checkout Repository
+      # 0️⃣ Pre-clean any broken submodules before checkout
+      - name: Remove broken submodules before checkout
+        run: |
+          echo "🧹 Cleaning any broken .gitmodules or nested repos..."
+          rm -f .gitmodules || true
+          rm -rf forex_ai_outputs/forex-ai-models || true
+          echo "✅ Cleaned potential submodule conflicts"
+
+      # 1️⃣ Checkout repository (no submodules)
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           persist-credentials: false
           fetch-depth: 0
+          lfs: false
+          submodules: false
+          clean: true
+          set-safe-directory: true
 
-      # -----------------------------
-      # 2️⃣ Setup Python
-      # -----------------------------
-      - name: Set up Python
+      # 2️⃣ Verify required secrets
+      - name: Check required secrets
+        run: |
+          if [ -z "${FOREX_PAT}" ]; then
+            echo "❌ FOREX_PAT secret is missing!"
+            exit 1
+          fi
+          if [ -z "${BROWSERLESS_TOKEN}" ]; then
+            echo "⚠️ BROWSERLESS_TOKEN secret is missing. Live prices will be skipped."
+          fi
+
+      # 3️⃣ System update & Git LFS setup
+      - name: System update & Git LFS setup
+        run: |
+          sudo apt-get update -qq || echo "⚠️ Could not update apt, skipping"
+          sudo apt-get install -y git-lfs || echo "⚠️ Git LFS install failed, maybe already installed"
+          git lfs install || echo "⚠️ Git LFS already initialized"
+          git lfs track "*.csv" "*.pkl" || echo "✅ CSV & PKL already tracked"
+
+      # 4️⃣ Set up Python 3.11
+      - name: Set up Python 3.11
         uses: actions/setup-python@v4
         with:
           python-version: "3.11"
 
-      # -----------------------------
-      # 3️⃣ Install dependencies
-      # -----------------------------
-      - name: Install dependencies
+      # 5️⃣ Upgrade pip & install dependencies
+      - name: Install Python dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install jupyter nbconvert nbformat pandas numpy yfinance matplotlib ta gitpython
+          python -m pip install --upgrade pip wheel setuptools
+          pip install jupyter papermill ipykernel pandas numpy matplotlib seaborn scikit-learn yfinance requests joblib ta
 
-      # -----------------------------
-      # 4️⃣ Run notebook with retries
-      # -----------------------------
-      - name: Run notebook
+      # 6️⃣ Register Python 3 kernel
+      - name: Register Python 3 kernel
+        run: python -m ipykernel install --user --name python3 --display-name "Python 3"
+
+      # 7️⃣ Create /content symlink for Colab paths
+      - name: Create /content symlink
         run: |
-          set -e
+          sudo mkdir -p /content
+          sudo ln -sf "$(pwd)" /content
+          echo "✅ Symlink created: /content -> $(pwd)"
+
+      # 8️⃣ Create output folder
+      - name: Create output folder
+        run: mkdir -p output
+
+      # 9️⃣ Execute AI_Forex_Brain notebook with retry
+      - name: Execute AI_Forex_Brain notebook
+        run: |
           MAX_RETRIES=3
-          COUNT=1
-          INPUT_NOTEBOOK="AI_Forex_Brain.ipynb"
-          OUTPUT_NOTEBOOK="output/AI_Forex_Brain_executed.ipynb"
-          mkdir -p output
-
-          while [ $COUNT -le $MAX_RETRIES ]; do
-            echo "🚀 Attempt $COUNT to execute notebook..."
-            if jupyter nbconvert --to notebook --execute "$INPUT_NOTEBOOK" --output "$OUTPUT_NOTEBOOK"; then
-              echo "✅ Notebook executed successfully!"
-              break
-            else
-              echo "❌ Failed on attempt $COUNT"
-              COUNT=$((COUNT + 1))
-              sleep 5
-            fi
+          COUNT=0
+          until [ $COUNT -ge $MAX_RETRIES ]
+          do
+            echo "🚀 Attempt $((COUNT+1)) to execute notebook..."
+            papermill "AI_Forex_Brain 2.ipynb" "output/AI_Forex_Brain_Executed.ipynb" -k python3 && break
+            COUNT=$((COUNT+1))
+            echo "⚠️ Notebook failed, retrying in 10 seconds... ($COUNT/$MAX_RETRIES)"
+            sleep 10
           done
-
-      # -----------------------------
-      # 5️⃣ Git LFS setup & force PAT remote
-      # -----------------------------
-      - name: Configure Git + LFS
-        run: |
-          git lfs install --skip-smudge
-          git config --global user.name "${GIT_USER_NAME}"
-          git config --global user.email "${GIT_USER_EMAIL}"
-          
-          # Force use of PAT-authenticated remote instead of GitHub Actions bot
-          git remote set-url origin https://x-access-token:${GIT_AUTH_TOKEN}@github.com/rahim-dotAI/forex-ai-models.git
-
-          # Track large files
-          git lfs track "*.csv"
-          git lfs track "*.pkl"
-          git add .gitattributes
-
-      # -----------------------------
-      # 6️⃣ Commit and push changes
-      # -----------------------------
-      - name: Commit and Push Outputs
-        run: |
-          echo "🪣 Adding output changes..."
-          git add output/*.ipynb || true
-          git add *.csv *.pkl || true
-          git add .gitattributes || true
-
-          echo "💬 Checking for differences..."
-          if git diff --cached --quiet; then
-            echo "✅ No new changes to commit."
-          else
-            git commit -m "🤖 Auto-update: executed AI_Forex_Brain notebook [$(date -u)]"
-            echo "📤 Pushing with PAT..."
-            git push origin main
-            echo "✅ Push complete!"
+          if [ $COUNT -eq $MAX_RETRIES ]; then
+            echo "❌ Notebook failed after $MAX_RETRIES retries."
+            exit 1
           fi
 
-      # -----------------------------
-      # 7️⃣ Upload executed notebook
-      # -----------------------------
-      - name: Upload notebook as artifact
+      # 🔟 Upload executed notebook as artifact
+      - name: Upload executed notebook
         uses: actions/upload-artifact@v4
         with:
-          name: executed-notebook
-          path: output/AI_Forex_Brain_executed.ipynb
+          name: AI_Forex_Brain_Executed
+          path: output/AI_Forex_Brain_Executed.ipynb
+
+      # 1️⃣1️⃣ Commit and push results using FOREX_PAT
+      - name: Commit and push results
+        if: success()
+        env:
+          GIT_AUTH_TOKEN: ${{ secrets.FOREX_PAT }}
+        run: |
+          echo "🪣 Adding output changes..."
+          git config user.name "${GIT_USER_NAME}"
+          git config user.email "${GIT_USER_EMAIL}"
+          git add output/*.ipynb || echo "⚠️ No notebook changes to add"
+          git diff --staged --quiet || git commit -m "🤖 Auto-update: executed AI_Forex_Brain notebook [$(date)]"
+          git remote set-url origin https://x-access-token:${GIT_AUTH_TOKEN}@github.com/${{ github.repository }}.git
+          git push origin main && echo "✅ Notebook committed and pushed successfully" || echo "⚠️ No new changes to push."

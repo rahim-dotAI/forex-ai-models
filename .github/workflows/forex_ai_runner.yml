@@ -16,9 +16,12 @@ jobs:
       PYTHONIOENCODING: utf-8
 
     steps:
-      # 1️⃣ Checkout repository
+      # 1️⃣ Checkout repository with PAT-safe credentials
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false  # ✅ Important: disables Actions bot credentials
+          fetch-depth: 0              # ✅ Full history for LFS
 
       # 2️⃣ Verify required secrets
       - name: Check required secrets
@@ -37,7 +40,7 @@ jobs:
           sudo apt-get update || echo "⚠️ Could not update apt, skipping"
           sudo apt-get install -y git-lfs || echo "⚠️ Git LFS install failed, maybe already installed"
           git lfs install || echo "⚠️ Git LFS already initialized"
-          git lfs track "*.csv" "*.pkl" || true
+          git lfs track "*.csv" "*.pkl" || echo "✅ CSV & PKL already tracked"
 
       # 4️⃣ Set up Python 3.11
       - name: Set up Python 3.11
@@ -102,10 +105,8 @@ jobs:
           git add output/*.ipynb || echo "⚠️ No notebook changes to add"
           if ! git diff --cached --quiet; then
             git commit -m "🤖 Auto-update: executed AI_Forex_Brain notebook [$(date)]"
-            # Set remote URL with PAT
             git remote set-url origin https://x-access-token:${GIT_AUTH_TOKEN}@github.com/${{ github.repository }}.git
             git push origin main
             echo "✅ Notebook committed and pushed successfully"
           else
             echo "✅ No new changes to push."
-          fi

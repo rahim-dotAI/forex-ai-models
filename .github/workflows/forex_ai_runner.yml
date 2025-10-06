@@ -37,7 +37,7 @@ jobs:
           sudo apt-get update || echo "⚠️ Could not update apt, skipping"
           sudo apt-get install -y git-lfs || echo "⚠️ Git LFS install failed, maybe already installed"
           git lfs install || echo "⚠️ Git LFS already initialized"
-          git lfs track "*.csv" "*.pkl" || echo "✅ CSV & PKL already tracked"
+          git lfs track "*.csv" "*.pkl" || true
 
       # 4️⃣ Set up Python 3.11
       - name: Set up Python 3.11
@@ -91,7 +91,7 @@ jobs:
           name: AI_Forex_Brain_Executed
           path: output/AI_Forex_Brain_Executed.ipynb
 
-      # 1️⃣1️⃣ Commit and push results to repo using FOREX_PAT
+      # 1️⃣1️⃣ Commit and push results using PAT
       - name: Commit and push results
         if: success()
         env:
@@ -100,6 +100,12 @@ jobs:
           git config user.name "Rahim AI Bot"
           git config user.email "${GIT_USER_EMAIL}"
           git add output/*.ipynb || echo "⚠️ No notebook changes to add"
-          git diff --staged --quiet || git commit -m "🤖 Auto-update: executed AI_Forex_Brain notebook [$(date)]"
-          git remote set-url origin https://x-access-token:${GIT_AUTH_TOKEN}@github.com/${{ github.repository }}.git
-          git push origin main && echo "✅ Notebook committed and pushed successfully" || echo "⚠️ No new changes to push."
+          if ! git diff --cached --quiet; then
+            git commit -m "🤖 Auto-update: executed AI_Forex_Brain notebook [$(date)]"
+            # Set remote URL with PAT
+            git remote set-url origin https://x-access-token:${GIT_AUTH_TOKEN}@github.com/${{ github.repository }}.git
+            git push origin main
+            echo "✅ Notebook committed and pushed successfully"
+          else
+            echo "✅ No new changes to push."
+          fi

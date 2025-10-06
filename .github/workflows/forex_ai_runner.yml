@@ -95,8 +95,7 @@ jobs:
             echo "✅ No new changes to commit."
           else
             git commit -m "🤖 Auto-update: executed AI_Forex_Brain notebook [$(date -u)]"
-            echo "📤 Pushing
-            with PAT..."
+            echo "📤 Pushing with PAT..."
             git push origin main
             echo "✅ Push complete!"
           fi

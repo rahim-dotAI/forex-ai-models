@@ -19,6 +19,8 @@ jobs:
       # 1️⃣ Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          submodules: false  # ✅ avoid submodule errors
 
       # 2️⃣ Verify required secrets
       - name: Check required secrets
@@ -29,12 +31,11 @@ jobs:
           fi
           if [ -z "${BROWSERLESS_TOKEN}" ]; then
             echo "⚠️ BROWSERLESS_TOKEN secret is missing. Live prices will be skipped."
-          fi
 
       # 3️⃣ System update & Git LFS setup
       - name: System update & Git LFS setup
         run: |
-          sudo apt-get update || echo "⚠️ Could not update apt, skipping"
+          sudo apt-get update -qq || echo "⚠️ Could not update apt, skipping"
           sudo apt-get install -y git-lfs || echo "⚠️ Git LFS install failed, maybe already installed"
           git lfs install || echo "⚠️ Git LFS already initialized"
           git lfs track "*.csv" "*.pkl" || echo "✅ CSV & PKL already tracked"
@@ -91,15 +92,21 @@ jobs:
           name: AI_Forex_Brain_Executed
           path: output/AI_Forex_Brain_Executed.ipynb
 
-      # 1️⃣1️⃣ Commit and push results to repo using FOREX_PAT
+      # 1️⃣1️⃣ Commit and push results to repo using PAT (fixed)
       - name: Commit and push results
         if: success()
         env:
           GIT_AUTH_TOKEN: ${{ secrets.FOREX_PAT }}
+          GIT_USER_NAME: "Rahim AI Bot"
+          GIT_USER_EMAIL: "nakatonabira3@gmail.com"
         run: |
-          git config user.name "Rahim AI Bot"
+          git config user.name "${GIT_USER_NAME}"
           git config user.email "${GIT_USER_EMAIL}"
           git add output/*.ipynb || echo "⚠️ No notebook changes to add"
-          git diff --staged --quiet || git commit -m "🤖 Auto-update: executed AI_Forex_Brain notebook [$(date)]"
-          git remote set-url origin https://x-access-token:${GIT_AUTH_TOKEN}@github.com/${{ github.repository }}.git
-          git push origin main && echo "✅ Notebook committed and pushed successfully" || echo "⚠️ No new changes to push."
+          # Commit only if there are changes
+          if ! git diff --cached --quiet; then
+            git commit -m "🤖 Auto-update: executed AI_Forex_Brain notebook [$(date)]"
+            git push https://${GIT_AUTH_TOKEN}@github.com/${{ github.repository }}.git main
+            echo "✅ Notebook committed and pushed successfully"
+          else
+            echo "✅ No new changes to commit/push."

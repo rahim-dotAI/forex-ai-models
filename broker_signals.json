@@ -1,8 +1,20 @@
 {
-  "timestamp": "2025-11-01T12:36:57.077234",
-  "iteration": 16,
+  "timestamp": "2025-11-01T12:38:19.134297",
+  "iteration": 17,
   "mode": "replay",
   "leaderboard": [
+    {
+      "model": "Alpha Momentum",
+      "color": "\ud83d\udd34",
+      "hex_color": "#E74C3C",
+      "pnl": -4.0077111407299526e-08,
+      "sharpe": -2.351051763438319e-06,
+      "max_dd": 4.0077111407299526e-08,
+      "total_trades": 0,
+      "successful_trades": 0,
+      "accuracy": 0,
+      "strategy": "Aggressive momentum trading"
+    },
     {
       "model": "Gamma Adaptive",
       "color": "\ud83d\udfe2",
@@ -14,26 +26,14 @@
       "successful_trades": 0,
       "accuracy": 0,
       "strategy": "Adaptive volatility trading"
-    },
-    {
-      "model": "Alpha Momentum",
-      "color": "\ud83d\udd34",
-      "hex_color": "#E74C3C",
-      "pnl": -4.021248400931654e-08,
-      "sharpe": -2.3589882642774587e-06,
-      "max_dd": 4.021248400931654e-08,
-      "total_trades": 0,
-      "successful_trades": 0,
-      "accuracy": 0,
-      "strategy": "Aggressive momentum trading"
     }
   ],
   "all_signals": {
     "Alpha Momentum": {
       "EUR/USD": {
         "direction": "BUY",
-        "strength": 3.6947002113475262,
-        "score_1_100": 79,
+        "strength": 3.533060869173349,
+        "score_1_100": 80,
         "last_price": 1.155,
         "SL": 1.1468764285714286,
         "TP": 1.1631235714285715,
@@ -41,13 +41,13 @@
         "atr": 0.008123571428571452,
         "atr_multiplier_sl": 1.0,
         "atr_multiplier_tp": 1.0,
-        "timestamp": "2025-11-01T12:36:41.634774",
+        "timestamp": "2025-11-01T12:38:03.329634",
         "model": "Alpha Momentum",
         "trailing_active": false
       },
       "GBP/USD": {
         "direction": "BUY",
-        "strength": 1.181621576847615,
+        "strength": 1.2877710271642835,
         "score_1_100": 76,
         "last_price": 1.315,
         "SL": 1.3025314285714285,
@@ -56,13 +56,13 @@
         "atr": 0.0124685714285714,
         "atr_multiplier_sl": 1.0,
         "atr_multiplier_tp": 1.0,
-        "timestamp": "2025-11-01T12:36:43.677876",
+        "timestamp": "2025-11-01T12:38:05.437691",
         "model": "Alpha Momentum",
         "trailing_active": false
       },
       "USD/JPY": {
         "direction": "SELL",
-        "strength": -3.6931726132713854,
+        "strength": -2.94894710733387,
         "score_1_100": 86,
         "last_price": 154.02,
         "SL": 156.02364285714287,
@@ -71,14 +71,14 @@
         "atr": 2.0036428571428604,
         "atr_multiplier_sl": 1.0,
         "atr_multiplier_tp": 1.0,
-        "timestamp": "2025-11-01T12:36:45.523562",
+        "timestamp": "2025-11-01T12:38:07.767664",
         "model": "Alpha Momentum",
         "trailing_active": false
       },
       "AUD/USD": {
         "direction": "BUY",
-        "strength": 0.9744543635635446,
-        "score_1_100": 83,
+        "strength": 0.8422682973010387,
+        "score_1_100": 75,
         "last_price": 0.6541,
         "SL": 0.6450314285714286,
         "TP": 0.6631685714285714,
@@ -86,7 +86,7 @@
         "atr": 0.00906857142857145,
         "atr_multiplier_sl": 1.0,
         "atr_multiplier_tp": 1.0,
-        "timestamp": "2025-11-01T12:36:47.600060",
+        "timestamp": "2025-11-01T12:38:09.806308",
         "model": "Alpha Momentum",
         "trailing_active": false
       }
@@ -94,8 +94,8 @@
     "Gamma Adaptive": {
       "EUR/USD": {
         "direction": "BUY",
-        "strength": 3.501448660788994,
-        "score_1_100": 88,
+        "strength": 3.744038945488768,
+        "score_1_100": 82,
         "last_price": 1.155,
         "SL": 1.1468764285714286,
         "TP": 1.1793707142857144,
@@ -103,14 +103,14 @@
         "atr": 0.008123571428571452,
         "atr_multiplier_sl": 1.0,
         "atr_multiplier_tp": 3.0,
-        "timestamp": "2025-11-01T12:36:49.233452",
+        "timestamp": "2025-11-01T12:38:11.813804",
         "model": "Gamma Adaptive",
         "trailing_active": false
       },
       "GBP/USD": {
         "direction": "BUY",
-        "strength": 1.3389763101257277,
-        "score_1_100": 83,
+        "strength": 1.2144565353661947,
+        "score_1_100": 76,
         "last_price": 1.315,
         "SL": 1.3025314285714285,
         "TP": 1.3524057142857142,
@@ -118,13 +118,13 @@
         "atr": 0.0124685714285714,
         "atr_multiplier_sl": 1.0,
         "atr_multiplier_tp": 3.0,
-        "timestamp": "2025-11-01T12:36:51.296780",
+        "timestamp": "2025-11-01T12:38:13.569183",
         "model": "Gamma Adaptive",
         "trailing_active": false
       },
       "USD/JPY": {
         "direction": "SELL",
-        "strength": -3.3829900206067034,
+        "strength": -2.8975909268547078,
         "score_1_100": 86,
         "last_price": 154.02,
         "SL": 156.02364285714287,
@@ -133,14 +133,14 @@
         "atr": 2.0036428571428604,
         "atr_multiplier_sl": 1.0,
         "atr_multiplier_tp": 3.0,
-        "timestamp": "2025-11-01T12:36:53.400032",
+        "timestamp": "2025-11-01T12:38:15.653449",
         "model": "Gamma Adaptive",
         "trailing_active": false
       },
       "AUD/USD": {
         "direction": "BUY",
-        "strength": 0.8165658965880446,
-        "score_1_100": 81,
+        "strength": 0.7876999904907083,
+        "score_1_100": 76,
         "last_price": 0.6541,
         "SL": 0.6450314285714286,
         "TP": 0.6813057142857144,
@@ -148,7 +148,7 @@
         "atr": 0.00906857142857145,
         "atr_multiplier_sl": 1.0,
         "atr_multiplier_tp": 3.0,
-        "timestamp": "2025-11-01T12:36:55.466074",
+        "timestamp": "2025-11-01T12:38:17.343464",
         "model": "Gamma Adaptive",
         "trailing_active": false
       }
@@ -157,13 +157,13 @@
   "ensemble_signals": {
     "EUR/USD": {
       "direction": "BUY",
-      "confidence": 83,
+      "confidence": 81,
       "consensus_strength": 100.0,
       "models_used": 2
     },
     "GBP/USD": {
       "direction": "BUY",
-      "confidence": 79,
+      "confidence": 76,
       "consensus_strength": 100.0,
       "models_used": 2
     },
@@ -175,7 +175,7 @@
     },
     "AUD/USD": {
       "direction": "BUY",
-      "confidence": 82,
+      "confidence": 75,
       "consensus_strength": 100.0,
       "models_used": 2
     }

@@ -1,57 +1,183 @@
 {
-  "timestamp": "2025-11-01T11:37:15.993537",
-  "pairs": {
+  "timestamp": "2025-11-01T12:16:28.373428",
+  "iteration": 1,
+  "mode": "replay",
+  "leaderboard": [
+    {
+      "model": "Gamma Adaptive",
+      "color": "\ud83d\udfe2",
+      "hex_color": "#2ECC71",
+      "pnl": -0.22256183101114857,
+      "sharpe": -0.07178287484595164,
+      "max_dd": 0.11401269150276505,
+      "total_trades": 0,
+      "successful_trades": 0,
+      "accuracy": 0,
+      "strategy": "Adaptive volatility trading"
+    },
+    {
+      "model": "Alpha Momentum",
+      "color": "\ud83d\udd34",
+      "hex_color": "#E74C3C",
+      "pnl": -0.7297488240726153,
+      "sharpe": -0.07183119110530169,
+      "max_dd": 0.4480770833353347,
+      "total_trades": 0,
+      "successful_trades": 0,
+      "accuracy": 0,
+      "strategy": "Aggressive momentum trading"
+    }
+  ],
+  "all_signals": {
+    "Alpha Momentum": {
+      "EUR/USD": {
+        "direction": "BUY",
+        "strength": 3.262188613668613,
+        "score_1_100": 86,
+        "last_price": 1.154,
+        "SL": 1.1458764285714285,
+        "TP": 1.1746048216007443,
+        "high_confidence": true,
+        "atr": 0.008123571428571452,
+        "atr_multiplier_sl": 1.0,
+        "atr_multiplier_tp": 2.536424007829255,
+        "timestamp": "2025-11-01T12:16:12.494714",
+        "model": "Alpha Momentum",
+        "trailing_active": false
+      },
+      "GBP/USD": {
+        "direction": "BUY",
+        "strength": 1.528293534922563,
+        "score_1_100": 85,
+        "last_price": 1.315,
+        "SL": 1.3025314285714285,
+        "TP": 1.3466255839147623,
+        "high_confidence": true,
+        "atr": 0.0124685714285714,
+        "atr_multiplier_sl": 1.0,
+        "atr_multiplier_tp": 2.536424007829255,
+        "timestamp": "2025-11-01T12:16:14.422919",
+        "model": "Alpha Momentum",
+        "trailing_active": false
+      },
+      "USD/JPY": {
+        "direction": "SELL",
+        "strength": -2.8225495038476365,
+        "score_1_100": 78,
+        "last_price": 154.03,
+        "SL": 156.03364285714287,
+        "TP": 148.94791215402725,
+        "high_confidence": true,
+        "atr": 2.0036428571428604,
+        "atr_multiplier_sl": 1.0,
+        "atr_multiplier_tp": 2.536424007829255,
+        "timestamp": "2025-11-01T12:16:16.382230",
+        "model": "Alpha Momentum",
+        "trailing_active": false
+      },
+      "AUD/USD": {
+        "direction": "BUY",
+        "strength": 0.7533377609246832,
+        "score_1_100": 79,
+        "last_price": 0.654,
+        "SL": 0.6449314285714286,
+        "TP": 0.6770017422881431,
+        "high_confidence": true,
+        "atr": 0.00906857142857145,
+        "atr_multiplier_sl": 1.0,
+        "atr_multiplier_tp": 2.536424007829255,
+        "timestamp": "2025-11-01T12:16:18.631501",
+        "model": "Alpha Momentum",
+        "trailing_active": false
+      }
+    },
+    "Gamma Adaptive": {
+      "EUR/USD": {
+        "direction": "BUY",
+        "strength": 2.997849889296645,
+        "score_1_100": 81,
+        "last_price": 1.154,
+        "SL": 1.1458764285714285,
+        "TP": 1.1678151806814914,
+        "high_confidence": true,
+        "atr": 0.008123571428571452,
+        "atr_multiplier_sl": 1.0,
+        "atr_multiplier_tp": 1.7006289417117602,
+        "timestamp": "2025-11-01T12:16:21.038293",
+        "model": "Gamma Adaptive",
+        "trailing_active": false
+      },
+      "GBP/USD": {
+        "direction": "BUY",
+        "strength": 1.5319898891780457,
+        "score_1_100": 80,
+        "last_price": 1.315,
+        "SL": 1.3025314285714285,
+        "TP": 1.3362044134332287,
+        "high_confidence": true,
+        "atr": 0.0124685714285714,
+        "atr_multiplier_sl": 1.0,
+        "atr_multiplier_tp": 1.7006289417117602,
+        "timestamp": "2025-11-01T12:16:22.874567",
+        "model": "Gamma Adaptive",
+        "trailing_active": false
+      },
+      "USD/JPY": {
+        "direction": "SELL",
+        "strength": -3.5608917049139004,
+        "score_1_100": 87,
+        "last_price": 154.03,
+        "SL": 156.03364285714287,
+        "TP": 150.62254696828882,
+        "high_confidence": true,
+        "atr": 2.0036428571428604,
+        "atr_multiplier_sl": 1.0,
+        "atr_multiplier_tp": 1.7006289417117602,
+        "timestamp": "2025-11-01T12:16:24.418536",
+        "model": "Gamma Adaptive",
+        "trailing_active": false
+      },
+      "AUD/USD": {
+        "direction": "BUY",
+        "strength": 1.0044735095457686,
+        "score_1_100": 85,
+        "last_price": 0.654,
+        "SL": 0.6449314285714286,
+        "TP": 0.6694222750314089,
+        "high_confidence": true,
+        "atr": 0.00906857142857145,
+        "atr_multiplier_sl": 1.0,
+        "atr_multiplier_tp": 1.7006289417117602,
+        "timestamp": "2025-11-01T12:16:26.557082",
+        "model": "Gamma Adaptive",
+        "trailing_active": false
+      }
+    }
+  },
+  "ensemble_signals": {
     "EUR/USD": {
-      "direction": "SELL",
-      "strength": -0.494755875214025,
-      "score_1_100": 71,
-      "last_price": 1.154,
-      "SL": 1.1596714285714285,
-      "TP": 1.146916534964886,
-      "high_confidence": true,
-      "atr": 0.005671428571428597,
-      "atr_multiplier_sl": 1.0,
-      "atr_multiplier_tp": 1.2489736837732173,
-      "timestamp": "2025-11-01T11:37:09.732377"
+      "direction": "BUY",
+      "confidence": 83,
+      "consensus_strength": 100.0,
+      "models_used": 2
     },
     "GBP/USD": {
-      "direction": "SELL",
-      "strength": -0.5993938989408013,
-      "score_1_100": 81,
-      "last_price": 1.315,
-      "SL": 1.3233428571428572,
-      "TP": 1.304579990981092,
-      "high_confidence": true,
-      "atr": 0.00834285714285716,
-      "atr_multiplier_sl": 1.0,
-      "atr_multiplier_tp": 1.2489736837732173,
-      "timestamp": "2025-11-01T11:37:12.294203"
+      "direction": "BUY",
+      "confidence": 82,
+      "consensus_strength": 100.0,
+      "models_used": 2
     },
     "USD/JPY": {
-      "direction": "BUY",
-      "strength": 1.0537345094946822,
-      "score_1_100": 82,
-      "last_price": 154.02,
-      "SL": 152.88500000000002,
-      "TP": 155.4375851310826,
-      "high_confidence": true,
-      "atr": 1.1349999999999991,
-      "atr_multiplier_sl": 1.0,
-      "atr_multiplier_tp": 1.2489736837732173,
-      "timestamp": "2025-11-01T11:37:14.304147"
+      "direction": "SELL",
+      "confidence": 82,
+      "consensus_strength": 100.0,
+      "models_used": 2
     },
     "AUD/USD": {
-      "direction": "SELL",
-      "strength": -0.19813882784202122,
-      "score_1_100": 64,
-      "last_price": 0.654,
-      "SL": 0.6589571428571429,
-      "TP": 0.6478086590247243,
-      "high_confidence": false,
-      "atr": 0.004957142857142842,
-      "atr_multiplier_sl": 1.0,
-      "atr_multiplier_tp": 1.2489736837732173,
-      "timestamp": "2025-11-01T11:37:15.993312"
+      "direction": "BUY",
+      "confidence": 82,
+      "consensus_strength": 100.0,
+      "models_used": 2
     }
   }
 }

@@ -1,100 +1,99 @@
-name: Run Ultimate Forex AI v7.2
+name: Forex AI Pipeline v7.2 🧠💹
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - 'trigger.txt'
-      - 'merged_data_pickles/**'
-  schedule:
-    - cron: '0 * * * *'  # Every hour
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
-  run-forex-ai:
+  build-train-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 55
-    env:
-      FOREX_PAT: ${{ secrets.FOREX_PAT }}
-      BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}
-      ALPHA_VANTAGE_KEY: ${{ secrets.ALPHA_VANTAGE_KEY }}
-      GIT_USER_NAME: "Rahim AI Bot"
-      GIT_USER_EMAIL: "nakatonabira3@gmail.com"
-      GITHUB_USERNAME: "rahim-dotAI"
-      GITHUB_REPO: "forex-ai-models"
-      PYTHONIOENCODING: utf-8
+    timeout-minutes: 90
 
     steps:
-      # 1️⃣ Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      # 2️⃣ Check trigger source
-      - name: Identify trigger source
-        run: |
-          if [ -f "trigger.txt" ]; then
-            echo "🎯 Triggered by: Colab data upload"
-            cat trigger.txt
-          else
-            echo "🎯 Triggered by: Schedule or manual"
-          fi
-
-      # 3️⃣ Verify required secrets
-      - name: Check required secrets
-        run: |
-          if [ -z "${FOREX_PAT}" ]; then
-            echo "❌ FOREX_PAT secret is missing!"
-            exit 1
-          fi
-          if [ -z "${BROWSERLESS_TOKEN}" ]; then
-            echo "⚠️ BROWSERLESS_TOKEN secret is missing."
-          fi
-          echo "✅ Required secrets verified"
-
-      # 4️⃣ System update
-      - name: System update
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y sqlite3
-          echo "✅ System setup complete"
-
-      # 5️⃣ Set up Python 3.10 (compatible with all packages)
       - name: Set up Python 3.10
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
-          cache: 'pip'
+          python-version: 3.10
 
-      # 6️⃣ Install Python dependencies
-      - name: Install Python dependencies
+      - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip wheel setuptools
-          pip install \
-            numpy==1.24.3 \
-            pandas==2.0.3 \
-            scipy==1.11.1 \
-            scikit-learn==1.3.0 \
-            requests==2.31.0 \
-            joblib==1.3.2 \
-            python-dotenv==1.0.0 \
-            ta==0.11.0 \
-            yfinance==0.2.28 \
-            beautifulsoup4==4.12.2 \
-            jupyter \
-            nbconvert \
-            ipykernel
-          echo "✅ Dependencies installed"
+          python -m pip install --upgrade pip
+          pip install jupyter nbconvert pandas numpy matplotlib scikit-learn yfinance ta requests tensorflow joblib
 
-      # 7️⃣ Create directory structure
-      - name: Create directory structure
+      - name: Verify key files exist
         run: |
-          mkdir -p merged_data_pickles forex-ai-models csvs pickles logs
-          echo "✅ Directory structure created"
+          echo "🔍 Checking for required files..."
+          for f in "AI_Forex_Brain_2.ipynb" "forex_pairs.csv" ".github/workflows/forex-ai-v72.yml"; do
+            if [ ! -f "$f" ]; then
+              echo "❌ Missing file: $f"
+              exit 1
+            else
+              echo "✅ Found: $f"
+            fi
+          done
 
-      # 8️⃣ Verify Jupyter notebook exists
+      - name: Display repo structure
+        run: |
+          echo "📂 Repository structure:"
+          ls -R | head -n 50
+
+      - name: Convert notebook to Python script
+        run: |
+          jupyter nbconvert --to script AI_Forex_Brain_2.ipynb
+          echo "✅ Notebook successfully converted to .py file"
+          ls -la AI_Forex_Brain_2.py
+
+      - name: Check Python syntax
+        run: |
+          python3 -m py_compile AI_Forex_Brain_2.py
+          echo "✅ Python syntax check passed"
+
+      - name: Run Forex AI Training Pipeline
+        run: |
+          echo "🚀 Starting Forex AI Training Pipeline..."
+          python3 AI_Forex_Brain_2.py || exit 1
+          echo "✅ Training completed successfully!"
+
+      - name: Save trained models and outputs
+        run: |
+          mkdir -p output
+          cp -r *.pkl *.csv *.png *.json 2>/dev/null || true
+          mv *.pkl *.csv *.png *.json output/ 2>/dev/null || true
+          echo "📦 Contents of output folder:"
+          ls -la output || echo "⚠️ No output generated."
+
+      - name: Upload output artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: forex-ai-v72-output
+          path: output/
+
+      - name: Run post-training analysis
+        run: |
+          echo "📈 Running basic model performance analysis..."
+          python3 - <<'EOF'
+import os, glob, pandas as pd
+print("🧮 Scanning for model files...")
+pkl_files = glob.glob("output/*.pkl")
+if not pkl_files:
+    print("⚠️ No .pkl models found in output/")
+else:
+    print("✅ Found", len(pkl_files), "trained model(s).")
+csv_files = glob.glob("output/*.csv")
+if csv_files:
+    print("📊 CSV result files detected:")
+    for f in csv_files:
+        print("-", f, "(", len(open(f).readlines()), "lines )")
+else:
+    print("⚠️ No CSV outputs detected.")
+EOF
+
       - name: Check for Jupyter notebook
         run: |
           if [ ! -f "AI_Forex_Brain_2.ipynb" ]; then
@@ -105,229 +104,21 @@ jobs:
           fi
           echo "✅ Jupyter notebook found"
 
-          # Validate notebook JSON safely
-          if ! python3 -c "import json; json.load(open('AI_Forex_Brain_2.ipynb'))" >/dev/null 2>&1; then
-            echo "❌ Notebook JSON is corrupted!"
-            exit 1
-          else
-            echo "✅ Notebook JSON is valid"
-          fi
-
-      # 9️⃣ Verify data pickles exist
-      - name: Check for data pickles
-        run: |
-          echo "📦 Checking for pickle files..."
-          PICKLE_COUNT=$(find merged_data_pickles -name "*_2244.pkl" 2>/dev/null | wc -l)
-          echo "Found $PICKLE_COUNT pickle files"
-          if [ "$PICKLE_COUNT" -eq 0 ]; then
-            echo "⚠️ WARNING: No pickle files found!"
-            echo "The script may need to generate data first."
-          else
-            echo "✅ Data pickles available:"
-            ls -lh merged_data_pickles/*_2244.pkl 2>/dev/null | head -10
-          fi
-
-      # 🔟 Restore cached state files
-      - name: Restore cached AI state
-        uses: actions/cache@v3
-        with:
-          path: |
-            forex-ai-models/*.pkl
-            forex-ai-models/*.db
-            forex-ai-models/*.json
-          key: forex-ai-state-${{ github.sha }}
-          restore-keys: |
-            forex-ai-state-
-
-      # 1️⃣1️⃣ Execute Forex AI Jupyter Notebook
-      - name: Execute Forex AI v7.3 Notebook
-        timeout-minutes: 50
-        run: |
-          echo "🚀 Starting Ultimate Hybrid Forex Pipeline v7.3..."
-          echo "📅 Current Day: $(date +%A)"
-          echo "🕐 Current Time: $(date '+%Y-%m-%d %H:%M:%S')"
-
-          jupyter nbconvert --to notebook --execute AI_Forex_Brain_2.ipynb \
-            --ExecutePreprocessor.timeout=3000 \
-            --output AI_Forex_Brain_2_executed.ipynb \
-            --stdout 2>&1 | tee execution.log || {
-            echo "❌ Notebook execution failed"
-            echo "Last 100 lines of output:"
-            tail -100 execution.log
-            if [ -f "AI_Forex_Brain_2_executed.ipynb" ]; then
-              echo "Checking executed notebook for errors..."
-              python3 - <<'EOF'
-import json
+          # Validate notebook JSON safely (YAML-compliant)
+          python3 - <<'EOF'
+import json, sys
 try:
-    with open('AI_Forex_Brain_2_executed.ipynb', 'r') as f:
-        nb = json.load(f)
-    for cell in nb.get('cells', []):
-        for output in cell.get('outputs', []):
-            if output.get('output_type') == 'error':
-                print('Error found:', output.get('ename'), output.get('evalue'))
-                print('Traceback:', '\n'.join(output.get('traceback', [])))
+    json.load(open("AI_Forex_Brain_2.ipynb"))
+    print("✅ Notebook JSON is valid")
 except Exception as e:
-    print(f'Could not parse notebook: {e}')
+    print("❌ Notebook JSON is corrupted!", e)
+    sys.exit(1)
 EOF
-            fi
-            exit 1
-          }
 
-          echo "✅ Notebook execution completed successfully"
-
-      # 1️⃣2️⃣ Check generated outputs
-      - name: Verify outputs
+      - name: Display completion summary
         run: |
-          echo "📊 Checking generated files..."
-
-          if [ -d "forex-ai-models" ]; then
-            echo "✅ forex-ai-models directory exists"
-            ls -lh forex-ai-models/ || echo "Directory is empty"
-          fi
-
-          if [ -f "forex-ai-models/broker_signals.json" ]; then
-            echo "✅ Broker signals generated"
-            head -20 forex-ai-models/broker_signals.json
-          fi
-
-          if [ -f "forex-ai-models/latest_signals.json" ]; then
-            echo "✅ Latest signals generated"
-            head -20 forex-ai-models/latest_signals.json
-          fi
-
-          if [ -f "forex-ai-models/infinite_memory.db" ]; then
-            echo "✅ Memory database exists"
-            sqlite3 forex-ai-models/infinite_memory.db "SELECT COUNT(*) as total_signals FROM signals_history;" 2>/dev/null || echo "No records yet"
-          fi
-
-          if [ -f "forex_pipeline.log" ]; then
-            echo "✅ Pipeline log exists"
-            echo "Last 30 lines:"
-            tail -30 forex_pipeline.log
-          fi
-
-      # 1️⃣3️⃣ Upload execution logs
-      - name: Upload logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: forex-ai-logs-${{ github.run_number }}
-          path: |
-            forex_pipeline.log
-            execution.log
-            AI_Forex_Brain_2_executed.ipynb
-            forex-ai-models/*.json
-            forex-ai-models/*.csv
-            logs/*.log
-          retention-days: 7
-          if-no-files-found: warn
-
-      # 1️⃣4️⃣ Upload AI state files
-      - name: Upload AI state
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: forex-ai-state-${{ github.run_number }}
-          path: |
-            forex-ai-models/*.pkl
-            forex-ai-models/*.db
-          retention-days: 30
-          if-no-files-found: warn
-
-      # 1️⃣5️⃣ Update trigger file
-      - name: Update trigger file
-        if: success()
-        run: |
-          echo "📝 Updating trigger file with completion status..."
-          {
-            echo "Last successful run: $(date '+%Y-%m-%d %H:%M:%S')"
-            echo "Status: ✅ Completed"
-            echo "Iteration: ${{ github.run_number }}"
-            echo "Day: $(date +%A)"
-          } > trigger.txt
-          cat trigger.txt
-
-      # 1️⃣6️⃣ Commit and push all changes
-      - name: Commit and push changes
-        if: success()
-        env:
-          GIT_AUTH_TOKEN: ${{ secrets.FOREX_PAT }}
-        run: |
-          echo "🪣 Preparing to commit changes..."
-          git config user.name "${GIT_USER_NAME}"
-          git config user.email "${GIT_USER_EMAIL}"
-
-          git add trigger.txt forex-ai-models/*.json forex-ai-models/*.pkl forex-ai-models/*.csv forex-ai-models/*.db forex_pipeline.log logs/ || true
-
-          if git diff --staged --quiet; then
-            echo "⏭️ No changes to commit"
-          else
-            echo "📝 Committing changes..."
-            TRIGGER_SOURCE="Schedule"
-            if [ -f "trigger.txt" ]; then
-              TRIGGER_SOURCE="Colab Upload"
-            fi
-            git commit -m "🤖 v7.3 Auto-update [$TRIGGER_SOURCE]: $(date '+%Y-%m-%d %H:%M:%S')"
-            git remote set-url origin https://x-access-token:${GIT_AUTH_TOKEN}@github.com/${{ github.repository }}.git
-            git push origin main && echo "✅ Changes pushed successfully" || echo "⚠️ Push failed"
-          fi
-
-      # 1️⃣7️⃣ Generate execution summary
-      - name: Generate summary
-        if: always()
-        run: |
-          echo "# 🏆 Forex AI v7.3 Execution Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Run #:** ${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Time:** $(date '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_STEP_SUMMARY
-          echo "**Day:** $(date +%A)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          if [ -f "trigger.txt" ]; then
-            echo "## 🎯 Trigger Info" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            cat trigger.txt >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-          fi
-
-          if [ -f "forex-ai-models/broker_signals.json" ]; then
-            echo "## 📊 Latest Broker Signals" >> $GITHUB_STEP_SUMMARY
-            echo '```json' >> $GITHUB_STEP_SUMMARY
-            head -50 forex-ai-models/broker_signals.json >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-          fi
-
-          if [ -f "forex-ai-models/latest_signals.json" ]; then
-            echo "## 📡 Latest Signals" >> $GITHUB_STEP_SUMMARY
-            echo '```json' >> $GITHUB_STEP_SUMMARY
-            head -50 forex-ai-models/latest_signals.json >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-          fi
-
-          if [ -f "forex_pipeline.log" ]; then
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "## 📝 Recent Log Entries" >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            tail -30 forex_pipeline.log >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-          fi
-
-      # 1️⃣8️⃣ Cleanup on failure
-      - name: Cleanup on failure
-        if: failure()
-        run: |
-          echo "❌ Job failed, cleaning up..."
-          {
-            echo "Last run: $(date '+%Y-%m-%d %H:%M:%S')"
-            echo "Status: ❌ Failed"
-            echo "Day: $(date +%A)"
-          } > trigger.txt
-
-          git config user.name "${GIT_USER_NAME}"
-          git config user.email "${GIT_USER_EMAIL}"
-          git add trigger.txt
-          git commit -m "❌ v7.3 Run failed: $(date '+%Y-%m-%d %H:%M:%S')" || true
-          git remote set-url origin https://x-access-token:${FOREX_PAT}@github.com/${{ github.repository }}.git
-          git push origin main || true
+          echo "🎯 Forex AI Pipeline v7.2 completed successfully!"
+          echo "Timestamp: $(date)"
+          echo "Runner: ${{ runner.name }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Repository: ${{ github.repository }}"

@@ -75,52 +75,12 @@ jobs:
           path: output/
 
       - name: Run post-training analysis
-        shell: bash
         run: |
-          echo "Running basic model performance analysis..."
-python3 - <<EOF
-import os, glob
+          python3 scripts/post_analysis.py
 
-print("[SCAN] Checking for model files...")
-pkl_files = glob.glob("output/*.pkl")
-if pkl_files:
-    print("[OK] Found", len(pkl_files), "trained model(s).")
-else:
-    print("[WARN] No .pkl models found in output/")
-
-csv_files = glob.glob("output/*.csv")
-if csv_files:
-    print("[INFO] CSV result files detected:")
-    for f in csv_files:
-        try:
-            lines = len(open(f).readlines())
-            print("-", f, f"({lines} lines)")
-        except Exception as e:
-            print("Error reading", f, ":", e)
-else:
-    print("[WARN] No CSV outputs detected.")
-EOF
-
-      - name: Check for Jupyter notebook
-        shell: bash
+      - name: Check notebook JSON
         run: |
-          if [ ! -f "AI_Forex_Brain_2.ipynb" ]; then
-            echo "AI_Forex_Brain_2.ipynb not found!"
-            echo "Available files:"
-            ls -la *.ipynb 2>/dev/null || echo "No .ipynb files found"
-            exit 1
-          fi
-          echo "Jupyter notebook found"
-
-python3 - <<EOF
-import json, sys
-try:
-    json.load(open("AI_Forex_Brain_2.ipynb"))
-    print("[OK] Notebook JSON is valid")
-except Exception as e:
-    print("[ERROR] Notebook JSON is corrupted!", e)
-    sys.exit(1)
-EOF
+          python3 scripts/check_notebook.py
 
       - name: Display completion summary
         run: |

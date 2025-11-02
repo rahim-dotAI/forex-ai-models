@@ -1,4 +1,4 @@
-name: Forex AI Pipeline v7.2
+name: Forex AI Pipeline v72
 
 on:
   push:
@@ -28,7 +28,7 @@ jobs:
 
       - name: Verify key files exist
         run: |
-          echo Checking for required files...
+          echo "Checking for required files..."
           for f in AI_Forex_Brain_2.ipynb forex_pairs.csv .github/workflows/forex-ai-v72.yml; do
             if [ ! -f "$f" ]; then
               echo "Missing file: $f"
@@ -75,10 +75,11 @@ jobs:
           path: output/
 
       - name: Run post-training analysis
+        shell: bash
         run: |
           echo "Running basic model performance analysis..."
-          python3 - <<'EOF'
-import os, glob 
+python3 - <<EOF
+import os, glob
 
 print("[SCAN] Checking for model files...")
 pkl_files = glob.glob("output/*.pkl")
@@ -101,6 +102,7 @@ else:
 EOF
 
       - name: Check for Jupyter notebook
+        shell: bash
         run: |
           if [ ! -f "AI_Forex_Brain_2.ipynb" ]; then
             echo "AI_Forex_Brain_2.ipynb not found!"
@@ -110,8 +112,7 @@ EOF
           fi
           echo "Jupyter notebook found"
 
-          # Validate notebook JSON safely (YAML-compliant)
-          python3 - <<'EOF'
+python3 - <<EOF
 import json, sys
 try:
     json.load(open("AI_Forex_Brain_2.ipynb"))

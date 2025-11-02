@@ -148,26 +148,24 @@ jobs:
           echo "📓 Validating notebook format..."
           python3 -c "import json; json.load(open('AI_Forex_Brain_2.ipynb'))" || {
             echo "❌ Notebook is not valid JSON. Attempting to fix..."
-            # Try to fix common JSON issues
-            python3 << 'PYEOF'
+            python3 -c '
 import json
 import sys
 
 try:
-    with open('AI_Forex_Brain_2.ipynb', 'r', encoding='utf-8') as f:
+    with open("AI_Forex_Brain_2.ipynb", "r", encoding="utf-8") as f:
         content = f.read()
     
-    # Try to parse and re-save with proper formatting
     nb = json.loads(content)
     
-    with open('AI_Forex_Brain_2.ipynb', 'w', encoding='utf-8') as f:
+    with open("AI_Forex_Brain_2.ipynb", "w", encoding="utf-8") as f:
         json.dump(nb, f, indent=1, ensure_ascii=False)
     
     print("✅ Notebook JSON fixed and reformatted")
 except Exception as e:
     print(f"❌ Cannot fix notebook: {e}")
     sys.exit(1)
-PYEOF
+'
           }
           
           # Convert and run the Jupyter notebook

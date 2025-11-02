@@ -74,13 +74,12 @@ jobs:
       # 5️⃣ Create working directories (including Colab-style paths)
       - name: Create working directories
         run: |
-          # Create standard working directories
-          mkdir -p /home/runner/work/forex-ai-models
-          mkdir -p forex-alpha-models/csvs
-          mkdir -p forex-alpha-models/pickles
-          mkdir -p forex-alpha-models/logs
-          mkdir -p forex-alpha-models/merged_data_pickles
-          mkdir -p forex-alpha-models/temp_pickles
+          # Create standard working directories in current location
+          mkdir -p /home/runner/work/forex-ai-models/forex-alpha-models/csvs
+          mkdir -p /home/runner/work/forex-ai-models/forex-alpha-models/pickles
+          mkdir -p /home/runner/work/forex-ai-models/forex-alpha-models/logs
+          mkdir -p /home/runner/work/forex-ai-models/forex-alpha-models/merged_data_pickles
+          mkdir -p /home/runner/work/forex-ai-models/forex-alpha-models/temp_pickles
           
           # Create /content directory structure for Colab compatibility
           sudo mkdir -p /content/forex-automation
@@ -95,7 +94,11 @@ jobs:
           sudo chown -R $USER:$USER /content
           sudo chmod -R 755 /content
           
-          echo "✅ Working directories created (including Colab paths)"
+          # Create symlink from working directory to /content
+          cd /home/runner/work/forex-ai-models
+          ln -sf /content/forex-alpha-models forex-alpha-models 2>/dev/null || true
+          
+          echo "✅ Working directories created (including Colab paths and symlinks)"
 
       # 6️⃣ Configure Git globally
       - name: Configure Git

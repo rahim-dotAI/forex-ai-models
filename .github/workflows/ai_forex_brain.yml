@@ -123,6 +123,9 @@ jobs:
           # Remove any remaining IPython magic commands
           sed -i '/^get_ipython/d' ai_forex_brain_2.py
           
+          # Patch the script to create directories with parents=True safely
+          sed -i 's/folder\.mkdir(exist_ok=True)/folder.mkdir(parents=True, exist_ok=True)/g' ai_forex_brain_2.py
+          
           echo "✅ Notebook converted and cleaned successfully"
 
       # 8️⃣ Execute AI Forex Brain Python Script
@@ -136,6 +139,7 @@ jobs:
           mkdir -p /home/runner/work/forex-ai-models/forex-alpha-models/{csvs,pickles,logs,merged_data_pickles,temp_pickles}
           mkdir -p /home/runner/work/forex-ai-models/forex-ai-models/forex-alpha-models/{csvs,pickles,logs,merged_data_pickles,temp_pickles}
           mkdir -p /content/forex-alpha-models/{csvs,pickles,logs,merged_data_pickles,temp_pickles}
+          mkdir -p /content/forex-automation/forex-ai-models/forex-alpha-models/{csvs,pickles,logs,merged_data_pickles,temp_pickles}
           
           # Create symlinks in both locations
           cd /home/runner/work/forex-ai-models
@@ -150,7 +154,15 @@ jobs:
             ln -sf /content/forex-alpha-models forex-alpha-models
           fi
           
+          # Also create in /content/forex-automation location (where script changes to)
+          cd /content/forex-automation/forex-ai-models
+          if [ ! -L "forex-alpha-models" ]; then
+            rm -rf forex-alpha-models 2>/dev/null || true
+            ln -sf /content/forex-alpha-models forex-alpha-models
+          fi
+          
           # Run the pipeline from the repo directory
+          cd /home/runner/work/forex-ai-models/forex-ai-models
           python ai_forex_brain_2.py
         continue-on-error: false
         timeout-minutes: 120

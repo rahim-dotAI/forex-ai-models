@@ -69,13 +69,11 @@ jobs:
           fi
           echo "✅ Required secrets verified"
 
-      # 3️⃣ System update & Git LFS setup
-      - name: System update & Git LFS setup
+      # 3️⃣ System update
+      - name: System update
         run: |
           sudo apt-get update -qq || echo "⚠️ Could not update apt, skipping"
-          sudo apt-get install -y git-lfs sqlite3 || echo "⚠️ Package install warnings"
-          git lfs install || echo "⚠️ Git LFS already initialized"
-          git lfs track "*.csv" "*.pkl" "*.db" || echo "✅ Already tracked"
+          sudo apt-get install -y sqlite3 || echo "⚠️ Package install warnings"
           echo "✅ System setup complete"
 
       # 4️⃣ Set up Python 3.11

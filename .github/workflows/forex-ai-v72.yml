@@ -147,25 +147,9 @@ jobs:
           
           echo "📓 Validating notebook format..."
           python3 -c "import json; json.load(open('AI_Forex_Brain_2.ipynb'))" || {
-            echo "❌ Notebook is not valid JSON. Attempting to fix..."
-            python3 -c '
-import json
-import sys
-
-try:
-    with open("AI_Forex_Brain_2.ipynb", "r", encoding="utf-8") as f:
-        content = f.read()
-    
-    nb = json.loads(content)
-    
-    with open("AI_Forex_Brain_2.ipynb", "w", encoding="utf-8") as f:
-        json.dump(nb, f, indent=1, ensure_ascii=False)
-    
-    print("✅ Notebook JSON fixed and reformatted")
-except Exception as e:
-    print(f"❌ Cannot fix notebook: {e}")
-    sys.exit(1)
-'
+            echo "❌ Notebook is not valid JSON"
+            echo "Please re-download notebook from Colab and re-upload"
+            exit 1
           }
           
           # Convert and run the Jupyter notebook

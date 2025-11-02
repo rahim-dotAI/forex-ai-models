@@ -131,6 +131,20 @@ jobs:
           GITHUB_ACTIONS: "true"
         run: |
           echo "🚀 Starting AI Forex Brain Pipeline..."
+          
+          # Ensure all required directories exist in all possible locations
+          mkdir -p /home/runner/work/forex-ai-models/forex-alpha-models/{csvs,pickles,logs,merged_data_pickles,temp_pickles}
+          mkdir -p /content/forex-alpha-models/{csvs,pickles,logs,merged_data_pickles,temp_pickles}
+          mkdir -p forex-alpha-models/{csvs,pickles,logs,merged_data_pickles,temp_pickles}
+          
+          # Create symlinks if they don't exist
+          cd /home/runner/work/forex-ai-models
+          if [ ! -L "forex-alpha-models" ]; then
+            rm -rf forex-alpha-models 2>/dev/null || true
+            ln -sf /content/forex-alpha-models forex-alpha-models
+          fi
+          
+          # Run the pipeline
           python ai_forex_brain_2.py
         continue-on-error: false
         timeout-minutes: 120

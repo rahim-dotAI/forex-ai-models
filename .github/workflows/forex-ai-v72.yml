@@ -1,4 +1,4 @@
-name: Forex AI Pipeline v7.2 🧠💹
+name: Forex AI Pipeline v7.2
 
 on:
   push:
@@ -19,7 +19,7 @@ jobs:
       - name: Set up Python 3.10
         uses: actions/setup-python@v5
         with:
-          python-version: 3.10
+          python-version: '3.10'
 
       - name: Install dependencies
         run: |
@@ -28,45 +28,45 @@ jobs:
 
       - name: Verify key files exist
         run: |
-          echo "🔍 Checking for required files..."
-          for f in "AI_Forex_Brain_2.ipynb" "forex_pairs.csv" ".github/workflows/forex-ai-v72.yml"; do
+          echo Checking for required files...
+          for f in AI_Forex_Brain_2.ipynb forex_pairs.csv .github/workflows/forex-ai-v72.yml; do
             if [ ! -f "$f" ]; then
-              echo "❌ Missing file: $f"
+              echo "Missing file: $f"
               exit 1
             else
-              echo "✅ Found: $f"
+              echo "Found: $f"
             fi
           done
 
       - name: Display repo structure
         run: |
-          echo "📂 Repository structure:"
+          echo "Repository structure:"
           ls -R | head -n 50
 
       - name: Convert notebook to Python script
         run: |
           jupyter nbconvert --to script AI_Forex_Brain_2.ipynb
-          echo "✅ Notebook successfully converted to .py file"
+          echo "Notebook successfully converted to .py file"
           ls -la AI_Forex_Brain_2.py
 
       - name: Check Python syntax
         run: |
           python3 -m py_compile AI_Forex_Brain_2.py
-          echo "✅ Python syntax check passed"
+          echo "Python syntax check passed"
 
       - name: Run Forex AI Training Pipeline
         run: |
-          echo "🚀 Starting Forex AI Training Pipeline..."
+          echo "Starting Forex AI Training Pipeline..."
           python3 AI_Forex_Brain_2.py || exit 1
-          echo "✅ Training completed successfully!"
+          echo "Training completed successfully!"
 
       - name: Save trained models and outputs
         run: |
           mkdir -p output
           cp -r *.pkl *.csv *.png *.json 2>/dev/null || true
           mv *.pkl *.csv *.png *.json output/ 2>/dev/null || true
-          echo "📦 Contents of output folder:"
-          ls -la output || echo "⚠️ No output generated."
+          echo "Contents of output folder:"
+          ls -la output || echo "No output generated."
 
       - name: Upload output artifacts
         uses: actions/upload-artifact@v4
@@ -76,48 +76,54 @@ jobs:
 
       - name: Run post-training analysis
         run: |
-          echo "📈 Running basic model performance analysis..."
+          echo "Running basic model performance analysis..."
           python3 - <<'EOF'
-import os, glob, pandas as pd
-print("🧮 Scanning for model files...")
+import os, glob 
+
+print("[SCAN] Checking for model files...")
 pkl_files = glob.glob("output/*.pkl")
-if not pkl_files:
-    print("⚠️ No .pkl models found in output/")
+if pkl_files:
+    print("[OK] Found", len(pkl_files), "trained model(s).")
 else:
-    print("✅ Found", len(pkl_files), "trained model(s).")
+    print("[WARN] No .pkl models found in output/")
+
 csv_files = glob.glob("output/*.csv")
 if csv_files:
-    print("📊 CSV result files detected:")
+    print("[INFO] CSV result files detected:")
     for f in csv_files:
-        print("-", f, "(", len(open(f).readlines()), "lines )")
+        try:
+            lines = len(open(f).readlines())
+            print("-", f, f"({lines} lines)")
+        except Exception as e:
+            print("Error reading", f, ":", e)
 else:
-    print("⚠️ No CSV outputs detected.")
+    print("[WARN] No CSV outputs detected.")
 EOF
 
       - name: Check for Jupyter notebook
         run: |
           if [ ! -f "AI_Forex_Brain_2.ipynb" ]; then
-            echo "❌ AI_Forex_Brain_2.ipynb not found!"
+            echo "AI_Forex_Brain_2.ipynb not found!"
             echo "Available files:"
             ls -la *.ipynb 2>/dev/null || echo "No .ipynb files found"
             exit 1
           fi
-          echo "✅ Jupyter notebook found"
+          echo "Jupyter notebook found"
 
           # Validate notebook JSON safely (YAML-compliant)
           python3 - <<'EOF'
 import json, sys
 try:
     json.load(open("AI_Forex_Brain_2.ipynb"))
-    print("✅ Notebook JSON is valid")
+    print("[OK] Notebook JSON is valid")
 except Exception as e:
-    print("❌ Notebook JSON is corrupted!", e)
+    print("[ERROR] Notebook JSON is corrupted!", e)
     sys.exit(1)
 EOF
 
       - name: Display completion summary
         run: |
-          echo "🎯 Forex AI Pipeline v7.2 completed successfully!"
+          echo "Forex AI Pipeline v7.2 completed successfully!"
           echo "Timestamp: $(date)"
           echo "Runner: ${{ runner.name }}"
           echo "Branch: ${{ github.ref_name }}"

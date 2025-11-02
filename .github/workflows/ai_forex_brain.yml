@@ -134,20 +134,23 @@ jobs:
           
           # Ensure all required directories exist in all possible locations
           mkdir -p /home/runner/work/forex-ai-models/forex-alpha-models/{csvs,pickles,logs,merged_data_pickles,temp_pickles}
+          mkdir -p /home/runner/work/forex-ai-models/forex-ai-models/forex-alpha-models/{csvs,pickles,logs,merged_data_pickles,temp_pickles}
           mkdir -p /content/forex-alpha-models/{csvs,pickles,logs,merged_data_pickles,temp_pickles}
-          mkdir -p forex-alpha-models/{csvs,pickles,logs,merged_data_pickles,temp_pickles}
           
-          # Create symlinks if they don't exist
+          # Create symlinks in both locations
           cd /home/runner/work/forex-ai-models
           if [ ! -L "forex-alpha-models" ]; then
             rm -rf forex-alpha-models 2>/dev/null || true
             ln -sf /content/forex-alpha-models forex-alpha-models
           fi
           
-          # Change to repo directory where the script is located
-          cd forex-ai-models
+          cd /home/runner/work/forex-ai-models/forex-ai-models
+          if [ ! -L "forex-alpha-models" ]; then
+            rm -rf forex-alpha-models 2>/dev/null || true
+            ln -sf /content/forex-alpha-models forex-alpha-models
+          fi
           
-          # Run the pipeline
+          # Run the pipeline from the repo directory
           python ai_forex_brain_2.py
         continue-on-error: false
         timeout-minutes: 120

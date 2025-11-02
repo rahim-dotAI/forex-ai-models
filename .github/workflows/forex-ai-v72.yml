@@ -91,11 +91,7 @@ jobs:
       # 7️⃣ Create directory structure
       - name: Create directory structure
         run: |
-          mkdir -p merged_data_pickles
-          mkdir -p forex-ai-models
-          mkdir -p csvs
-          mkdir -p pickles
-          mkdir -p logs
+          mkdir -p merged_data_pickles forex-ai-models csvs pickles logs
           echo "✅ Directory structure created"
 
       # 8️⃣ Verify Jupyter notebook exists
@@ -108,12 +104,14 @@ jobs:
             exit 1
           fi
           echo "✅ Jupyter notebook found"
-          
-          # Validate notebook JSON
-          python3 -c "import json; json.load(open('AI_Forex_Brain_2.ipynb'))" && echo "✅ Notebook JSON is valid" || {
+
+          # Validate notebook JSON safely
+          if ! python3 -c "import json; json.load(open('AI_Forex_Brain_2.ipynb'))" >/dev/null 2>&1; then
             echo "❌ Notebook JSON is corrupted!"
             exit 1
-          }
+          else
+            echo "✅ Notebook JSON is valid"
+          fi
 
       # 9️⃣ Verify data pickles exist
       - name: Check for data pickles
@@ -121,7 +119,6 @@ jobs:
           echo "📦 Checking for pickle files..."
           PICKLE_COUNT=$(find merged_data_pickles -name "*_2244.pkl" 2>/dev/null | wc -l)
           echo "Found $PICKLE_COUNT pickle files"
-          
           if [ "$PICKLE_COUNT" -eq 0 ]; then
             echo "⚠️ WARNING: No pickle files found!"
             echo "The script may need to generate data first."
@@ -149,8 +146,7 @@ jobs:
           echo "🚀 Starting Ultimate Hybrid Forex Pipeline v7.3..."
           echo "📅 Current Day: $(date +%A)"
           echo "🕐 Current Time: $(date '+%Y-%m-%d %H:%M:%S')"
-          
-          # Execute the Jupyter notebook
+
           jupyter nbconvert --to notebook --execute AI_Forex_Brain_2.ipynb \
             --ExecutePreprocessor.timeout=3000 \
             --output AI_Forex_Brain_2_executed.ipynb \
@@ -158,13 +154,10 @@ jobs:
             echo "❌ Notebook execution failed"
             echo "Last 100 lines of output:"
             tail -100 execution.log
-            
-            # Try to show error from executed notebook if it exists
             if [ -f "AI_Forex_Brain_2_executed.ipynb" ]; then
               echo "Checking executed notebook for errors..."
-              python3 -c "
+              python3 - <<'EOF'
 import json
-import sys
 try:
     with open('AI_Forex_Brain_2_executed.ipynb', 'r') as f:
         nb = json.load(f)
@@ -172,41 +165,41 @@ try:
         for output in cell.get('outputs', []):
             if output.get('output_type') == 'error':
                 print('Error found:', output.get('ename'), output.get('evalue'))
-                print('Traceback:', '\\n'.join(output.get('traceback', [])))
+                print('Traceback:', '\n'.join(output.get('traceback', [])))
 except Exception as e:
     print(f'Could not parse notebook: {e}')
-" || true
+EOF
             fi
             exit 1
           }
-          
+
           echo "✅ Notebook execution completed successfully"
 
       # 1️⃣2️⃣ Check generated outputs
       - name: Verify outputs
         run: |
           echo "📊 Checking generated files..."
-          
+
           if [ -d "forex-ai-models" ]; then
             echo "✅ forex-ai-models directory exists"
             ls -lh forex-ai-models/ || echo "Directory is empty"
           fi
-          
+
           if [ -f "forex-ai-models/broker_signals.json" ]; then
             echo "✅ Broker signals generated"
             head -20 forex-ai-models/broker_signals.json
           fi
-          
+
           if [ -f "forex-ai-models/latest_signals.json" ]; then
             echo "✅ Latest signals generated"
             head -20 forex-ai-models/latest_signals.json
           fi
-          
+
           if [ -f "forex-ai-models/infinite_memory.db" ]; then
             echo "✅ Memory database exists"
             sqlite3 forex-ai-models/infinite_memory.db "SELECT COUNT(*) as total_signals FROM signals_history;" 2>/dev/null || echo "No records yet"
           fi
-          
+
           if [ -f "forex_pipeline.log" ]; then
             echo "✅ Pipeline log exists"
             echo "Last 30 lines:"
@@ -246,10 +239,12 @@ except Exception as e:
         if: success()
         run: |
           echo "📝 Updating trigger file with completion status..."
-          echo "Last successful run: $(date '+%Y-%m-%d %H:%M:%S')" > trigger.txt
-          echo "Status: ✅ Completed" >> trigger.txt
-          echo "Iteration: ${{ github.run_number }}" >> trigger.txt
-          echo "Day: $(date +%A)" >> trigger.txt
+          {
+            echo "Last successful run: $(date '+%Y-%m-%d %H:%M:%S')"
+            echo "Status: ✅ Completed"
+            echo "Iteration: ${{ github.run_number }}"
+            echo "Day: $(date +%A)"
+          } > trigger.txt
           cat trigger.txt
 
       # 1️⃣6️⃣ Commit and push all changes
@@ -261,17 +256,9 @@ except Exception as e:
           echo "🪣 Preparing to commit changes..."
           git config user.name "${GIT_USER_NAME}"
           git config user.email "${GIT_USER_EMAIL}"
-          
-          # Add all relevant files
-          git add trigger.txt || echo "No trigger file"
-          git add forex-ai-models/*.json || echo "No JSON files"
-          git add forex-ai-models/*.pkl || echo "No PKL files"
-          git add forex-ai-models/*.csv || echo "No CSV files"
-          git add forex-ai-models/*.db || echo "No DB files"
-          git add forex_pipeline.log || echo "No log file"
-          git add logs/ || echo "No logs folder"
-          
-          # Check if there are changes
+
+          git add trigger.txt forex-ai-models/*.json forex-ai-models/*.pkl forex-ai-models/*.csv forex-ai-models/*.db forex_pipeline.log logs/ || true
+
           if git diff --staged --quiet; then
             echo "⏭️ No changes to commit"
           else
@@ -281,8 +268,6 @@ except Exception as e:
               TRIGGER_SOURCE="Colab Upload"
             fi
             git commit -m "🤖 v7.3 Auto-update [$TRIGGER_SOURCE]: $(date '+%Y-%m-%d %H:%M:%S')"
-            
-            # Push with authentication
             git remote set-url origin https://x-access-token:${GIT_AUTH_TOKEN}@github.com/${{ github.repository }}.git
             git push origin main && echo "✅ Changes pushed successfully" || echo "⚠️ Push failed"
           fi
@@ -298,35 +283,35 @@ except Exception as e:
           echo "**Time:** $(date '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_STEP_SUMMARY
           echo "**Day:** $(date +%A)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ -f "trigger.txt" ]; then
             echo "## 🎯 Trigger Info" >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
             cat trigger.txt >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           if [ -f "forex-ai-models/broker_signals.json" ]; then
             echo "## 📊 Latest Broker Signals" >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`json" >> $GITHUB_STEP_SUMMARY
+            echo '```json' >> $GITHUB_STEP_SUMMARY
             head -50 forex-ai-models/broker_signals.json >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           if [ -f "forex-ai-models/latest_signals.json" ]; then
             echo "## 📡 Latest Signals" >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`json" >> $GITHUB_STEP_SUMMARY
+            echo '```json' >> $GITHUB_STEP_SUMMARY
             head -50 forex-ai-models/latest_signals.json >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
           fi
-          
+
           if [ -f "forex_pipeline.log" ]; then
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "## 📝 Recent Log Entries" >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
             tail -30 forex_pipeline.log >> $GITHUB_STEP_SUMMARY
-            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
           fi
 
       # 1️⃣8️⃣ Cleanup on failure
@@ -334,17 +319,15 @@ except Exception as e:
         if: failure()
         run: |
           echo "❌ Job failed, cleaning up..."
-          
-          # Update trigger file with failure status
-          echo "Last run: $(date '+%Y-%m-%d %H:%M:%S')" > trigger.txt
-          echo "Status: ❌ Failed" >> trigger.txt
-          echo "Day: $(date +%A)" >> trigger.txt
-          
+          {
+            echo "Last run: $(date '+%Y-%m-%d %H:%M:%S')"
+            echo "Status: ❌ Failed"
+            echo "Day: $(date +%A)"
+          } > trigger.txt
+
           git config user.name "${GIT_USER_NAME}"
           git config user.email "${GIT_USER_EMAIL}"
           git add trigger.txt
           git commit -m "❌ v7.3 Run failed: $(date '+%Y-%m-%d %H:%M:%S')" || true
-          
-          # Try to push failure status
           git remote set-url origin https://x-access-token:${FOREX_PAT}@github.com/${{ github.repository }}.git
           git push origin main || true

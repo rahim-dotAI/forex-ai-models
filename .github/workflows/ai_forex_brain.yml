@@ -144,6 +144,9 @@ jobs:
             ln -sf /content/forex-alpha-models forex-alpha-models
           fi
           
+          # Change to repo directory where the script is located
+          cd forex-ai-models
+          
           # Run the pipeline
           python ai_forex_brain_2.py
         continue-on-error: false

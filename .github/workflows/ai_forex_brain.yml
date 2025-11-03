@@ -140,6 +140,13 @@ jobs:
           sed -i 's|= BASE_FOLDER / "csvs"|= Path("/content/forex-alpha-models/csvs")|g' ai_forex_brain_2.py
           sed -i 's|= BASE_FOLDER / "logs"|= Path("/content/forex-alpha-models/logs")|g' ai_forex_brain_2.py
           
+          # Patch file paths for database and other files
+          sed -i 's|INFINITE_MEMORY_DB = REPO_FOLDER / "infinite_memory.db"|INFINITE_MEMORY_DB = Path("/content/forex-alpha-models/infinite_memory.db")|g' ai_forex_brain_2.py
+          sed -i 's|MONDAY_RUNS_FILE = REPO_FOLDER / "monday_runs.pkl"|MONDAY_RUNS_FILE = Path("/content/forex-alpha-models/monday_runs.pkl")|g' ai_forex_brain_2.py
+          sed -i 's|LEARNING_PROGRESS_FILE = REPO_FOLDER / "learning_progress.pkl"|LEARNING_PROGRESS_FILE = Path("/content/forex-alpha-models/learning_progress.pkl")|g' ai_forex_brain_2.py
+          sed -i 's|SIGNALS_JSON_PATH = REPO_FOLDER / "broker_signals.json"|SIGNALS_JSON_PATH = Path("/content/forex-alpha-models/broker_signals.json")|g' ai_forex_brain_2.py
+          sed -i 's|ENSEMBLE_SIGNALS_FILE = REPO_FOLDER / "ensemble_signals.json"|ENSEMBLE_SIGNALS_FILE = Path("/content/forex-alpha-models/ensemble_signals.json")|g' ai_forex_brain_2.py
+          
           echo "✅ Notebook converted and cleaned successfully"
 
       # 8️⃣ Execute AI Forex Brain Python Script

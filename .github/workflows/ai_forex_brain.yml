@@ -126,6 +126,10 @@ jobs:
           # Patch the script to create directories with parents=True safely
           sed -i 's/\.mkdir(exist_ok=True)/.mkdir(parents=True, exist_ok=True)/g' ai_forex_brain_2.py
           
+          # Patch ROOT_PATH and ROOT_DIR to use absolute paths
+          sed -i 's|ROOT_PATH = ROOT_DIR / "forex-alpha-models"|ROOT_PATH = Path("/content/forex-alpha-models")|g' ai_forex_brain_2.py
+          sed -i 's|ROOT_DIR = Path("/content")|ROOT_DIR = Path("/content/forex-alpha-models")|g' ai_forex_brain_2.py
+          
           # Patch all BASE_DIR definitions to use /content/forex-alpha-models
           sed -i 's|BASE_DIR = Path("/content/forex-alpha-models")|BASE_DIR = Path("/content/forex-alpha-models")|g' ai_forex_brain_2.py
           sed -i 's|BASE_DIR = Path("./forex-alpha-models")|BASE_DIR = Path("/content/forex-alpha-models")|g' ai_forex_brain_2.py
@@ -135,6 +139,10 @@ jobs:
           # Patch REPO_FOLDER to use absolute path
           sed -i 's|REPO_FOLDER = ROOT_PATH / "forex-ai-models"|REPO_FOLDER = Path("/content/forex-alpha-models/forex-ai-models")|g' ai_forex_brain_2.py
           sed -i 's|REPO_FOLDER = ROOT_DIR / "forex-ai-models"|REPO_FOLDER = Path("/content/forex-alpha-models/forex-ai-models")|g' ai_forex_brain_2.py
+          
+          # Patch PICKLE_FOLDER paths
+          sed -i 's|PICKLE_FOLDER = FINAL_PICKLE_FOLDER|PICKLE_FOLDER = Path("/content/forex-alpha-models/merged_data_pickles")|g' ai_forex_brain_2.py
+          sed -i 's|FINAL_PICKLE_FOLDER = ROOT_PATH / "merged_data_pickles"|FINAL_PICKLE_FOLDER = Path("/content/forex-alpha-models/merged_data_pickles")|g' ai_forex_brain_2.py
           
           # More aggressive: replace any relative path construction with absolute
           sed -i 's|= BASE_DIR / "pickles"|= Path("/content/forex-alpha-models/pickles")|g' ai_forex_brain_2.py

@@ -126,6 +126,14 @@ jobs:
           # Patch the script to create directories with parents=True safely
           sed -i 's/folder\.mkdir(exist_ok=True)/folder.mkdir(parents=True, exist_ok=True)/g' ai_forex_brain_2.py
           
+          # Patch CSV_FOLDER creation to use absolute path
+          sed -i 's|CSV_FOLDER = BASE_FOLDER / "csvs"|CSV_FOLDER = Path("/content/forex-alpha-models/csvs")|g' ai_forex_brain_2.py
+          sed -i 's|PICKLE_FOLDER = BASE_FOLDER / "pickles"|PICKLE_FOLDER = Path("/content/forex-alpha-models/pickles")|g' ai_forex_brain_2.py
+          sed -i 's|LOG_FOLDER = BASE_FOLDER / "logs"|LOG_FOLDER = Path("/content/forex-alpha-models/logs")|g' ai_forex_brain_2.py
+          
+          # Add Path import if not present
+          grep -q "from pathlib import Path" ai_forex_brain_2.py || sed -i '1i from pathlib import Path' ai_forex_brain_2.py
+          
           echo "✅ Notebook converted and cleaned successfully"
 
       # 8️⃣ Execute AI Forex Brain Python Script
@@ -136,29 +144,10 @@ jobs:
           echo "🚀 Starting AI Forex Brain Pipeline..."
           
           # Create directories in all possible locations
-          mkdir -p /home/runner/work/forex-ai-models/forex-alpha-models/{csvs,pickles,logs,merged_data_pickles,temp_pickles,forex-ai-models}
-          mkdir -p /home/runner/work/forex-ai-models/forex-ai-models/forex-alpha-models/{csvs,pickles,logs,merged_data_pickles,temp_pickles,forex-ai-models}
-          mkdir -p /content/forex-alpha-models/{csvs,pickles,logs,merged_data_pickles,temp_pickles,forex-ai-models}
-          mkdir -p /content/forex-automation/forex-alpha-models/{csvs,pickles,logs,merged_data_pickles,temp_pickles,forex-ai-models}
-          mkdir -p /content/forex-automation/forex-ai-models/forex-alpha-models/{csvs,pickles,logs,merged_data_pickles,temp_pickles,forex-ai-models}
-          mkdir -p /content/forex-automation/forex-ai-models/forex-alpha-models/forex-alpha-models/{csvs,pickles,logs,merged_data_pickles,temp_pickles}
+          mkdir -p /content/forex-alpha-models/{csvs,pickles,logs,merged_data_pickles,temp_pickles}
           
-          # Create symlinks in key locations
-          cd /home/runner/work/forex-ai-models
-          rm -rf forex-alpha-models 2>/dev/null || true
-          ln -sf /content/forex-alpha-models forex-alpha-models || true
-          
-          cd /home/runner/work/forex-ai-models/forex-ai-models
-          rm -rf forex-alpha-models 2>/dev/null || true
-          ln -sf /content/forex-alpha-models forex-alpha-models || true
-          
-          cd /content/forex-automation/forex-ai-models
-          rm -rf forex-alpha-models 2>/dev/null || true
-          ln -sf /content/forex-alpha-models forex-alpha-models || true
-          
-          cd /content/forex-automation/forex-ai-models/forex-alpha-models
-          rm -rf forex-alpha-models 2>/dev/null || true
-          ln -sf /content/forex-alpha-models forex-alpha-models || true
+          # Give full permissions
+          chmod -R 777 /content/forex-alpha-models
           
           # Run the pipeline from the repo directory
           cd /home/runner/work/forex-ai-models/forex-ai-models

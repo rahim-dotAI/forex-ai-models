@@ -135,35 +135,67 @@ jobs:
         run: |
           echo "🚀 Starting AI Forex Brain Pipeline..."
           
-          # Ensure all required directories exist in all possible locations
-          mkdir -p /home/runner/work/forex-ai-models/forex-alpha-models/{csvs,pickles,logs,merged_data_pickles,temp_pickles}
-          mkdir -p /home/runner/work/forex-ai-models/forex-ai-models/forex-alpha-models/{csvs,pickles,logs,merged_data_pickles,temp_pickles}
-          mkdir -p /content/forex-alpha-models/{csvs,pickles,logs,merged_data_pickles,temp_pickles}
-          mkdir -p /content/forex-automation/forex-ai-models/forex-alpha-models/{csvs,pickles,logs,merged_data_pickles,temp_pickles}
+          # Function to create all necessary directories
+          create_forex_dirs() {
+            local base_dir=$1
+            mkdir -p "$base_dir/forex-alpha-models/csvs"
+            mkdir -p "$base_dir/forex-alpha-models/pickles"
+            mkdir -p "$base_dir/forex-alpha-models/logs"
+            mkdir -p "$base_dir/forex-alpha-models/merged_data_pickles"
+            mkdir -p "$base_dir/forex-alpha-models/temp_pickles"
+            mkdir -p "$base_dir/forex-alpha-models/forex-ai-models"
+          }
           
-          # Create symlinks in both locations
-          cd /home/runner/work/forex-ai-models
-          if [ ! -L "forex-alpha-models" ]; then
-            rm -rf forex-alpha-models 2>/dev/null || true
-            ln -sf /content/forex-alpha-models forex-alpha-models
-          fi
+          # Create directories in all possible locations
+          create_forex_dirs "/home/runner/work/forex-ai-models"
+          create_forex_dirs "/home/runner/work/forex-ai-models/forex-ai-models"
+          create_forex_dirs "/content"
+          create_forex_dirs "/content/forex-automation"
+          create_forex_dirs "/content/forex-automation/forex-ai-models"
+          create_forex_dirs "/content/forex-automation/forex-ai-models/forex-alpha-models"
           
-          cd /home/runner/work/forex-ai-models/forex-ai-models
-          if [ ! -L "forex-alpha-models" ]; then
-            rm -rf forex-alpha-models 2>/dev/null || true
-            ln -sf /content/forex-alpha-models forex-alpha-models
-          fi
-          
-          # Also create in /content/forex-automation location (where script changes to)
-          cd /content/forex-automation/forex-ai-models
-          if [ ! -L "forex-alpha-models" ]; then
-            rm -rf forex-alpha-models 2>/dev/null || true
-            ln -sf /content/forex-alpha-models forex-alpha-models
-          fi
+          # Create symlinks in key locations
+          for dir in \
+            "/home/runner/work/forex-ai-models" \
+            "/home/runner/work/forex-ai-models/forex-ai-models" \
+            "/content/forex-automation/forex-ai-models" \
+            "/content/forex-automation/forex-ai-models/forex-alpha-models"
+          do
+            if [ -d "$dir" ]; then
+              cd "$dir"
+              if [ ! -L "forex-alpha-models" ] && [ ! -d "forex-alpha-models/csvs" ]; then
+                rm -rf forex-alpha-models 2>/dev/null || true
+                ln -sf /content/forex-alpha-models forex-alpha-models
+              fi
+            fi
+          done
           
           # Run the pipeline from the repo directory
           cd /home/runner/work/forex-ai-models/forex-ai-models
+          
+          # Create a monitor script that periodically creates directories
+          cat > monitor_dirs.sh << 'EOF'
+#!/bin/bash
+while true; do
+  for dir in \
+    "/content/forex-automation/forex-ai-models/forex-alpha-models/csvs" \
+    "/content/forex-automation/forex-ai-models/forex-alpha-models/pickles" \
+    "/content/forex-automation/forex-ai-models/forex-alpha-models/logs"
+  do
+    mkdir -p "$dir" 2>/dev/null || true
+  done
+  sleep 5
+done
+EOF
+          chmod +x monitor_dirs.sh
+          ./monitor_dirs.sh &
+          MONITOR_PID=$!
+          
+          # Run the pipeline
           python ai_forex_brain_2.py
+          
+          # Kill the monitor script
+          kill $MONITOR_PID 2>/dev/null || true
         continue-on-error: false
         timeout-minutes: 120
 

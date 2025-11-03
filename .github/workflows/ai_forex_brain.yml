@@ -124,15 +124,21 @@ jobs:
           sed -i '/^get_ipython/d' ai_forex_brain_2.py
           
           # Patch the script to create directories with parents=True safely
-          sed -i 's/folder\.mkdir(exist_ok=True)/folder.mkdir(parents=True, exist_ok=True)/g' ai_forex_brain_2.py
+          sed -i 's/\.mkdir(exist_ok=True)/.mkdir(parents=True, exist_ok=True)/g' ai_forex_brain_2.py
           
-          # Patch CSV_FOLDER creation to use absolute path
-          sed -i 's|CSV_FOLDER = BASE_FOLDER / "csvs"|CSV_FOLDER = Path("/content/forex-alpha-models/csvs")|g' ai_forex_brain_2.py
-          sed -i 's|PICKLE_FOLDER = BASE_FOLDER / "pickles"|PICKLE_FOLDER = Path("/content/forex-alpha-models/pickles")|g' ai_forex_brain_2.py
-          sed -i 's|LOG_FOLDER = BASE_FOLDER / "logs"|LOG_FOLDER = Path("/content/forex-alpha-models/logs")|g' ai_forex_brain_2.py
+          # Patch all BASE_DIR definitions to use /content/forex-alpha-models
+          sed -i 's|BASE_DIR = Path("/content/forex-alpha-models")|BASE_DIR = Path("/content/forex-alpha-models")|g' ai_forex_brain_2.py
+          sed -i 's|BASE_DIR = Path("./forex-alpha-models")|BASE_DIR = Path("/content/forex-alpha-models")|g' ai_forex_brain_2.py
+          sed -i 's|BASE_FOLDER = Path("/content/forex-alpha-models")|BASE_FOLDER = Path("/content/forex-alpha-models")|g' ai_forex_brain_2.py
+          sed -i 's|BASE_FOLDER = Path("./forex-alpha-models")|BASE_FOLDER = Path("/content/forex-alpha-models")|g' ai_forex_brain_2.py
           
-          # Add Path import if not present
-          grep -q "from pathlib import Path" ai_forex_brain_2.py || sed -i '1i from pathlib import Path' ai_forex_brain_2.py
+          # More aggressive: replace any relative path construction with absolute
+          sed -i 's|= BASE_DIR / "pickles"|= Path("/content/forex-alpha-models/pickles")|g' ai_forex_brain_2.py
+          sed -i 's|= BASE_DIR / "csvs"|= Path("/content/forex-alpha-models/csvs")|g' ai_forex_brain_2.py
+          sed -i 's|= BASE_DIR / "logs"|= Path("/content/forex-alpha-models/logs")|g' ai_forex_brain_2.py
+          sed -i 's|= BASE_FOLDER / "pickles"|= Path("/content/forex-alpha-models/pickles")|g' ai_forex_brain_2.py
+          sed -i 's|= BASE_FOLDER / "csvs"|= Path("/content/forex-alpha-models/csvs")|g' ai_forex_brain_2.py
+          sed -i 's|= BASE_FOLDER / "logs"|= Path("/content/forex-alpha-models/logs")|g' ai_forex_brain_2.py
           
           echo "✅ Notebook converted and cleaned successfully"
 

@@ -4,34 +4,49 @@ on:
   push:
     paths:
       - 'colab_trigger.txt'
+      - 'AI_Forex_Brain_2.ipynb'
     branches:
       - main
   workflow_dispatch:
+  # NOTE: No schedule - Python code handles its own 1-hour intervals
+  # GitHub Actions will run continuously until 6-hour timeout, then you trigger manually
 
 jobs:
   run-forex-brain:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
+    
     env:
+      # Required secrets
       FOREX_PAT: ${{ secrets.FOREX_PAT }}
       BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}
       ALPHA_VANTAGE_KEY: ${{ secrets.ALPHA_VANTAGE_KEY }}
+      
+      # Email configuration (NEW - add these to your GitHub secrets)
+      GMAIL_USER: ${{ secrets.GMAIL_USER }}
+      GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+      
+      # Git configuration
       GIT_USER_NAME: "Forex AI Bot"
       GIT_USER_EMAIL: "nakatonabira3@gmail.com"
       GITHUB_USERNAME: "rahim-dotAI"
       GITHUB_REPO: "forex-ai-models"
+      
+      # Python configuration
       PYTHONIOENCODING: utf-8
       PYTHONUNBUFFERED: 1
+      GITHUB_ACTIONS: "true"
 
     steps:
-      # 0️⃣ Pre-clean any broken submodules
-      - name: Remove broken submodules before checkout
+      # 0️⃣ Cleanup
+      - name: Pre-cleanup
         run: |
-          echo "🧹 Cleaning any broken .gitmodules or nested repos..."
-          rm -f .gitmodules || true
-          rm -rf forex_ai_outputs/forex-ai-models || true
-          echo "✅ Cleaned potential submodule conflicts"
+          echo "🧹 Cleaning workspace..."
+          sudo rm -rf /content 2>/dev/null || true
+          rm -f .gitmodules 2>/dev/null || true
+          echo "✅ Workspace cleaned"
 
-      # 1️⃣ Checkout repository
+      # 1️⃣ Checkout
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -40,67 +55,61 @@ jobs:
           lfs: false
           submodules: false
           clean: true
-          set-safe-directory: true
 
-      # 2️⃣ Verify required secrets
-      - name: Check required secrets
+      # 2️⃣ Verify secrets
+      - name: Verify required secrets
         run: |
-          if [ -z "${FOREX_PAT}" ]; then
-            echo "❌ FOREX_PAT secret is missing!"
-            exit 1
-          fi
-          if [ -z "${BROWSERLESS_TOKEN}" ]; then
-            echo "⚠️ BROWSERLESS_TOKEN secret is missing. Live prices will be skipped."
-          fi
-          if [ -z "${ALPHA_VANTAGE_KEY}" ]; then
-            echo "⚠️ ALPHA_VANTAGE_KEY secret is missing. Alpha Vantage data fetch will fail."
+          MISSING_SECRETS=()
+          
+          [ -z "${FOREX_PAT}" ] && MISSING_SECRETS+=("FOREX_PAT")
+          [ -z "${BROWSERLESS_TOKEN}" ] && MISSING_SECRETS+=("BROWSERLESS_TOKEN")
+          [ -z "${ALPHA_VANTAGE_KEY}" ] && MISSING_SECRETS+=("ALPHA_VANTAGE_KEY")
+          [ -z "${GMAIL_USER}" ] && MISSING_SECRETS+=("GMAIL_USER")
+          [ -z "${GMAIL_APP_PASSWORD}" ] && MISSING_SECRETS+=("GMAIL_APP_PASSWORD")
+          
+          if [ ${#MISSING_SECRETS[@]} -gt 0 ]; then
+            echo "❌ Missing required secrets: ${MISSING_SECRETS[*]}"
+            echo "⚠️ Pipeline will run with limited functionality"
+          else
+            echo "✅ All required secrets are configured"
           fi
 
-      # 3️⃣ Set up Python 3.11
+      # 3️⃣ Python setup
       - name: Set up Python 3.11
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: 'pip'
 
-      # 4️⃣ Upgrade pip & install dependencies
-      - name: Install Python dependencies
+      # 4️⃣ Install dependencies
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip wheel setuptools
-          pip install mplfinance firebase-admin dropbox requests beautifulsoup4 \
-            pandas numpy ta yfinance pyppeteer nest_asyncio lightgbm joblib \
-            matplotlib alpha_vantage tqdm scikit-learn river jupyter
+          pip install --no-cache-dir \
+            mplfinance firebase-admin dropbox requests beautifulsoup4 \
+            pandas numpy ta yfinance pyppeteer nest_asyncio lightgbm \
+            joblib matplotlib alpha_vantage tqdm scikit-learn river \
+            jupyter nbconvert
+          echo "✅ Dependencies installed"
 
-      # 5️⃣ Create working directories (including Colab-style paths)
-      - name: Create working directories
+      # 5️⃣ Create unified directory structure
+      - name: Create directory structure
         run: |
-          # Create standard working directories in current location
-          mkdir -p /home/runner/work/forex-ai-models/forex-alpha-models/csvs
-          mkdir -p /home/runner/work/forex-ai-models/forex-alpha-models/pickles
-          mkdir -p /home/runner/work/forex-ai-models/forex-alpha-models/logs
-          mkdir -p /home/runner/work/forex-ai-models/forex-alpha-models/merged_data_pickles
-          mkdir -p /home/runner/work/forex-ai-models/forex-alpha-models/temp_pickles
+          # Create /content structure (Colab-style)
+          sudo mkdir -p /content/forex-alpha-models/{csvs,pickles,logs,merged_data_pickles,temp_pickles,forex-ai-models}
           
-          # Create /content directory structure for Colab compatibility
-          sudo mkdir -p /content/forex-automation
-          sudo mkdir -p /content/forex-alpha-models/csvs
-          sudo mkdir -p /content/forex-alpha-models/pickles
-          sudo mkdir -p /content/forex-alpha-models/logs
-          sudo mkdir -p /content/forex-alpha-models/merged_data_pickles
-          sudo mkdir -p /content/forex-alpha-models/temp_pickles
-          sudo mkdir -p /content/forex-alpha-models/forex-ai-models
-          
-          # Give current user ownership of /content
+          # Set ownership and permissions
           sudo chown -R $USER:$USER /content
           sudo chmod -R 755 /content
           
-          # Create symlink from working directory to /content
-          cd /home/runner/work/forex-ai-models
-          ln -sf /content/forex-alpha-models forex-alpha-models 2>/dev/null || true
+          # Create working directories in runner workspace
+          mkdir -p $GITHUB_WORKSPACE/outputs/{csvs,pickles,logs,merged_data_pickles,temp_pickles}
           
-          echo "✅ Working directories created (including Colab paths and symlinks)"
+          echo "✅ Directory structure created"
+          echo "📂 Created paths:"
+          ls -la /content/forex-alpha-models/
 
-      # 6️⃣ Configure Git globally
+      # 6️⃣ Configure Git
       - name: Configure Git
         run: |
           git config --global user.name "${GIT_USER_NAME}"
@@ -108,165 +117,251 @@ jobs:
           git config --global advice.detachedHead false
           git config --global credential.helper store
           echo "https://${GITHUB_USERNAME}:${FOREX_PAT}@github.com" > ~/.git-credentials
-          echo "✅ Git configured with credentials"
+          echo "✅ Git configured"
 
-      # 7️⃣ Convert notebook to Python script and clean
-      - name: Convert notebook to Python script
+      # 7️⃣ Convert notebook with comprehensive path fixes
+      - name: Convert and patch notebook
         run: |
-          echo "📝 Converting notebook to Python script..."
+          echo "📝 Converting notebook to Python..."
           jupyter nbconvert --to python "AI_Forex_Brain_2.ipynb" --output ai_forex_brain_2
           
-          echo "🧹 Removing Jupyter-specific commands..."
-          # Remove get_ipython() calls (like !pip install)
-          sed -i '/get_ipython()/d' ai_forex_brain_2.py
+          echo "🔧 Applying comprehensive patches..."
           
-          # Remove any remaining IPython magic commands
+          # Remove Jupyter magic commands
+          sed -i '/get_ipython()/d' ai_forex_brain_2.py
           sed -i '/^get_ipython/d' ai_forex_brain_2.py
           
-          # Patch the script to create directories with parents=True safely
+          # Fix all .mkdir() calls to include parents=True
           sed -i 's/\.mkdir(exist_ok=True)/.mkdir(parents=True, exist_ok=True)/g' ai_forex_brain_2.py
           
-          # Patch ROOT_PATH and ROOT_DIR to use absolute paths
-          sed -i 's|ROOT_PATH = ROOT_DIR / "forex-alpha-models"|ROOT_PATH = Path("/content/forex-alpha-models")|g' ai_forex_brain_2.py
-          sed -i 's|ROOT_DIR = Path("/content")|ROOT_DIR = Path("/content/forex-alpha-models")|g' ai_forex_brain_2.py
+          # Comprehensive path fixes - Replace ALL path definitions
+          cat > path_fixes.sed << 'EOF'
+          # Root directory fixes
+          s|ROOT_DIR = Path("/content")|ROOT_DIR = Path("/content/forex-alpha-models")|g
+          s|ROOT_PATH = ROOT_DIR / "forex-alpha-models"|ROOT_PATH = Path("/content/forex-alpha-models")|g
+          s|ROOT_DIR = Path(".")|ROOT_DIR = Path("/content/forex-alpha-models")|g
           
-          # Patch all BASE_DIR definitions to use /content/forex-alpha-models
-          sed -i 's|BASE_DIR = Path("/content/forex-alpha-models")|BASE_DIR = Path("/content/forex-alpha-models")|g' ai_forex_brain_2.py
-          sed -i 's|BASE_DIR = Path("./forex-alpha-models")|BASE_DIR = Path("/content/forex-alpha-models")|g' ai_forex_brain_2.py
-          sed -i 's|BASE_FOLDER = Path("/content/forex-alpha-models")|BASE_FOLDER = Path("/content/forex-alpha-models")|g' ai_forex_brain_2.py
-          sed -i 's|BASE_FOLDER = Path("./forex-alpha-models")|BASE_FOLDER = Path("/content/forex-alpha-models")|g' ai_forex_brain_2.py
+          # Base directory fixes
+          s|BASE_DIR = Path("/content/forex-alpha-models")|BASE_DIR = Path("/content/forex-alpha-models")|g
+          s|BASE_DIR = Path("./forex-alpha-models")|BASE_DIR = Path("/content/forex-alpha-models")|g
+          s|BASE_FOLDER = Path("/content/forex-alpha-models")|BASE_FOLDER = Path("/content/forex-alpha-models")|g
+          s|BASE_FOLDER = Path(".")|BASE_FOLDER = Path("/content/forex-alpha-models")|g
           
-          # Patch REPO_FOLDER to use absolute path
-          sed -i 's|REPO_FOLDER = ROOT_PATH / "forex-ai-models"|REPO_FOLDER = Path("/content/forex-alpha-models/forex-ai-models")|g' ai_forex_brain_2.py
-          sed -i 's|REPO_FOLDER = ROOT_DIR / "forex-ai-models"|REPO_FOLDER = Path("/content/forex-alpha-models/forex-ai-models")|g' ai_forex_brain_2.py
+          # Repository folder fix
+          s|REPO_FOLDER = .* / "forex-ai-models"|REPO_FOLDER = Path("/content/forex-alpha-models/forex-ai-models")|g
           
-          # Patch PICKLE_FOLDER paths
-          sed -i 's|PICKLE_FOLDER = FINAL_PICKLE_FOLDER|PICKLE_FOLDER = Path("/content/forex-alpha-models/merged_data_pickles")|g' ai_forex_brain_2.py
-          sed -i 's|FINAL_PICKLE_FOLDER = ROOT_PATH / "merged_data_pickles"|FINAL_PICKLE_FOLDER = Path("/content/forex-alpha-models/merged_data_pickles")|g' ai_forex_brain_2.py
+          # Pickle folder fixes
+          s|PICKLE_FOLDER = .* / "pickles"|PICKLE_FOLDER = Path("/content/forex-alpha-models/pickles")|g
+          s|FINAL_PICKLE_FOLDER = .* / "merged_data_pickles"|FINAL_PICKLE_FOLDER = Path("/content/forex-alpha-models/merged_data_pickles")|g
+          s|CSV_FOLDER = .* / "csvs"|CSV_FOLDER = Path("/content/forex-alpha-models/csvs")|g
+          s|LOG_FOLDER = .* / "logs"|LOG_FOLDER = Path("/content/forex-alpha-models/logs")|g
+          s|LOGS_FOLDER = .* / "logs"|LOGS_FOLDER = Path("/content/forex-alpha-models/logs")|g
+          s|TEMP_PICKLE_FOLDER = .* / "temp_pickles"|TEMP_PICKLE_FOLDER = Path("/content/forex-alpha-models/temp_pickles")|g
           
-          # More aggressive: replace any relative path construction with absolute
-          sed -i 's|= BASE_DIR / "pickles"|= Path("/content/forex-alpha-models/pickles")|g' ai_forex_brain_2.py
-          sed -i 's|= BASE_DIR / "csvs"|= Path("/content/forex-alpha-models/csvs")|g' ai_forex_brain_2.py
-          sed -i 's|= BASE_DIR / "logs"|= Path("/content/forex-alpha-models/logs")|g' ai_forex_brain_2.py
-          sed -i 's|= BASE_FOLDER / "pickles"|= Path("/content/forex-alpha-models/pickles")|g' ai_forex_brain_2.py
-          sed -i 's|= BASE_FOLDER / "csvs"|= Path("/content/forex-alpha-models/csvs")|g' ai_forex_brain_2.py
-          sed -i 's|= BASE_FOLDER / "logs"|= Path("/content/forex-alpha-models/logs")|g' ai_forex_brain_2.py
+          # Database and state files
+          s|INFINITE_MEMORY_DB = .* / "infinite_memory.db"|INFINITE_MEMORY_DB = Path("/content/forex-alpha-models/forex-ai-models/infinite_memory.db")|g
+          s|TRADE_MEMORY_DB = .* / "hybrid_ml_memory.db"|TRADE_MEMORY_DB = Path("/content/forex-alpha-models/forex-ai-models/hybrid_ml_memory.db")|g
+          s|MONDAY_RUNS_FILE = .* / "monday_runs.pkl"|MONDAY_RUNS_FILE = Path("/content/forex-alpha-models/forex-ai-models/monday_runs.pkl")|g
+          s|LEARNING_PROGRESS_FILE = .* / "learning_progress.pkl"|LEARNING_PROGRESS_FILE = Path("/content/forex-alpha-models/forex-ai-models/learning_progress.pkl")|g
+          s|PREVIOUS_SIGNALS_FILE = .* / "previous_signals.pkl"|PREVIOUS_SIGNALS_FILE = Path("/content/forex-alpha-models/forex-ai-models/previous_signals.pkl")|g
+          s|ITERATION_COUNTER_FILE = .* / "iteration_counter.pkl"|ITERATION_COUNTER_FILE = Path("/content/forex-alpha-models/forex-ai-models/iteration_counter.pkl")|g
+          s|ML_ITERATION_COUNTER_FILE = .* / "ml_iteration_counter.pkl"|ML_ITERATION_COUNTER_FILE = Path("/content/forex-alpha-models/forex-ai-models/ml_iteration_counter.pkl")|g
           
-          # Patch file paths for database and other files
-          sed -i 's|INFINITE_MEMORY_DB = REPO_FOLDER / "infinite_memory.db"|INFINITE_MEMORY_DB = Path("/content/forex-alpha-models/infinite_memory.db")|g' ai_forex_brain_2.py
-          sed -i 's|MONDAY_RUNS_FILE = REPO_FOLDER / "monday_runs.pkl"|MONDAY_RUNS_FILE = Path("/content/forex-alpha-models/monday_runs.pkl")|g' ai_forex_brain_2.py
-          sed -i 's|LEARNING_PROGRESS_FILE = REPO_FOLDER / "learning_progress.pkl"|LEARNING_PROGRESS_FILE = Path("/content/forex-alpha-models/learning_progress.pkl")|g' ai_forex_brain_2.py
-          sed -i 's|SIGNALS_JSON_PATH = REPO_FOLDER / "broker_signals.json"|SIGNALS_JSON_PATH = Path("/content/forex-alpha-models/broker_signals.json")|g' ai_forex_brain_2.py
-          sed -i 's|ENSEMBLE_SIGNALS_FILE = REPO_FOLDER / "ensemble_signals.json"|ENSEMBLE_SIGNALS_FILE = Path("/content/forex-alpha-models/ensemble_signals.json")|g' ai_forex_brain_2.py
+          # Signal files
+          s|SIGNALS_JSON_PATH = .* / "broker_signals.json"|SIGNALS_JSON_PATH = Path("/content/forex-alpha-models/forex-ai-models/broker_signals.json")|g
+          s|ENSEMBLE_SIGNALS_FILE = .* / "ensemble_signals.json"|ENSEMBLE_SIGNALS_FILE = Path("/content/forex-alpha-models/forex-ai-models/ensemble_signals.json")|g
+          s|JSON_FILE = .* / "latest_signals.json"|JSON_FILE = Path("/content/forex-alpha-models/forex-ai-models/latest_signals.json")|g
+          EOF
           
-          echo "✅ Notebook converted and cleaned successfully"
+          sed -i -f path_fixes.sed ai_forex_brain_2.py
+          
+          # Fix the ensure_repo() function to clone into correct location
+          sed -i 's|subprocess.run(\["git", "clone"|subprocess.run(["git", "clone", "-b", "main"|g' ai_forex_brain_2.py
+          
+          # Add safety check at the beginning of the script
+          cat > safety_header.py << 'EOF'
+          import os
+          import sys
+          from pathlib import Path
+          
+          # GitHub Actions environment check
+          if os.environ.get("GITHUB_ACTIONS") == "true":
+              print("🔧 GitHub Actions environment detected - forcing /content paths")
+              os.environ["IN_GHA"] = "1"
+          
+          # Ensure /content directory exists
+          Path("/content/forex-alpha-models").mkdir(parents=True, exist_ok=True)
+          Path("/content/forex-alpha-models/forex-ai-models").mkdir(parents=True, exist_ok=True)
+          
+          print(f"✅ Working directory: {os.getcwd()}")
+          print(f"✅ /content exists: {Path('/content/forex-alpha-models').exists()}")
+          
+          EOF
+          
+          # Prepend safety header to the script
+          cat safety_header.py ai_forex_brain_2.py > ai_forex_brain_2_patched.py
+          mv ai_forex_brain_2_patched.py ai_forex_brain_2.py
+          
+          echo "✅ Notebook converted and patched"
+          
+          # Show first 50 lines for verification
+          echo "📄 First 50 lines of patched script:"
+          head -n 50 ai_forex_brain_2.py
 
-      # 8️⃣ Execute AI Forex Brain Python Script
-      - name: Execute AI Forex Brain Pipeline
-        env:
-          GITHUB_ACTIONS: "true"
+      # 8️⃣ Pre-populate forex-ai-models repo
+      - name: Clone forex-ai-models repository
+        run: |
+          cd /content/forex-alpha-models
+          
+          if [ ! -d "forex-ai-models/.git" ]; then
+            echo "📥 Cloning forex-ai-models repository..."
+            git clone -b main https://${GITHUB_USERNAME}:${FOREX_PAT}@github.com/${GITHUB_USERNAME}/${GITHUB_REPO}.git forex-ai-models
+            echo "✅ Repository cloned"
+          else
+            echo "✅ Repository already exists"
+          fi
+          
+          cd forex-ai-models
+          git config user.name "${GIT_USER_NAME}"
+          git config user.email "${GIT_USER_EMAIL}"
+          
+          echo "📂 Repository structure:"
+          ls -la
+
+      # 9️⃣ Execute pipeline
+      - name: Run AI Forex Brain Pipeline
         run: |
           echo "🚀 Starting AI Forex Brain Pipeline..."
+          echo "================================================"
+          echo "📊 Environment:"
+          echo "  - Python: $(python --version)"
+          echo "  - Working Dir: $(pwd)"
+          echo "  - /content exists: $([ -d /content/forex-alpha-models ] && echo 'YES' || echo 'NO')"
+          echo "================================================"
           
-          # Create directories in all possible locations including forex-ai-models subdir
-          mkdir -p /content/forex-alpha-models/{csvs,pickles,logs,merged_data_pickles,temp_pickles,forex-ai-models}
+          # Run the pipeline
+          python ai_forex_brain_2.py 2>&1 | tee pipeline_output.log
           
-          # Give full permissions
-          chmod -R 777 /content/forex-alpha-models
+          EXIT_CODE=${PIPESTATUS[0]}
           
-          # Run the pipeline from the repo directory
-          cd /home/runner/work/forex-ai-models/forex-ai-models
-          python ai_forex_brain_2.py
-        continue-on-error: false
-        timeout-minutes: 120
+          echo "================================================"
+          echo "📊 Pipeline Exit Code: $EXIT_CODE"
+          echo "================================================"
+          
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "❌ Pipeline failed with exit code $EXIT_CODE"
+            echo "📝 Last 50 lines of output:"
+            tail -n 50 pipeline_output.log
+            exit $EXIT_CODE
+          fi
+          
+          echo "✅ Pipeline completed successfully"
+        timeout-minutes: 110
 
-      # 8️⃣ Upload logs as artifacts
+      # 🔟 Collect outputs
+      - name: Collect pipeline outputs
+        if: always()
+        run: |
+          echo "📦 Collecting outputs..."
+          
+          # Copy outputs to workspace for artifact upload
+          cp -r /content/forex-alpha-models/logs $GITHUB_WORKSPACE/outputs/ 2>/dev/null || true
+          cp -r /content/forex-alpha-models/merged_data_pickles $GITHUB_WORKSPACE/outputs/ 2>/dev/null || true
+          cp -r /content/forex-alpha-models/pickles $GITHUB_WORKSPACE/outputs/ 2>/dev/null || true
+          
+          # Copy signals
+          mkdir -p $GITHUB_WORKSPACE/outputs/signals
+          cp /content/forex-alpha-models/forex-ai-models/*.json $GITHUB_WORKSPACE/outputs/signals/ 2>/dev/null || true
+          
+          # Copy logs
+          cp pipeline_output.log $GITHUB_WORKSPACE/outputs/logs/ 2>/dev/null || true
+          cp forex_pipeline.log $GITHUB_WORKSPACE/outputs/logs/ 2>/dev/null || true
+          
+          echo "✅ Outputs collected"
+          echo "📂 Output structure:"
+          find $GITHUB_WORKSPACE/outputs -type f
+
+      # 1️⃣1️⃣ Upload artifacts
       - name: Upload pipeline logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: forex-pipeline-logs
+          name: forex-pipeline-logs-${{ github.run_number }}
           path: |
-            forex-alpha-models/logs/*.log
-            forex_pipeline.log
+            outputs/logs/*.log
+            pipeline_output.log
           retention-days: 7
 
-      # 9️⃣ Upload generated pickles as artifacts
-      - name: Upload generated pickles
+      - name: Upload pickles
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: forex-pickles
+          name: forex-pickles-${{ github.run_number }}
           path: |
-            forex-alpha-models/merged_data_pickles/*.pkl
-            forex-alpha-models/pickles/*.pkl
+            outputs/merged_data_pickles/*.pkl
+            outputs/pickles/*.pkl
           retention-days: 3
 
-      # 🔟 Upload signals JSON
-      - name: Upload signals JSON
+      - name: Upload signals
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: forex-signals
-          path: |
-            forex-alpha-models/forex-ai-models/broker_signals.json
-            forex-alpha-models/forex-ai-models/ensemble_signals.json
-            forex-alpha-models/forex-ai-models/latest_signals.json
+          name: forex-signals-${{ github.run_number }}
+          path: outputs/signals/*.json
           retention-days: 7
 
-      # 1️⃣1️⃣ Commit and push results
+      # 1️⃣2️⃣ Commit and push
       - name: Commit and push results
         if: success()
-        env:
-          GIT_AUTH_TOKEN: ${{ secrets.FOREX_PAT }}
         run: |
-          cd forex-alpha-models/forex-ai-models || exit 0
+          cd /content/forex-alpha-models/forex-ai-models
           
-          echo "📦 Adding changes to git..."
+          echo "📦 Staging changes..."
           git add -A
           
-          # Check if there are changes to commit
           if git diff --staged --quiet; then
             echo "✅ No changes to commit"
             exit 0
           fi
           
-          # Commit changes
-          git commit -m "🤖 Auto-update: AI Forex Brain Pipeline [$(date '+%Y-%m-%d %H:%M:%S')]" || echo "No changes to commit"
+          echo "💾 Committing changes..."
+          git commit -m "🤖 Auto-update: AI Forex Brain [$(date '+%Y-%m-%d %H:%M:%S UTC')]" || {
+            echo "⚠️ Commit failed or nothing to commit"
+            exit 0
+          }
           
-          # Set remote URL with token
-          git remote set-url origin https://x-access-token:${GIT_AUTH_TOKEN}@github.com/${GITHUB_USERNAME}/${GITHUB_REPO}.git
+          echo "🔄 Pulling latest changes..."
+          git pull --rebase origin main || echo "⚠️ Nothing to pull"
           
-          # Pull latest changes to avoid conflicts
-          git pull --rebase origin main || echo "Nothing to pull"
-          
-          # Push changes
-          git push origin main && echo "✅ Changes pushed successfully" || echo "⚠️ Push failed or no changes to push"
+          echo "📤 Pushing changes..."
+          git push origin main && echo "✅ Changes pushed" || echo "⚠️ Push failed"
 
-      # 1️⃣2️⃣ Cleanup sensitive files
+      # 1️⃣3️⃣ Cleanup
       - name: Cleanup sensitive data
         if: always()
         run: |
           rm -f ~/.git-credentials
-          echo "✅ Cleaned up sensitive files"
+          rm -f /content/forex-alpha-models/forex-ai-models/.git/credentials 2>/dev/null || true
+          echo "✅ Sensitive data cleaned"
 
-      # 1️⃣3️⃣ Summary report
-      - name: Pipeline Summary
+      # 1️⃣4️⃣ Summary
+      - name: Pipeline summary
         if: always()
         run: |
           echo "================================================"
           echo "🎯 AI FOREX BRAIN PIPELINE SUMMARY"
           echo "================================================"
-          echo "📅 Run Date: $(date)"
-          echo "🔧 Python Version: $(python --version)"
-          echo "📊 Working Directory: $(pwd)"
+          echo "📅 Timestamp: $(date)"
+          echo "🔢 Run Number: ${{ github.run_number }}"
+          echo "🔧 Python: $(python --version)"
+          echo "📂 Working Dir: $(pwd)"
           echo "================================================"
           
-          if [ -f "forex_pipeline.log" ]; then
-            echo "📝 Last 20 log entries:"
-            tail -n 20 forex_pipeline.log
+          if [ -f "pipeline_output.log" ]; then
+            echo "📝 Last 30 log lines:"
+            tail -n 30 pipeline_output.log
           fi
           
           echo "================================================"
-          echo "✅ Pipeline execution completed"
+          echo "Status: ${{ job.status }}"
           echo "================================================"

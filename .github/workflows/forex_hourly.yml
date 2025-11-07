@@ -1,20 +1,25 @@
-name: Run AI Forex Brain Pipeline
+name: Run AI Forex Brain Pipeline (Hourly)
 
 on:
+  # Run every hour at minute 0
+  schedule:
+    - cron: '0 * * * *'
+  
+  # Manual trigger
+  workflow_dispatch:
+  
+  # Trigger on push to notebook or trigger file
   push:
     paths:
       - 'colab_trigger.txt'
       - 'AI_Forex_Brain_2.ipynb'
     branches:
       - main
-  workflow_dispatch:
-  # NOTE: No schedule - Python code handles its own 1-hour intervals
-  # GitHub Actions will run continuously until 6-hour timeout, then you trigger manually
 
 jobs:
   run-forex-brain:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 55  # Complete before next hourly run
     
     env:
       # Required secrets
@@ -22,7 +27,7 @@ jobs:
       BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}
       ALPHA_VANTAGE_KEY: ${{ secrets.ALPHA_VANTAGE_KEY }}
       
-      # Email configuration (NEW - add these to your GitHub secrets)
+      # Email configuration
       GMAIL_USER: ${{ secrets.GMAIL_USER }}
       GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
       
@@ -36,6 +41,9 @@ jobs:
       PYTHONIOENCODING: utf-8
       PYTHONUNBUFFERED: 1
       GITHUB_ACTIONS: "true"
+      
+      # Pipeline mode configuration
+      SINGLE_RUN_MODE: "true"  # Force single run, no loop
 
     steps:
       # 0️⃣ Cleanup
@@ -119,13 +127,13 @@ jobs:
           echo "https://${GITHUB_USERNAME}:${FOREX_PAT}@github.com" > ~/.git-credentials
           echo "✅ Git configured"
 
-      # 7️⃣ Convert notebook with comprehensive path fixes
-      - name: Convert and patch notebook
+      # 7️⃣ Convert notebook and patch for single-run mode
+      - name: Convert and patch notebook for hourly execution
         run: |
           echo "📝 Converting notebook to Python..."
           jupyter nbconvert --to python "AI_Forex_Brain_2.ipynb" --output ai_forex_brain_2
           
-          echo "🔧 Applying comprehensive patches..."
+          echo "🔧 Applying comprehensive patches for SINGLE RUN MODE..."
           
           # Remove Jupyter magic commands
           sed -i '/get_ipython()/d' ai_forex_brain_2.py
@@ -178,6 +186,71 @@ jobs:
           # Fix the ensure_repo() function to clone into correct location
           sed -i 's|subprocess.run(\["git", "clone"|subprocess.run(["git", "clone", "-b", "main"|g' ai_forex_brain_2.py
           
+          # 🆕 CRITICAL: Remove the infinite loop - convert to single run
+          echo "🔧 Converting infinite loop to single run mode..."
+          
+          # Create single-run patch
+          cat > single_run_patch.py << 'EOFPATCH'
+          import re
+          
+          # Read the converted script
+          with open('ai_forex_brain_2.py', 'r') as f:
+              content = f.read()
+          
+          # Find and modify the main execution loop
+          # Replace: while not shutdown_handler.is_shutdown_requested():
+          # With: if True:  # Single run mode for hourly GitHub Actions
+          
+          content = re.sub(
+              r'while not shutdown_handler\.is_shutdown_requested\(\):',
+              'if True:  # Single run mode for hourly GitHub Actions',
+              content
+          )
+          
+          # Remove or modify sleep statements
+          # Replace: time.sleep(CHECK_INTERVAL)
+          # With: pass  # No sleep in single-run mode
+          
+          content = re.sub(
+              r'time\.sleep\(CHECK_INTERVAL\)',
+              'pass  # No sleep in single-run mode',
+              content
+          )
+          
+          # Also handle other sleep patterns
+          content = re.sub(
+              r'time\.sleep\(\d+\)',
+              'pass  # No sleep in single-run mode',
+              content
+          )
+          
+          # Remove weekend replay continuous loop
+          # Find: while replay_system.advance_time(REPLAY_CONFIG['replay_advance_minutes']):
+          # Replace with conditional that runs once
+          content = re.sub(
+              r'while replay_system\.advance_time\(.*?\):',
+              'if replay_system.advance_time(REPLAY_CONFIG["replay_advance_minutes"]):  # Single iteration',
+              content
+          )
+          
+          # Add early exit after single iteration in main loop
+          # Find the end of the main iteration block and add break
+          content = re.sub(
+              r'(git_push_changes\(commit_msg\))\s*\n',
+              r'\1\n            break  # Exit after single iteration (hourly mode)\n',
+              content
+          )
+          
+          # Write patched content
+          with open('ai_forex_brain_2.py', 'w') as f:
+              f.write(content)
+          
+          print("✅ Converted to single-run mode")
+          EOFPATCH
+          
+          # Run the single-run patch
+          python single_run_patch.py
+          
           # Add safety check at the beginning of the script
           cat > safety_header.py << 'EOF'
           import os
@@ -186,7 +259,8 @@ jobs:
           
           # GitHub Actions environment check
           if os.environ.get("GITHUB_ACTIONS") == "true":
-              print("🔧 GitHub Actions environment detected - forcing /content paths")
+              print("🔧 GitHub Actions environment detected - HOURLY MODE")
+              print("⏰ Single run mode: Pipeline will execute once and exit")
               os.environ["IN_GHA"] = "1"
           
           # Ensure /content directory exists
@@ -202,11 +276,14 @@ jobs:
           cat safety_header.py ai_forex_brain_2.py > ai_forex_brain_2_patched.py
           mv ai_forex_brain_2_patched.py ai_forex_brain_2.py
           
-          echo "✅ Notebook converted and patched"
+          echo "✅ Notebook converted and patched for hourly single-run mode"
           
-          # Show first 50 lines for verification
-          echo "📄 First 50 lines of patched script:"
-          head -n 50 ai_forex_brain_2.py
+          # Show conversion summary
+          echo "📊 Conversion Summary:"
+          echo "  - Removed infinite loop"
+          echo "  - Disabled sleep statements"
+          echo "  - Single iteration mode enabled"
+          echo "  - Ready for hourly execution"
 
       # 8️⃣ Pre-populate forex-ai-models repo
       - name: Clone forex-ai-models repository
@@ -219,6 +296,9 @@ jobs:
             echo "✅ Repository cloned"
           else
             echo "✅ Repository already exists"
+            cd forex-ai-models
+            git pull origin main
+            echo "✅ Repository updated"
           fi
           
           cd forex-ai-models
@@ -228,18 +308,20 @@ jobs:
           echo "📂 Repository structure:"
           ls -la
 
-      # 9️⃣ Execute pipeline
-      - name: Run AI Forex Brain Pipeline
+      # 9️⃣ Execute pipeline (SINGLE RUN)
+      - name: Run AI Forex Brain Pipeline (Single Iteration)
         run: |
-          echo "🚀 Starting AI Forex Brain Pipeline..."
+          echo "🚀 Starting AI Forex Brain Pipeline (HOURLY MODE)..."
           echo "================================================"
+          echo "⏰ Mode: SINGLE RUN (No loop, completes and exits)"
           echo "📊 Environment:"
           echo "  - Python: $(python --version)"
           echo "  - Working Dir: $(pwd)"
           echo "  - /content exists: $([ -d /content/forex-alpha-models ] && echo 'YES' || echo 'NO')"
+          echo "  - Next run: In ~1 hour (automatic)"
           echo "================================================"
           
-          # Run the pipeline
+          # Run the pipeline (single iteration)
           python ai_forex_brain_2.py 2>&1 | tee pipeline_output.log
           
           EXIT_CODE=${PIPESTATUS[0]}
@@ -255,8 +337,9 @@ jobs:
             exit $EXIT_CODE
           fi
           
-          echo "✅ Pipeline completed successfully"
-        timeout-minutes: 110
+          echo "✅ Pipeline completed successfully (single iteration)"
+          echo "⏰ Next automatic run: $(date -d '+1 hour' '+%Y-%m-%d %H:00:00 UTC')"
+        timeout-minutes: 50
 
       # 🔟 Collect outputs
       - name: Collect pipeline outputs
@@ -276,6 +359,10 @@ jobs:
           # Copy logs
           cp pipeline_output.log $GITHUB_WORKSPACE/outputs/logs/ 2>/dev/null || true
           cp forex_pipeline.log $GITHUB_WORKSPACE/outputs/logs/ 2>/dev/null || true
+          
+          # Copy state files for persistence
+          cp /content/forex-alpha-models/forex-ai-models/*.pkl $GITHUB_WORKSPACE/outputs/ 2>/dev/null || true
+          cp /content/forex-alpha-models/forex-ai-models/*.db $GITHUB_WORKSPACE/outputs/ 2>/dev/null || true
           
           echo "✅ Outputs collected"
           echo "📂 Output structure:"
@@ -300,6 +387,7 @@ jobs:
           path: |
             outputs/merged_data_pickles/*.pkl
             outputs/pickles/*.pkl
+            outputs/*.pkl
           retention-days: 3
 
       - name: Upload signals
@@ -325,7 +413,8 @@ jobs:
           fi
           
           echo "💾 Committing changes..."
-          git commit -m "🤖 Auto-update: AI Forex Brain [$(date '+%Y-%m-%d %H:%M:%S UTC')]" || {
+          ITERATION_INFO=$(grep -oP 'Iteration #\K\d+' /content/forex-alpha-models/pipeline_output.log | tail -1 || echo "N/A")
+          git commit -m "🤖 Hourly update #${ITERATION_INFO}: AI Forex Brain [$(date '+%Y-%m-%d %H:%M:%S UTC')]" || {
             echo "⚠️ Commit failed or nothing to commit"
             exit 0
           }
@@ -349,19 +438,21 @@ jobs:
         if: always()
         run: |
           echo "================================================"
-          echo "🎯 AI FOREX BRAIN PIPELINE SUMMARY"
+          echo "🎯 AI FOREX BRAIN HOURLY PIPELINE SUMMARY"
           echo "================================================"
           echo "📅 Timestamp: $(date)"
           echo "🔢 Run Number: ${{ github.run_number }}"
           echo "🔧 Python: $(python --version)"
+          echo "⏰ Execution Mode: SINGLE RUN (Hourly)"
           echo "📂 Working Dir: $(pwd)"
           echo "================================================"
           
           if [ -f "pipeline_output.log" ]; then
-            echo "📝 Last 30 log lines:"
-            tail -n 30 pipeline_output.log
+            echo "📝 Pipeline Completion Status:"
+            tail -n 30 pipeline_output.log | grep -E "(✅|❌|🏆|💼|🎬)" || tail -n 30 pipeline_output.log
           fi
           
           echo "================================================"
           echo "Status: ${{ job.status }}"
+          echo "⏰ Next scheduled run: $(date -d '+1 hour' '+%Y-%m-%d %H:00:00 UTC')"
           echo "================================================"

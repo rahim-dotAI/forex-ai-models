@@ -233,11 +233,23 @@ jobs:
               content
           )
           
-          # Add early exit after single iteration in main loop
-          # Find the end of the main iteration block and add break
+          # BETTER APPROACH: Replace the entire main() function's try block end
+          # Find the pattern: "while not shutdown" or "if True:" and change loop behavior
+          # Instead of adding break, we'll modify the loop condition itself
+          
+          # Find: WEEKEND_MONDAY_MANAGER.should_sleep_after_iteration()
+          # Add exit logic after that check
           content = re.sub(
-              r'(git_push_changes\(commit_msg\))\s*\n',
-              r'\1\n            break  # Exit after single iteration (hourly mode)\n',
+              r'(if WEEKEND_MONDAY_MANAGER\.should_sleep_after_iteration\(\):.*?print_status.*?"info"\))',
+              r'\1\n                break  # Exit after single iteration (hourly mode)',
+              content,
+              flags=re.DOTALL
+          )
+          
+          # Alternative: Add break after the final else clause in the main loop
+          content = re.sub(
+              r'(else:\s+print_status\([^)]+no sleep in replay mode[^)]+\))',
+              r'\1\n                break  # Exit after single iteration (hourly mode)',
               content
           )
           

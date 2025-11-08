@@ -87,47 +87,119 @@ jobs:
         run: |
           cd /content/forex-alpha-models
           if [ ! -d "forex-ai-models/.git" ]; then
+            echo "🔄 Cloning forex-ai-models repository..."
             git clone -b main https://${GITHUB_USERNAME}:${FOREX_PAT}@github.com/${GITHUB_USERNAME}/${GITHUB_REPO}.git forex-ai-models
           else
+            echo "📥 Pulling latest changes..."
             cd forex-ai-models
             git pull origin main
           fi
           cd forex-ai-models
           git config user.name "${GIT_USER_NAME}"
           git config user.email "${GIT_USER_EMAIL}"
+          
+          echo ""
+          echo "📂 Repository contents:"
+          ls -la
 
       - name: Check dependencies and decide execution mode
         id: check_deps
         run: |
-          echo "Checking if required files exist for Ultra-Persistent mode..."
+          echo "=========================================="
+          echo "CHECKING DEPENDENCIES FOR MODE SELECTION"
+          echo "=========================================="
           
+          REPO_PATH="/content/forex-alpha-models/forex-ai-models"
           REQUIRED_FILES_MISSING=0
           
+          echo ""
+          echo "📊 Checking for required files in $REPO_PATH..."
+          
           # Check for CSV data files
-          if [ ! -d "/content/forex-alpha-models/csvs" ] || [ -z "$(ls -A /content/forex-alpha-models/csvs/*.csv 2>/dev/null)" ]; then
-            echo "Missing: CSV data files"
+          echo ""
+          echo "1️⃣ Checking CSV files..."
+          CSV_COUNT=$(find "$REPO_PATH" -maxdepth 1 -name "*.csv" 2>/dev/null | wc -l)
+          if [ $CSV_COUNT -gt 0 ]; then
+            echo "   ✅ Found $CSV_COUNT CSV files"
+            ls -lh "$REPO_PATH"/*.csv 2>/dev/null | head -5
+          else
+            echo "   ❌ No CSV files found"
             REQUIRED_FILES_MISSING=1
           fi
           
-          # Check for merged pickle files
-          if [ ! -d "/content/forex-alpha-models/merged_data_pickles" ] || [ -z "$(ls -A /content/forex-alpha-models/merged_data_pickles/*.pkl 2>/dev/null)" ]; then
-            echo "Missing: Merged pickle files"
+          # Check for pickle files
+          echo ""
+          echo "2️⃣ Checking pickle files..."
+          PKL_COUNT=$(find "$REPO_PATH" -maxdepth 1 -name "*_2244.pkl" 2>/dev/null | wc -l)
+          if [ $PKL_COUNT -gt 0 ]; then
+            echo "   ✅ Found $PKL_COUNT merged pickle files"
+            ls -lh "$REPO_PATH"/*_2244.pkl 2>/dev/null | head -5
+          else
+            echo "   ❌ No merged pickle files found"
             REQUIRED_FILES_MISSING=1
           fi
           
-          # Check forex-ai-models repo
-          if [ ! -d "/content/forex-alpha-models/forex-ai-models/.git" ]; then
-            echo "Missing: forex-ai-models repository"
-            REQUIRED_FILES_MISSING=1
+          # Check for database files
+          echo ""
+          echo "3️⃣ Checking database files..."
+          if [ -f "$REPO_PATH/infinite_memory.db" ] || [ -f "$REPO_PATH/ml_persistent_memory.db" ]; then
+            echo "   ✅ Database files exist"
+            ls -lh "$REPO_PATH"/*.db 2>/dev/null
+          else
+            echo "   ⚠️  No database files (will be created on first run)"
           fi
+          
+          echo ""
+          echo "=========================================="
           
           if [ $REQUIRED_FILES_MISSING -eq 1 ]; then
             echo "mode=full" >> $GITHUB_OUTPUT
-            echo "DECISION: Running FULL pipeline (data files missing)"
+            echo "🔴 DECISION: Running FULL pipeline"
+            echo "   Reason: Required data files missing from repository"
           else
             echo "mode=ultra" >> $GITHUB_OUTPUT
-            echo "DECISION: Running ULTRA-PERSISTENT mode (all dependencies present)"
+            echo "🟢 DECISION: Running ULTRA-PERSISTENT mode"
+            echo "   Reason: All required files present in repository"
           fi
+          
+          echo "=========================================="
+
+      - name: Copy data files to working directories
+        if: steps.check_deps.outputs.mode == 'ultra'
+        run: |
+          echo "📦 Copying data from repository to working directories..."
+          
+          REPO_PATH="/content/forex-alpha-models/forex-ai-models"
+          
+          # Copy CSV files
+          if ls "$REPO_PATH"/*.csv 1> /dev/null 2>&1; then
+            cp "$REPO_PATH"/*.csv /content/forex-alpha-models/csvs/
+            echo "✅ Copied CSV files"
+          fi
+          
+          # Copy pickle files
+          if ls "$REPO_PATH"/*_2244.pkl 1> /dev/null 2>&1; then
+            cp "$REPO_PATH"/*_2244.pkl /content/forex-alpha-models/merged_data_pickles/
+            echo "✅ Copied merged pickle files"
+          fi
+          
+          # Copy other pickle files
+          if ls "$REPO_PATH"/*.pkl 1> /dev/null 2>&1; then
+            cp "$REPO_PATH"/*.pkl /content/forex-alpha-models/pickles/ 2>/dev/null || true
+            echo "✅ Copied other pickle files"
+          fi
+          
+          # Copy database files
+          if ls "$REPO_PATH"/*.db 1> /dev/null 2>&1; then
+            cp "$REPO_PATH"/*.db /content/forex-alpha-models/forex-ai-models/
+            echo "✅ Copied database files"
+          fi
+          
+          echo ""
+          echo "📊 Working directory status:"
+          echo "CSVs: $(ls -1 /content/forex-alpha-models/csvs/*.csv 2>/dev/null | wc -l) files"
+          echo "Merged pickles: $(ls -1 /content/forex-alpha-models/merged_data_pickles/*.pkl 2>/dev/null | wc -l) files"
+          echo "Other pickles: $(ls -1 /content/forex-alpha-models/pickles/*.pkl 2>/dev/null | wc -l) files"
 
       - name: Convert notebook to Python
         run: |
@@ -150,263 +222,200 @@ jobs:
           EOF
           sed -i -f path_fixes.sed ai_forex_brain_2.py
 
-      - name: Extract Ultra-Persistent section (if needed)
+      - name: Extract THREE Ultra-Persistent Cells
         if: steps.check_deps.outputs.mode == 'ultra'
         run: |
-          cat > extract_ultra.py << 'PYTHON_EOF'
+          cat > extract_three_cells.py << 'PYTHON_EOF'
+          import re
+          
           with open("ai_forex_brain_2.py", "r", encoding="utf-8") as f:
               content = f.read()
           
-          marker = '#!/usr/bin/env python3\n"""\nVERSION 3.6'
+          # Define the THREE cell markers in order
+          markers = [
+              {
+                  'name': 'Ultra-Persistent Pipeline (VERSION 3.6)',
+                  'pattern': r'# ={60,}\n# VERSION 3\.6 – Unified Loader \+ Merge Pickles'
+              },
+              {
+                  'name': 'Unified Pipeline (FX CSV Combine)',
+                  'pattern': r'# ={60,}\n# FX CSV Combine \+ Incremental Indicators Pipeline'
+              },
+              {
+                  'name': 'Hybrid Pipeline v7.5',
+                  'pattern': r'#!/usr/bin/env python3\n"""\nUltimate Hybrid Forex Pipeline v7\.5'
+              }
+          ]
           
-          if marker in content:
-              idx = content.find(marker)
-              filtered = content[idx:]
-              print(f"Found Ultra-Persistent v3.6 at position {idx}")
-          else:
-              # Try alternate markers
-              for alt_marker in ['VERSION 3.5', 'ULTRA-PERSISTENT']:
-                  if alt_marker in content:
-                      sections = content.split('#!/usr/bin/env python3')
-                      for i, section in enumerate(sections):
-                          if alt_marker in section:
-                              filtered = '#!/usr/bin/env python3' + section
-                              print(f"Found using alt method (section {i})")
-                              break
-                      break
+          print("=" * 80)
+          print("EXTRACTING THREE ULTRA-PERSISTENT CELLS")
+          print("=" * 80)
+          
+          cell_positions = []
+          
+          # Find all three cells
+          for i, marker_info in enumerate(markers, 1):
+              match = re.search(marker_info['pattern'], content)
+              if match:
+                  pos = match.start()
+                  cell_positions.append({
+                      'index': i,
+                      'name': marker_info['name'],
+                      'position': pos
+                  })
+                  print(f"\n✅ Cell {i} Found: {marker_info['name']}")
+                  print(f"   Position: {pos:,}")
+                  # Show first line of content
+                  first_line = content[pos:pos+100].split('\n')[0]
+                  print(f"   First line: {first_line[:70]}...")
               else:
-                  print("Warning: Could not find section, using full file")
-                  filtered = content
+                  print(f"\n❌ Cell {i} NOT FOUND: {marker_info['name']}")
           
+          if len(cell_positions) < 3:
+              print("\n" + "=" * 80)
+              print("⚠️  WARNING: Not all 3 cells found!")
+              print(f"   Found: {len(cell_positions)}/3 cells")
+              print("=" * 80)
+              
+              # Fallback: extract from first found cell to end
+              if cell_positions:
+                  start_pos = min(c['position'] for c in cell_positions)
+                  print(f"\n🔄 Fallback: Extracting from position {start_pos:,} to END")
+                  extracted_code = content[start_pos:]
+              else:
+                  print("\n❌ No cells found! Using full notebook")
+                  extracted_code = content
+          else:
+              # Extract from FIRST cell to END of file
+              start_pos = cell_positions[0]['position']
+              extracted_code = content[start_pos:]
+              
+              print("\n" + "=" * 80)
+              print("✅ EXTRACTION SUCCESSFUL")
+              print("=" * 80)
+              print(f"\nExtracting from Cell 1 ({cell_positions[0]['name']}) to END")
+              print(f"Start position: {start_pos:,}")
+              print(f"Extracted length: {len(extracted_code):,} characters")
+              print(f"Total lines: {len(extracted_code.split(chr(10))):,}")
+          
+          # Write extracted code
           with open("ai_forex_brain_2_ultra.py", "w", encoding="utf-8") as f:
-              f.write(filtered)
+              f.write(extracted_code)
           
-          print(f"Extracted {len(filtered)} characters")
+          # Verify extraction
+          lines = extracted_code.split('\n')
+          print("\n" + "=" * 80)
+          print("EXTRACTION SUMMARY")
+          print("=" * 80)
+          print(f"Total lines: {len(lines):,}")
+          print(f"\nFirst 5 lines:")
+          for i, line in enumerate(lines[:5], 1):
+              print(f"  {i:3d}: {line[:75]}")
+          print(f"\nLast 5 lines:")
+          for i, line in enumerate(lines[-5:], len(lines)-4):
+              print(f"  {i:3d}: {line[:75]}")
+          
+          # Count cells included
+          cell_markers_found = sum([
+              1 for m in markers 
+              if re.search(m['pattern'], extracted_code)
+          ])
+          print(f"\n📋 Cells included in extraction: {cell_markers_found}/3")
+          
+          print("\n✅ Ultra-persistent script ready: ai_forex_brain_2_ultra.py")
+          print("=" * 80)
           PYTHON_EOF
           
-          python extract_ultra.py
+          python extract_three_cells.py
 
       - name: Run Pipeline (Full Mode)
         if: steps.check_deps.outputs.mode == 'full'
         run: |
           echo "=========================================="
-          echo "RUNNING FULL PIPELINE MODE"
-          echo "Reason: Required data files not present"
-          echo "This will run the complete notebook"
+          echo "🔴 RUNNING FULL PIPELINE MODE"
+          echo "=========================================="
+          echo "This will execute ALL cells in the notebook:"
+          echo "  1. Data fetching from APIs"
+          echo "  2. Indicator calculation"
+          echo "  3. Pickle creation"
+          echo "  4. Model training"
+          echo "  5. Signal generation"
           echo "=========================================="
           python ai_forex_brain_2.py 2>&1 | tee pipeline_output.log
           EXIT_CODE=${PIPESTATUS[0]}
           if [ $EXIT_CODE -ne 0 ]; then
-            echo "Pipeline failed with exit code $EXIT_CODE"
+            echo "❌ Pipeline failed with exit code $EXIT_CODE"
             tail -n 50 pipeline_output.log
             exit $EXIT_CODE
           fi
         timeout-minutes: 50
 
-      - name: Run Pipeline (Ultra-Persistent Mode)
+      - name: Run Pipeline (Ultra-Persistent Mode - 3 Cells)
         if: steps.check_deps.outputs.mode == 'ultra'
         run: |
           echo "=========================================="
-          echo "RUNNING ULTRA-PERSISTENT MODE v3.6"
-          echo "Reason: All required files present"
-          echo "Starting from VERSION 3.6 section"
+          echo "🟢 RUNNING ULTRA-PERSISTENT MODE (3 CELLS)"
+          echo "=========================================="
+          echo "Executing in order:"
+          echo "  1. VERSION 3.6 - Ultra-Persistent Pipeline"
+          echo "  2. FX CSV Combine + Incremental Indicators"
+          echo "  3. Ultimate Hybrid Forex Pipeline v7.5"
           echo "=========================================="
           python ai_forex_brain_2_ultra.py 2>&1 | tee pipeline_output.log
           EXIT_CODE=${PIPESTATUS[0]}
           if [ $EXIT_CODE -ne 0 ]; then
-            echo "Pipeline failed with exit code $EXIT_CODE"
-            tail -n 50 pipeline_output.log
+            echo "❌ Pipeline failed with exit code $EXIT_CODE"
+            tail -n 100 pipeline_output.log
             exit $EXIT_CODE
           fi
         timeout-minutes: 50
 
-      - name: Verify persistence after run
-        if: always()
+      - name: Copy outputs back to repository
         run: |
-          echo "=========================================="
-          echo "VERIFYING DATA PERSISTENCE"
-          echo "=========================================="
+          echo "📦 Copying outputs back to repository..."
           
-          cd /content/forex-alpha-models/forex-ai-models
+          # Copy from working directories to repo
+          cp -r /content/forex-alpha-models/csvs/*.csv \
+            /content/forex-alpha-models/forex-ai-models/ 2>/dev/null || true
           
-          echo ""
-          echo "📊 Checking critical persistence files..."
+          cp -r /content/forex-alpha-models/merged_data_pickles/*_2244.pkl \
+            /content/forex-alpha-models/forex-ai-models/ 2>/dev/null || true
           
-          # Check database
-          if [ -f "ml_persistent_memory.db" ]; then
-            DB_SIZE=$(du -h ml_persistent_memory.db | cut -f1)
-            echo "✅ Database exists: ml_persistent_memory.db ($DB_SIZE)"
-            
-            # Check if database has data
-            if command -v sqlite3 &> /dev/null; then
-              PENDING_COUNT=$(sqlite3 ml_persistent_memory.db "SELECT COUNT(*) FROM pending_trades;" 2>/dev/null || echo "0")
-              COMPLETED_COUNT=$(sqlite3 ml_persistent_memory.db "SELECT COUNT(*) FROM completed_trades;" 2>/dev/null || echo "0")
-              echo "   📈 Pending trades: $PENDING_COUNT"
-              echo "   📊 Completed trades: $COMPLETED_COUNT"
-            fi
-          else
-            echo "❌ Database NOT found - first run or creation failed"
-          fi
+          cp -r /content/forex-alpha-models/pickles/*.pkl \
+            /content/forex-alpha-models/forex-ai-models/ 2>/dev/null || true
           
-          # Check iteration counter
-          if [ -f "ml_iteration_counter.pkl" ]; then
-            echo "✅ Iteration counter exists"
-          else
-            echo "⚠️  Iteration counter missing"
-          fi
+          cp -r /content/forex-alpha-models/forex-ai-models/*.db \
+            /content/forex-alpha-models/forex-ai-models/ 2>/dev/null || true
           
-          # Check learning progress
-          if [ -f "ml_learning_progress.pkl" ]; then
-            echo "✅ Learning progress file exists"
-          else
-            echo "⚠️  Learning progress missing"
-          fi
+          cp -r /content/forex-alpha-models/forex-ai-models/*.json \
+            /content/forex-alpha-models/forex-ai-models/ 2>/dev/null || true
           
-          # Check signals
-          if [ -f "latest_signals.json" ]; then
-            echo "✅ Latest signals JSON exists"
-          else
-            echo "⚠️  Signals JSON missing"
-          fi
-          
-          echo ""
-          echo "📁 All files in repo root:"
-          ls -lh *.db *.pkl *.json 2>/dev/null || echo "No persistence files found"
-          
-          echo ""
-          echo "=========================================="
+          echo "✅ Outputs copied"
 
-      - name: Commit and push all changes to forex-ai-models repo
-        if: always()
+      - name: Commit and push changes
         run: |
           cd /content/forex-alpha-models/forex-ai-models
           
-          echo "=========================================="
-          echo "COMMITTING CHANGES TO GIT"
-          echo "=========================================="
+          git add .
           
-          # Stage all changes
-          git add -A
-          
-          # Check if there are changes
-          if git diff --staged --quiet; then
+          if git diff --cached --quiet; then
             echo "ℹ️  No changes to commit"
           else
-            echo "📝 Changes detected, committing..."
-            
-            # Show what's being committed
-            echo ""
-            echo "Files to be committed:"
-            git diff --staged --name-only
-            
-            # Commit with detailed message
-            TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
-            git commit -m "🤖 Auto update - $TIMESTAMP
-
-            - Trade evaluation system: FIXED
-            - Data persistence: ACTIVE
-            - Learning system: OPERATIONAL
-            
-            This commit contains:
-            - Updated database with trade results
-            - Model performance cache
-            - Iteration counter
-            - Learning progress data
-            - Latest trading signals"
-            
-            # Push with retry logic
-            echo ""
-            echo "🚀 Pushing to GitHub..."
-            for i in {1..3}; do
-              if git push origin main; then
-                echo "✅ Changes pushed successfully on attempt $i"
-                break
-              else
-                echo "⚠️  Push attempt $i failed, retrying in 5 seconds..."
-                sleep 5
-                
-                if [ $i -eq 3 ]; then
-                  echo "❌ Failed to push after 3 attempts"
-                  exit 1
-                fi
-              fi
-            done
+            git commit -m "🤖 Auto-update: Ultra-Persistent Pipeline - $(date +'%Y-%m-%d %H:%M:%S UTC')"
+            git push origin main || {
+              echo "⚠️  Push failed, trying to pull and merge..."
+              git pull --rebase origin main
+              git push origin main
+            }
+            echo "✅ Changes pushed successfully"
           fi
-          
-          echo "=========================================="
 
-      - name: Collect outputs
-        if: always()
-        run: |
-          mkdir -p $GITHUB_WORKSPACE/outputs/signals
-          cp -r /content/forex-alpha-models/logs $GITHUB_WORKSPACE/outputs/ 2>/dev/null || true
-          cp -r /content/forex-alpha-models/merged_data_pickles $GITHUB_WORKSPACE/outputs/ 2>/dev/null || true
-          cp -r /content/forex-alpha-models/pickles $GITHUB_WORKSPACE/outputs/ 2>/dev/null || true
-          cp /content/forex-alpha-models/forex-ai-models/*.json $GITHUB_WORKSPACE/outputs/signals/ 2>/dev/null || true
-          cp pipeline_output.log $GITHUB_WORKSPACE/outputs/logs/ 2>/dev/null || true
-          cp /content/forex-alpha-models/forex-ai-models/*.pkl $GITHUB_WORKSPACE/outputs/ 2>/dev/null || true
-          cp /content/forex-alpha-models/forex-ai-models/*.db $GITHUB_WORKSPACE/outputs/ 2>/dev/null || true
-
-      - name: Upload logs
+      - name: Upload logs as artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: forex-pipeline-logs-${{ github.run_number }}
+          name: pipeline-logs-${{ github.run_number }}
           path: |
-            outputs/logs/*.log
             pipeline_output.log
+            /content/forex-alpha-models/logs/*.log
           retention-days: 7
-
-      - name: Upload pickles
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: forex-pickles-${{ github.run_number }}
-          path: |
-            outputs/merged_data_pickles/*.pkl
-            outputs/pickles/*.pkl
-            outputs/*.pkl
-          retention-days: 3
-
-      - name: Upload signals
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: forex-signals-${{ github.run_number }}
-          path: outputs/signals/*.json
-          retention-days: 7
-
-      - name: Upload database (for inspection)
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: forex-database-${{ github.run_number }}
-          path: outputs/*.db
-          retention-days: 7
-
-      - name: Cleanup sensitive data
-        if: always()
-        run: |
-          rm -f ~/.git-credentials
-          rm -f /content/forex-alpha-models/forex-ai-models/.git/credentials 2>/dev/null || true
-
-      - name: Pipeline summary
-        if: always()
-        run: |
-          echo "=========================================="
-          echo "PIPELINE EXECUTION SUMMARY"
-          echo "=========================================="
-          echo "Run Number: ${{ github.run_number }}"
-          echo "Execution Mode: ${{ steps.check_deps.outputs.mode }}"
-          echo "Status: ${{ job.status }}"
-          echo ""
-          echo "📊 Persistence Check:"
-          if [ -f "/content/forex-alpha-models/forex-ai-models/ml_persistent_memory.db" ]; then
-            echo "✅ Database persisted to Git"
-          else
-            echo "⚠️  Database not found"
-          fi
-          echo ""
-          echo "📝 Last 30 lines of log:"
-          tail -n 30 pipeline_output.log 2>/dev/null || echo "No log file found"
-          echo "=========================================="

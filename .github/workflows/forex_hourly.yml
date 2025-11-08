@@ -27,9 +27,9 @@ jobs:
       BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}
       ALPHA_VANTAGE_KEY: ${{ secrets.ALPHA_VANTAGE_KEY }}
       
-      # Email configuration
-      GMAIL_USER: ${{ secrets.GMAIL_USER }}
-      GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+      # 🔧 FIX: Remove environment variables for Gmail - let code use hardcoded values
+      # GMAIL_USER: ${{ secrets.GMAIL_USER }}
+      # GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
       
       # Git configuration
       GIT_USER_NAME: "Forex AI Bot"
@@ -64,7 +64,7 @@ jobs:
           submodules: false
           clean: true
 
-      # 2️⃣ Verify secrets
+      # 2️⃣ Verify secrets (UPDATED - Skip Gmail check)
       - name: Verify required secrets
         run: |
           MISSING_SECRETS=()
@@ -72,8 +72,7 @@ jobs:
           [ -z "${FOREX_PAT}" ] && MISSING_SECRETS+=("FOREX_PAT")
           [ -z "${BROWSERLESS_TOKEN}" ] && MISSING_SECRETS+=("BROWSERLESS_TOKEN")
           [ -z "${ALPHA_VANTAGE_KEY}" ] && MISSING_SECRETS+=("ALPHA_VANTAGE_KEY")
-          [ -z "${GMAIL_USER}" ] && MISSING_SECRETS+=("GMAIL_USER")
-          [ -z "${GMAIL_APP_PASSWORD}" ] && MISSING_SECRETS+=("GMAIL_APP_PASSWORD")
+          # Gmail credentials are hardcoded in script, so we skip checking them here
           
           if [ ${#MISSING_SECRETS[@]} -gt 0 ]; then
             echo "❌ Missing required secrets: ${MISSING_SECRETS[*]}"
@@ -81,6 +80,8 @@ jobs:
           else
             echo "✅ All required secrets are configured"
           fi
+          
+          echo "📧 Gmail: Using hardcoded credentials from script"
 
       # 3️⃣ Python setup
       - name: Set up Python 3.11
@@ -141,6 +142,11 @@ jobs:
           
           # Fix all .mkdir() calls to include parents=True
           sed -i 's/\.mkdir(exist_ok=True)/.mkdir(parents=True, exist_ok=True)/g' ai_forex_brain_2.py
+          
+          # 🔧 FIX: Remove os.environ.get() for Gmail credentials - force hardcoded values
+          echo "🔧 Patching Gmail credentials to use hardcoded values..."
+          sed -i 's/GMAIL_USER = os\.environ\.get("GMAIL_USER", "nakatonabira3@gmail\.com")/GMAIL_USER = "nakatonabira3@gmail.com"/g' ai_forex_brain_2.py
+          sed -i 's/GMAIL_APP_PASSWORD = os\.environ\.get("GMAIL_APP_PASSWORD", "gmwohahtltmcewug")/GMAIL_APP_PASSWORD = "gmwohahtltmcewug"/g' ai_forex_brain_2.py
           
           # Comprehensive path fixes - Replace ALL path definitions
           cat > path_fixes.sed << 'EOF'
@@ -289,12 +295,14 @@ jobs:
           mv ai_forex_brain_2_patched.py ai_forex_brain_2.py
           
           echo "✅ Notebook converted and patched for hourly single-run mode"
+          echo "✅ Gmail credentials patched to use hardcoded values"
           
           # Show conversion summary
           echo "📊 Conversion Summary:"
           echo "  - Removed infinite loop"
           echo "  - Disabled sleep statements"
           echo "  - Single iteration mode enabled"
+          echo "  - Gmail credentials: HARDCODED (not using env vars)"
           echo "  - Ready for hourly execution"
 
       # 8️⃣ Pre-populate forex-ai-models repo
@@ -326,6 +334,7 @@ jobs:
           echo "🚀 Starting AI Forex Brain Pipeline (HOURLY MODE)..."
           echo "================================================"
           echo "⏰ Mode: SINGLE RUN (No loop, completes and exits)"
+          echo "📧 Gmail: Using hardcoded credentials"
           echo "📊 Environment:"
           echo "  - Python: $(python --version)"
           echo "  - Working Dir: $(pwd)"
@@ -456,6 +465,7 @@ jobs:
           echo "🔢 Run Number: ${{ github.run_number }}"
           echo "🔧 Python: $(python --version)"
           echo "⏰ Execution Mode: SINGLE RUN (Hourly)"
+          echo "📧 Gmail: Hardcoded credentials (not using env vars)"
           echo "📂 Working Dir: $(pwd)"
           echo "================================================"
           

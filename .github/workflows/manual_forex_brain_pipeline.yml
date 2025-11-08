@@ -48,9 +48,9 @@ jobs:
           [ -z "${BROWSERLESS_TOKEN}" ] && MISSING_SECRETS+=("BROWSERLESS_TOKEN")
           [ -z "${ALPHA_VANTAGE_KEY}" ] && MISSING_SECRETS+=("ALPHA_VANTAGE_KEY")
           if [ ${#MISSING_SECRETS[@]} -gt 0 ]; then
-            echo "Missing secrets: ${MISSING_SECRETS[*]}"
+            echo "⚠️  Missing secrets: ${MISSING_SECRETS[*]}"
           else
-            echo "All secrets configured"
+            echo "✅ All secrets configured"
           fi
 
       - name: Set up Python 3.11
@@ -291,111 +291,95 @@ jobs:
           EOF
           sed -i -f path_fixes.sed ai_forex_brain_2.py
 
-      - name: Extract THREE Ultra-Persistent Cells
+      - name: Extract Ultra-Persistent Cells (Smart Detection)
         if: steps.check_deps.outputs.mode == 'ultra'
         run: |
-          cat > extract_three_cells.py << 'PYTHON_EOF'
+          cat > extract_ultra_cells.py << 'PYTHON_EOF'
           import re
           
           with open("ai_forex_brain_2.py", "r", encoding="utf-8") as f:
               content = f.read()
           
-          # Define the THREE cell markers in order
-          markers = [
+          print("=" * 80)
+          print("SEARCHING FOR ULTRA-PERSISTENT PIPELINE CELLS")
+          print("=" * 80)
+          
+          # Define the THREE cells we need to find (based on actual notebook structure)
+          cell_markers = [
               {
-                  'name': 'Ultra-Persistent Pipeline (VERSION 3.6)',
-                  'pattern': r'# ={60,}\n# VERSION 3\.6 – Unified Loader \+ Merge Pickles'
+                  'name': 'FX CSV Combine + Incremental Indicators',
+                  'pattern': r'# FX CSV Combine \+ Incremental Indicators Pipeline'
               },
               {
-                  'name': 'Unified Pipeline (FX CSV Combine)',
-                  'pattern': r'# ={60,}\n# FX CSV Combine \+ Incremental Indicators Pipeline'
+                  'name': 'VERSION 3.6 - Unified Loader',
+                  'pattern': r'# VERSION 3\.6 â€" Unified Loader \+ Merge Pickles'
               },
               {
-                  'name': 'Hybrid Pipeline v7.5',
-                  'pattern': r'#!/usr/bin/env python3\n"""\nUltimate Hybrid Forex Pipeline v7\.5'
+                  'name': 'Ultimate Hybrid Forex Pipeline v7.5',
+                  'pattern': r'#!/usr/bin/env python3\s*\n\s*"""\s*Ultimate Hybrid Forex Pipeline v7\.5'
               }
           ]
           
-          print("=" * 80)
-          print("EXTRACTING THREE ULTRA-PERSISTENT CELLS")
-          print("=" * 80)
+          found_cells = []
           
-          cell_positions = []
-          
-          # Find all three cells
-          for i, marker_info in enumerate(markers, 1):
-              match = re.search(marker_info['pattern'], content)
+          for i, marker_info in enumerate(cell_markers, 1):
+              match = re.search(marker_info['pattern'], content, re.DOTALL | re.MULTILINE)
               if match:
                   pos = match.start()
-                  cell_positions.append({
+                  found_cells.append({
                       'index': i,
                       'name': marker_info['name'],
                       'position': pos
                   })
-                  print(f"\n✅ Cell {i} Found: {marker_info['name']}")
+                  print(f"✅ Cell {i} Found: {marker_info['name']}")
                   print(f"   Position: {pos:,}")
-                  # Show first line of content
-                  first_line = content[pos:pos+100].split('\n')[0]
-                  print(f"   First line: {first_line[:70]}...")
               else:
-                  print(f"\n❌ Cell {i} NOT FOUND: {marker_info['name']}")
+                  print(f"❌ Cell {i} NOT FOUND: {marker_info['name']}")
           
-          if len(cell_positions) < 3:
-              print("\n" + "=" * 80)
-              print("⚠️  WARNING: Not all 3 cells found!")
-              print(f"   Found: {len(cell_positions)}/3 cells")
-              print("=" * 80)
-              
-              # Fallback: extract from first found cell to end
-              if cell_positions:
-                  start_pos = min(c['position'] for c in cell_positions)
-                  print(f"\n🔄 Fallback: Extracting from position {start_pos:,} to END")
-                  extracted_code = content[start_pos:]
-              else:
-                  print("\n❌ No cells found! Using full notebook")
-                  extracted_code = content
-          else:
-              # Extract from FIRST cell to END of file
-              start_pos = cell_positions[0]['position']
+          print(f"\n📊 Found {len(found_cells)}/3 cells")
+          
+          if len(found_cells) == 0:
+              print("\n⚠️  No cells found! Using full notebook")
+              extracted_code = content
+          elif len(found_cells) == 3:
+              # All 3 cells found - extract from first to end
+              start_pos = min(c['position'] for c in found_cells)
               extracted_code = content[start_pos:]
-              
-              print("\n" + "=" * 80)
-              print("✅ EXTRACTION SUCCESSFUL")
-              print("=" * 80)
-              print(f"\nExtracting from Cell 1 ({cell_positions[0]['name']}) to END")
-              print(f"Start position: {start_pos:,}")
-              print(f"Extracted length: {len(extracted_code):,} characters")
-              print(f"Total lines: {len(extracted_code.split(chr(10))):,}")
+              print(f"\n✅ Extracting from first cell (position {start_pos:,}) to END")
+          else:
+              # Partial cells found - extract from earliest found
+              start_pos = min(c['position'] for c in found_cells)
+              extracted_code = content[start_pos:]
+              print(f"\n⚠️  Extracting from position {start_pos:,} to END (partial match)")
           
           # Write extracted code
           with open("ai_forex_brain_2_ultra.py", "w", encoding="utf-8") as f:
               f.write(extracted_code)
           
-          # Verify extraction
+          # Summary
           lines = extracted_code.split('\n')
           print("\n" + "=" * 80)
           print("EXTRACTION SUMMARY")
           print("=" * 80)
-          print(f"Total lines: {len(lines):,}")
+          print(f"Total lines extracted: {len(lines):,}")
+          print(f"Total characters: {len(extracted_code):,}")
+          
           print(f"\nFirst 5 lines:")
           for i, line in enumerate(lines[:5], 1):
               print(f"  {i:3d}: {line[:75]}")
-          print(f"\nLast 5 lines:")
-          for i, line in enumerate(lines[-5:], len(lines)-4):
-              print(f"  {i:3d}: {line[:75]}")
           
-          # Count cells included
-          cell_markers_found = sum([
-              1 for m in markers 
-              if re.search(m['pattern'], extracted_code)
+          # Verify cells are present in extraction
+          cells_in_extract = sum([
+              1 for marker in cell_markers 
+              if re.search(marker['pattern'], extracted_code, re.DOTALL | re.MULTILINE)
           ])
-          print(f"\n📋 Cells included in extraction: {cell_markers_found}/3")
+          print(f"\n📋 Cells included in extraction: {cells_in_extract}/3")
           
           print("\n✅ Ultra-persistent script ready: ai_forex_brain_2_ultra.py")
           print("=" * 80)
           PYTHON_EOF
           
-          python extract_three_cells.py
+          python extract_ultra_cells.py
 
       - name: Run Pipeline (Full Mode)
         if: steps.check_deps.outputs.mode == 'full'
@@ -419,15 +403,15 @@ jobs:
           fi
         timeout-minutes: 50
 
-      - name: Run Pipeline (Ultra-Persistent Mode - 3 Cells)
+      - name: Run Pipeline (Ultra-Persistent Mode)
         if: steps.check_deps.outputs.mode == 'ultra'
         run: |
           echo "=========================================="
           echo "🟢 RUNNING ULTRA-PERSISTENT MODE (3 CELLS)"
           echo "=========================================="
           echo "Executing in order:"
-          echo "  1. VERSION 3.6 - Ultra-Persistent Pipeline"
-          echo "  2. FX CSV Combine + Incremental Indicators"
+          echo "  1. FX CSV Combine + Incremental Indicators"
+          echo "  2. VERSION 3.6 - Unified Loader + Merge Pickles"
           echo "  3. Ultimate Hybrid Forex Pipeline v7.5"
           echo "=========================================="
           python ai_forex_brain_2_ultra.py 2>&1 | tee pipeline_output.log
@@ -440,6 +424,7 @@ jobs:
         timeout-minutes: 50
 
       - name: Copy outputs back to repository
+        if: always()
         run: |
           echo "📦 Copying outputs back to repository..."
           
@@ -528,6 +513,7 @@ jobs:
           echo "✅ All outputs copied successfully (skipped identical files)"
 
       - name: Commit and push changes
+        if: always()
         run: |
           cd /content/forex-alpha-models/forex-ai-models
           
@@ -536,7 +522,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "ℹ️  No changes to commit"
           else
-            git commit -m "🤖 Auto-update: Ultra-Persistent Pipeline - $(date +'%Y-%m-%d %H:%M:%S UTC')"
+            git commit -m "🤖 Auto-update: Pipeline run - $(date +'%Y-%m-%d %H:%M:%S UTC')"
             git push origin main || {
               echo "⚠️  Push failed, trying to pull and merge..."
               git pull --rebase origin main

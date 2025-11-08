@@ -138,12 +138,14 @@ jobs:
           echo "📧 Gmail: Using hardcoded credentials"
           echo "📊 Starting from: VERSION 3.5 – ULTRA-PERSISTENT SELF-LEARNING HYBRID FX PIPELINE"
           echo "================================================"
-          python -c "import re; \
-with open('ai_forex_brain_2.py','r',encoding='utf-8') as f: content=f.read(); \
-marker='#!/usr/bin/env python3\n\"\"\"\nVERSION 3.5 – ULTRA-PERSISTENT SELF-LEARNING HYBRID FX PIPELINE'; \
+          python -c 'import re; \
+with open("ai_forex_brain_2.py","r",encoding="utf-8") as f: content=f.read(); \
+marker="""#!/usr/bin/env python3
+\"\"\" 
+VERSION 3.5 – ULTRA-PERSISTENT SELF-LEARNING HYBRID FX PIPELINE"""; \
 idx=content.find(marker); filtered_content=content[idx:] if idx!=-1 else content; \
-with open('ai_forex_brain_2_ultra.py','w',encoding='utf-8') as f: f.write(filtered_content); \
-print(f'✅ Extracted {len(filtered_content)} characters')"
+with open("ai_forex_brain_2_ultra.py","w",encoding="utf-8") as f: f.write(filtered_content); \
+print("✅ Extracted {} characters".format(len(filtered_content)))'
           if [ -f "ai_forex_brain_2_ultra.py" ]; then
             echo "✅ Running extracted Ultra-Persistent pipeline..."
             python ai_forex_brain_2_ultra.py 2>&1 | tee pipeline_output.log

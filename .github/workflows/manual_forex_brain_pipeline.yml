@@ -207,44 +207,57 @@ jobs:
           mkdir -p /content/forex-alpha-models/{csvs,pickles,merged_data_pickles,logs}
           
           # Copy CSV files
+          CSV_COUNT=0
           if ls "$REPO_PATH"/*.csv 1> /dev/null 2>&1; then
-            cp -v "$REPO_PATH"/*.csv /content/forex-alpha-models/csvs/
-            echo "✅ Copied $(ls "$REPO_PATH"/*.csv | wc -l) CSV files"
+            for file in "$REPO_PATH"/*.csv; do
+              cp -v "$file" /content/forex-alpha-models/csvs/
+              CSV_COUNT=$((CSV_COUNT + 1))
+            done
+            echo "✅ Copied $CSV_COUNT CSV files"
           fi
           
           # Copy merged pickle files (2244)
+          PKL_2244_COUNT=0
           if ls "$REPO_PATH"/*_2244.pkl 1> /dev/null 2>&1; then
-            cp -v "$REPO_PATH"/*_2244.pkl /content/forex-alpha-models/merged_data_pickles/
-            echo "✅ Copied $(ls "$REPO_PATH"/*_2244.pkl | wc -l) merged pickle files"
+            for file in "$REPO_PATH"/*_2244.pkl; do
+              cp -v "$file" /content/forex-alpha-models/merged_data_pickles/
+              PKL_2244_COUNT=$((PKL_2244_COUNT + 1))
+            done
+            echo "✅ Copied $PKL_2244_COUNT merged pickle files"
           fi
           
           # Copy indicator pickle files
+          IND_COUNT=0
           if ls "$REPO_PATH"/*_indicators.pkl 1> /dev/null 2>&1; then
-            cp -v "$REPO_PATH"/*_indicators.pkl /content/forex-alpha-models/pickles/
-            echo "✅ Copied $(ls "$REPO_PATH"/*_indicators.pkl | wc -l) indicator pickle files"
+            for file in "$REPO_PATH"/*_indicators.pkl; do
+              cp -v "$file" /content/forex-alpha-models/pickles/
+              IND_COUNT=$((IND_COUNT + 1))
+            done
+            echo "✅ Copied $IND_COUNT indicator pickle files"
           fi
           
-          # Copy ML model pickle files (sgd, rf, best_chrom, etc.)
+          # Copy ML model pickle files
+          ML_COUNT=0
           for pattern in "*_sgd.pkl" "*_rf.pkl" "*_rf_hist.pkl" "*_best_chrom.pkl" "*_population.pkl" "*_trade_memory.pkl" "*_gen_count.pkl" "*_ga_progress.pkl"; do
             if ls "$REPO_PATH"/$pattern 1> /dev/null 2>&1; then
-              cp -v "$REPO_PATH"/$pattern /content/forex-alpha-models/pickles/ 2>/dev/null || true
+              for file in "$REPO_PATH"/$pattern; do
+                cp -v "$file" /content/forex-alpha-models/pickles/ 2>/dev/null || true
+                ML_COUNT=$((ML_COUNT + 1))
+              done
             fi
           done
-          echo "✅ Copied ML model files"
+          echo "✅ Copied $ML_COUNT ML model files"
           
-          # Copy database files
-          if ls "$REPO_PATH"/*.db 1> /dev/null 2>&1; then
-            cp -v "$REPO_PATH"/*.db /content/forex-alpha-models/forex-ai-models/
-            echo "✅ Copied $(ls "$REPO_PATH"/*.db | wc -l) database files"
-          fi
+          # Database files - NO COPY needed (already in right place)
+          echo "✅ Database files already in place (no copy needed)"
           
-          # Copy other important pickle files
+          # Copy other important pickle files to working directory
           for file in learning_progress.pkl iteration_counter.pkl previous_signals.pkl monday_runs.pkl; do
             if [ -f "$REPO_PATH/$file" ]; then
-              cp -v "$REPO_PATH/$file" /content/forex-alpha-models/forex-ai-models/
+              # These stay in repo folder (no copy needed)
+              echo "✅ Found $file in repo"
             fi
           done
-          echo "✅ Copied other state files"
           
           echo ""
           echo "=========================================="
@@ -432,50 +445,72 @@ jobs:
           
           REPO_DIR="/content/forex-alpha-models/forex-ai-models"
           
-          # Copy CSV files
+          # Copy CSV files from working dir to repo
+          CSV_COUNT=0
           if ls /content/forex-alpha-models/csvs/*.csv 1> /dev/null 2>&1; then
-            cp -v /content/forex-alpha-models/csvs/*.csv "$REPO_DIR/" 2>/dev/null || true
-            echo "✅ Copied CSV files"
+            for file in /content/forex-alpha-models/csvs/*.csv; do
+              filename=$(basename "$file")
+              if [ ! -f "$REPO_DIR/$filename" ] || ! cmp -s "$file" "$REPO_DIR/$filename"; then
+                cp -v "$file" "$REPO_DIR/"
+                CSV_COUNT=$((CSV_COUNT + 1))
+              fi
+            done
+            echo "✅ Updated $CSV_COUNT CSV files"
           fi
           
           # Copy merged pickle files (2244) - CRITICAL!
+          PKL_2244_COUNT=0
           if ls /content/forex-alpha-models/merged_data_pickles/*_2244.pkl 1> /dev/null 2>&1; then
-            cp -v /content/forex-alpha-models/merged_data_pickles/*_2244.pkl "$REPO_DIR/" 2>/dev/null || true
-            echo "✅ Copied merged pickle files (2244)"
+            for file in /content/forex-alpha-models/merged_data_pickles/*_2244.pkl; do
+              filename=$(basename "$file")
+              if [ ! -f "$REPO_DIR/$filename" ] || ! cmp -s "$file" "$REPO_DIR/$filename"; then
+                cp -v "$file" "$REPO_DIR/"
+                PKL_2244_COUNT=$((PKL_2244_COUNT + 1))
+              fi
+            done
+            echo "✅ Updated $PKL_2244_COUNT merged pickle files (2244)"
           fi
           
           # Copy indicator pickle files
+          IND_COUNT=0
           if ls /content/forex-alpha-models/pickles/*_indicators.pkl 1> /dev/null 2>&1; then
-            cp -v /content/forex-alpha-models/pickles/*_indicators.pkl "$REPO_DIR/" 2>/dev/null || true
-            echo "✅ Copied indicator pickle files"
+            for file in /content/forex-alpha-models/pickles/*_indicators.pkl; do
+              filename=$(basename "$file")
+              if [ ! -f "$REPO_DIR/$filename" ] || ! cmp -s "$file" "$REPO_DIR/$filename"; then
+                cp -v "$file" "$REPO_DIR/"
+                IND_COUNT=$((IND_COUNT + 1))
+              fi
+            done
+            echo "✅ Updated $IND_COUNT indicator pickle files"
           fi
           
           # Copy ML model files
+          ML_COUNT=0
           for pattern in "*_sgd.pkl" "*_rf.pkl" "*_rf_hist.pkl" "*_best_chrom.pkl" "*_population.pkl" "*_trade_memory.pkl" "*_gen_count.pkl" "*_ga_progress.pkl"; do
             if ls /content/forex-alpha-models/pickles/$pattern 1> /dev/null 2>&1; then
-              cp -v /content/forex-alpha-models/pickles/$pattern "$REPO_DIR/" 2>/dev/null || true
+              for file in /content/forex-alpha-models/pickles/$pattern; do
+                filename=$(basename "$file")
+                if [ ! -f "$REPO_DIR/$filename" ] || ! cmp -s "$file" "$REPO_DIR/$filename"; then
+                  cp -v "$file" "$REPO_DIR/"
+                  ML_COUNT=$((ML_COUNT + 1))
+                fi
+              done
             fi
           done
-          echo "✅ Copied ML model files"
+          echo "✅ Updated $ML_COUNT ML model files"
           
-          # Copy database files
-          if ls /content/forex-alpha-models/forex-ai-models/*.db 1> /dev/null 2>&1; then
-            cp -v /content/forex-alpha-models/forex-ai-models/*.db "$REPO_DIR/" 2>/dev/null || true
-            echo "✅ Copied database files"
-          fi
+          # Database files - already in correct location (skip)
+          echo "✅ Database files already in repository (no copy needed)"
           
           # Copy JSON files
-          if ls /content/forex-alpha-models/forex-ai-models/*.json 1> /dev/null 2>&1; then
-            cp -v /content/forex-alpha-models/forex-ai-models/*.json "$REPO_DIR/" 2>/dev/null || true
-            echo "✅ Copied JSON files"
+          JSON_COUNT=0
+          if ls "$REPO_DIR"/*.json 1> /dev/null 2>&1; then
+            JSON_COUNT=$(ls -1 "$REPO_DIR"/*.json 2>/dev/null | wc -l)
+            echo "✅ JSON files: $JSON_COUNT (already in repo)"
           fi
           
-          # Copy other state files
-          for file in learning_progress.pkl iteration_counter.pkl previous_signals.pkl monday_runs.pkl; do
-            if [ -f "/content/forex-alpha-models/forex-ai-models/$file" ]; then
-              cp -v "/content/forex-alpha-models/forex-ai-models/$file" "$REPO_DIR/"
-            fi
-          done
+          # Other state files - already in correct location (skip)
+          echo "✅ State files (learning_progress, iteration_counter, etc.) already in repo"
           
           echo ""
           echo "=========================================="
@@ -484,12 +519,13 @@ jobs:
           echo "CSV files: $(ls -1 "$REPO_DIR"/*.csv 2>/dev/null | wc -l)"
           echo "Merged pickles (2244): $(ls -1 "$REPO_DIR"/*_2244.pkl 2>/dev/null | wc -l)"
           echo "Indicator pickles: $(ls -1 "$REPO_DIR"/*_indicators.pkl 2>/dev/null | wc -l)"
-          echo "ML model pickles: $(ls -1 "$REPO_DIR"/*_{sgd,rf,best_chrom}.pkl 2>/dev/null | wc -l)"
+          echo "ML SGD/RF pickles: $(ls -1 "$REPO_DIR"/*_{sgd,rf}.pkl 2>/dev/null | wc -l)"
+          echo "ML state pickles: $(ls -1 "$REPO_DIR"/*_{best_chrom,population,trade_memory}.pkl 2>/dev/null | wc -l)"
           echo "Databases: $(ls -1 "$REPO_DIR"/*.db 2>/dev/null | wc -l)"
           echo "JSON files: $(ls -1 "$REPO_DIR"/*.json 2>/dev/null | wc -l)"
           echo "=========================================="
           
-          echo "✅ All outputs copied successfully"
+          echo "✅ All outputs copied successfully (skipped identical files)"
 
       - name: Commit and push changes
         run: |

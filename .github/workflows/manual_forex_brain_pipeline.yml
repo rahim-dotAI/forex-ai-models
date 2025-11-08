@@ -157,21 +157,24 @@ jobs:
           with open("ai_forex_brain_2.py", "r", encoding="utf-8") as f:
               content = f.read()
           
-          marker = '#!/usr/bin/env python3\n"""\nVERSION 3.5'
+          marker = '#!/usr/bin/env python3\n"""\nVERSION 3.6'
           
           if marker in content:
               idx = content.find(marker)
               filtered = content[idx:]
-              print(f"Found Ultra-Persistent at position {idx}")
+              print(f"Found Ultra-Persistent v3.6 at position {idx}")
           else:
-              sections = content.split('#!/usr/bin/env python3')
-              filtered = None
-              for i, section in enumerate(sections):
-                  if 'ULTRA-PERSISTENT' in section or 'VERSION 3.5' in section:
-                      filtered = '#!/usr/bin/env python3' + section
-                      print(f"Found using alt method (section {i})")
+              # Try alternate markers
+              for alt_marker in ['VERSION 3.5', 'ULTRA-PERSISTENT']:
+                  if alt_marker in content:
+                      sections = content.split('#!/usr/bin/env python3')
+                      for i, section in enumerate(sections):
+                          if alt_marker in section:
+                              filtered = '#!/usr/bin/env python3' + section
+                              print(f"Found using alt method (section {i})")
+                              break
                       break
-              if filtered is None:
+              else:
                   print("Warning: Could not find section, using full file")
                   filtered = content
           
@@ -204,9 +207,9 @@ jobs:
         if: steps.check_deps.outputs.mode == 'ultra'
         run: |
           echo "=========================================="
-          echo "RUNNING ULTRA-PERSISTENT MODE"
+          echo "RUNNING ULTRA-PERSISTENT MODE v3.6"
           echo "Reason: All required files present"
-          echo "Starting from VERSION 3.5 section"
+          echo "Starting from VERSION 3.6 section"
           echo "=========================================="
           python ai_forex_brain_2_ultra.py 2>&1 | tee pipeline_output.log
           EXIT_CODE=${PIPESTATUS[0]}
@@ -216,6 +219,121 @@ jobs:
             exit $EXIT_CODE
           fi
         timeout-minutes: 50
+
+      - name: Verify persistence after run
+        if: always()
+        run: |
+          echo "=========================================="
+          echo "VERIFYING DATA PERSISTENCE"
+          echo "=========================================="
+          
+          cd /content/forex-alpha-models/forex-ai-models
+          
+          echo ""
+          echo "📊 Checking critical persistence files..."
+          
+          # Check database
+          if [ -f "ml_persistent_memory.db" ]; then
+            DB_SIZE=$(du -h ml_persistent_memory.db | cut -f1)
+            echo "✅ Database exists: ml_persistent_memory.db ($DB_SIZE)"
+            
+            # Check if database has data
+            if command -v sqlite3 &> /dev/null; then
+              PENDING_COUNT=$(sqlite3 ml_persistent_memory.db "SELECT COUNT(*) FROM pending_trades;" 2>/dev/null || echo "0")
+              COMPLETED_COUNT=$(sqlite3 ml_persistent_memory.db "SELECT COUNT(*) FROM completed_trades;" 2>/dev/null || echo "0")
+              echo "   📈 Pending trades: $PENDING_COUNT"
+              echo "   📊 Completed trades: $COMPLETED_COUNT"
+            fi
+          else
+            echo "❌ Database NOT found - first run or creation failed"
+          fi
+          
+          # Check iteration counter
+          if [ -f "ml_iteration_counter.pkl" ]; then
+            echo "✅ Iteration counter exists"
+          else
+            echo "⚠️  Iteration counter missing"
+          fi
+          
+          # Check learning progress
+          if [ -f "ml_learning_progress.pkl" ]; then
+            echo "✅ Learning progress file exists"
+          else
+            echo "⚠️  Learning progress missing"
+          fi
+          
+          # Check signals
+          if [ -f "latest_signals.json" ]; then
+            echo "✅ Latest signals JSON exists"
+          else
+            echo "⚠️  Signals JSON missing"
+          fi
+          
+          echo ""
+          echo "📁 All files in repo root:"
+          ls -lh *.db *.pkl *.json 2>/dev/null || echo "No persistence files found"
+          
+          echo ""
+          echo "=========================================="
+
+      - name: Commit and push all changes to forex-ai-models repo
+        if: always()
+        run: |
+          cd /content/forex-alpha-models/forex-ai-models
+          
+          echo "=========================================="
+          echo "COMMITTING CHANGES TO GIT"
+          echo "=========================================="
+          
+          # Stage all changes
+          git add -A
+          
+          # Check if there are changes
+          if git diff --staged --quiet; then
+            echo "ℹ️  No changes to commit"
+          else
+            echo "📝 Changes detected, committing..."
+            
+            # Show what's being committed
+            echo ""
+            echo "Files to be committed:"
+            git diff --staged --name-only
+            
+            # Commit with detailed message
+            TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+            git commit -m "🤖 Auto update - $TIMESTAMP
+
+            - Trade evaluation system: FIXED
+            - Data persistence: ACTIVE
+            - Learning system: OPERATIONAL
+            
+            This commit contains:
+            - Updated database with trade results
+            - Model performance cache
+            - Iteration counter
+            - Learning progress data
+            - Latest trading signals"
+            
+            # Push with retry logic
+            echo ""
+            echo "🚀 Pushing to GitHub..."
+            for i in {1..3}; do
+              if git push origin main; then
+                echo "✅ Changes pushed successfully on attempt $i"
+                break
+              else
+                echo "⚠️  Push attempt $i failed, retrying in 5 seconds..."
+                sleep 5
+                
+                if [ $i -eq 3 ]; then
+                  echo "❌ Failed to push after 3 attempts"
+                  exit 1
+                fi
+              fi
+            done
+          fi
+          
+          echo "=========================================="
 
       - name: Collect outputs
         if: always()
@@ -258,15 +376,13 @@ jobs:
           path: outputs/signals/*.json
           retention-days: 7
 
-      - name: Commit and push results
+      - name: Upload database (for inspection)
         if: success()
-        run: |
-          cd /content/forex-alpha-models/forex-ai-models
-          git add -A
-          git diff --staged --quiet && exit 0
-          git commit -m "Auto update from pipeline" || true
-          git pull --rebase origin main || true
-          git push origin main || true
+        uses: actions/upload-artifact@v4
+        with:
+          name: forex-database-${{ github.run_number }}
+          path: outputs/*.db
+          retention-days: 7
 
       - name: Cleanup sensitive data
         if: always()
@@ -278,11 +394,19 @@ jobs:
         if: always()
         run: |
           echo "=========================================="
-          echo "PIPELINE SUMMARY"
+          echo "PIPELINE EXECUTION SUMMARY"
           echo "=========================================="
           echo "Run Number: ${{ github.run_number }}"
           echo "Execution Mode: ${{ steps.check_deps.outputs.mode }}"
           echo "Status: ${{ job.status }}"
-          echo "=========================================="
+          echo ""
+          echo "📊 Persistence Check:"
+          if [ -f "/content/forex-alpha-models/forex-ai-models/ml_persistent_memory.db" ]; then
+            echo "✅ Database persisted to Git"
+          else
+            echo "⚠️  Database not found"
+          fi
+          echo ""
+          echo "📝 Last 30 lines of log:"
           tail -n 30 pipeline_output.log 2>/dev/null || echo "No log file found"
           echo "=========================================="

@@ -116,7 +116,6 @@ jobs:
           jupyter nbconvert --to python "AI_Forex_Brain_2.ipynb" --output ai_forex_brain_2
           
           echo "🔧 Applying patches for SINGLE RUN MODE..."
-          
           sed -i '/get_ipython()/d' ai_forex_brain_2.py
           sed -i '/^get_ipython/d' ai_forex_brain_2.py
           sed -i 's/\.mkdir(exist_ok=True)/.mkdir(parents=True, exist_ok=True)/g' ai_forex_brain_2.py
@@ -141,59 +140,46 @@ jobs:
       - name: Clone forex-ai-models repository
         run: |
           cd /content/forex-alpha-models
-          
           if [ ! -d "forex-ai-models/.git" ]; then
-            echo "📥 Cloning forex-ai-models repository..."
             git clone -b main https://${GITHUB_USERNAME}:${FOREX_PAT}@github.com/${GITHUB_USERNAME}/${GITHUB_REPO}.git forex-ai-models
-            echo "✅ Repository cloned"
           else
-            echo "✅ Repository already exists"
             cd forex-ai-models
             git pull origin main
-            echo "✅ Repository updated"
           fi
-          
           cd forex-ai-models
           git config user.name "${GIT_USER_NAME}"
           git config user.email "${GIT_USER_EMAIL}"
 
-      # 9️⃣ Execute pipeline (SINGLE RUN - From Ultra-Persistent FX onwards)
-      - name: Run AI Forex Brain Pipeline (From Ultra-Persistent Section)
+      # 9️⃣ Extract Ultra-Persistent Section
+      - name: Extract Ultra-Persistent Python Section
         run: |
-          echo "🚀 Starting AI Forex Brain Pipeline..."
-          python -c '
+          cat > extract_ultra.py << 'PYTHON'
 import re
-
 with open("ai_forex_brain_2.py", "r", encoding="utf-8") as f:
     content = f.read()
-
 marker = "#!/usr/bin/env python3\n\"\"\"\nVERSION 3.5 – ULTRA-PERSISTENT SELF-LEARNING HYBRID FX PIPELINE"
 idx = content.find(marker)
 filtered_content = content[idx:] if idx != -1 else content
-
 with open("ai_forex_brain_2_ultra.py", "w", encoding="utf-8") as f:
     f.write(filtered_content)
-          '
+PYTHON
+          python extract_ultra.py
 
+      # 10️⃣ Run the pipeline
+      - name: Run AI Forex Brain Pipeline
+        run: |
           if [ -f "ai_forex_brain_2_ultra.py" ]; then
-            echo "✅ Running extracted Ultra-Persistent pipeline..."
             python ai_forex_brain_2_ultra.py 2>&1 | tee pipeline_output.log
           else
-            echo "⚠️ Filtered file not created, running full pipeline..."
             python ai_forex_brain_2.py 2>&1 | tee pipeline_output.log
           fi
-          
           EXIT_CODE=${PIPESTATUS[0]}
-          
-          echo "📊 Pipeline Exit Code: $EXIT_CODE"
           if [ $EXIT_CODE -ne 0 ]; then
-            echo "❌ Pipeline failed"
             tail -n 50 pipeline_output.log
             exit $EXIT_CODE
           fi
-          echo "✅ Pipeline completed successfully"
 
-      # 10️⃣ Collect outputs
+      # 11️⃣ Collect outputs
       - name: Collect pipeline outputs
         if: always()
         run: |
@@ -205,11 +191,9 @@ with open("ai_forex_brain_2_ultra.py", "w", encoding="utf-8") as f:
           cp pipeline_output.log $GITHUB_WORKSPACE/outputs/logs/ 2>/dev/null || true
           cp /content/forex-alpha-models/forex-ai-models/*.pkl $GITHUB_WORKSPACE/outputs/ 2>/dev/null || true
           cp /content/forex-alpha-models/forex-ai-models/*.db $GITHUB_WORKSPACE/outputs/ 2>/dev/null || true
-          echo "✅ Outputs collected"
 
-      # 11️⃣ Upload artifacts
-      - name: Upload pipeline logs
-        if: always()
+      # 12️⃣ Upload artifacts
+      - name: Upload logs
         uses: actions/upload-artifact@v4
         with:
           name: forex-pipeline-logs-${{ github.run_number }}
@@ -219,8 +203,8 @@ with open("ai_forex_brain_2_ultra.py", "w", encoding="utf-8") as f:
           retention-days: 7
 
       - name: Upload pickles
-        if: success()
         uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: forex-pickles-${{ github.run_number }}
           path: |
@@ -230,37 +214,31 @@ with open("ai_forex_brain_2_ultra.py", "w", encoding="utf-8") as f:
           retention-days: 3
 
       - name: Upload signals
-        if: success()
         uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: forex-signals-${{ github.run_number }}
           path: outputs/signals/*.json
           retention-days: 7
 
-      # 12️⃣ Commit and push results
+      # 13️⃣ Commit and push results
       - name: Commit and push results
         if: success()
         run: |
           cd /content/forex-alpha-models/forex-ai-models
           git add -A
-          if git diff --staged --quiet; then
-            echo "✅ No changes to commit"
-            exit 0
-          fi
           git commit -m "🤖 Manual trigger update: AI Forex Brain [$(date '+%Y-%m-%d %H:%M:%S UTC')]" || true
           git pull --rebase origin main || true
           git push origin main || true
-          echo "✅ Changes pushed"
 
-      # 13️⃣ Cleanup
+      # 14️⃣ Cleanup sensitive data
       - name: Cleanup sensitive data
         if: always()
         run: |
           rm -f ~/.git-credentials
           rm -f /content/forex-alpha-models/forex-ai-models/.git/credentials 2>/dev/null || true
-          echo "✅ Sensitive data cleaned"
 
-      # 14️⃣ Summary
+      # 15️⃣ Summary
       - name: Pipeline summary
         if: always()
         run: |
@@ -269,7 +247,6 @@ with open("ai_forex_brain_2_ultra.py", "w", encoding="utf-8") as f:
           echo "📅 Timestamp: $(date)"
           echo "🔢 Run Number: ${{ github.run_number }}"
           echo "⏰ Trigger: Manual (colab_trigger.txt)"
-          echo "📧 Gmail: Hardcoded credentials"
           echo "================================================"
           tail -n 30 pipeline_output.log || true
           echo "================================================"

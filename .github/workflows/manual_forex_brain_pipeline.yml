@@ -1,0 +1,349 @@
+name: Manual Forex Brain Pipeline (Trigger File)
+
+on:
+  # Manual trigger
+  workflow_dispatch:
+  
+  # Trigger ONLY on push to trigger file
+  push:
+    paths:
+      - 'colab_trigger.txt'
+    branches:
+      - main
+
+jobs:
+  run-forex-brain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    
+    env:
+      # Required secrets
+      FOREX_PAT: ${{ secrets.FOREX_PAT }}
+      BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}
+      ALPHA_VANTAGE_KEY: ${{ secrets.ALPHA_VANTAGE_KEY }}
+      
+      # Git configuration
+      GIT_USER_NAME: "Forex AI Bot"
+      GIT_USER_EMAIL: "nakatonabira3@gmail.com"
+      GITHUB_USERNAME: "rahim-dotAI"
+      GITHUB_REPO: "forex-ai-models"
+      
+      # Python configuration
+      PYTHONIOENCODING: utf-8
+      PYTHONUNBUFFERED: 1
+      GITHUB_ACTIONS: "true"
+      
+      # Pipeline mode configuration
+      SINGLE_RUN_MODE: "true"
+
+    steps:
+      # 0️⃣ Cleanup
+      - name: Pre-cleanup
+        run: |
+          echo "🧹 Cleaning workspace..."
+          sudo rm -rf /content 2>/dev/null || true
+          rm -f .gitmodules 2>/dev/null || true
+          echo "✅ Workspace cleaned"
+
+      # 1️⃣ Checkout
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          lfs: false
+          submodules: false
+          clean: true
+
+      # 2️⃣ Verify secrets
+      - name: Verify required secrets
+        run: |
+          MISSING_SECRETS=()
+          
+          [ -z "${FOREX_PAT}" ] && MISSING_SECRETS+=("FOREX_PAT")
+          [ -z "${BROWSERLESS_TOKEN}" ] && MISSING_SECRETS+=("BROWSERLESS_TOKEN")
+          [ -z "${ALPHA_VANTAGE_KEY}" ] && MISSING_SECRETS+=("ALPHA_VANTAGE_KEY")
+          
+          if [ ${#MISSING_SECRETS[@]} -gt 0 ]; then
+            echo "❌ Missing required secrets: ${MISSING_SECRETS[*]}"
+            echo "⚠️ Pipeline will run with limited functionality"
+          else
+            echo "✅ All required secrets are configured"
+          fi
+          
+          echo "📧 Gmail: Using hardcoded credentials from script"
+
+      # 3️⃣ Python setup
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+
+      # 4️⃣ Install dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip wheel setuptools
+          pip install --no-cache-dir \
+            mplfinance firebase-admin dropbox requests beautifulsoup4 \
+            pandas numpy ta yfinance pyppeteer nest_asyncio lightgbm \
+            joblib matplotlib alpha_vantage tqdm scikit-learn river \
+            jupyter nbconvert
+          echo "✅ Dependencies installed"
+
+      # 5️⃣ Create unified directory structure
+      - name: Create directory structure
+        run: |
+          sudo mkdir -p /content/forex-alpha-models/{csvs,pickles,logs,merged_data_pickles,temp_pickles,forex-ai-models}
+          sudo chown -R $USER:$USER /content
+          sudo chmod -R 755 /content
+          mkdir -p $GITHUB_WORKSPACE/outputs/{csvs,pickles,logs,merged_data_pickles,temp_pickles}
+          echo "✅ Directory structure created"
+
+      # 6️⃣ Configure Git
+      - name: Configure Git
+        run: |
+          git config --global user.name "${GIT_USER_NAME}"
+          git config --global user.email "${GIT_USER_EMAIL}"
+          git config --global advice.detachedHead false
+          git config --global credential.helper store
+          echo "https://${GITHUB_USERNAME}:${FOREX_PAT}@github.com" > ~/.git-credentials
+          echo "✅ Git configured"
+
+      # 7️⃣ Convert notebook and patch for single-run mode
+      - name: Convert and patch notebook
+        run: |
+          echo "📝 Converting notebook to Python..."
+          jupyter nbconvert --to python "AI_Forex_Brain_2.ipynb" --output ai_forex_brain_2
+          
+          echo "🔧 Applying patches for SINGLE RUN MODE..."
+          
+          # Remove Jupyter magic commands
+          sed -i '/get_ipython()/d' ai_forex_brain_2.py
+          sed -i '/^get_ipython/d' ai_forex_brain_2.py
+          
+          # Fix mkdir calls
+          sed -i 's/\.mkdir(exist_ok=True)/.mkdir(parents=True, exist_ok=True)/g' ai_forex_brain_2.py
+          
+          # Patch Gmail credentials to use hardcoded values
+          sed -i 's/GMAIL_USER = os\.environ\.get("GMAIL_USER", "nakatonabira3@gmail\.com")/GMAIL_USER = "nakatonabira3@gmail.com"/g' ai_forex_brain_2.py
+          sed -i 's/GMAIL_APP_PASSWORD = os\.environ\.get("GMAIL_APP_PASSWORD", "gmwohahtltmcewug")/GMAIL_APP_PASSWORD = "gmwohahtltmcewug"/g' ai_forex_brain_2.py
+          
+          # Path fixes
+          cat > path_fixes.sed << 'EOF'
+          s|ROOT_DIR = Path("/content")|ROOT_DIR = Path("/content/forex-alpha-models")|g
+          s|ROOT_PATH = ROOT_DIR / "forex-alpha-models"|ROOT_PATH = Path("/content/forex-alpha-models")|g
+          s|BASE_DIR = Path(".")|BASE_DIR = Path("/content/forex-alpha-models")|g
+          s|REPO_FOLDER = .* / "forex-ai-models"|REPO_FOLDER = Path("/content/forex-alpha-models/forex-ai-models")|g
+          s|PICKLE_FOLDER = .* / "pickles"|PICKLE_FOLDER = Path("/content/forex-alpha-models/pickles")|g
+          s|FINAL_PICKLE_FOLDER = .* / "merged_data_pickles"|FINAL_PICKLE_FOLDER = Path("/content/forex-alpha-models/merged_data_pickles")|g
+          s|CSV_FOLDER = .* / "csvs"|CSV_FOLDER = Path("/content/forex-alpha-models/csvs")|g
+          s|LOG_FOLDER = .* / "logs"|LOG_FOLDER = Path("/content/forex-alpha-models/logs")|g
+          EOF
+          
+          sed -i -f path_fixes.sed ai_forex_brain_2.py
+          
+          echo "✅ Notebook converted and patched"
+
+      # 8️⃣ Pre-populate forex-ai-models repo
+      - name: Clone forex-ai-models repository
+        run: |
+          cd /content/forex-alpha-models
+          
+          if [ ! -d "forex-ai-models/.git" ]; then
+            echo "📥 Cloning forex-ai-models repository..."
+            git clone -b main https://${GITHUB_USERNAME}:${FOREX_PAT}@github.com/${GITHUB_USERNAME}/${GITHUB_REPO}.git forex-ai-models
+            echo "✅ Repository cloned"
+          else
+            echo "✅ Repository already exists"
+            cd forex-ai-models
+            git pull origin main
+            echo "✅ Repository updated"
+          fi
+          
+          cd forex-ai-models
+          git config user.name "${GIT_USER_NAME}"
+          git config user.email "${GIT_USER_EMAIL}"
+
+      # 9️⃣ Execute pipeline (SINGLE RUN - From Ultra-Persistent FX onwards)
+      - name: Run AI Forex Brain Pipeline (From Ultra-Persistent Section)
+        run: |
+          echo "🚀 Starting AI Forex Brain Pipeline..."
+          echo "================================================"
+          echo "⏰ Mode: SINGLE RUN (Manual trigger via colab_trigger.txt)"
+          echo "📧 Gmail: Using hardcoded credentials"
+          echo "📊 Starting from: VERSION 3.5 – ULTRA-PERSISTENT SELF-LEARNING HYBRID FX PIPELINE"
+          echo "================================================"
+          
+          # Extract and run only from the Ultra-Persistent section onwards
+          python -c '
+import re
+
+with open("ai_forex_brain_2.py", "r", encoding="utf-8") as f:
+    content = f.read()
+
+# Find the exact marker for VERSION 3.5 ULTRA-PERSISTENT section
+marker = "#!/usr/bin/env python3\n\"\"\"\nVERSION 3.5 – ULTRA-PERSISTENT SELF-LEARNING HYBRID FX PIPELINE"
+
+if marker in content:
+    # Split at the marker and keep everything from that point onwards
+    idx = content.find(marker)
+    filtered_content = content[idx:]
+    print(f"✅ Found Ultra-Persistent section at position {idx}")
+else:
+    # Try alternative markers
+    alt_markers = [
+        "VERSION 3.5",
+        "ULTRA-PERSISTENT SELF-LEARNING HYBRID FX PIPELINE",
+        "#!/usr/bin/env python3"
+    ]
+    
+    filtered_content = None
+    for alt_marker in alt_markers:
+        if alt_marker in content:
+            idx = content.find(alt_marker)
+            # Go back to find the nearest shebang or start
+            start_idx = content.rfind("#!/usr/bin/env python3", 0, idx)
+            if start_idx != -1:
+                filtered_content = content[start_idx:]
+                print(f"✅ Found section using alternative marker at position {start_idx}")
+                break
+    
+    if filtered_content is None:
+        print("⚠️ Could not find Ultra-Persistent section, using full file")
+        filtered_content = content
+
+# Write the filtered content
+with open("ai_forex_brain_2_ultra.py", "w", encoding="utf-8") as f:
+    f.write(filtered_content)
+
+print(f"✅ Extracted {len(filtered_content)} characters to ai_forex_brain_2_ultra.py")
+          '
+          
+          # Run the filtered pipeline
+          if [ -f "ai_forex_brain_2_ultra.py" ]; then
+            echo "✅ Running extracted Ultra-Persistent pipeline..."
+            python ai_forex_brain_2_ultra.py 2>&1 | tee pipeline_output.log
+          else
+            echo "⚠️ Filtered file not created, running full pipeline..."
+            python ai_forex_brain_2.py 2>&1 | tee pipeline_output.log
+          fi
+          
+          EXIT_CODE=${PIPESTATUS[0]}
+          
+          echo "================================================"
+          echo "📊 Pipeline Exit Code: $EXIT_CODE"
+          echo "================================================"
+          
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "❌ Pipeline failed with exit code $EXIT_CODE"
+            echo "📝 Last 50 lines of output:"
+            tail -n 50 pipeline_output.log
+            exit $EXIT_CODE
+          fi
+          
+          echo "✅ Pipeline completed successfully"
+        timeout-minutes: 50
+
+      # 🔟 Collect outputs
+      - name: Collect pipeline outputs
+        if: always()
+        run: |
+          echo "📦 Collecting outputs..."
+          cp -r /content/forex-alpha-models/logs $GITHUB_WORKSPACE/outputs/ 2>/dev/null || true
+          cp -r /content/forex-alpha-models/merged_data_pickles $GITHUB_WORKSPACE/outputs/ 2>/dev/null || true
+          cp -r /content/forex-alpha-models/pickles $GITHUB_WORKSPACE/outputs/ 2>/dev/null || true
+          mkdir -p $GITHUB_WORKSPACE/outputs/signals
+          cp /content/forex-alpha-models/forex-ai-models/*.json $GITHUB_WORKSPACE/outputs/signals/ 2>/dev/null || true
+          cp pipeline_output.log $GITHUB_WORKSPACE/outputs/logs/ 2>/dev/null || true
+          cp /content/forex-alpha-models/forex-ai-models/*.pkl $GITHUB_WORKSPACE/outputs/ 2>/dev/null || true
+          cp /content/forex-alpha-models/forex-ai-models/*.db $GITHUB_WORKSPACE/outputs/ 2>/dev/null || true
+          echo "✅ Outputs collected"
+
+      # 1️⃣1️⃣ Upload artifacts
+      - name: Upload pipeline logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: forex-pipeline-logs-${{ github.run_number }}
+          path: |
+            outputs/logs/*.log
+            pipeline_output.log
+          retention-days: 7
+
+      - name: Upload pickles
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: forex-pickles-${{ github.run_number }}
+          path: |
+            outputs/merged_data_pickles/*.pkl
+            outputs/pickles/*.pkl
+            outputs/*.pkl
+          retention-days: 3
+
+      - name: Upload signals
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: forex-signals-${{ github.run_number }}
+          path: outputs/signals/*.json
+          retention-days: 7
+
+      # 1️⃣2️⃣ Commit and push results
+      - name: Commit and push results
+        if: success()
+        run: |
+          cd /content/forex-alpha-models/forex-ai-models
+          
+          echo "📦 Staging changes..."
+          git add -A
+          
+          if git diff --staged --quiet; then
+            echo "✅ No changes to commit"
+            exit 0
+          fi
+          
+          echo "💾 Committing changes..."
+          git commit -m "🤖 Manual trigger update: AI Forex Brain [$(date '+%Y-%m-%d %H:%M:%S UTC')]" || {
+            echo "⚠️ Commit failed or nothing to commit"
+            exit 0
+          }
+          
+          echo "🔄 Pulling latest changes..."
+          git pull --rebase origin main || echo "⚠️ Nothing to pull"
+          
+          echo "📤 Pushing changes..."
+          git push origin main && echo "✅ Changes pushed" || echo "⚠️ Push failed"
+
+      # 1️⃣3️⃣ Cleanup
+      - name: Cleanup sensitive data
+        if: always()
+        run: |
+          rm -f ~/.git-credentials
+          rm -f /content/forex-alpha-models/forex-ai-models/.git/credentials 2>/dev/null || true
+          echo "✅ Sensitive data cleaned"
+
+      # 1️⃣4️⃣ Summary
+      - name: Pipeline summary
+        if: always()
+        run: |
+          echo "================================================"
+          echo "🎯 AI FOREX BRAIN MANUAL PIPELINE SUMMARY"
+          echo "================================================"
+          echo "📅 Timestamp: $(date)"
+          echo "🔢 Run Number: ${{ github.run_number }}"
+          echo "⏰ Trigger: Manual (colab_trigger.txt)"
+          echo "📧 Gmail: Hardcoded credentials"
+          echo "📂 Started from: Ultra-Persistent FX Pipeline"
+          echo "================================================"
+          
+          if [ -f "pipeline_output.log" ]; then
+            echo "📝 Pipeline Completion Status:"
+            tail -n 30 pipeline_output.log | grep -E "(✅|❌|🏆|💼|🎬)" || tail -n 30 pipeline_output.log
+          fi
+          
+          echo "================================================"
+          echo "Status: ${{ job.status }}"
+          echo "✅ Pipeline complete - Awaiting next manual trigger"
+          echo "================================================"

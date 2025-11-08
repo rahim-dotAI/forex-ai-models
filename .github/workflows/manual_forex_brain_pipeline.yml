@@ -45,7 +45,7 @@ jobs:
           submodules: false
           clean: true
 
-      # 2️⃣ Verify required secrets
+      # 2️⃣ Verify secrets
       - name: Verify required secrets
         run: |
           MISSING_SECRETS=()
@@ -59,8 +59,6 @@ jobs:
           else
             echo "✅ All required secrets are configured"
           fi
-
-          echo "📧 Gmail: Using hardcoded credentials from script"
 
       # 3️⃣ Setup Python
       - name: Set up Python 3.11
@@ -99,34 +97,19 @@ jobs:
           echo "https://${GITHUB_USERNAME}:${FOREX_PAT}@github.com" > ~/.git-credentials
           echo "✅ Git configured"
 
-      # 7️⃣ Convert notebook and patch for single-run mode
-      - name: Convert and patch notebook
+      # 7️⃣ Convert notebook to Python
+      - name: Convert notebook
         run: |
-          echo "📝 Converting notebook to Python..."
-          jupyter nbconvert --to python "AI_Forex_Brain_2.ipynb" --output ai_forex_brain_2
+          jupyter nbconvert --to python "AI_Forex_Brain_2.ipynb" --output ai_forex_brain_2.py
+          echo "✅ Notebook converted to Python"
 
-          echo "🔧 Applying patches for SINGLE RUN MODE..."
-          sed -i '/get_ipython()/d' ai_forex_brain_2.py
-          sed -i '/^get_ipython/d' ai_forex_brain_2.py
-          sed -i 's/\.mkdir(exist_ok=True)/.mkdir(parents=True, exist_ok=True)/g' ai_forex_brain_2.py
-          sed -i 's/GMAIL_USER = os\.environ\.get("GMAIL_USER", ".*")/GMAIL_USER = "nakatonabira3@gmail.com"/g' ai_forex_brain_2.py
-          sed -i 's/GMAIL_APP_PASSWORD = os\.environ\.get("GMAIL_APP_PASSWORD", ".*")/GMAIL_APP_PASSWORD = "gmwohahtltmcewug"/g' ai_forex_brain_2.py
+      # 8️⃣ Patch notebook for single-run mode
+      - name: Patch Python script
+        run: |
+          python scripts/patch_single_run.py
+          echo "✅ Python script patched for single-run mode"
 
-          cat > path_fixes.sed << 'EOF'
-s|ROOT_DIR = Path("/content")|ROOT_DIR = Path("/content/forex-alpha-models")|g
-s|ROOT_PATH = ROOT_DIR / "forex-alpha-models"|ROOT_PATH = Path("/content/forex-alpha-models")|g
-s|BASE_DIR = Path(".")|BASE_DIR = Path("/content/forex-alpha-models")|g
-s|REPO_FOLDER = .* / "forex-ai-models"|REPO_FOLDER = Path("/content/forex-alpha-models/forex-ai-models")|g
-s|PICKLE_FOLDER = .* / "pickles"|PICKLE_FOLDER = Path("/content/forex-alpha-models/pickles")|g
-s|FINAL_PICKLE_FOLDER = .* / "merged_data_pickles"|FINAL_PICKLE_FOLDER = Path("/content/forex-alpha-models/merged_data_pickles")|g
-s|CSV_FOLDER = .* / "csvs"|CSV_FOLDER = Path("/content/forex-alpha-models/csvs")|g
-s|LOG_FOLDER = .* / "logs"|LOG_FOLDER = Path("/content/forex-alpha-models/logs")|g
-EOF
-
-          sed -i -f path_fixes.sed ai_forex_brain_2.py
-          echo "✅ Notebook converted and patched"
-
-      # 8️⃣ Clone repository
+      # 9️⃣ Clone forex-ai-models repository
       - name: Clone forex-ai-models repository
         run: |
           cd /content/forex-alpha-models
@@ -140,64 +123,36 @@ EOF
           git config user.name "${GIT_USER_NAME}"
           git config user.email "${GIT_USER_EMAIL}"
 
-      # 9️⃣ Extract Ultra-Persistent Python Section
-      - name: Extract Ultra-Persistent Python Section
+      # 🔟 Extract Ultra-Persistent Python section
+      - name: Extract Ultra-Persistent Section
         run: |
-          cat > extract_ultra.py << 'PYTHON'
-import re
-with open('ai_forex_brain_2.py','r',encoding='utf-8') as f:
-    content = f.read()
+          python scripts/extract_ultra.py
+          echo "✅ Extracted Ultra-Persistent pipeline section"
 
-marker = '#!/usr/bin/env python3'
-alt_marker = 'Ultra-Persistent Hybrid FX Pipeline'
-
-if marker in content:
-    parts = content.split(marker)
-    for i, part in enumerate(parts):
-        if 'Ultra-Persistent' in part or 'Hybrid FX Pipeline' in part:
-            filtered_content = marker + marker.join(parts[i:])
-            break
-    else:
-        filtered_content = content
-else:
-    filtered_content = content
-
-with open('ai_forex_brain_2_ultra.py','w',encoding='utf-8') as f:
-    f.write(filtered_content)
-
-print('✅ Extracted Ultra-Persistent section onwards')
-PYTHON
-
-          python extract_ultra.py
-
-      # 10️⃣ Run pipeline
+      # 1️⃣1️⃣ Run pipeline
       - name: Run AI Forex Brain Pipeline
         run: |
-          if [ -f "ai_forex_brain_2_ultra.py" ]; then
-            python ai_forex_brain_2_ultra.py 2>&1 | tee pipeline_output.log
-          else
-            python ai_forex_brain_2.py 2>&1 | tee pipeline_output.log
-          fi
+          python ai_forex_brain_2_ultra.py 2>&1 | tee pipeline_output.log
           EXIT_CODE=${PIPESTATUS[0]}
           if [ $EXIT_CODE -ne 0 ]; then
             tail -n 50 pipeline_output.log
             exit $EXIT_CODE
           fi
 
-      # 11️⃣ Collect outputs
+      # 1️⃣2️⃣ Collect outputs
       - name: Collect outputs
         if: always()
         run: |
           mkdir -p $GITHUB_WORKSPACE/outputs/signals
-          cp -r /content/forex-alpha-models/logs $GITHUB_WORKSPACE/outputs/ 2>/dev/null || true
-          cp -r /content/forex-alpha-models/merged_data_pickles $GITHUB_WORKSPACE/outputs/ 2>/dev/null || true
-          cp -r /content/forex-alpha-models/pickles $GITHUB_WORKSPACE/outputs/ 2>/dev/null || true
-          cp /content/forex-alpha-models/forex-ai-models/*.json $GITHUB_WORKSPACE/outputs/signals/ 2>/dev/null || true
-          cp pipeline_output.log $GITHUB_WORKSPACE/outputs/logs/ 2>/dev/null || true
-          cp /content/forex-alpha-models/forex-ai-models/*.pkl $GITHUB_WORKSPACE/outputs/ 2>/dev/null || true
-          cp /content/forex-alpha-models/forex-ai-models/*.db $GITHUB_WORKSPACE/outputs/ 2>/dev/null || true
+          cp -r /content/forex-alpha-models/logs $GITHUB_WORKSPACE/outputs/ || true
+          cp -r /content/forex-alpha-models/merged_data_pickles $GITHUB_WORKSPACE/outputs/ || true
+          cp -r /content/forex-alpha-models/pickles $GITHUB_WORKSPACE/outputs/ || true
+          cp /content/forex-alpha-models/forex-ai-models/*.json $GITHUB_WORKSPACE/outputs/signals/ || true
+          cp pipeline_output.log $GITHUB_WORKSPACE/outputs/logs/ || true
+          cp /content/forex-alpha-models/forex-ai-models/*.pkl $GITHUB_WORKSPACE/outputs/ || true
+          cp /content/forex-alpha-models/forex-ai-models/*.db $GITHUB_WORKSPACE/outputs/ || true
 
-      # 12️⃣ Upload artifacts
+      # 1️⃣3️⃣ Upload artifacts
       - name: Upload logs
         uses: actions/upload-artifact@v4
         with:
@@ -208,8 +163,8 @@ PYTHON
           retention-days: 7
 
       - name: Upload pickles
-        if: success()
         uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: forex-pickles-${{ github.run_number }}
           path: |
@@ -219,14 +174,14 @@ PYTHON
           retention-days: 3
 
       - name: Upload signals
-        if: success()
         uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: forex-signals-${{ github.run_number }}
           path: outputs/signals/*.json
           retention-days: 7
 
-      # 13️⃣ Commit and push results
+      # 1️⃣4️⃣ Commit and push results
       - name: Commit and push results
         if: success()
         run: |
@@ -236,14 +191,14 @@ PYTHON
           git pull --rebase origin main || true
           git push origin main || true
 
-      # 14️⃣ Cleanup sensitive data
+      # 1️⃣5️⃣ Cleanup sensitive data
       - name: Cleanup sensitive data
         if: always()
         run: |
           rm -f ~/.git-credentials
-          rm -f /content/forex-alpha-models/forex-ai-models/.git/credentials 2>/dev/null || true
+          rm -f /content/forex-alpha-models/forex-ai-models/.git/credentials || true
 
-      # 15️⃣ Pipeline summary
+      # 1️⃣6️⃣ Pipeline summary
       - name: Pipeline summary
         if: always()
         run: |
@@ -251,12 +206,8 @@ PYTHON
           echo "🎯 AI FOREX BRAIN MANUAL PIPELINE SUMMARY"
           echo "📅 Timestamp: $(date)"
           echo "🔢 Run Number: ${{ github.run_number }}"
-          echo "⏰ Trigger: Manual (colab_trigger.txt)"
-          echo "📧 Gmail: Hardcoded credentials"
-          echo "📂 Started from: Ultra-Persistent FX Pipeline"
           echo "================================================"
           tail -n 30 pipeline_output.log || true
           echo "================================================"
           echo "Status: ${{ job.status }}"
-          echo "✅ Pipeline complete - Awaiting next manual trigger"
-          echo "================================================"
+          echo "✅ Pipeline complete"

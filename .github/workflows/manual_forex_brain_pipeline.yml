@@ -12,7 +12,7 @@ jobs:
   run-forex-brain:
     runs-on: ubuntu-latest
     timeout-minutes: 55
-    
+
     env:
       FOREX_PAT: ${{ secrets.FOREX_PAT }}
       BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}
@@ -35,7 +35,7 @@ jobs:
           rm -f .gitmodules 2>/dev/null || true
           echo "✅ Workspace cleaned"
 
-      # 1️⃣ Checkout
+      # 1️⃣ Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -45,29 +45,29 @@ jobs:
           submodules: false
           clean: true
 
-      # 2️⃣ Verify secrets
+      # 2️⃣ Verify required secrets
       - name: Verify required secrets
         run: |
           MISSING_SECRETS=()
           [ -z "${FOREX_PAT}" ] && MISSING_SECRETS+=("FOREX_PAT")
           [ -z "${BROWSERLESS_TOKEN}" ] && MISSING_SECRETS+=("BROWSERLESS_TOKEN")
           [ -z "${ALPHA_VANTAGE_KEY}" ] && MISSING_SECRETS+=("ALPHA_VANTAGE_KEY")
-          
+
           if [ ${#MISSING_SECRETS[@]} -gt 0 ]; then
             echo "❌ Missing required secrets: ${MISSING_SECRETS[*]}"
             echo "⚠️ Pipeline will run with limited functionality"
           else
             echo "✅ All required secrets are configured"
           fi
-          
+
           echo "📧 Gmail: Using hardcoded credentials from script"
 
-      # 3️⃣ Python setup
+      # 3️⃣ Setup Python
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: 'pip'
+          cache: pip
 
       # 4️⃣ Install dependencies
       - name: Install dependencies
@@ -104,24 +104,25 @@ jobs:
         run: |
           echo "📝 Converting notebook to Python..."
           jupyter nbconvert --to python "AI_Forex_Brain_2.ipynb" --output ai_forex_brain_2
-          
+
           echo "🔧 Applying patches for SINGLE RUN MODE..."
           sed -i '/get_ipython()/d' ai_forex_brain_2.py
           sed -i '/^get_ipython/d' ai_forex_brain_2.py
           sed -i 's/\.mkdir(exist_ok=True)/.mkdir(parents=True, exist_ok=True)/g' ai_forex_brain_2.py
           sed -i 's/GMAIL_USER = os\.environ\.get("GMAIL_USER", ".*")/GMAIL_USER = "nakatonabira3@gmail.com"/g' ai_forex_brain_2.py
           sed -i 's/GMAIL_APP_PASSWORD = os\.environ\.get("GMAIL_APP_PASSWORD", ".*")/GMAIL_APP_PASSWORD = "gmwohahtltmcewug"/g' ai_forex_brain_2.py
-          
+
           cat > path_fixes.sed << 'EOF'
-          s|ROOT_DIR = Path("/content")|ROOT_DIR = Path("/content/forex-alpha-models")|g
-          s|ROOT_PATH = ROOT_DIR / "forex-alpha-models"|ROOT_PATH = Path("/content/forex-alpha-models")|g
-          s|BASE_DIR = Path(".")|BASE_DIR = Path("/content/forex-alpha-models")|g
-          s|REPO_FOLDER = .* / "forex-ai-models"|REPO_FOLDER = Path("/content/forex-alpha-models/forex-ai-models")|g
-          s|PICKLE_FOLDER = .* / "pickles"|PICKLE_FOLDER = Path("/content/forex-alpha-models/pickles")|g
-          s|FINAL_PICKLE_FOLDER = .* / "merged_data_pickles"|FINAL_PICKLE_FOLDER = Path("/content/forex-alpha-models/merged_data_pickles")|g
-          s|CSV_FOLDER = .* / "csvs"|CSV_FOLDER = Path("/content/forex-alpha-models/csvs")|g
-          s|LOG_FOLDER = .* / "logs"|LOG_FOLDER = Path("/content/forex-alpha-models/logs")|g
-          EOF
+s|ROOT_DIR = Path("/content")|ROOT_DIR = Path("/content/forex-alpha-models")|g
+s|ROOT_PATH = ROOT_DIR / "forex-alpha-models"|ROOT_PATH = Path("/content/forex-alpha-models")|g
+s|BASE_DIR = Path(".")|BASE_DIR = Path("/content/forex-alpha-models")|g
+s|REPO_FOLDER = .* / "forex-ai-models"|REPO_FOLDER = Path("/content/forex-alpha-models/forex-ai-models")|g
+s|PICKLE_FOLDER = .* / "pickles"|PICKLE_FOLDER = Path("/content/forex-alpha-models/pickles")|g
+s|FINAL_PICKLE_FOLDER = .* / "merged_data_pickles"|FINAL_PICKLE_FOLDER = Path("/content/forex-alpha-models/merged_data_pickles")|g
+s|CSV_FOLDER = .* / "csvs"|CSV_FOLDER = Path("/content/forex-alpha-models/csvs")|g
+s|LOG_FOLDER = .* / "logs"|LOG_FOLDER = Path("/content/forex-alpha-models/logs")|g
+EOF
+
           sed -i -f path_fixes.sed ai_forex_brain_2.py
           echo "✅ Notebook converted and patched"
 
@@ -139,7 +140,7 @@ jobs:
           git config user.name "${GIT_USER_NAME}"
           git config user.email "${GIT_USER_EMAIL}"
 
-      # 9️⃣ Extract Ultra-Persistent Python section (fixed)
+      # 9️⃣ Extract Ultra-Persistent Python Section
       - name: Extract Ultra-Persistent Python Section
         run: |
           cat > extract_ultra.py << 'PYTHON'
@@ -235,14 +236,14 @@ PYTHON
           git pull --rebase origin main || true
           git push origin main || true
 
-      # 14️⃣ Cleanup
+      # 14️⃣ Cleanup sensitive data
       - name: Cleanup sensitive data
         if: always()
         run: |
           rm -f ~/.git-credentials
           rm -f /content/forex-alpha-models/forex-ai-models/.git/credentials 2>/dev/null || true
 
-      # 15️⃣ Summary
+      # 15️⃣ Pipeline summary
       - name: Pipeline summary
         if: always()
         run: |

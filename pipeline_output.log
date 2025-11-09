@@ -2,17 +2,37 @@
 ✅ 🚀 FOREX PIPELINE v8.5.1
 ℹ️ ======================================================================
 ℹ️ 
-📊 Iteration #1
-ℹ️ Total: 1 | Days: 1 | Avg/Day: 1.0
+📊 Iteration #2
+ℹ️ Total: 2 | Days: 1 | Avg/Day: 2.0
 ℹ️ 
 📦 Loading data...
-❌ ❌ Error loading EUR_USD_2244.pkl: invalid load key, 'v'.
-❌ ❌ Error loading GBP_USD_2244.pkl: invalid load key, 'v'.
-❌ ❌ Error loading USD_JPY_2244.pkl: invalid load key, 'v'.
-❌ ❌ Error loading AUD_USD_2244.pkl: invalid load key, 'v'.
-❌ 
-❌ Error: No data loaded!
-Traceback (most recent call last):
-  File "/home/runner/work/forex-ai-models/forex-ai-models/forex_pipeline_v85.py", line 364, in main
-    raise ValueError("No data loaded!")
-ValueError: No data loaded!
+✅ ✅ Loaded EUR/USD: 5000 rows
+✅ ✅ Loaded GBP/USD: 5000 rows
+✅ ✅ Loaded USD/JPY: 5000 rows
+✅ ✅ Loaded AUD/USD: 5000 rows
+✅ ✅ Loaded 4 pairs
+ℹ️ 
+🏆 Running Competition...
+ℹ️ 🔴 Training Alpha Momentum...
+ℹ️   Gen 5/20: Best=117.4139
+ℹ️   Gen 10/20: Best=154.1353
+ℹ️   Gen 15/20: Best=222.4016
+ℹ️   Gen 20/20: Best=256.0756
+✅   ✅ Alpha Momentum: 41.7% accuracy | $251.9058 PnL | 271 trades
+ℹ️ 🔵 Training Beta Conservative...
+ℹ️   Gen 5/15: Best=393.5118
+ℹ️   Gen 10/15: Best=565.6260
+ℹ️   Gen 15/15: Best=594.1779
+✅   ✅ Beta Conservative: 35.2% accuracy | $590.6611 PnL | 418 trades
+ℹ️ 🟢 Training Gamma Adaptive...
+ℹ️   Gen 5/22: Best=402.9252
+ℹ️   Gen 10/22: Best=488.3072
+ℹ️   Gen 15/22: Best=586.0470
+ℹ️   Gen 20/22: Best=619.3855
+✅   ✅ Gamma Adaptive: 35.9% accuracy | $615.7914 PnL | 409 trades
+ℹ️ 
+💾 Saving signals...
+✅ 
+======================================================================
+✅ ✅ PIPELINE COMPLETED
+✅ ======================================================================

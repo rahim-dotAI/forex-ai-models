@@ -1,4 +1,4 @@
-name: Smart Forex Brain Pipeline (Auto-Detect Mode)
+name: Smart Forex Brain Pipeline (Weekend-Aware Auto-Detect)
 
 on:
   workflow_dispatch:
@@ -7,6 +7,9 @@ on:
       - 'colab_trigger.txt'
     branches:
       - main
+  schedule:
+    # Run multiple times on weekdays and weekends
+    - cron: '0 */4 * * *'  # Every 4 hours
 
 jobs:
   run-forex-brain:
@@ -17,6 +20,8 @@ jobs:
       FOREX_PAT: ${{ secrets.FOREX_PAT }}
       BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}
       ALPHA_VANTAGE_KEY: ${{ secrets.ALPHA_VANTAGE_KEY }}
+      GMAIL_USER: ${{ secrets.GMAIL_USER }}
+      GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
       GIT_USER_NAME: "Forex AI Bot"
       GIT_USER_EMAIL: "nakatonabira3@gmail.com"
       GITHUB_USERNAME: "rahim-dotAI"
@@ -41,12 +46,50 @@ jobs:
           submodules: false
           clean: true
 
+      - name: Detect Weekend vs Weekday Mode
+        id: detect_mode
+        run: |
+          # Get current day of week (0=Sunday, 1=Monday, ..., 6=Saturday)
+          DAY_OF_WEEK=$(date +%u)  # 1=Monday, 7=Sunday
+          
+          echo "=========================================="
+          echo "🗓️  DAY DETECTION"
+          echo "=========================================="
+          echo "Current day number: $DAY_OF_WEEK (1=Mon, 7=Sun)"
+          echo "Current date: $(date +'%A, %B %d, %Y %H:%M UTC')"
+          echo ""
+          
+          # Saturday (6) or Sunday (7) = Weekend
+          if [ $DAY_OF_WEEK -eq 6 ] || [ $DAY_OF_WEEK -eq 7 ]; then
+            echo "is_weekend=true" >> $GITHUB_OUTPUT
+            echo "execution_mode=weekend_v85_only" >> $GITHUB_OUTPUT
+            echo "🎯 MODE: WEEKEND (v8.5 Pipeline Only)"
+            echo "   ✅ Will execute ONLY forex pipeline v8.5 code"
+            echo "   ⏭️  Skipping data fetching and full notebook"
+          elif [ $DAY_OF_WEEK -eq 1 ]; then
+            echo "is_weekend=false" >> $GITHUB_OUTPUT
+            echo "execution_mode=monday_full" >> $GITHUB_OUTPUT
+            echo "🎯 MODE: MONDAY (Full Pipeline)"
+            echo "   ✅ Will execute full notebook (data fetch + v8.5)"
+          else
+            echo "is_weekend=false" >> $GITHUB_OUTPUT
+            echo "execution_mode=weekday_smart" >> $GITHUB_OUTPUT
+            echo "🎯 MODE: WEEKDAY (Smart Detection)"
+            echo "   ✅ Will check data availability"
+            echo "   ✅ Full pipeline if missing data, v8.5 only if data exists"
+          fi
+          
+          echo "=========================================="
+
       - name: Verify secrets
         run: |
           MISSING_SECRETS=()
           [ -z "${FOREX_PAT}" ] && MISSING_SECRETS+=("FOREX_PAT")
           [ -z "${BROWSERLESS_TOKEN}" ] && MISSING_SECRETS+=("BROWSERLESS_TOKEN")
           [ -z "${ALPHA_VANTAGE_KEY}" ] && MISSING_SECRETS+=("ALPHA_VANTAGE_KEY")
+          [ -z "${GMAIL_USER}" ] && MISSING_SECRETS+=("GMAIL_USER")
+          [ -z "${GMAIL_APP_PASSWORD}" ] && MISSING_SECRETS+=("GMAIL_APP_PASSWORD")
+          
           if [ ${#MISSING_SECRETS[@]} -gt 0 ]; then
             echo "⚠️  Missing secrets: ${MISSING_SECRETS[*]}"
           else
@@ -102,173 +145,56 @@ jobs:
           echo "📂 Repository contents:"
           ls -la
 
-      - name: Check dependencies and decide execution mode
-        id: check_deps
+      - name: Check data availability (Weekday Smart Mode Only)
+        if: steps.detect_mode.outputs.execution_mode == 'weekday_smart'
+        id: check_data
         run: |
           echo "=========================================="
-          echo "CHECKING DEPENDENCIES FOR MODE SELECTION"
+          echo "CHECKING DATA FOR SMART MODE DECISION"
           echo "=========================================="
           
           REPO_PATH="/content/forex-alpha-models/forex-ai-models"
           
-          echo ""
-          echo "📊 Checking for required files in $REPO_PATH..."
-          echo ""
+          # Check for merged pickle files (the key dependency for v8.5)
+          MERGED_PKL_COUNT=$(find "$REPO_PATH" -maxdepth 1 -name "*_2244.pkl" -type f -size +10k 2>/dev/null | wc -l)
           
-          # Check for CSV data files
-          echo "1️⃣ Checking CSV files..."
-          CSV_COUNT=$(find "$REPO_PATH" -maxdepth 1 -name "*.csv" -type f 2>/dev/null | wc -l)
-          if [ $CSV_COUNT -gt 0 ]; then
-            echo "   ✅ Found $CSV_COUNT CSV files"
-            ls -lh "$REPO_PATH"/*.csv 2>/dev/null | head -3
+          echo "📊 Found $MERGED_PKL_COUNT merged pickle files (*_2244.pkl)"
+          
+          if [ $MERGED_PKL_COUNT -ge 4 ]; then
+            echo "decision=v85_only" >> $GITHUB_OUTPUT
+            echo "✅ DECISION: Run v8.5 only (sufficient data exists)"
           else
-            echo "   ❌ No CSV files found"
-          fi
-          
-          # Check for pickle files WITH INDICATORS
-          echo ""
-          echo "2️⃣ Checking indicator pickle files..."
-          INDICATOR_PKL_COUNT=$(find "$REPO_PATH" -maxdepth 1 -name "*_indicators.pkl" -type f 2>/dev/null | wc -l)
-          if [ $INDICATOR_PKL_COUNT -gt 0 ]; then
-            echo "   ✅ Found $INDICATOR_PKL_COUNT indicator pickle files"
-            ls -lh "$REPO_PATH"/*_indicators.pkl 2>/dev/null | head -3
-          else
-            echo "   ❌ No indicator pickle files found"
-          fi
-          
-          # Check for merged 2244 pickle files
-          echo ""
-          echo "3️⃣ Checking merged pickle files (2244)..."
-          MERGED_PKL_COUNT=$(find "$REPO_PATH" -maxdepth 1 -name "*_2244.pkl" -type f 2>/dev/null | wc -l)
-          if [ $MERGED_PKL_COUNT -gt 0 ]; then
-            echo "   ✅ Found $MERGED_PKL_COUNT merged pickle files"
-            ls -lh "$REPO_PATH"/*_2244.pkl 2>/dev/null | head -3
-          else
-            echo "   ❌ No merged pickle files found"
-          fi
-          
-          # Check for database files
-          echo ""
-          echo "4️⃣ Checking database files..."
-          DB_COUNT=$(find "$REPO_PATH" -maxdepth 1 -name "*.db" -type f -size +1k 2>/dev/null | wc -l)
-          if [ $DB_COUNT -gt 0 ]; then
-            echo "   ✅ Found $DB_COUNT database files"
-            ls -lh "$REPO_PATH"/*.db 2>/dev/null
-          else
-            echo "   ⚠️  No database files (will be created)"
-          fi
-          
-          # Check for ML model pickle files
-          echo ""
-          echo "5️⃣ Checking ML model files..."
-          ML_PKL_COUNT=$(find "$REPO_PATH" -maxdepth 1 \( -name "*_sgd.pkl" -o -name "*_rf.pkl" -o -name "*_best_chrom.pkl" \) -type f 2>/dev/null | wc -l)
-          if [ $ML_PKL_COUNT -gt 0 ]; then
-            echo "   ✅ Found $ML_PKL_COUNT ML model files"
-            ls -lh "$REPO_PATH"/*_sgd.pkl "$REPO_PATH"/*_rf.pkl 2>/dev/null | head -3
-          else
-            echo "   ⚠️  No ML model files (will be created)"
-          fi
-          
-          echo ""
-          echo "=========================================="
-          echo "📊 DECISION LOGIC:"
-          echo "   CSVs: $CSV_COUNT files"
-          echo "   Indicator PKLs: $INDICATOR_PKL_COUNT files"
-          echo "   Merged PKLs (2244): $MERGED_PKL_COUNT files"
-          echo "   Databases: $DB_COUNT files"
-          echo "   ML Models: $ML_PKL_COUNT files"
-          echo "=========================================="
-          echo ""
-          
-          # Decision: Need CSVs AND (indicator pickles OR merged pickles) for ultra mode
-          if [ $CSV_COUNT -ge 4 ] && { [ $INDICATOR_PKL_COUNT -ge 4 ] || [ $MERGED_PKL_COUNT -ge 4 ]; }; then
-            echo "mode=ultra" >> $GITHUB_OUTPUT
-            echo "🟢 DECISION: Running ULTRA-PERSISTENT mode"
-            echo "   ✅ Sufficient data files found in repository"
-            echo "   ✅ Will skip data fetching and use existing files"
-          else
-            echo "mode=full" >> $GITHUB_OUTPUT
-            echo "🔴 DECISION: Running FULL pipeline"
-            echo "   ❌ Missing required data files"
-            echo "   ⚠️  Need: 4 CSVs + 4 indicator/merged pickles"
-            echo "   ⚠️  Found: $CSV_COUNT CSVs, $INDICATOR_PKL_COUNT indicators, $MERGED_PKL_COUNT merged"
+            echo "decision=full_pipeline" >> $GITHUB_OUTPUT
+            echo "⚠️  DECISION: Run full pipeline (need fresh data)"
           fi
           
           echo "=========================================="
 
-      - name: Copy data files to working directories
-        if: steps.check_deps.outputs.mode == 'ultra'
+      - name: Copy existing data to working directories
+        if: |
+          steps.detect_mode.outputs.is_weekend == 'true' || 
+          (steps.detect_mode.outputs.execution_mode == 'weekday_smart' && steps.check_data.outputs.decision == 'v85_only')
         run: |
-          echo "📦 Copying data from repository to working directories..."
+          echo "📦 Copying existing data from repository..."
           
           REPO_PATH="/content/forex-alpha-models/forex-ai-models"
           
           # Create target directories
           mkdir -p /content/forex-alpha-models/{csvs,pickles,merged_data_pickles,logs}
           
-          # Copy CSV files
-          CSV_COUNT=0
-          if ls "$REPO_PATH"/*.csv 1> /dev/null 2>&1; then
-            for file in "$REPO_PATH"/*.csv; do
-              cp -v "$file" /content/forex-alpha-models/csvs/
-              CSV_COUNT=$((CSV_COUNT + 1))
-            done
-            echo "✅ Copied $CSV_COUNT CSV files"
-          fi
-          
-          # Copy merged pickle files (2244)
-          PKL_2244_COUNT=0
+          # Copy merged pickle files (CRITICAL for v8.5)
           if ls "$REPO_PATH"/*_2244.pkl 1> /dev/null 2>&1; then
-            for file in "$REPO_PATH"/*_2244.pkl; do
-              cp -v "$file" /content/forex-alpha-models/merged_data_pickles/
-              PKL_2244_COUNT=$((PKL_2244_COUNT + 1))
-            done
-            echo "✅ Copied $PKL_2244_COUNT merged pickle files"
+            cp -v "$REPO_PATH"/*_2244.pkl /content/forex-alpha-models/merged_data_pickles/
+            echo "✅ Copied merged pickle files"
+          else
+            echo "❌ WARNING: No merged pickle files found!"
           fi
           
-          # Copy indicator pickle files
-          IND_COUNT=0
-          if ls "$REPO_PATH"/*_indicators.pkl 1> /dev/null 2>&1; then
-            for file in "$REPO_PATH"/*_indicators.pkl; do
-              cp -v "$file" /content/forex-alpha-models/pickles/
-              IND_COUNT=$((IND_COUNT + 1))
-            done
-            echo "✅ Copied $IND_COUNT indicator pickle files"
-          fi
+          # Copy other necessary files
+          [ -d "$REPO_PATH"/*.csv ] && cp -v "$REPO_PATH"/*.csv /content/forex-alpha-models/csvs/ 2>/dev/null || true
+          [ -d "$REPO_PATH"/*_indicators.pkl ] && cp -v "$REPO_PATH"/*_indicators.pkl /content/forex-alpha-models/pickles/ 2>/dev/null || true
           
-          # Copy ML model pickle files
-          ML_COUNT=0
-          for pattern in "*_sgd.pkl" "*_rf.pkl" "*_rf_hist.pkl" "*_best_chrom.pkl" "*_population.pkl" "*_trade_memory.pkl" "*_gen_count.pkl" "*_ga_progress.pkl"; do
-            if ls "$REPO_PATH"/$pattern 1> /dev/null 2>&1; then
-              for file in "$REPO_PATH"/$pattern; do
-                cp -v "$file" /content/forex-alpha-models/pickles/ 2>/dev/null || true
-                ML_COUNT=$((ML_COUNT + 1))
-              done
-            fi
-          done
-          echo "✅ Copied $ML_COUNT ML model files"
-          
-          # Database files - NO COPY needed (already in right place)
-          echo "✅ Database files already in place (no copy needed)"
-          
-          # Copy other important pickle files to working directory
-          for file in learning_progress.pkl iteration_counter.pkl previous_signals.pkl monday_runs.pkl; do
-            if [ -f "$REPO_PATH/$file" ]; then
-              # These stay in repo folder (no copy needed)
-              echo "✅ Found $file in repo"
-            fi
-          done
-          
-          echo ""
-          echo "=========================================="
-          echo "📊 Working directory status:"
-          echo "=========================================="
-          echo "CSVs: $(ls -1 /content/forex-alpha-models/csvs/*.csv 2>/dev/null | wc -l) files"
-          echo "Merged pickles (2244): $(ls -1 /content/forex-alpha-models/merged_data_pickles/*_2244.pkl 2>/dev/null | wc -l) files"
-          echo "Indicator pickles: $(ls -1 /content/forex-alpha-models/pickles/*_indicators.pkl 2>/dev/null | wc -l) files"
-          echo "ML model pickles: $(ls -1 /content/forex-alpha-models/pickles/*_{sgd,rf}.pkl 2>/dev/null | wc -l) files"
-          echo "Databases: $(ls -1 /content/forex-alpha-models/forex-ai-models/*.db 2>/dev/null | wc -l) files"
-          echo "=========================================="
+          echo "✅ Data copy complete"
 
       - name: Convert notebook to Python
         run: |
@@ -291,130 +217,72 @@ jobs:
           EOF
           sed -i -f path_fixes.sed ai_forex_brain_2.py
 
-      - name: Extract Ultra-Persistent Cells (Smart Detection)
-        if: steps.check_deps.outputs.mode == 'ultra'
+      - name: Extract v8.5 Pipeline Code Only
+        if: |
+          steps.detect_mode.outputs.is_weekend == 'true' || 
+          (steps.detect_mode.outputs.execution_mode == 'weekday_smart' && steps.check_data.outputs.decision == 'v85_only')
         run: |
-          cat > extract_ultra_cells.py << 'PYTHON_EOF'
+          cat > extract_v85.py << 'PYTHON_EOF'
           import re
           
           with open("ai_forex_brain_2.py", "r", encoding="utf-8") as f:
               content = f.read()
           
           print("=" * 80)
-          print("SEARCHING FOR ULTRA-PERSISTENT PIPELINE CELLS")
+          print("🎯 EXTRACTING FOREX PIPELINE v8.5 CODE ONLY")
           print("=" * 80)
           
-          # Define the THREE cells we need to find (based on actual notebook structure)
-          cell_markers = [
-              {
-                  'name': 'FX CSV Combine + Incremental Indicators',
-                  'pattern': r'# FX CSV Combine \+ Incremental Indicators Pipeline'
-              },
-              {
-                  'name': 'VERSION 3.6 - Unified Loader',
-                  'pattern': r'# VERSION 3\.6 â€" Unified Loader \+ Merge Pickles'
-              },
-              {
-                  'name': 'Ultimate Hybrid Forex Pipeline v7.5',
-                  'pattern': r'#!/usr/bin/env python3\s*\n\s*"""\s*Ultimate Hybrid Forex Pipeline v7\.5'
-              }
-          ]
+          # Search for the v8.5 pipeline cell marker
+          pattern = r'#!/usr/bin/env python3\s*\n\s*"""\s*Ultimate.*?Forex.*?Pipeline.*?v8[.\d]*.*?OPTIMIZED'
           
-          found_cells = []
+          match = re.search(pattern, content, re.DOTALL | re.IGNORECASE)
           
-          for i, marker_info in enumerate(cell_markers, 1):
-              match = re.search(marker_info['pattern'], content, re.DOTALL | re.MULTILINE)
-              if match:
-                  pos = match.start()
-                  found_cells.append({
-                      'index': i,
-                      'name': marker_info['name'],
-                      'position': pos
-                  })
-                  print(f"✅ Cell {i} Found: {marker_info['name']}")
-                  print(f"   Position: {pos:,}")
-              else:
-                  print(f"❌ Cell {i} NOT FOUND: {marker_info['name']}")
-          
-          print(f"\n📊 Found {len(found_cells)}/3 cells")
-          
-          if len(found_cells) == 0:
-              print("\n⚠️  No cells found! Using full notebook")
-              extracted_code = content
-          elif len(found_cells) == 3:
-              # All 3 cells found - extract from first to end
-              start_pos = min(c['position'] for c in found_cells)
+          if match:
+              start_pos = match.start()
               extracted_code = content[start_pos:]
-              print(f"\n✅ Extracting from first cell (position {start_pos:,}) to END")
+              
+              print(f"✅ Found v8.5 pipeline at position {start_pos:,}")
+              print(f"✅ Extracted {len(extracted_code):,} characters")
+              
+              # Write extracted code
+              with open("forex_pipeline_v85_only.py", "w", encoding="utf-8") as f:
+                  f.write(extracted_code)
+              
+              lines = extracted_code.split('\n')
+              print(f"✅ Total lines: {len(lines):,}")
+              print(f"\nFirst 5 lines:")
+              for i, line in enumerate(lines[:5], 1):
+                  print(f"  {i}: {line[:75]}")
+              
+              print("\n✅ v8.5 pipeline script ready: forex_pipeline_v85_only.py")
           else:
-              # Partial cells found - extract from earliest found
-              start_pos = min(c['position'] for c in found_cells)
-              extracted_code = content[start_pos:]
-              print(f"\n⚠️  Extracting from position {start_pos:,} to END (partial match)")
+              print("❌ ERROR: Could not find v8.5 pipeline code!")
+              print("⚠️  Falling back to full notebook")
+              
+              # Fallback: use full notebook
+              with open("forex_pipeline_v85_only.py", "w", encoding="utf-8") as f:
+                  f.write(content)
           
-          # Write extracted code
-          with open("ai_forex_brain_2_ultra.py", "w", encoding="utf-8") as f:
-              f.write(extracted_code)
-          
-          # Summary
-          lines = extracted_code.split('\n')
-          print("\n" + "=" * 80)
-          print("EXTRACTION SUMMARY")
-          print("=" * 80)
-          print(f"Total lines extracted: {len(lines):,}")
-          print(f"Total characters: {len(extracted_code):,}")
-          
-          print(f"\nFirst 5 lines:")
-          for i, line in enumerate(lines[:5], 1):
-              print(f"  {i:3d}: {line[:75]}")
-          
-          # Verify cells are present in extraction
-          cells_in_extract = sum([
-              1 for marker in cell_markers 
-              if re.search(marker['pattern'], extracted_code, re.DOTALL | re.MULTILINE)
-          ])
-          print(f"\n📋 Cells included in extraction: {cells_in_extract}/3")
-          
-          print("\n✅ Ultra-persistent script ready: ai_forex_brain_2_ultra.py")
           print("=" * 80)
           PYTHON_EOF
           
-          python extract_ultra_cells.py
+          python extract_v85.py
 
-      - name: Run Pipeline (Full Mode)
-        if: steps.check_deps.outputs.mode == 'full'
+      - name: Run Full Pipeline (Monday or Missing Data)
+        if: |
+          steps.detect_mode.outputs.execution_mode == 'monday_full' ||
+          (steps.detect_mode.outputs.execution_mode == 'weekday_smart' && steps.check_data.outputs.decision == 'full_pipeline')
         run: |
           echo "=========================================="
-          echo "🔴 RUNNING FULL PIPELINE MODE"
+          echo "🔴 RUNNING FULL PIPELINE"
           echo "=========================================="
-          echo "This will execute ALL cells in the notebook:"
+          echo "Executing all notebook cells:"
           echo "  1. Data fetching from APIs"
           echo "  2. Indicator calculation"
-          echo "  3. Pickle creation"
-          echo "  4. Model training"
-          echo "  5. Signal generation"
+          echo "  3. Pickle creation & merging"
+          echo "  4. Forex Pipeline v8.5"
           echo "=========================================="
           python ai_forex_brain_2.py 2>&1 | tee pipeline_output.log
-          EXIT_CODE=${PIPESTATUS[0]}
-          if [ $EXIT_CODE -ne 0 ]; then
-            echo "❌ Pipeline failed with exit code $EXIT_CODE"
-            tail -n 50 pipeline_output.log
-            exit $EXIT_CODE
-          fi
-        timeout-minutes: 50
-
-      - name: Run Pipeline (Ultra-Persistent Mode)
-        if: steps.check_deps.outputs.mode == 'ultra'
-        run: |
-          echo "=========================================="
-          echo "🟢 RUNNING ULTRA-PERSISTENT MODE (3 CELLS)"
-          echo "=========================================="
-          echo "Executing in order:"
-          echo "  1. FX CSV Combine + Incremental Indicators"
-          echo "  2. VERSION 3.6 - Unified Loader + Merge Pickles"
-          echo "  3. Ultimate Hybrid Forex Pipeline v7.5"
-          echo "=========================================="
-          python ai_forex_brain_2_ultra.py 2>&1 | tee pipeline_output.log
           EXIT_CODE=${PIPESTATUS[0]}
           if [ $EXIT_CODE -ne 0 ]; then
             echo "❌ Pipeline failed with exit code $EXIT_CODE"
@@ -423,6 +291,43 @@ jobs:
           fi
         timeout-minutes: 50
 
+      - name: Run v8.5 Pipeline Only (Weekend or Data Exists)
+        if: |
+          steps.detect_mode.outputs.is_weekend == 'true' || 
+          (steps.detect_mode.outputs.execution_mode == 'weekday_smart' && steps.check_data.outputs.decision == 'v85_only')
+        run: |
+          echo "=========================================="
+          echo "🟢 RUNNING v8.5 PIPELINE ONLY"
+          echo "=========================================="
+          echo "Mode: ${{ steps.detect_mode.outputs.execution_mode }}"
+          echo ""
+          echo "Executing:"
+          echo "  ✅ Forex Pipeline v8.5"
+          echo "  ⏭️  Skipping data fetching"
+          echo "  ⏭️  Skipping indicator calculation"
+          echo "  ⏭️  Using existing merged pickle files"
+          echo "=========================================="
+          
+          # Verify merged pickles exist
+          PICKLE_COUNT=$(ls -1 /content/forex-alpha-models/merged_data_pickles/*_2244.pkl 2>/dev/null | wc -l)
+          if [ $PICKLE_COUNT -lt 4 ]; then
+            echo "❌ ERROR: Not enough merged pickle files found ($PICKLE_COUNT/4)"
+            echo "⚠️  Cannot run v8.5 without data. Exiting..."
+            exit 1
+          fi
+          
+          echo "✅ Found $PICKLE_COUNT merged pickle files"
+          echo ""
+          
+          python forex_pipeline_v85_only.py 2>&1 | tee pipeline_output.log
+          EXIT_CODE=${PIPESTATUS[0]}
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "❌ Pipeline failed with exit code $EXIT_CODE"
+            tail -n 100 pipeline_output.log
+            exit $EXIT_CODE
+          fi
+        timeout-minutes: 20
+
       - name: Copy outputs back to repository
         if: always()
         run: |
@@ -430,87 +335,57 @@ jobs:
           
           REPO_DIR="/content/forex-alpha-models/forex-ai-models"
           
-          # Copy CSV files from working dir to repo
-          CSV_COUNT=0
+          # Copy CSV files (if any new ones)
           if ls /content/forex-alpha-models/csvs/*.csv 1> /dev/null 2>&1; then
             for file in /content/forex-alpha-models/csvs/*.csv; do
               filename=$(basename "$file")
               if [ ! -f "$REPO_DIR/$filename" ] || ! cmp -s "$file" "$REPO_DIR/$filename"; then
                 cp -v "$file" "$REPO_DIR/"
-                CSV_COUNT=$((CSV_COUNT + 1))
               fi
             done
-            echo "✅ Updated $CSV_COUNT CSV files"
           fi
           
-          # Copy merged pickle files (2244) - CRITICAL!
-          PKL_2244_COUNT=0
+          # Copy merged pickle files (CRITICAL - always update)
           if ls /content/forex-alpha-models/merged_data_pickles/*_2244.pkl 1> /dev/null 2>&1; then
-            for file in /content/forex-alpha-models/merged_data_pickles/*_2244.pkl; do
-              filename=$(basename "$file")
-              if [ ! -f "$REPO_DIR/$filename" ] || ! cmp -s "$file" "$REPO_DIR/$filename"; then
-                cp -v "$file" "$REPO_DIR/"
-                PKL_2244_COUNT=$((PKL_2244_COUNT + 1))
-              fi
-            done
-            echo "✅ Updated $PKL_2244_COUNT merged pickle files (2244)"
+            cp -v /content/forex-alpha-models/merged_data_pickles/*_2244.pkl "$REPO_DIR/" 2>/dev/null || true
+            echo "✅ Updated merged pickle files"
           fi
           
           # Copy indicator pickle files
-          IND_COUNT=0
           if ls /content/forex-alpha-models/pickles/*_indicators.pkl 1> /dev/null 2>&1; then
             for file in /content/forex-alpha-models/pickles/*_indicators.pkl; do
               filename=$(basename "$file")
               if [ ! -f "$REPO_DIR/$filename" ] || ! cmp -s "$file" "$REPO_DIR/$filename"; then
                 cp -v "$file" "$REPO_DIR/"
-                IND_COUNT=$((IND_COUNT + 1))
               fi
             done
-            echo "✅ Updated $IND_COUNT indicator pickle files"
           fi
           
-          # Copy ML model files
-          ML_COUNT=0
-          for pattern in "*_sgd.pkl" "*_rf.pkl" "*_rf_hist.pkl" "*_best_chrom.pkl" "*_population.pkl" "*_trade_memory.pkl" "*_gen_count.pkl" "*_ga_progress.pkl"; do
-            if ls /content/forex-alpha-models/pickles/$pattern 1> /dev/null 2>&1; then
-              for file in /content/forex-alpha-models/pickles/$pattern; do
-                filename=$(basename "$file")
-                if [ ! -f "$REPO_DIR/$filename" ] || ! cmp -s "$file" "$REPO_DIR/$filename"; then
-                  cp -v "$file" "$REPO_DIR/"
-                  ML_COUNT=$((ML_COUNT + 1))
-                fi
-              done
+          # Copy ML model files (v8.5 outputs)
+          for pattern in "*_sgd.pkl" "*_rf.pkl" "learning_v85.pkl" "iteration_v85.pkl" "weights_v85.pkl" "memory_v85.db" "monday_runs.pkl"; do
+            if ls /content/forex-alpha-models/pickles/$pattern 1> /dev/null 2>&1 || ls "$REPO_DIR"/$pattern 1> /dev/null 2>&1; then
+              cp -v /content/forex-alpha-models/pickles/$pattern "$REPO_DIR/" 2>/dev/null || true
+              cp -v "$REPO_DIR"/$pattern "$REPO_DIR/" 2>/dev/null || true
             fi
           done
-          echo "✅ Updated $ML_COUNT ML model files"
           
-          # Database files - already in correct location (skip)
-          echo "✅ Database files already in repository (no copy needed)"
-          
-          # Copy JSON files
-          JSON_COUNT=0
+          # Copy JSON signal files (v8.5 outputs)
           if ls "$REPO_DIR"/*.json 1> /dev/null 2>&1; then
-            JSON_COUNT=$(ls -1 "$REPO_DIR"/*.json 2>/dev/null | wc -l)
-            echo "✅ JSON files: $JSON_COUNT (already in repo)"
+            echo "✅ JSON signal files already in repo"
           fi
-          
-          # Other state files - already in correct location (skip)
-          echo "✅ State files (learning_progress, iteration_counter, etc.) already in repo"
           
           echo ""
           echo "=========================================="
-          echo "📊 Repository now contains:"
+          echo "📊 Repository contents:"
           echo "=========================================="
           echo "CSV files: $(ls -1 "$REPO_DIR"/*.csv 2>/dev/null | wc -l)"
           echo "Merged pickles (2244): $(ls -1 "$REPO_DIR"/*_2244.pkl 2>/dev/null | wc -l)"
-          echo "Indicator pickles: $(ls -1 "$REPO_DIR"/*_indicators.pkl 2>/dev/null | wc -l)"
-          echo "ML SGD/RF pickles: $(ls -1 "$REPO_DIR"/*_{sgd,rf}.pkl 2>/dev/null | wc -l)"
-          echo "ML state pickles: $(ls -1 "$REPO_DIR"/*_{best_chrom,population,trade_memory}.pkl 2>/dev/null | wc -l)"
           echo "Databases: $(ls -1 "$REPO_DIR"/*.db 2>/dev/null | wc -l)"
-          echo "JSON files: $(ls -1 "$REPO_DIR"/*.json 2>/dev/null | wc -l)"
+          echo "JSON signals: $(ls -1 "$REPO_DIR"/*.json 2>/dev/null | wc -l)"
+          echo "Learning files: $(ls -1 "$REPO_DIR"/*_v85.pkl 2>/dev/null | wc -l)"
           echo "=========================================="
           
-          echo "✅ All outputs copied successfully (skipped identical files)"
+          echo "✅ All outputs synchronized"
 
       - name: Commit and push changes
         if: always()
@@ -522,7 +397,8 @@ jobs:
           if git diff --cached --quiet; then
             echo "ℹ️  No changes to commit"
           else
-            git commit -m "🤖 Auto-update: Pipeline run - $(date +'%Y-%m-%d %H:%M:%S UTC')"
+            MODE="${{ steps.detect_mode.outputs.execution_mode }}"
+            git commit -m "🤖 Auto-update [$MODE]: $(date +'%Y-%m-%d %H:%M:%S UTC')"
             git push origin main || {
               echo "⚠️  Push failed, trying to pull and merge..."
               git pull --rebase origin main
@@ -535,8 +411,46 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pipeline-logs-${{ github.run_number }}
+          name: pipeline-logs-${{ github.run_number }}-${{ steps.detect_mode.outputs.execution_mode }}
           path: |
             pipeline_output.log
             /content/forex-alpha-models/logs/*.log
           retention-days: 7
+
+      - name: Execution Summary
+        if: always()
+        run: |
+          echo ""
+          echo "=========================================="
+          echo "📊 EXECUTION SUMMARY"
+          echo "=========================================="
+          echo "Mode: ${{ steps.detect_mode.outputs.execution_mode }}"
+          echo "Weekend: ${{ steps.detect_mode.outputs.is_weekend }}"
+          echo "Date: $(date +'%A, %B %d, %Y %H:%M UTC')"
+          echo ""
+          
+          if [ "${{ steps.detect_mode.outputs.is_weekend }}" == "true" ]; then
+            echo "✅ Weekend mode: Executed v8.5 pipeline only"
+            echo "   - Used existing merged pickle data"
+            echo "   - No data fetching performed"
+            echo "   - Trade evaluation with historical prices"
+          elif [ "${{ steps.detect_mode.outputs.execution_mode }}" == "monday_full" ]; then
+            echo "✅ Monday mode: Executed full pipeline"
+            echo "   - Fresh data fetched from APIs"
+            echo "   - Indicators recalculated"
+            echo "   - v8.5 pipeline executed with new data"
+          else
+            if [ "${{ steps.check_data.outputs.decision }}" == "v85_only" ]; then
+              echo "✅ Weekday smart mode: v8.5 only"
+              echo "   - Sufficient data already exists"
+              echo "   - Skipped data fetching"
+            else
+              echo "✅ Weekday smart mode: Full pipeline"
+              echo "   - Missing data detected"
+              echo "   - Full refresh performed"
+            fi
+          fi
+          
+          echo ""
+          echo "📈 Pipeline outputs should be available in repository"
+          echo "=========================================="

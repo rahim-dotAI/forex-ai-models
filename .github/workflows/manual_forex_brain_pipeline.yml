@@ -232,7 +232,22 @@ jobs:
               
               if code:
                   # Clean IPython magics
-                  code = re.sub(r'^%.*
+                  code = re.sub(r'^%.*$', '', code, flags=re.MULTILINE)
+                  code = re.sub(r'^!.*$', '', code, flags=re.MULTILINE)
+                  code = code.replace('get_ipython()', '# get_ipython()')
+                  
+                  # Fix paths for GitHub Actions
+                  code = code.replace('Path("/content")', 'Path(".")')
+                  code = code.replace('"forex-alpha-models"', '"."')
+                  
+                  # Write to file
+                  with open('targeted_cell.py', 'w', encoding='utf-8') as f:
+                      f.write(code)
+                  
+                  print(f"Extracted {len(code)} characters to targeted_cell.py")
+              else:
+                  sys.exit(1)
+          EOF
           
           # Extract the targeted cell
           echo "Extracting targeted cell from notebook..."
@@ -334,263 +349,32 @@ jobs:
           echo "Weekend: ${{ steps.detect_mode.outputs.is_weekend }}"
           echo "Date: $(date +'%A, %B %d, %Y %H:%M UTC')"
           echo ""
-          
           echo "Generated Files:"
           
+          # Check each file individually with proper quoting
           if [ -f "broker_signals.json" ]; then
-            SIZE=$(wc -c < "broker_signals.json" 2>/dev/null || echo "0")
-            echo "  ✅ broker_signals.json (${SIZE} bytes)"
+            FILE_SIZE=$(wc -c < "broker_signals.json" 2>/dev/null || echo "0")
+            echo "  ✅ broker_signals.json (${FILE_SIZE} bytes)"
           fi
           
           if [ -f "ensemble_signals.json" ]; then
-            SIZE=$(wc -c < "ensemble_signals.json" 2>/dev/null || echo "0")
-            echo "  ✅ ensemble_signals.json (${SIZE} bytes)"
+            FILE_SIZE=$(wc -c < "ensemble_signals.json" 2>/dev/null || echo "0")
+            echo "  ✅ ensemble_signals.json (${FILE_SIZE} bytes)"
           fi
           
           if [ -f "learning_v85.pkl" ]; then
-            SIZE=$(wc -c < "learning_v85.pkl" 2>/dev/null || echo "0")
-            echo "  ✅ learning_v85.pkl (${SIZE} bytes)"
+            FILE_SIZE=$(wc -c < "learning_v85.pkl" 2>/dev/null || echo "0")
+            echo "  ✅ learning_v85.pkl (${FILE_SIZE} bytes)"
           fi
           
           if [ -f "iteration_v85.pkl" ]; then
-            SIZE=$(wc -c < "iteration_v85.pkl" 2>/dev/null || echo "0")
-            echo "  ✅ iteration_v85.pkl (${SIZE} bytes)"
+            FILE_SIZE=$(wc -c < "iteration_v85.pkl" 2>/dev/null || echo "0")
+            echo "  ✅ iteration_v85.pkl (${FILE_SIZE} bytes)"
           fi
           
           if [ -f "memory_v85.db" ]; then
-            SIZE=$(wc -c < "memory_v85.db" 2>/dev/null || echo "0")
-            echo "  ✅ memory_v85.db (${SIZE} bytes)"
+            FILE_SIZE=$(wc -c < "memory_v85.db" 2>/dev/null || echo "0")
+            echo "  ✅ memory_v85.db (${FILE_SIZE} bytes)"
           fi
-          
-          echo "==========================================", '', code, flags=re.MULTILINE)
-                  code = re.sub(r'^!.*
-          
-          # Extract the targeted cell
-          echo "Extracting targeted cell from notebook..."
-          python extract_cell.py "AI_Forex_Brain_2.ipynb" "pipeline_main"
-          
-          if [ ! -f "targeted_cell.py" ]; then
-            echo "❌ Failed to extract cell"
-            exit 1
-          fi
-          
-          echo ""
-          echo "First 20 lines of extracted code:"
-          head -20 targeted_cell.py
-          echo ""
-          
-          # Run the extracted cell
-          echo "Running extracted cell..."
-          python targeted_cell.py 2>&1 | tee pipeline_output.log
-          
-          EXIT_CODE=${PIPESTATUS[0]}
-          if [ $EXIT_CODE -ne 0 ]; then
-            echo ""
-            echo "❌ Cell execution failed with exit code $EXIT_CODE"
-            echo ""
-            echo "Last 100 lines of output:"
-            tail -n 100 pipeline_output.log
-            exit $EXIT_CODE
-          fi
-          
-          echo ""
-          echo "✅ Cell executed successfully"
-        timeout-minutes: 50
-
-      - name: Commit and push changes
-        if: always()
-        run: |
-          git add -A
-          
-          if git diff --cached --quiet; then
-            echo "ℹ️  No changes to commit"
-          else
-            MODE="${{ steps.detect_mode.outputs.execution_mode }}"
-            TIMESTAMP=$(date +'%Y-%m-%d %H:%M:%S UTC')
-            
-            git commit -m "🤖 Auto-update [$MODE]: $TIMESTAMP" || true
-            
-            echo "Syncing with remote..."
-            for i in {1..3}; do
-              echo "Attempt $i: Pulling latest changes..."
-              if git pull --rebase origin main 2>&1 | grep -q "CONFLICT"; then
-                echo "⚠️  Conflict detected, resolving with ours strategy..."
-                git checkout --ours .
-                git add -A
-                git rebase --continue || true
-              fi
-              
-              echo "Attempt $i: Pushing to GitHub..."
-              if git push origin main 2>&1; then
-                echo "✅ Successfully pushed on attempt $i"
-                break
-              else
-                echo "⚠️  Push failed on attempt $i"
-                if [ $i -lt 3 ]; then
-                  echo "Waiting 3 seconds before retry..."
-                  sleep 3
-                  git fetch origin main
-                  git reset --soft origin/main
-                  git add -A
-                  git commit -m "🤖 Auto-update [$MODE]: $TIMESTAMP" || true
-                else
-                  echo "❌ All push attempts failed"
-                  exit 1
-                fi
-              fi
-            done
-          fi
-
-      - name: Upload logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pipeline-logs-${{ github.run_number }}
-          path: |
-            pipeline_output.log
-            targeted_cell.py
-            forex_pipeline_v85.log
-            pipeline.log
-          retention-days: 7
-
-      - name: Summary
-        if: always()
-        run: |
-          echo "=========================================="
-          echo "📊 EXECUTION SUMMARY"
-          echo "=========================================="
-          echo "Mode: ${{ steps.detect_mode.outputs.execution_mode }}"
-          echo "Weekend: ${{ steps.detect_mode.outputs.is_weekend }}"
-          echo "Date: $(date +'%A, %B %d, %Y %H:%M UTC')"
-          echo ""
-          
-          echo "Generated Files:"
-          for file in broker_signals.json ensemble_signals.json learning_v85.pkl iteration_v85.pkl memory_v85.db; do
-            if [ -f "$file" ]; then
-              echo "  ✅ $file ($(wc -c < "$file") bytes)"
-            fi
-          done
-          
-          echo "==========================================", '', code, flags=re.MULTILINE)
-                  code = code.replace('get_ipython()', '# get_ipython()')
-                  
-                  # Fix paths for GitHub Actions
-                  code = code.replace('Path("/content")', 'Path(".")')
-                  code = code.replace('"forex-alpha-models"', '"."')
-                  
-                  # Write to file
-                  with open('targeted_cell.py', 'w', encoding='utf-8') as f:
-                      f.write(code)
-                  
-                  print(f"Extracted {len(code)} characters to targeted_cell.py")
-              else:
-                  sys.exit(1)
-          EOF
-          
-          # Extract the targeted cell
-          echo "Extracting targeted cell from notebook..."
-          python extract_cell.py "AI_Forex_Brain_2.ipynb" "pipeline_main"
-          
-          if [ ! -f "targeted_cell.py" ]; then
-            echo "❌ Failed to extract cell"
-            exit 1
-          fi
-          
-          echo ""
-          echo "First 20 lines of extracted code:"
-          head -20 targeted_cell.py
-          echo ""
-          
-          # Run the extracted cell
-          echo "Running extracted cell..."
-          python targeted_cell.py 2>&1 | tee pipeline_output.log
-          
-          EXIT_CODE=${PIPESTATUS[0]}
-          if [ $EXIT_CODE -ne 0 ]; then
-            echo ""
-            echo "❌ Cell execution failed with exit code $EXIT_CODE"
-            echo ""
-            echo "Last 100 lines of output:"
-            tail -n 100 pipeline_output.log
-            exit $EXIT_CODE
-          fi
-          
-          echo ""
-          echo "✅ Cell executed successfully"
-        timeout-minutes: 50
-
-      - name: Commit and push changes
-        if: always()
-        run: |
-          git add -A
-          
-          if git diff --cached --quiet; then
-            echo "ℹ️  No changes to commit"
-          else
-            MODE="${{ steps.detect_mode.outputs.execution_mode }}"
-            TIMESTAMP=$(date +'%Y-%m-%d %H:%M:%S UTC')
-            
-            git commit -m "🤖 Auto-update [$MODE]: $TIMESTAMP" || true
-            
-            echo "Syncing with remote..."
-            for i in {1..3}; do
-              echo "Attempt $i: Pulling latest changes..."
-              if git pull --rebase origin main 2>&1 | grep -q "CONFLICT"; then
-                echo "⚠️  Conflict detected, resolving with ours strategy..."
-                git checkout --ours .
-                git add -A
-                git rebase --continue || true
-              fi
-              
-              echo "Attempt $i: Pushing to GitHub..."
-              if git push origin main 2>&1; then
-                echo "✅ Successfully pushed on attempt $i"
-                break
-              else
-                echo "⚠️  Push failed on attempt $i"
-                if [ $i -lt 3 ]; then
-                  echo "Waiting 3 seconds before retry..."
-                  sleep 3
-                  git fetch origin main
-                  git reset --soft origin/main
-                  git add -A
-                  git commit -m "🤖 Auto-update [$MODE]: $TIMESTAMP" || true
-                else
-                  echo "❌ All push attempts failed"
-                  exit 1
-                fi
-              fi
-            done
-          fi
-
-      - name: Upload logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pipeline-logs-${{ github.run_number }}
-          path: |
-            pipeline_output.log
-            targeted_cell.py
-            forex_pipeline_v85.log
-            pipeline.log
-          retention-days: 7
-
-      - name: Summary
-        if: always()
-        run: |
-          echo "=========================================="
-          echo "📊 EXECUTION SUMMARY"
-          echo "=========================================="
-          echo "Mode: ${{ steps.detect_mode.outputs.execution_mode }}"
-          echo "Weekend: ${{ steps.detect_mode.outputs.is_weekend }}"
-          echo "Date: $(date +'%A, %B %d, %Y %H:%M UTC')"
-          echo ""
-          
-          echo "Generated Files:"
-          for file in broker_signals.json ensemble_signals.json learning_v85.pkl iteration_v85.pkl memory_v85.db; do
-            if [ -f "$file" ]; then
-              echo "  ✅ $file ($(wc -c < "$file") bytes)"
-            fi
-          done
           
           echo "=========================================="

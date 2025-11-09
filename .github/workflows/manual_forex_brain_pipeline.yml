@@ -336,29 +336,30 @@ jobs:
           echo ""
           
           echo "Generated Files:"
+          
           if [ -f "broker_signals.json" ]; then
-            SIZE=$(wc -c < "broker_signals.json")
-            echo "  ✅ broker_signals.json ($SIZE bytes)"
+            SIZE=$(wc -c < "broker_signals.json" 2>/dev/null || echo "0")
+            echo "  ✅ broker_signals.json (${SIZE} bytes)"
           fi
           
           if [ -f "ensemble_signals.json" ]; then
-            SIZE=$(wc -c < "ensemble_signals.json")
-            echo "  ✅ ensemble_signals.json ($SIZE bytes)"
+            SIZE=$(wc -c < "ensemble_signals.json" 2>/dev/null || echo "0")
+            echo "  ✅ ensemble_signals.json (${SIZE} bytes)"
           fi
           
           if [ -f "learning_v85.pkl" ]; then
-            SIZE=$(wc -c < "learning_v85.pkl")
-            echo "  ✅ learning_v85.pkl ($SIZE bytes)"
+            SIZE=$(wc -c < "learning_v85.pkl" 2>/dev/null || echo "0")
+            echo "  ✅ learning_v85.pkl (${SIZE} bytes)"
           fi
           
           if [ -f "iteration_v85.pkl" ]; then
-            SIZE=$(wc -c < "iteration_v85.pkl")
-            echo "  ✅ iteration_v85.pkl ($SIZE bytes)"
+            SIZE=$(wc -c < "iteration_v85.pkl" 2>/dev/null || echo "0")
+            echo "  ✅ iteration_v85.pkl (${SIZE} bytes)"
           fi
           
           if [ -f "memory_v85.db" ]; then
-            SIZE=$(wc -c < "memory_v85.db")
-            echo "  ✅ memory_v85.db ($SIZE bytes)"
+            SIZE=$(wc -c < "memory_v85.db" 2>/dev/null || echo "0")
+            echo "  ✅ memory_v85.db (${SIZE} bytes)"
           fi
           
           echo "==========================================", '', code, flags=re.MULTILINE)

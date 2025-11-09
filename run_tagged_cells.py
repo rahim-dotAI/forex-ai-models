@@ -2,6 +2,7 @@ import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
 import sys
 import re
+import traceback
 
 def run_tagged_cells(notebook_path, tags=['weekend', 'pipeline_main', 'v85']):
     """Execute only cells with specified tags"""
@@ -94,14 +95,27 @@ def run_tagged_cells(notebook_path, tags=['weekend', 'pipeline_main', 'v85']):
             
         except CellExecutionError as e:
             print(f"   ❌ ERROR in cell {cell_idx}!")
-            print(f"   Error: {str(e)[:200]}")
+            print(f"   Error type: CellExecutionError")
+            print(f"   Error message: {str(e)}")
+            print()
+            print("   Full traceback:")
+            print(traceback.format_exc())
+            print()
+            print("   Cell source (first 500 chars):")
+            print(cell.source[:500])
             print()
             return False
         
         except Exception as e:
             print(f"   ❌ UNEXPECTED ERROR in cell {cell_idx}!")
             print(f"   Error type: {type(e).__name__}")
-            print(f"   Error: {str(e)[:200]}")
+            print(f"   Error message: {str(e)}")
+            print()
+            print("   Full traceback:")
+            print(traceback.format_exc())
+            print()
+            print("   Cell source (first 500 chars):")
+            print(cell.source[:500])
             print()
             return False
     

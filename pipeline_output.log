@@ -1,4 +1,18 @@
+ℹ️ ======================================================================
+✅ 🚀 FOREX PIPELINE v8.5.1
+ℹ️ ======================================================================
+ℹ️ 
+📊 Iteration #1
+ℹ️ Total: 1 | Days: 1 | Avg/Day: 1.0
+ℹ️ 
+📦 Loading data...
+❌ ❌ Error loading EUR_USD_2244.pkl: invalid load key, 'v'.
+❌ ❌ Error loading GBP_USD_2244.pkl: invalid load key, 'v'.
+❌ ❌ Error loading USD_JPY_2244.pkl: invalid load key, 'v'.
+❌ ❌ Error loading AUD_USD_2244.pkl: invalid load key, 'v'.
+❌ 
+❌ Error: No data loaded!
 Traceback (most recent call last):
-  File "/home/runner/work/forex-ai-models/forex-ai-models/forex_pipeline_v85.py", line 29, in <module>
-    import ta
-ModuleNotFoundError: No module named 'ta'
+  File "/home/runner/work/forex-ai-models/forex-ai-models/forex_pipeline_v85.py", line 364, in main
+    raise ValueError("No data loaded!")
+ValueError: No data loaded!

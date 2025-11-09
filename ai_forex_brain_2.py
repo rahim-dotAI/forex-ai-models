@@ -1,3 +1,966 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[ ]:
+
+
+# ======================================================
+# 🌍 Notebook Initialization — Colab + GitHub Actions + Local
+# ======================================================
+import os
+import sys
+from pathlib import Path
+import subprocess
+
+# ======================================================
+# 1️⃣ Detect Environment
+# ======================================================
+try:
+    import google.colab
+    IN_COLAB = True
+except ImportError:
+    IN_COLAB = False
+
+IN_GHA = "GITHUB_ACTIONS" in os.environ
+IN_LOCAL = not IN_COLAB and not IN_GHA
+
+ENV_NAME = "Colab" if IN_COLAB else "GitHub Actions" if IN_GHA else "Local"
+print(f"🔍 Detected environment: {ENV_NAME}")
+
+# ======================================================
+# 2️⃣ Safe Working Folder (Auto-Switch)
+# ======================================================
+if IN_COLAB:
+    BASE_DIR = Path("/content")
+elif IN_GHA:
+    BASE_DIR = Path("/home/runner/work")
+else:
+    BASE_DIR = Path(".")
+
+REPO_NAME = "forex-ai-models"  # Updated repo name
+SAVE_FOLDER = BASE_DIR / REPO_NAME
+SAVE_FOLDER.mkdir(parents=True, exist_ok=True)
+os.chdir(SAVE_FOLDER)
+print(f"✅ Working directory set to: {SAVE_FOLDER.resolve()}")
+
+# ======================================================
+# 3️⃣ Git Configuration (Universal)
+# ======================================================
+GIT_NAME = os.environ.get("GIT_USER_NAME", "Forex AI Bot")
+GIT_EMAIL = os.environ.get("GIT_USER_EMAIL", "nakatonabira3@gmail.com")
+
+subprocess.run(["git", "config", "--global", "user.name", GIT_NAME], check=False)
+subprocess.run(["git", "config", "--global", "user.email", GIT_EMAIL], check=False)
+subprocess.run(["git", "config", "--global", "advice.detachedHead", "false"], check=False)
+
+print(f"✅ Git configured: {GIT_NAME} <{GIT_EMAIL}>")
+
+# ======================================================
+# 4️⃣ Tokens & Secrets
+# ======================================================
+FOREX_PAT = os.environ.get("FOREX_PAT")
+BROWSERLESS_TOKEN = os.environ.get("BROWSERLESS_TOKEN")
+
+# Load Colab secrets if missing
+if IN_COLAB and not FOREX_PAT:
+    try:
+        from google.colab import userdata
+        FOREX_PAT = userdata.get('FOREX_PAT')
+        if FOREX_PAT:
+            os.environ["FOREX_PAT"] = FOREX_PAT
+            print("🔐 Loaded FOREX_PAT from Colab secret.")
+    except Exception:
+        print("⚠️ No Colab secret found for FOREX_PAT")
+
+if not FOREX_PAT:
+    print("⚠️ FOREX_PAT not found — GitHub cloning may fail.")
+if not BROWSERLESS_TOKEN:
+    print("⚠️ BROWSERLESS_TOKEN not found.")
+
+# ======================================================
+# 5️⃣ Output Folders
+# ======================================================
+CSV_FOLDER = SAVE_FOLDER / "csvs"
+PICKLE_FOLDER = SAVE_FOLDER / "pickles"
+LOGS_FOLDER = SAVE_FOLDER / "logs"
+
+for folder in [CSV_FOLDER, PICKLE_FOLDER, LOGS_FOLDER]:
+    folder.mkdir(parents=True, exist_ok=True)
+
+print(f"✅ Output folders ready:")
+print(f"   • CSVs:    {CSV_FOLDER}")
+print(f"   • Pickles: {PICKLE_FOLDER}")
+print(f"   • Logs:    {LOGS_FOLDER}")
+
+# ======================================================
+# 6️⃣ Environment Debug Info
+# ======================================================
+print(f"Python version: {sys.version.split()[0]}")
+print(f"Current working directory: {os.getcwd()}")
+print(f"Directory contents: {os.listdir('.')}")
+
+
+# In[ ]:
+
+
+
+
+# In[ ]:
+
+
+import os
+
+# Set your keys (only for this session)
+os.environ['ALPHA_VANTAGE_KEY'] = '1W58NPZXOG5SLHZ6'
+os.environ['BROWSERLESS_TOKEN'] = '2TMVUBAjFwrr7Tb283f0da6602a4cb698b81778bda61967f7'
+
+# Test if they work
+print("Alpha Vantage Key:", os.environ.get('ALPHA_VANTAGE_KEY'))
+print("Browserless Token:", os.environ.get('BROWSERLESS_TOKEN'))
+
+
+
+
+# In[ ]:
+
+
+# ======================================================
+# ⚡ Full Colab-ready GitHub Sync + Remove LFS
+# ======================================================
+import os
+import subprocess
+import shutil
+from pathlib import Path
+import urllib.parse
+
+# -----------------------------
+# 0️⃣ Environment / Paths
+# -----------------------------
+REPO_PARENT = Path("/content/forex-automation")
+REPO_PARENT.mkdir(parents=True, exist_ok=True)
+os.chdir(REPO_PARENT)
+
+GITHUB_USERNAME = "rahim-dotAI"
+GITHUB_REPO = "forex-ai-models"
+BRANCH = "main"
+REPO_FOLDER = REPO_PARENT / GITHUB_REPO
+
+# -----------------------------
+# 1️⃣ GitHub Token
+# -----------------------------
+FOREX_PAT = os.environ.get("FOREX_PAT")
+if not FOREX_PAT:
+    from google.colab import userdata
+    FOREX_PAT = userdata.get("FOREX_PAT")
+    if FOREX_PAT:
+        os.environ["FOREX_PAT"] = FOREX_PAT
+        print("🔐 Loaded FOREX_PAT from Colab secret.")
+
+if not FOREX_PAT:
+    raise ValueError("❌ Missing FOREX_PAT. Set it in Colab userdata or GitHub secrets.")
+
+SAFE_PAT = urllib.parse.quote(FOREX_PAT)
+
+REPO_URL = f"https://{GITHUB_USERNAME}:{SAFE_PAT}@github.com/{GITHUB_USERNAME}/{GITHUB_REPO}.git"
+
+# -----------------------------
+# 2️⃣ Clean old repo
+# -----------------------------
+if REPO_FOLDER.exists():
+    print(f"🗑 Removing old repo: {REPO_FOLDER}")
+    shutil.rmtree(REPO_FOLDER)
+
+# -----------------------------
+# 3️⃣ Clone repo safely (skip LFS)
+# -----------------------------
+print("🔗 Cloning repo (skipping LFS)...")
+env = os.environ.copy()
+env["GIT_LFS_SKIP_SMUDGE"] = "1"
+
+subprocess.run(["git", "clone", REPO_URL, str(REPO_FOLDER)], check=True, env=env)
+os.chdir(REPO_FOLDER)
+print(f"✅ Repo cloned successfully into {REPO_FOLDER}")
+
+# -----------------------------
+# 4️⃣ Uninstall LFS and convert files
+# -----------------------------
+print("⚙️ Removing Git LFS and converting files...")
+subprocess.run(["git", "lfs", "uninstall"], check=True)
+subprocess.run(["git", "lfs", "migrate", "export", "--include=*.csv"], check=True)
+
+# -----------------------------
+# 5️⃣ Configure Git user
+# -----------------------------
+GIT_USER_NAME = os.environ.get("GIT_USER_NAME", "Forex AI Bot")
+GIT_USER_EMAIL = os.environ.get("GIT_USER_EMAIL", "nakatonabira3@gmail.com")
+
+subprocess.run(["git", "config", "--global", "user.name", GIT_USER_NAME], check=True)
+subprocess.run(["git", "config", "--global", "user.email", GIT_USER_EMAIL], check=True)
+subprocess.run(["git", "config", "--global", "advice.detachedHead", "false"], check=True)
+print(f"✅ Git configured: {GIT_USER_NAME} <{GIT_USER_EMAIL}>")
+
+# -----------------------------
+# 6️⃣ Stage, commit, push
+# -----------------------------
+subprocess.run(["git", "add", "-A"], check=True)
+status = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True)
+
+if status.stdout.strip():
+    subprocess.run(["git", "commit", "-m", "Remove LFS and convert files to normal Git"], check=True)
+    subprocess.run(["git", "push", "origin", BRANCH], check=True)
+    print("🚀 Repo updated: LFS removed permanently.")
+else:
+    print("✅ No changes detected. LFS already removed.")
+
+# -----------------------------
+# 7️⃣ Create standard output folders
+# -----------------------------
+for folder in ["csvs", "pickles", "logs"]:
+    Path(folder).mkdir(parents=True, exist_ok=True)
+print("📁 Output folders ready: csvs/, pickles/, logs/")
+
+# -----------------------------
+# 8️⃣ Summary
+# -----------------------------
+print("\n🧾 Summary:")
+print(f"• Working Directory: {os.getcwd()}")
+print(f"• Repository: https://github.com/{GITHUB_USERNAME}/{GITHUB_REPO}")
+print("✅ All operations completed successfully.")
+
+
+# In[ ]:
+
+
+# ======================================================
+# 🚀 FULLY FIXED ALPHA VANTAGE FX WORKFLOW
+# - Uses URL-safe PAT
+# - Loads from Colab secrets
+# - Cleans stale repo + skips LFS
+# - GitHub Actions + Colab Safe
+# ======================================================
+import os
+import time
+import hashlib
+import requests
+import subprocess
+import threading
+import shutil
+import urllib.parse
+from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import pandas as pd
+
+# ======================================================
+# 1️⃣ Detect Environment
+# ======================================================
+try:
+    import google.colab
+    IN_COLAB = True
+except ImportError:
+    IN_COLAB = False
+
+IN_GHA = "GITHUB_ACTIONS" in os.environ
+print(f"Detected environment: {'Colab' if IN_COLAB else 'GitHub/Local'}")
+
+# ======================================================
+# 2️⃣ Working directories
+# ======================================================
+BASE_FOLDER = Path("/content/forex-alpha-models") if IN_COLAB else Path("./forex-alpha-models")
+BASE_FOLDER.mkdir(parents=True, exist_ok=True)
+os.chdir(BASE_FOLDER)
+
+PICKLE_FOLDER = BASE_FOLDER / "pickles"
+CSV_FOLDER = BASE_FOLDER / "csvs"
+LOG_FOLDER = BASE_FOLDER / "logs"
+
+for folder in [PICKLE_FOLDER, CSV_FOLDER, LOG_FOLDER]:
+    folder.mkdir(exist_ok=True)
+
+print(f"✅ Working directory: {BASE_FOLDER.resolve()}")
+print(f"✅ Output folders ready: {PICKLE_FOLDER}, {CSV_FOLDER}, {LOG_FOLDER}")
+
+# ======================================================
+# 3️⃣ GitHub Configuration
+# ======================================================
+GITHUB_USERNAME = "rahim-dotAI"
+GITHUB_REPO = "forex-ai-models"
+BRANCH = "main"
+REPO_FOLDER = BASE_FOLDER / GITHUB_REPO
+
+# Load PAT from env or Colab userdata
+FOREX_PAT = os.environ.get("FOREX_PAT")
+if not FOREX_PAT and IN_COLAB:
+    try:
+        from google.colab import userdata
+        FOREX_PAT = userdata.get("FOREX_PAT")
+        if FOREX_PAT:
+            os.environ["FOREX_PAT"] = FOREX_PAT
+            print("🔐 Loaded FOREX_PAT from Colab secret.")
+    except Exception:
+        pass
+
+if not FOREX_PAT:
+    raise ValueError("❌ Missing FOREX_PAT. Set it in Colab userdata or GitHub secrets.")
+
+SAFE_PAT = urllib.parse.quote(FOREX_PAT)
+REPO_URL = f"https://{GITHUB_USERNAME}:{SAFE_PAT}@github.com/{GITHUB_USERNAME}/{GITHUB_REPO}.git"
+
+# ======================================================
+# 4️⃣ Safe Repo Clone / Sync
+# ======================================================
+if REPO_FOLDER.exists():
+    print(f"🗑 Removing old repo: {REPO_FOLDER}")
+    shutil.rmtree(REPO_FOLDER)
+
+print("🔗 Cloning repo (skipping LFS)...")
+env = os.environ.copy()
+env["GIT_LFS_SKIP_SMUDGE"] = "1"
+
+subprocess.run(["git", "clone", "-b", BRANCH, REPO_URL, str(REPO_FOLDER)], check=True, env=env)
+os.chdir(REPO_FOLDER)
+print(f"✅ Repo cloned successfully into {REPO_FOLDER}")
+
+# Configure Git identity
+GIT_USER_NAME = os.environ.get("GIT_USER_NAME", "Forex AI Bot")
+GIT_USER_EMAIL = os.environ.get("GIT_USER_EMAIL", "nakatonabira3@gmail.com")
+
+subprocess.run(["git", "config", "--global", "user.name", GIT_USER_NAME], check=True)
+subprocess.run(["git", "config", "--global", "user.email", GIT_USER_EMAIL], check=True)
+print(f"✅ Git configured: {GIT_USER_NAME} <{GIT_USER_EMAIL}>")
+
+# ======================================================
+# 5️⃣ Alpha Vantage Setup
+# ======================================================
+ALPHA_VANTAGE_KEY = os.environ.get("ALPHA_VANTAGE_KEY")
+if not ALPHA_VANTAGE_KEY:
+    raise ValueError("❌ ALPHA_VANTAGE_KEY missing!")
+
+FX_PAIRS = ["EUR/USD", "GBP/USD", "USD/JPY", "AUD/USD"]
+lock = threading.Lock()
+
+def ensure_tz_naive(df):
+    if df is None or df.empty:
+        return df
+    df.index = pd.to_datetime(df.index, errors='coerce')
+    if df.index.tz is not None:
+        df.index = df.index.tz_convert(None)
+    return df
+
+def file_hash(filepath, chunk_size=8192):
+    if not filepath.exists():
+        return None
+    md5 = hashlib.md5()
+    with open(filepath, "rb") as f:
+        for chunk in iter(lambda: f.read(chunk_size), b""):
+            md5.update(chunk)
+    return md5.hexdigest()
+
+def fetch_alpha_vantage_fx(pair, outputsize='full', max_retries=3, retry_delay=5):
+    base_url = 'https://www.alphavantage.co/query'
+    from_currency, to_currency = pair.split('/')
+    params = {
+        'function': 'FX_DAILY',
+        'from_symbol': from_currency,
+        'to_symbol': to_currency,
+        'outputsize': outputsize,
+        'datatype': 'json',
+        'apikey': ALPHA_VANTAGE_KEY
+    }
+    for attempt in range(max_retries):
+        try:
+            r = requests.get(base_url, params=params, timeout=30)
+            r.raise_for_status()
+            data = r.json()
+            if 'Time Series FX (Daily)' not in data:
+                raise ValueError(f"Unexpected API response: {data}")
+            ts = data['Time Series FX (Daily)']
+            df = pd.DataFrame(ts).T
+            df.index = pd.to_datetime(df.index)
+            df = df.sort_index()
+            df = df.rename(columns={
+                '1. open': 'open',
+                '2. high': 'high',
+                '3. low': 'low',
+                '4. close': 'close'
+            }).astype(float)
+            df = ensure_tz_naive(df)
+            return df
+        except Exception as e:
+            print(f"⚠️ Attempt {attempt + 1} failed fetching {pair}: {e}")
+            time.sleep(retry_delay)
+    print(f"❌ Failed to fetch {pair} after {max_retries} retries")
+    return pd.DataFrame()
+
+# ======================================================
+# 6️⃣ Process Pairs for Unified CSV Pipeline
+# ======================================================
+def process_pair(pair):
+    filename = pair.replace("/", "_") + ".csv"
+    filepath = CSV_FOLDER / filename
+
+    if filepath.exists():
+        existing_df = pd.read_csv(filepath, index_col=0, parse_dates=True)
+    else:
+        existing_df = pd.DataFrame()
+
+    old_hash = file_hash(filepath)
+    new_df = fetch_alpha_vantage_fx(pair)
+    if new_df.empty:
+        return None, f"No new data for {pair}"
+
+    combined_df = pd.concat([existing_df, new_df]) if not existing_df.empty else new_df
+    combined_df = combined_df[~combined_df.index.duplicated(keep='last')]
+    combined_df.sort_index(inplace=True)
+
+    with lock:
+        combined_df.to_csv(filepath)
+
+    new_hash = file_hash(filepath)
+    changed = old_hash != new_hash
+    print(f"ℹ️ {pair} total rows: {len(combined_df)}")
+    return str(filepath) if changed else None, f"{pair} {'updated' if changed else 'no changes'}"
+
+# ======================================================
+# 7️⃣ Execute All Pairs in Parallel
+# ======================================================
+changed_files = []
+tasks = []
+
+with ThreadPoolExecutor(max_workers=4) as executor:
+    for pair in FX_PAIRS:
+        tasks.append(executor.submit(process_pair, pair))
+    for future in as_completed(tasks):
+        filepath, msg = future.result()
+        print(msg)
+        if filepath:
+            changed_files.append(filepath)
+
+# ======================================================
+# 8️⃣ Commit & Push Changes
+# ======================================================
+if changed_files:
+    print(f"🚀 Committing {len(changed_files)} updated files...")
+    subprocess.run(["git", "add", "-A"], check=False)
+    subprocess.run(["git", "commit", "-m", "Update Alpha Vantage FX data"], check=False)
+    subprocess.run(["git", "push", "origin", BRANCH], check=False)
+else:
+    print("✅ No changes to commit.")
+
+print("✅ All FX pairs processed, saved, pushed successfully!")
+
+
+# In[ ]:
+
+
+# ======================================================
+# FULLY IMPROVED FOREX DATA WORKFLOW - YFINANCE
+# Colab + GitHub Actions Safe, 403-Proof, Large History
+# ======================================================
+
+import os, time, hashlib, subprocess, shutil, threading
+from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import pandas as pd
+import yfinance as yf
+
+# ======================================================
+# 1️⃣ Detect environment
+# ======================================================
+try:
+    import google.colab
+    IN_COLAB = True
+except ImportError:
+    IN_COLAB = False
+
+IN_GHA = "GITHUB_ACTIONS" in os.environ
+IN_LOCAL = not IN_COLAB and not IN_GHA
+
+print(f"Detected environment: {'Colab' if IN_COLAB else ('GitHub Actions' if IN_GHA else 'Local')}")
+
+# ======================================================
+# 2️⃣ Working directories
+# ======================================================
+BASE_DIR = Path("/content/forex-alpha-models") if IN_COLAB else Path("./forex-alpha-models")
+BASE_DIR.mkdir(parents=True, exist_ok=True)
+os.chdir(BASE_DIR)
+
+PICKLE_FOLDER = BASE_DIR / "pickles"; PICKLE_FOLDER.mkdir(exist_ok=True)
+CSV_FOLDER = BASE_DIR / "csvs"; CSV_FOLDER.mkdir(exist_ok=True)
+LOG_FOLDER = BASE_DIR / "logs"; LOG_FOLDER.mkdir(exist_ok=True)
+
+print(f"✅ Working directory: {BASE_DIR.resolve()}")
+print(f"✅ Output folders ready: {PICKLE_FOLDER}, {CSV_FOLDER}, {LOG_FOLDER}")
+
+# ======================================================
+# 3️⃣ Git configuration
+# ======================================================
+GIT_NAME = os.environ.get("GIT_USER_NAME", "Forex AI Bot")
+GIT_EMAIL = os.environ.get("GIT_USER_EMAIL", "nakatonabira3@gmail.com")
+GITHUB_USERNAME = "rahim-dotAI"
+GITHUB_REPO = "forex-ai-models"
+BRANCH = "main"
+
+FOREX_PAT = os.environ.get("FOREX_PAT")
+if not FOREX_PAT:
+    raise ValueError("❌ FOREX_PAT missing!")
+
+subprocess.run(["git", "config", "--global", "user.name", GIT_NAME], check=False)
+subprocess.run(["git", "config", "--global", "user.email", GIT_EMAIL], check=False)
+subprocess.run(["git", "config", "--global", "credential.helper", "store"], check=False)
+
+cred_file = Path.home() / ".git-credentials"
+cred_file.write_text(f"https://{GITHUB_USERNAME}:{FOREX_PAT}@github.com\n")
+
+# ======================================================
+# 4️⃣ Clone or update repo safely
+# ======================================================
+REPO_FOLDER = BASE_DIR / GITHUB_REPO
+def ensure_repo_cloned(repo_url, repo_folder, branch="main"):
+    repo_folder = Path(repo_folder)
+    tmp_folder = repo_folder.parent / (repo_folder.name + "_tmp")
+    if tmp_folder.exists(): shutil.rmtree(tmp_folder)
+    if not (repo_folder / ".git").exists():
+        print(f"📥 Cloning repo into {tmp_folder} ...")
+        subprocess.run(["git", "clone", "-b", branch, repo_url, str(tmp_folder)], check=True)
+        if repo_folder.exists(): shutil.rmtree(repo_folder)
+        tmp_folder.rename(repo_folder)
+    else:
+        print("🔄 Repo exists, pulling latest...")
+        subprocess.run(["git", "-C", str(repo_folder), "fetch", "origin"], check=True)
+        subprocess.run(["git", "-C", str(repo_folder), "checkout", branch], check=False)
+        subprocess.run(["git", "-C", str(repo_folder), "pull", "origin", branch], check=False)
+    print(f"✅ Repo ready at {repo_folder.resolve()}")
+
+REPO_URL = f"https://{GITHUB_USERNAME}:{FOREX_PAT}@github.com/{GITHUB_USERNAME}/{GITHUB_REPO}.git"
+ensure_repo_cloned(REPO_URL, REPO_FOLDER, BRANCH)
+
+# ======================================================
+# 5️⃣ FX pairs & timeframes
+# ======================================================
+FX_PAIRS = ["EUR/USD", "GBP/USD", "USD/JPY", "AUD/USD"]
+TIMEFRAMES = {
+    "1d_5y": ("1d", "5y"),
+    "1h_2y": ("1h", "2y"),
+    "15m_60d": ("15m", "60d"),
+    "5m_1mo": ("5m", "1mo"),
+    "1m_7d": ("1m", "7d")
+}
+
+lock = threading.Lock()
+
+# ======================================================
+# 6️⃣ Helper functions
+# ======================================================
+def file_hash(filepath, chunk_size=8192):
+    if not filepath.exists(): return None
+    md5 = hashlib.md5()
+    with open(filepath, "rb") as f:
+        for chunk in iter(lambda: f.read(chunk_size), b""): md5.update(chunk)
+    return md5.hexdigest()
+
+def ensure_tz_naive(df):
+    if df is None or df.empty: return df
+    df.index = pd.to_datetime(df.index, errors='coerce')
+    if df.index.tz: df.index = df.index.tz_convert(None)
+    return df
+
+def merge_data(existing_df, new_df):
+    existing_df = ensure_tz_naive(existing_df)
+    new_df = ensure_tz_naive(new_df)
+    if existing_df.empty: return new_df
+    if new_df.empty: return existing_df
+    combined = pd.concat([existing_df, new_df])
+    combined = combined[~combined.index.duplicated(keep="last")]
+    combined.sort_index(inplace=True)
+    return combined
+
+# ======================================================
+# 7️⃣ Worker function for pairs/timeframes
+# ======================================================
+def process_pair_tf(pair, tf_name, interval, period, max_retries=3, retry_delay=5):
+    symbol = pair.replace("/", "") + "=X"
+    filename = f"{pair.replace('/', '_')}_{tf_name}.csv"
+    filepath = REPO_FOLDER / filename
+
+    existing_df = pd.read_csv(filepath, index_col=0, parse_dates=True) if filepath.exists() else pd.DataFrame()
+    old_hash = file_hash(filepath)
+
+    for attempt in range(max_retries):
+        try:
+            df = yf.download(symbol, interval=interval, period=period, progress=False, auto_adjust=False, threads=True)
+            if df.empty: raise ValueError("No data returned")
+            df = df[[c for c in ['Open','High','Low','Close','Volume'] if c in df.columns]]
+            df.rename(columns=lambda x: x.lower(), inplace=True)
+            df = ensure_tz_naive(df)
+            combined_df = merge_data(existing_df, df)
+            combined_df.to_csv(filepath)
+            if old_hash != file_hash(filepath):
+                return f"📈 Updated {pair} {tf_name}", str(filepath)
+            return f"✅ No changes {pair} {tf_name}", None
+        except Exception as e:
+            print(f"⚠️ Attempt {attempt+1}/{max_retries} failed for {pair} {tf_name}: {e}")
+            if attempt < max_retries: time.sleep(retry_delay)
+            else: return f"❌ Failed {pair} {tf_name}", None
+
+# ======================================================
+# 8️⃣ Parallel execution
+# ======================================================
+changed_files = []
+tasks = []
+
+with ThreadPoolExecutor(max_workers=8) as executor:
+    for pair in FX_PAIRS:
+        for tf_name, (interval, period) in TIMEFRAMES.items():
+            tasks.append(executor.submit(process_pair_tf, pair, tf_name, interval, period))
+
+for future in as_completed(tasks):
+    msg, filename = future.result()
+    print(msg)
+    if filename: changed_files.append(filename)
+
+# ======================================================
+# 9️⃣ Commit & push updates
+# ======================================================
+if changed_files:
+    print(f"🚀 Committing {len(changed_files)} updated files...")
+    subprocess.run(["git", "-C", str(REPO_FOLDER), "add"] + changed_files, check=False)
+    subprocess.run(["git", "-C", str(REPO_FOLDER), "commit", "-m", "Update YFinance FX data CSVs"], check=False)
+    subprocess.run(["git", "-C", str(REPO_FOLDER), "push", "origin", BRANCH], check=False)
+else:
+    print("✅ No changes detected, nothing to push.")
+
+print("🎯 All FX pairs & timeframes processed safely with maximum historical rows!")
+
+
+# In[ ]:
+
+
+# ======================================================
+# FX CSV Combine + Incremental Indicators Pipeline
+# Fully optimized for YFinance + Alpha Vantage
+# Thread-safe, timezone-safe, Git-push-safe, large dataset-ready
+# FIXED: Column validation before processing
+# ======================================================
+
+import os, time, hashlib, subprocess, shutil
+from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import threading
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import MinMaxScaler
+import ta
+from ta.momentum import WilliamsRIndicator
+
+# -----------------------------
+# 0️⃣ Environment & folders
+# -----------------------------
+try:
+    import google.colab
+    IN_COLAB = True
+except ImportError:
+    IN_COLAB = False
+
+ROOT_DIR = Path("/content/forex-alpha-models") if IN_COLAB else Path(".")
+ROOT_DIR.mkdir(parents=True, exist_ok=True)
+
+REPO_FOLDER = ROOT_DIR / "forex-ai-models"
+CSV_FOLDER = ROOT_DIR / "csvs"
+PICKLE_FOLDER = ROOT_DIR / "pickles"
+LOGS_FOLDER = ROOT_DIR / "logs"
+for folder in [CSV_FOLDER, PICKLE_FOLDER, LOGS_FOLDER]:
+    folder.mkdir(parents=True, exist_ok=True)
+
+lock = threading.Lock()
+
+def print_status(msg, level="info"):
+    levels = {"info":"ℹ️","success":"✅","warn":"⚠️"}
+    print(f"{levels.get(level, 'ℹ️')} {msg}")
+
+# -----------------------------
+# 1️⃣ Git configuration
+# -----------------------------
+GIT_NAME = os.environ.get("GIT_USER_NAME", "Abdul Rahim")
+GIT_EMAIL = os.environ.get("GIT_USER_EMAIL", "nakatonabira3@gmail.com")
+GITHUB_USERNAME = os.environ.get("GITHUB_USERNAME", "rahim-dotAI")
+GITHUB_REPO = os.environ.get("GITHUB_REPO", "forex-ai-models")
+FOREX_PAT = os.environ.get("FOREX_PAT", "").strip()
+BRANCH = "main"
+
+if not FOREX_PAT:
+    raise ValueError("❌ FOREX_PAT missing!")
+
+REPO_URL = f"https://{GITHUB_USERNAME}:{FOREX_PAT}@github.com/{GITHUB_USERNAME}/{GITHUB_REPO}.git"
+
+subprocess.run(["git", "config", "--global", "user.name", GIT_NAME], check=False)
+subprocess.run(["git", "config", "--global", "user.email", GIT_EMAIL], check=False)
+subprocess.run(["git", "config", "--global", "credential.helper", "store"], check=False)
+cred_file = Path.home() / ".git-credentials"
+cred_file.write_text(f"https://{GITHUB_USERNAME}:{FOREX_PAT}@github.com\n")
+
+# -----------------------------
+# 2️⃣ Ensure repo exists
+# -----------------------------
+def ensure_repo():
+    if not (REPO_FOLDER / ".git").exists():
+        if REPO_FOLDER.exists():
+            shutil.rmtree(REPO_FOLDER)
+        print_status(f"Cloning repo into {REPO_FOLDER}...", "info")
+        subprocess.run(["git", "clone", "-b", BRANCH, REPO_URL, str(REPO_FOLDER)], check=True)
+    else:
+        print_status("Repo exists, pulling latest...", "info")
+        subprocess.run(["git", "-C", str(REPO_FOLDER), "fetch", "origin"], check=False)
+        subprocess.run(["git", "-C", str(REPO_FOLDER), "checkout", BRANCH], check=False)
+        subprocess.run(["git", "-C", str(REPO_FOLDER), "pull", "origin", BRANCH], check=False)
+        print_status("Repo synced successfully", "success")
+ensure_repo()
+
+# -----------------------------
+# 3️⃣ Helpers - UPDATED WITH SAFEGUARDS
+# -----------------------------
+def ensure_tz_naive(df):
+    if df is None or df.empty:
+        return pd.DataFrame()
+    df.index = pd.to_datetime(df.index, errors='coerce')
+    if df.index.tz is not None:
+        df.index = df.index.tz_localize(None)
+    return df
+
+def file_hash(filepath):
+    if not filepath.exists():
+        return None
+    md5 = hashlib.md5()
+    with open(filepath, "rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            md5.update(chunk)
+    return md5.hexdigest()
+
+def safe_numeric(df):
+    """Handle infinity/NaN robustly before any scaling - WITH COLUMN VALIDATION"""
+    # Replace infinity values first
+    df.replace([np.inf, -np.inf], np.nan, inplace=True)
+
+    # Check if OHLC columns exist before trying to drop NaN rows
+    required_columns = ['open', 'high', 'low', 'close']
+    existing_columns = [col for col in required_columns if col in df.columns]
+
+    # Only drop NaN if we have at least some OHLC columns
+    if existing_columns:
+        df.dropna(subset=existing_columns, inplace=True)
+    else:
+        # If no OHLC columns, just drop rows that are completely empty
+        df.dropna(how='all', inplace=True)
+
+    return df
+
+# -----------------------------
+# 4️⃣ Incremental CSV combine
+# -----------------------------
+def combine_csv(csv_path):
+    target_file = REPO_FOLDER / csv_path.name
+    existing_df = ensure_tz_naive(pd.read_csv(target_file, index_col=0, parse_dates=True)) if target_file.exists() else pd.DataFrame()
+    new_df = ensure_tz_naive(pd.read_csv(csv_path, index_col=0, parse_dates=True))
+    combined_df = pd.concat([existing_df, new_df])
+    combined_df = combined_df[~combined_df.index.duplicated(keep="last")]
+    combined_df.sort_index(inplace=True)
+    return combined_df, target_file
+
+# -----------------------------
+# 5️⃣ Incremental indicators - UPDATED WITH VALIDATION
+# -----------------------------
+def add_indicators_incremental(existing_df, combined_df):
+    new_rows = combined_df.loc[~combined_df.index.isin(existing_df.index)] if not existing_df.empty else combined_df
+    if new_rows.empty:
+        return None
+
+    # CRITICAL: Validate OHLC columns exist before processing
+    required_cols = ['open', 'high', 'low', 'close']
+    if not all(col in new_rows.columns for col in required_cols):
+        print_status(f"⚠️ Missing required OHLC columns. Found: {list(new_rows.columns)}", "warn")
+        return None
+
+    # Clean numeric data with validation
+    new_rows = safe_numeric(new_rows)
+
+    # Check if we still have data after cleaning
+    if new_rows.empty:
+        print_status("⚠️ No rows left after cleaning", "warn")
+        return None
+
+    new_rows.sort_index(inplace=True)
+
+    # Trend indicators
+    try:
+        trend = {
+            'SMA_10': lambda d: ta.trend.sma_indicator(d['close'], 10),
+            'SMA_50': lambda d: ta.trend.sma_indicator(d['close'], 50),
+            'SMA_200': lambda d: ta.trend.sma_indicator(d['close'], 200),
+            'EMA_10': lambda d: ta.trend.ema_indicator(d['close'], 10),
+            'EMA_50': lambda d: ta.trend.ema_indicator(d['close'], 50),
+            'EMA_200': lambda d: ta.trend.ema_indicator(d['close'], 200),
+            'MACD': lambda d: ta.trend.macd(d['close']),
+            'MACD_signal': lambda d: ta.trend.macd_signal(d['close']),
+            'ADX': lambda d: ta.trend.adx(d['high'], d['low'], d['close'], 14)
+        }
+
+        # Momentum indicators
+        momentum = {
+            'RSI_14': lambda d: ta.momentum.rsi(d['close'], 14),
+            'StochRSI': lambda d: ta.momentum.stochrsi(d['close'], 14),
+            'CCI': lambda d: ta.trend.cci(d['high'], d['low'], d['close'], 20),
+            'ROC': lambda d: ta.momentum.roc(d['close'], 12),
+            'Williams_%R': lambda d: WilliamsRIndicator(d['high'], d['low'], d['close'], 14).williams_r()
+        }
+
+        # Volatility
+        volatility = {
+            'Bollinger_High': lambda d: ta.volatility.bollinger_hband(d['close'], 20, 2),
+            'Bollinger_Low': lambda d: ta.volatility.bollinger_lband(d['close'], 20, 2),
+            'ATR': lambda d: ta.volatility.average_true_range(d['high'], d['low'], d['close'], 14),
+            'STDDEV_20': lambda d: d['close'].rolling(20).std()
+        }
+
+        # Volume-based
+        volume = {}
+        if 'volume' in new_rows.columns:
+            volume = {
+                'OBV': lambda d: ta.volume.on_balance_volume(d['close'], d['volume']),
+                'MFI': lambda d: ta.volume.money_flow_index(d['high'], d['low'], d['close'], d['volume'], 14)
+            }
+
+        indicators = {**trend, **momentum, **volatility, **volume}
+        for name, func in indicators.items():
+            try:
+                new_rows[name] = func(new_rows)
+            except Exception as e:
+                print_status(f"⚠️ Failed to calculate {name}: {e}", "warn")
+                new_rows[name] = np.nan
+
+        # Cross signals
+        if 'EMA_10' in new_rows.columns and 'EMA_50' in new_rows.columns:
+            new_rows['EMA_10_cross_EMA_50'] = (new_rows['EMA_10'] > new_rows['EMA_50']).astype(int)
+        if 'EMA_50' in new_rows.columns and 'EMA_200' in new_rows.columns:
+            new_rows['EMA_50_cross_EMA_200'] = (new_rows['EMA_50'] > new_rows['EMA_200']).astype(int)
+        if 'SMA_10' in new_rows.columns and 'SMA_50' in new_rows.columns:
+            new_rows['SMA_10_cross_SMA_50'] = (new_rows['SMA_10'] > new_rows['SMA_50']).astype(int)
+        if 'SMA_50' in new_rows.columns and 'SMA_200' in new_rows.columns:
+            new_rows['SMA_50_cross_SMA_200'] = (new_rows['SMA_50'] > new_rows['SMA_200']).astype(int)
+
+    except Exception as e:
+        print_status(f"⚠️ Indicator calculation error: {e}", "warn")
+
+    # 🔧 CRITICAL FIX: Clean infinity/NaN values before scaling
+    numeric_cols = new_rows.select_dtypes(include=[np.number]).columns
+    if len(numeric_cols) > 0 and not new_rows[numeric_cols].dropna(how='all').empty:
+        # Replace infinity values with NaN
+        new_rows[numeric_cols] = new_rows[numeric_cols].replace([np.inf, -np.inf], np.nan)
+
+        # Forward fill NaN values, then backward fill, then fill remaining with 0
+        new_rows[numeric_cols] = new_rows[numeric_cols].ffill().bfill().fillna(0)
+
+        # Clip extreme values to a reasonable range
+        for col in numeric_cols:
+            if new_rows[col].std() > 0:
+                mean_val = new_rows[col].mean()
+                std_val = new_rows[col].std()
+                lower_bound = mean_val - (5 * std_val)
+                upper_bound = mean_val + (5 * std_val)
+                new_rows[col] = new_rows[col].clip(lower=lower_bound, upper=upper_bound)
+
+        # Now scale safely
+        scaler = MinMaxScaler()
+        try:
+            new_rows[numeric_cols] = scaler.fit_transform(new_rows[numeric_cols])
+        except Exception as e:
+            print_status(f"⚠️ Scaling warning: {e} - using manual normalization", "warn")
+            # Manual normalization fallback
+            for col in numeric_cols:
+                col_min = new_rows[col].min()
+                col_max = new_rows[col].max()
+                if col_max > col_min:
+                    new_rows[col] = (new_rows[col] - col_min) / (col_max - col_min)
+
+    return new_rows
+
+# -----------------------------
+# 6️⃣ Worker function - UPDATED WITH VALIDATION
+# -----------------------------
+def process_csv_file(csv_file):
+    try:
+        combined_df, target_file = combine_csv(csv_file)
+
+        # Validate combined dataframe has required columns
+        required_cols = ['open', 'high', 'low', 'close']
+        if not all(col in combined_df.columns for col in required_cols):
+            return None, f"⚠️ Skipped {csv_file.name}: Missing OHLC columns"
+
+        existing_pickle = PICKLE_FOLDER / f"{csv_file.stem}_indicators.pkl"
+        existing_df = pd.read_pickle(existing_pickle) if existing_pickle.exists() else pd.DataFrame()
+
+        new_indicators = add_indicators_incremental(existing_df, combined_df)
+        if new_indicators is not None:
+            updated_df = pd.concat([existing_df, new_indicators]).sort_index()
+            with lock:
+                updated_df.to_pickle(existing_pickle, protocol=4)
+                combined_df.to_csv(target_file)
+            msg = f"{csv_file.name} updated with {len(new_indicators)} new rows"
+        else:
+            msg = f"{csv_file.name} no new rows"
+
+        total_rows = len(combined_df)
+        print_status(f"{csv_file.name} total rows: {total_rows}", "info")
+
+        return str(existing_pickle) if new_indicators is not None else None, msg
+
+    except Exception as e:
+        print_status(f"❌ Error processing {csv_file.name}: {e}", "warn")
+        return None, f"❌ Failed {csv_file.name}: {e}"
+
+# -----------------------------
+# 7️⃣ Process all CSVs in parallel
+# -----------------------------
+csv_files = list(CSV_FOLDER.glob("*.csv"))
+if not csv_files:
+    print_status("No CSVs found to process – pipeline will skip", "warn")
+
+changed_files = []
+
+with ThreadPoolExecutor(max_workers=min(8, len(csv_files) or 1)) as executor:
+    futures = [executor.submit(process_csv_file, f) for f in csv_files]
+    for future in as_completed(futures):
+        file, msg = future.result()
+        print_status(msg, "success" if file else "info")
+        if file:
+            changed_files.append(file)
+
+# -----------------------------
+# 8️⃣ Commit & push updates
+# -----------------------------
+if changed_files:
+    print_status(f"Committing {len(changed_files)} updated files...", "info")
+    subprocess.run(["git", "-C", str(REPO_FOLDER), "add"] + changed_files, check=False)
+    subprocess.run(
+        ["git", "-C", str(REPO_FOLDER), "commit", "-m", "📈 Auto update FX CSVs & indicators"],
+        check=False
+    )
+
+    push_cmd = f"git -C {REPO_FOLDER} push {REPO_URL} {BRANCH}"
+    for attempt in range(3):
+        if subprocess.run(push_cmd, shell=True).returncode == 0:
+            print_status("Push successful", "success")
+            break
+        else:
+            print_status(f"Push attempt {attempt+1} failed, retrying...", "warn")
+            time.sleep(5)
+else:
+    print_status("No files changed – skipping push", "info")
+
+print_status("All CSVs combined, incremental indicators added, and Git updated successfully.", "success")
+
+
+# In[ ]:
+
+
 #!/usr/bin/env python3
 """
 VERSION 3.6 – ULTRA-PERSISTENT SELF-LEARNING HYBRID FX PIPELINE (FIXED)
@@ -39,7 +1002,7 @@ from collections import defaultdict
 # ======================================================
 ROOT_DIR = Path("/content/forex-alpha-models")
 ROOT_DIR.mkdir(parents=True, exist_ok=True)
-REPO_FOLDER = ROOT_DIR / "."
+REPO_FOLDER = ROOT_DIR / "forex-ai-models"
 CSV_FOLDER = ROOT_DIR / "csvs"
 PICKLE_FOLDER = ROOT_DIR / "pickles"
 LOGS_FOLDER = ROOT_DIR / "logs"
@@ -985,7 +1948,7 @@ ML_ITERATION_COUNTER = MLIterationCounter()
 GIT_NAME = os.environ.get("GIT_USER_NAME", "Forex AI Bot")
 GIT_EMAIL = os.environ.get("GIT_USER_EMAIL", "nakatonabira3@gmail.com")
 GITHUB_USERNAME = os.environ.get("GITHUB_USERNAME", "rahim-dotAI")
-GITHUB_REPO = os.environ.get("GITHUB_REPO", ".")
+GITHUB_REPO = os.environ.get("GITHUB_REPO", "forex-ai-models")
 FOREX_PAT = os.environ.get("FOREX_PAT", "").strip()
 BRANCH = "main"
 BROWSERLESS_TOKEN = os.environ.get("BROWSERLESS_TOKEN","")
@@ -1315,9 +2278,9 @@ from datetime import datetime
 # -----------------------------
 ROOT_DIR = Path("/content/forex-alpha-models")
 CSV_FOLDER = ROOT_DIR / "csvs"
-REPO_FOLDER = ROOT_DIR / "."
+REPO_FOLDER = ROOT_DIR / "forex-ai-models"
 TEMP_PICKLE_FOLDER = ROOT_DIR / "temp_pickles"
-FINAL_PICKLE_FOLDER = ROOT_DIR / "."
+FINAL_PICKLE_FOLDER = ROOT_DIR / "merged_data_pickles"
 
 for folder in [CSV_FOLDER, TEMP_PICKLE_FOLDER, FINAL_PICKLE_FOLDER, REPO_FOLDER]:
     folder.mkdir(parents=True, exist_ok=True)
@@ -1584,12 +2547,12 @@ try:
 except ImportError:
     IN_COLAB = False
 
-ROOT_DIR = Path(".") if IN_COLAB else Path(".")
-ROOT_PATH = ROOT_DIR / "."
+ROOT_DIR = Path("/content") if IN_COLAB else Path(".")
+ROOT_PATH = ROOT_DIR / "forex-alpha-models"
 
 # Folder setup
-PICKLE_FOLDER = ROOT_PATH / "."
-REPO_FOLDER = ROOT_PATH / "."
+PICKLE_FOLDER = ROOT_PATH / "merged_data_pickles"
+REPO_FOLDER = ROOT_PATH / "forex-ai-models"
 for f in [PICKLE_FOLDER, REPO_FOLDER]:
     f.mkdir(parents=True, exist_ok=True)
 os.chdir(ROOT_PATH)
@@ -1598,7 +2561,7 @@ os.chdir(ROOT_PATH)
 GIT_NAME = os.environ.get("GIT_USER_NAME", "Forex AI Bot")
 GIT_EMAIL = os.environ.get("GIT_USER_EMAIL", "nakatonabira3@gmail.com")
 GITHUB_USERNAME = os.environ.get("GITHUB_USERNAME", "rahim-dotAI")
-GITHUB_REPO = os.environ.get("GITHUB_REPO", ".")
+GITHUB_REPO = os.environ.get("GITHUB_REPO", "forex-ai-models")
 FOREX_PAT = os.environ.get("FOREX_PAT", "").strip()
 REPO_URL = f"https://{GITHUB_USERNAME}:{FOREX_PAT}@github.com/{GITHUB_USERNAME}/{GITHUB_REPO}.git"
 
@@ -2718,3 +3681,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+    print_status("Pipeline shutdown complete", "info")
+

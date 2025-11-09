@@ -251,50 +251,114 @@ def backtest_strategy(data, chromosome):
 # GENETIC ALGORITHM
 # ======================================================
 def run_ga(data, model_name, config):
-    print_status(f"{config['color']} Training {model_name}...", "info")
+    print_status(f"\n{'='*70}", "info")
+    print_status(f"{config['color']} TRAINING: {model_name}", "info")
+    print_status(f"{'='*70}", "info")
+    print_status(f"Population Size: {config['pop_size']}", "info")
+    print_status(f"Generations: {config['generations']}", "info")
+    print_status(f"Mutation Rate: {config['mutation_rate']}", "info")
+    print_status(f"ATR SL Range: {config['atr_sl_range']}", "info")
+    print_status(f"ATR TP Range: {config['atr_tp_range']}", "info")
+    print_status(f"Risk Range: {config['risk_range']}", "info")
+    print_status(f"Confidence Range: {config['confidence_range']}", "info")
+    print_status(f"{'='*70}\n", "info")
     
     pop_size = config['pop_size']
     generations = config['generations']
     mutation_rate = config['mutation_rate']
     
+    # Initialize population
+    print_status(f"🧬 Initializing population with {pop_size} chromosomes...", "info")
     population = []
-    for _ in range(pop_size):
+    for i in range(pop_size):
         chrom = create_chromosome(config)
         metrics = backtest_strategy(data, chrom)
         fitness = metrics['total_pnl'] + (metrics['accuracy'] / 100) * 10
         population.append((fitness, chrom))
+        if (i + 1) % 5 == 0 or (i + 1) == pop_size:
+            print_status(f"  Created {i+1}/{pop_size} chromosomes...", "info")
     
     population.sort(reverse=True, key=lambda x: x[0])
+    print_status(f"✅ Initial population created. Best fitness: {population[0][0]:.4f}\n", "success")
+    
+    # Evolution loop
+    print_status("🔄 Starting evolution...", "info")
+    best_fitness_history = []
     
     for gen in range(generations):
-        new_pop = population[:max(1, int(pop_size * 0.2))]
+        # Selection: Keep top 20%
+        elite_size = max(1, int(pop_size * 0.2))
+        new_pop = population[:elite_size]
         
+        # Crossover and mutation
+        offspring_created = 0
         while len(new_pop) < pop_size:
             p1, p2 = random.sample(population, 2)
             point = random.randint(1, len(p1[1]) - 1)
             child = p1[1][:point] + p2[1][point:]
             
+            # Mutation
+            mutations = 0
             for i in range(len(child)):
                 if random.random() < mutation_rate:
                     child[i] = float(child[i] + random.gauss(0, 0.1))
+                    mutations += 1
             
             metrics = backtest_strategy(data, child)
             fitness = metrics['total_pnl'] + (metrics['accuracy'] / 100) * 10
             new_pop.append((fitness, child))
+            offspring_created += 1
         
         population = sorted(new_pop, reverse=True, key=lambda x: x[0])
+        best_fitness = population[0][0]
+        best_fitness_history.append(best_fitness)
         
-        if (gen + 1) % 5 == 0:
-            print_status(f"  Gen {gen+1}/{generations}: Best={population[0][0]:.4f}", "info")
+        # Calculate improvement
+        improvement = ""
+        if gen > 0:
+            diff = best_fitness - best_fitness_history[gen-1]
+            if diff > 0:
+                improvement = f" ⬆️ +{diff:.4f}"
+            elif diff < 0:
+                improvement = f" ⬇️ {diff:.4f}"
+            else:
+                improvement = " ➡️ No change"
+        
+        # Progress bar
+        progress = (gen + 1) / generations
+        bar_length = 30
+        filled = int(bar_length * progress)
+        bar = '█' * filled + '░' * (bar_length - filled)
+        percentage = progress * 100
+        
+        print_status(
+            f"Gen [{gen+1:2d}/{generations:2d}] [{bar}] {percentage:5.1f}% | "
+            f"Best Fitness: {best_fitness:8.4f}{improvement} | "
+            f"Elite: {elite_size} | Offspring: {offspring_created}",
+            "info"
+        )
     
+    # Final evaluation
+    print_status(f"\n{'='*70}", "success")
     best_chrom = population[0][1]
     final_metrics = backtest_strategy(data, best_chrom)
     
-    print_status(
-        f"  ✅ {model_name}: {final_metrics['accuracy']:.1f}% accuracy | "
-        f"${final_metrics['total_pnl']:.4f} PnL | {final_metrics['total_trades']} trades",
-        "success"
-    )
+    atr_sl, atr_tp, risk, conf = decode_chromosome(best_chrom)
+    
+    print_status(f"🏆 FINAL RESULTS - {model_name}", "success")
+    print_status(f"{'='*70}", "success")
+    print_status(f"Accuracy:        {final_metrics['accuracy']:.2f}%", "success")
+    print_status(f"Total PnL:       ${final_metrics['total_pnl']:.4f}", "success")
+    print_status(f"Total Trades:    {final_metrics['total_trades']}", "success")
+    print_status(f"Winning Trades:  {final_metrics['winning_trades']}", "success")
+    print_status(f"Losing Trades:   {final_metrics['total_trades'] - final_metrics['winning_trades']}", "success")
+    print_status(f"Win Rate:        {final_metrics['accuracy']:.2f}%", "success")
+    print_status(f"\nBest Parameters:", "success")
+    print_status(f"  ATR Stop Loss:  {atr_sl:.4f}", "success")
+    print_status(f"  ATR Take Profit: {atr_tp:.4f}", "success")
+    print_status(f"  Risk Per Trade: {risk:.4f} ({risk*100:.2f}%)", "success")
+    print_status(f"  Confidence:     {conf:.4f}", "success")
+    print_status(f"{'='*70}\n", "success")
     
     return {'chromosome': best_chrom, 'metrics': final_metrics}
 
@@ -347,53 +411,152 @@ def generate_signals(data, chromosome, model_name):
 # ======================================================
 def main():
     print_status("=" * 70, "info")
-    print_status("🚀 FOREX PIPELINE v8.5.1", "success")
+    print_status("🚀 FOREX PIPELINE v8.5.1 - DETAILED MODE", "success")
     print_status("=" * 70, "info")
     
     try:
+        # Iteration tracking
+        print_status("\n📊 ITERATION TRACKING", "info")
+        print_status("-" * 70, "info")
         current_iter = COUNTER.increment()
         stats = COUNTER.get_stats()
         
-        print_status(f"\n📊 Iteration #{current_iter}", "info")
-        print_status(f"Total: {stats['total']} | Days: {stats['days']} | Avg/Day: {stats['per_day']:.1f}", "info")
+        print_status(f"Current Iteration: #{current_iter}", "info")
+        print_status(f"Total Iterations:  {stats['total']}", "info")
+        print_status(f"Days Running:      {stats['days']}", "info")
+        print_status(f"Avg Per Day:       {stats['per_day']:.2f}", "info")
+        print_status(f"Timestamp:         {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}", "info")
+        print_status("-" * 70 + "\n", "info")
         
-        print_status("\n📦 Loading data...", "info")
+        # Data loading
+        print_status("📦 LOADING DATA", "info")
+        print_status("-" * 70, "info")
+        print_status(f"Looking for pickle files in: {PICKLE_FOLDER}", "info")
+        print_status(f"Expected pairs: {', '.join(PAIRS)}\n", "info")
+        
         data = load_data(PICKLE_FOLDER)
         
         if not data:
             raise ValueError("No data loaded!")
         
-        print_status(f"✅ Loaded {len(data)} pairs", "success")
+        print_status(f"\n✅ Successfully loaded {len(data)} currency pairs", "success")
         
-        print_status("\n🏆 Running Competition...", "info")
+        # Data summary
+        print_status("\n📈 DATA SUMMARY", "info")
+        print_status("-" * 70, "info")
+        for pair, pair_data in data.items():
+            df = pair_data['merged']
+            print_status(f"{pair}:", "info")
+            print_status(f"  Rows:           {len(df)}", "info")
+            print_status(f"  Date Range:     {df.index[0]} to {df.index[-1]}", "info")
+            print_status(f"  Last Close:     {df['close'].iloc[-1]:.5f}", "info")
+            print_status(f"  Last ATR:       {df['atr'].iloc[-1]:.5f}", "info")
+            print_status(f"  Hybrid Signal:  {df['hybrid_signal'].iloc[-1]:.5f}", "info")
+        print_status("-" * 70 + "\n", "info")
+        
+        # Model competition
+        print_status("🏆 STARTING MODEL COMPETITION", "info")
+        print_status("=" * 70, "info")
+        print_status(f"Number of Models: {len(COMPETITION_MODELS)}", "info")
+        print_status(f"Models: {', '.join(COMPETITION_MODELS.keys())}\n", "info")
+        
         results = {}
         signals_by_model = {}
         
-        for model_name, config in COMPETITION_MODELS.items():
+        for idx, (model_name, config) in enumerate(COMPETITION_MODELS.items(), 1):
+            print_status(f"\n{'='*70}", "info")
+            print_status(f"MODEL {idx}/{len(COMPETITION_MODELS)}: {model_name} {config['color']}", "info")
+            print_status(f"{'='*70}", "info")
+            
             result = run_ga(data, model_name, config)
             results[model_name] = result
             signals = generate_signals(data, result['chromosome'], model_name)
             signals_by_model[model_name] = signals
+            
+            # Show generated signals
+            print_status(f"📡 Generated Signals for {model_name}:", "info")
+            print_status("-" * 70, "info")
+            for pair, signal in signals.items():
+                direction_icon = "🟢" if signal['direction'] == 'BUY' else "🔴" if signal['direction'] == 'SELL' else "⚪"
+                print_status(
+                    f"{direction_icon} {pair}: {signal['direction']} | "
+                    f"Price: {signal['last_price']:.5f} | "
+                    f"SL: {signal['SL']:.5f} | "
+                    f"TP: {signal['TP']:.5f} | "
+                    f"Score: {signal['score_1_100']}/100",
+                    "info"
+                )
+            print_status("-" * 70 + "\n", "info")
         
-        print_status("\n💾 Saving signals...", "info")
+        # Competition summary
+        print_status("\n" + "=" * 70, "success")
+        print_status("🏆 COMPETITION RESULTS SUMMARY", "success")
+        print_status("=" * 70, "success")
+        
+        ranked_models = sorted(
+            results.items(),
+            key=lambda x: x[1]['metrics']['total_pnl'],
+            reverse=True
+        )
+        
+        for rank, (model_name, result) in enumerate(ranked_models, 1):
+            medal = "🥇" if rank == 1 else "🥈" if rank == 2 else "🥉" if rank == 3 else f"{rank}."
+            metrics = result['metrics']
+            print_status(
+                f"{medal} {model_name}: "
+                f"${metrics['total_pnl']:.2f} PnL | "
+                f"{metrics['accuracy']:.1f}% accuracy | "
+                f"{metrics['total_trades']} trades | "
+                f"Win rate: {metrics['winning_trades']}/{metrics['total_trades']}",
+                "success"
+            )
+        print_status("=" * 70 + "\n", "success")
+        
+        # Save signals
+        print_status("💾 SAVING SIGNALS", "info")
+        print_status("-" * 70, "info")
+        
+        print_status(f"Saving to {SIGNALS_JSON}...", "info")
         with open(SIGNALS_JSON, 'w') as f:
             json.dump(signals_by_model, f, indent=2, default=str)
+        print_status(f"✅ Saved broker signals", "success")
         
+        print_status(f"Saving to {ENSEMBLE_JSON}...", "info")
         with open(ENSEMBLE_JSON, 'w') as f:
             json.dump({
                 'timestamp': datetime.now(timezone.utc).isoformat(),
                 'iteration': current_iter,
-                'models': signals_by_model
+                'models': signals_by_model,
+                'performance': {
+                    model: {
+                        'pnl': results[model]['metrics']['total_pnl'],
+                        'accuracy': results[model]['metrics']['accuracy'],
+                        'trades': results[model]['metrics']['total_trades']
+                    }
+                    for model in signals_by_model.keys()
+                }
             }, f, indent=2, default=str)
+        print_status(f"✅ Saved ensemble signals", "success")
+        print_status("-" * 70 + "\n", "success")
         
-        print_status("\n" + "=" * 70, "success")
-        print_status("✅ PIPELINE COMPLETED", "success")
+        # Final summary
         print_status("=" * 70, "success")
+        print_status("✅ PIPELINE COMPLETED SUCCESSFULLY", "success")
+        print_status("=" * 70, "success")
+        print_status(f"Execution Time: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}", "success")
+        print_status(f"Files Generated: {SIGNALS_JSON.name}, {ENSEMBLE_JSON.name}", "success")
+        print_status(f"Next Action: Signals ready for broker execution", "success")
+        print_status("=" * 70 + "\n", "success")
         
     except Exception as e:
-        print_status(f"\n❌ Error: {e}", "error")
+        print_status("\n" + "=" * 70, "error")
+        print_status("❌ PIPELINE FAILED", "error")
+        print_status("=" * 70, "error")
+        print_status(f"Error: {e}", "error")
+        print_status("\nFull Traceback:", "error")
         import traceback
         traceback.print_exc()
+        print_status("=" * 70, "error")
         sys.exit(1)
 
 if __name__ == "__main__":

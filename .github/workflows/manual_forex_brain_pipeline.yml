@@ -318,9 +318,11 @@ jobs:
           path: |
             pipeline_output.log
             targeted_cell.py
+            extract_cell.py
             forex_pipeline_v85.log
             pipeline.log
           retention-days: 7
+          if-no-files-found: ignore
 
       - name: Summary
         if: always()
@@ -334,11 +336,30 @@ jobs:
           echo ""
           
           echo "Generated Files:"
-          for file in broker_signals.json ensemble_signals.json learning_v85.pkl iteration_v85.pkl memory_v85.db; do
-            if [ -f "$file" ]; then
-              echo "  ✅ $file ($(wc -c < "$file") bytes)"
-            fi
-          done
+          if [ -f "broker_signals.json" ]; then
+            SIZE=$(wc -c < "broker_signals.json")
+            echo "  ✅ broker_signals.json ($SIZE bytes)"
+          fi
+          
+          if [ -f "ensemble_signals.json" ]; then
+            SIZE=$(wc -c < "ensemble_signals.json")
+            echo "  ✅ ensemble_signals.json ($SIZE bytes)"
+          fi
+          
+          if [ -f "learning_v85.pkl" ]; then
+            SIZE=$(wc -c < "learning_v85.pkl")
+            echo "  ✅ learning_v85.pkl ($SIZE bytes)"
+          fi
+          
+          if [ -f "iteration_v85.pkl" ]; then
+            SIZE=$(wc -c < "iteration_v85.pkl")
+            echo "  ✅ iteration_v85.pkl ($SIZE bytes)"
+          fi
+          
+          if [ -f "memory_v85.db" ]; then
+            SIZE=$(wc -c < "memory_v85.db")
+            echo "  ✅ memory_v85.db ($SIZE bytes)"
+          fi
           
           echo "==========================================", '', code, flags=re.MULTILINE)
                   code = re.sub(r'^!.*

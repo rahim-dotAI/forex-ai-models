@@ -12,7 +12,7 @@ Cell index: unknown
 Error: An error occurred while executing the following cell:
 ------------------
 # ======================================================
-# ⚡ Full Colab-ready GitHub Sync + Remove LFS
+# 🔄 GitHub Sync (Environment-Aware)
 # ======================================================
 import os
 import subprocess
@@ -20,142 +20,125 @@ import shutil
 from pathlib import Path
 import urllib.parse
 
-# -----------------------------
-# 0️⃣ Environment / Paths
-# -----------------------------
-REPO_PARENT = Path("/content/forex-automation")
-REPO_PARENT.mkdir(parents=True, exist_ok=True)
-os.chdir(REPO_PARENT)
-
+# Use variables from initialization cell
 GITHUB_USERNAME = "rahim-dotAI"
 GITHUB_REPO = "forex-ai-models"
 BRANCH = "main"
-REPO_FOLDER = REPO_PARENT / GITHUB_REPO
 
-# -----------------------------
-# 1️⃣ GitHub Token
-# -----------------------------
+print(f"🔧 Running in: {ENV_NAME}")
+print(f"📂 Working directory: {os.getcwd()}")
+
+# ======================================================
+# GitHub Token
+# ======================================================
 FOREX_PAT = os.environ.get("FOREX_PAT")
-if not FOREX_PAT:
-    from google.colab import userdata
-    FOREX_PAT = userdata.get("FOREX_PAT")
-    if FOREX_PAT:
-        os.environ["FOREX_PAT"] = FOREX_PAT
-        print("🔐 Loaded FOREX_PAT from Colab secret.")
+
+if not FOREX_PAT and IN_COLAB:
+    try:
+        from google.colab import userdata
+        FOREX_PAT = userdata.get("FOREX_PAT")
+        if FOREX_PAT:
+            os.environ["FOREX_PAT"] = FOREX_PAT
+            print("🔐 Loaded FOREX_PAT from Colab secret.")
+    except ImportError:
+        pass
 
 if not FOREX_PAT:
-    raise ValueError("❌ Missing FOREX_PAT. Set it in Colab userdata or GitHub secrets.")
+    print("⚠️ Warning: FOREX_PAT not found. Git operations may fail.")
+else:
+    SAFE_PAT = urllib.parse.quote(FOREX_PAT)
+    REPO_URL = f"https://{GITHUB_USERNAME}:{SAFE_PAT}@github.com/{GITHUB_USERNAME}/{GITHUB_REPO}.git"
 
-SAFE_PAT = urllib.parse.quote(FOREX_PAT)
+# ======================================================
+# Handle Repository Based on Environment
+# ======================================================
+if IN_GHA:
+    # GitHub Actions: Already in the repo
+    print("✅ Running in GitHub Actions - repository already checked out")
+    print(f"📂 Current directory: {Path.cwd()}")
 
-REPO_URL = f"https://{GITHUB_USERNAME}:{SAFE_PAT}@github.com/{GITHUB_USERNAME}/{GITHUB_REPO}.git"
+elif IN_COLAB:
+    # Google Colab: Need to clone
+    REPO_FOLDER = SAVE_FOLDER
 
-# -----------------------------
-# 2️⃣ Clean old repo
-# -----------------------------
-if REPO_FOLDER.exists():
-    print(f"🗑 Removing old repo: {REPO_FOLDER}")
-    shutil.rmtree(REPO_FOLDER)
+    if not (REPO_FOLDER / ".git").exists():
+        print(f"🔗 Cloning repository to {REPO_FOLDER}...")
+        env = os.environ.copy()
+        env["GIT_LFS_SKIP_SMUDGE"] = "1"
 
-# -----------------------------
-# 3️⃣ Clone repo safely (skip LFS)
-# -----------------------------
-print("🔗 Cloning repo (skipping LFS)...")
-env = os.environ.copy()
-env["GIT_LFS_SKIP_SMUDGE"] = "1"
+        try:
+            subprocess.run(
+                ["git", "clone", REPO_URL, str(REPO_FOLDER)],
+                check=True,
+                env=env,
+                capture_output=True,
+                text=True
+            )
+            print(f"✅ Repository cloned successfully")
+        except subprocess.CalledProcessError as e:
+            print(f"⚠️ Clone failed: {e.stderr}")
+            print("Continuing with existing directory...")
+    else:
+        print("✅ Repository already exists, pulling latest changes...")
+        try:
+            subprocess.run(["git", "pull", "origin", BRANCH], check=True, cwd=REPO_FOLDER)
+        except subprocess.CalledProcessError:
+            print("⚠️ Pull failed, continuing anyway...")
 
-subprocess.run(["git", "clone", REPO_URL, str(REPO_FOLDER)], check=True, env=env)
-os.chdir(REPO_FOLDER)
-print(f"✅ Repo cloned successfully into {REPO_FOLDER}")
+    # Remove LFS for Colab
+    print("⚙️ Configuring Git LFS...")
+    try:
+        subprocess.run(["git", "lfs", "uninstall"], check=False, cwd=REPO_FOLDER)
+        subprocess.run(
+            ["git", "lfs", "migrate", "export", "--include=*.csv"],
+            check=False,
+            cwd=REPO_FOLDER
+        )
+        print("✅ LFS configuration updated")
+    except Exception as e:
+        print(f"⚠️ LFS setup warning: {e}")
 
-# -----------------------------
-# 4️⃣ Uninstall LFS and convert files
-# -----------------------------
-print("⚙️ Removing Git LFS and converting files...")
-subprocess.run(["git", "lfs", "uninstall"], check=True)
-subprocess.run(["git", "lfs", "migrate", "export", "--include=*.csv"], check=True)
+else:
+    # Local environment
+    print("✅ Running locally")
+    if not (SAVE_FOLDER / ".git").exists():
+        print("⚠️ Not a git repository. Initialize manually if needed.")
 
-# -----------------------------
-# 5️⃣ Configure Git user
-# -----------------------------
+# ======================================================
+# Git Configuration
+# ======================================================
 GIT_USER_NAME = os.environ.get("GIT_USER_NAME", "Forex AI Bot")
 GIT_USER_EMAIL = os.environ.get("GIT_USER_EMAIL", "nakatonabira3@gmail.com")
 
-subprocess.run(["git", "config", "--global", "user.name", GIT_USER_NAME], check=True)
-subprocess.run(["git", "config", "--global", "user.email", GIT_USER_EMAIL], check=True)
-subprocess.run(["git", "config", "--global", "advice.detachedHead", "false"], check=True)
+subprocess.run(["git", "config", "--global", "user.name", GIT_USER_NAME], check=False)
+subprocess.run(["git", "config", "--global", "user.email", GIT_USER_EMAIL], check=False)
+subprocess.run(["git", "config", "--global", "advice.detachedHead", "false"], check=False)
+
 print(f"✅ Git configured: {GIT_USER_NAME} <{GIT_USER_EMAIL}>")
 
-# -----------------------------
-# 6️⃣ Stage, commit, push
-# -----------------------------
-subprocess.run(["git", "add", "-A"], check=True)
-status = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True)
-
-if status.stdout.strip():
-    subprocess.run(["git", "commit", "-m", "Remove LFS and convert files to normal Git"], check=True)
-    subprocess.run(["git", "push", "origin", BRANCH], check=True)
-    print("🚀 Repo updated: LFS removed permanently.")
-else:
-    print("✅ No changes detected. LFS already removed.")
-
-# -----------------------------
-# 7️⃣ Create standard output folders
-# -----------------------------
-for folder in ["csvs", "pickles", "logs"]:
-    Path(folder).mkdir(parents=True, exist_ok=True)
-print("📁 Output folders ready: csvs/, pickles/, logs/")
-
-# -----------------------------
-# 8️⃣ Summary
-# -----------------------------
-print("\n🧾 Summary:")
+# ======================================================
+# Verify Working Environment
+# ======================================================
+print("\n🧾 Environment Summary:")
+print(f"• Environment: {ENV_NAME}")
 print(f"• Working Directory: {os.getcwd()}")
 print(f"• Repository: https://github.com/{GITHUB_USERNAME}/{GITHUB_REPO}")
-print("✅ All operations completed successfully.")
-
+print(f"• Git repo exists: {(Path.cwd() / '.git').exists()}")
+print("✅ Setup completed successfully")
 ------------------
 
 
 [31m---------------------------------------------------------------------------[39m
-[31mFileNotFoundError[39m                         Traceback (most recent call last)
-[36mFile [39m[32m/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/pathlib.py:1116[39m, in [36mPath.mkdir[39m[34m(self, mode, parents, exist_ok)[39m
-[32m   1115[39m [38;5;28;01mtry[39;00m:
-[32m-> [39m[32m1116[39m     [43mos[49m[43m.[49m[43mmkdir[49m[43m([49m[38;5;28;43mself[39;49m[43m,[49m[43m [49m[43mmode[49m[43m)[49m
-[32m   1117[39m [38;5;28;01mexcept[39;00m [38;5;167;01mFileNotFoundError[39;00m:
+[31mNameError[39m                                 Traceback (most recent call last)
+[36mCell[39m[36m [39m[32mIn[1][39m[32m, line 15[39m
+[32m     12[39m GITHUB_REPO = [33m"[39m[33mforex-ai-models[39m[33m"[39m
+[32m     13[39m BRANCH = [33m"[39m[33mmain[39m[33m"[39m
+[32m---> [39m[32m15[39m [38;5;28mprint[39m([33mf[39m[33m"[39m[33m🔧 Running in: [39m[38;5;132;01m{[39;00m[43mENV_NAME[49m[38;5;132;01m}[39;00m[33m"[39m)
+[32m     16[39m [38;5;28mprint[39m([33mf[39m[33m"[39m[33m📂 Working directory: [39m[38;5;132;01m{[39;00mos.getcwd()[38;5;132;01m}[39;00m[33m"[39m)
+[32m     18[39m [38;5;66;03m# ======================================================[39;00m
+[32m     19[39m [38;5;66;03m# GitHub Token[39;00m
+[32m     20[39m [38;5;66;03m# ======================================================[39;00m
 
-[31mFileNotFoundError[39m: [Errno 2] No such file or directory: '/content/forex-automation'
-
-During handling of the above exception, another exception occurred:
-
-[31mPermissionError[39m                           Traceback (most recent call last)
-[36mCell[39m[36m [39m[32mIn[4][39m[32m, line 14[39m
-[32m     10[39m [38;5;66;03m# -----------------------------[39;00m
-[32m     11[39m [38;5;66;03m# 0️⃣ Environment / Paths[39;00m
-[32m     12[39m [38;5;66;03m# -----------------------------[39;00m
-[32m     13[39m REPO_PARENT = Path([33m"[39m[33m/content/forex-automation[39m[33m"[39m)
-[32m---> [39m[32m14[39m [43mREPO_PARENT[49m[43m.[49m[43mmkdir[49m[43m([49m[43mparents[49m[43m=[49m[38;5;28;43;01mTrue[39;49;00m[43m,[49m[43m [49m[43mexist_ok[49m[43m=[49m[38;5;28;43;01mTrue[39;49;00m[43m)[49m
-[32m     15[39m os.chdir(REPO_PARENT)
-[32m     17[39m GITHUB_USERNAME = [33m"[39m[33mrahim-dotAI[39m[33m"[39m
-
-[36mFile [39m[32m/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/pathlib.py:1120[39m, in [36mPath.mkdir[39m[34m(self, mode, parents, exist_ok)[39m
-[32m   1118[39m     [38;5;28;01mif[39;00m [38;5;129;01mnot[39;00m parents [38;5;129;01mor[39;00m [38;5;28mself[39m.parent == [38;5;28mself[39m:
-[32m   1119[39m         [38;5;28;01mraise[39;00m
-[32m-> [39m[32m1120[39m     [38;5;28;43mself[39;49m[43m.[49m[43mparent[49m[43m.[49m[43mmkdir[49m[43m([49m[43mparents[49m[43m=[49m[38;5;28;43;01mTrue[39;49;00m[43m,[49m[43m [49m[43mexist_ok[49m[43m=[49m[38;5;28;43;01mTrue[39;49;00m[43m)[49m
-[32m   1121[39m     [38;5;28mself[39m.mkdir(mode, parents=[38;5;28;01mFalse[39;00m, exist_ok=exist_ok)
-[32m   1122[39m [38;5;28;01mexcept[39;00m [38;5;167;01mOSError[39;00m:
-[32m   1123[39m     [38;5;66;03m# Cannot rely on checking for EEXIST, since the operating system[39;00m
-[32m   1124[39m     [38;5;66;03m# could give priority to other errors like EACCES or EROFS[39;00m
-
-[36mFile [39m[32m/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/pathlib.py:1116[39m, in [36mPath.mkdir[39m[34m(self, mode, parents, exist_ok)[39m
-[32m   1112[39m [38;5;250m[39m[33;03m"""[39;00m
-[32m   1113[39m [33;03mCreate a new directory at this given path.[39;00m
-[32m   1114[39m [33;03m"""[39;00m
-[32m   1115[39m [38;5;28;01mtry[39;00m:
-[32m-> [39m[32m1116[39m     [43mos[49m[43m.[49m[43mmkdir[49m[43m([49m[38;5;28;43mself[39;49m[43m,[49m[43m [49m[43mmode[49m[43m)[49m
-[32m   1117[39m [38;5;28;01mexcept[39;00m [38;5;167;01mFileNotFoundError[39;00m:
-[32m   1118[39m     [38;5;28;01mif[39;00m [38;5;129;01mnot[39;00m parents [38;5;129;01mor[39;00m [38;5;28mself[39m.parent == [38;5;28mself[39m:
-
-[31mPermissionError[39m: [Errno 13] Permission denied: '/content'
+[31mNameError[39m: name 'ENV_NAME' is not defined
 
 ============================================================

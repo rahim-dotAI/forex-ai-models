@@ -333,6 +333,43 @@ jobs:
           done
           echo "=========================================="
 
+      - name: Clean up nested git repositories
+        if: always()
+        run: |
+          echo "=========================================="
+          echo "🧹 CLEANING NESTED GIT REPOSITORIES"
+          echo "=========================================="
+          
+          # Find and remove all nested .git directories
+          NESTED_REPOS=$(find . -mindepth 2 -type d -name ".git" 2>/dev/null)
+          
+          if [ -z "$NESTED_REPOS" ]; then
+            echo "✅ No nested git repositories found"
+          else
+            echo "Found nested repositories:"
+            echo "$NESTED_REPOS"
+            echo ""
+            
+            # Remove each nested .git directory
+            while IFS= read -r git_dir; do
+              if [ -n "$git_dir" ] && [ -d "$git_dir" ]; then
+                echo "🗑️  Removing: $git_dir"
+                rm -rf "$git_dir"
+              fi
+            done <<< "$NESTED_REPOS"
+            
+            echo ""
+            echo "✅ All nested git repositories removed"
+          fi
+          
+          # Specific check for known problematic path
+          if [ -d "forex-alpha-models/forex-ai-models/.git" ]; then
+            echo "🗑️  Removing specific nested repo: forex-alpha-models/forex-ai-models/.git"
+            rm -rf forex-alpha-models/forex-ai-models/.git
+          fi
+          
+          echo "=========================================="
+
       - name: Commit and push changes
         if: always()
         run: |

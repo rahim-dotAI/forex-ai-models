@@ -1,6 +1,6 @@
 📖 Reading notebook: AI_Forex_Brain_2.ipynb
-✅ Loaded 9 cells
-   - Code cells: 9
+✅ Loaded 10 cells
+   - Code cells: 10
    - Markdown cells: 0
 
 🚀 Executing notebook...
@@ -12,27 +12,63 @@ Cell index: unknown
 Error: An error occurred while executing the following cell:
 ------------------
 # ======================================================
-# 🔄 GitHub Sync (Environment-Aware)
+# 🚀 FULLY FIXED ALPHA VANTAGE FX WORKFLOW
+# - Uses URL-safe PAT
+# - Loads from Colab secrets
+# - Cleans stale repo + skips LFS
+# - GitHub Actions + Colab Safe
 # ======================================================
 import os
+import time
+import hashlib
+import requests
 import subprocess
+import threading
 import shutil
-from pathlib import Path
 import urllib.parse
+from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import pandas as pd
 
-# Use variables from initialization cell
+# ======================================================
+# 1️⃣ Detect Environment
+# ======================================================
+try:
+    import google.colab
+    IN_COLAB = True
+except ImportError:
+    IN_COLAB = False
+
+IN_GHA = "GITHUB_ACTIONS" in os.environ
+print(f"Detected environment: {'Colab' if IN_COLAB else 'GitHub/Local'}")
+
+# ======================================================
+# 2️⃣ Working directories
+# ======================================================
+BASE_FOLDER = Path("/content/forex-alpha-models") if IN_COLAB else Path("./forex-alpha-models")
+BASE_FOLDER.mkdir(parents=True, exist_ok=True)
+os.chdir(BASE_FOLDER)
+
+PICKLE_FOLDER = BASE_FOLDER / "pickles"
+CSV_FOLDER = BASE_FOLDER / "csvs"
+LOG_FOLDER = BASE_FOLDER / "logs"
+
+for folder in [PICKLE_FOLDER, CSV_FOLDER, LOG_FOLDER]:
+    folder.mkdir(exist_ok=True)
+
+print(f"✅ Working directory: {BASE_FOLDER.resolve()}")
+print(f"✅ Output folders ready: {PICKLE_FOLDER}, {CSV_FOLDER}, {LOG_FOLDER}")
+
+# ======================================================
+# 3️⃣ GitHub Configuration
+# ======================================================
 GITHUB_USERNAME = "rahim-dotAI"
 GITHUB_REPO = "forex-ai-models"
 BRANCH = "main"
+REPO_FOLDER = BASE_FOLDER / GITHUB_REPO
 
-print(f"🔧 Running in: {ENV_NAME}")
-print(f"📂 Working directory: {os.getcwd()}")
-
-# ======================================================
-# GitHub Token
-# ======================================================
+# Load PAT from env or Colab userdata
 FOREX_PAT = os.environ.get("FOREX_PAT")
-
 if not FOREX_PAT and IN_COLAB:
     try:
         from google.colab import userdata
@@ -40,105 +76,182 @@ if not FOREX_PAT and IN_COLAB:
         if FOREX_PAT:
             os.environ["FOREX_PAT"] = FOREX_PAT
             print("🔐 Loaded FOREX_PAT from Colab secret.")
-    except ImportError:
+    except Exception:
         pass
 
 if not FOREX_PAT:
-    print("⚠️ Warning: FOREX_PAT not found. Git operations may fail.")
-else:
-    SAFE_PAT = urllib.parse.quote(FOREX_PAT)
-    REPO_URL = f"https://{GITHUB_USERNAME}:{SAFE_PAT}@github.com/{GITHUB_USERNAME}/{GITHUB_REPO}.git"
+    raise ValueError("❌ Missing FOREX_PAT. Set it in Colab userdata or GitHub secrets.")
+
+SAFE_PAT = urllib.parse.quote(FOREX_PAT)
+REPO_URL = f"https://{GITHUB_USERNAME}:{SAFE_PAT}@github.com/{GITHUB_USERNAME}/{GITHUB_REPO}.git"
 
 # ======================================================
-# Handle Repository Based on Environment
+# 4️⃣ Safe Repo Clone / Sync
 # ======================================================
-if IN_GHA:
-    # GitHub Actions: Already in the repo
-    print("✅ Running in GitHub Actions - repository already checked out")
-    print(f"📂 Current directory: {Path.cwd()}")
+if REPO_FOLDER.exists():
+    print(f"🗑 Removing old repo: {REPO_FOLDER}")
+    shutil.rmtree(REPO_FOLDER)
 
-elif IN_COLAB:
-    # Google Colab: Need to clone
-    REPO_FOLDER = SAVE_FOLDER
+print("🔗 Cloning repo (skipping LFS)...")
+env = os.environ.copy()
+env["GIT_LFS_SKIP_SMUDGE"] = "1"
 
-    if not (REPO_FOLDER / ".git").exists():
-        print(f"🔗 Cloning repository to {REPO_FOLDER}...")
-        env = os.environ.copy()
-        env["GIT_LFS_SKIP_SMUDGE"] = "1"
+subprocess.run(["git", "clone", "-b", BRANCH, REPO_URL, str(REPO_FOLDER)], check=True, env=env)
+os.chdir(REPO_FOLDER)
+print(f"✅ Repo cloned successfully into {REPO_FOLDER}")
 
-        try:
-            subprocess.run(
-                ["git", "clone", REPO_URL, str(REPO_FOLDER)],
-                check=True,
-                env=env,
-                capture_output=True,
-                text=True
-            )
-            print(f"✅ Repository cloned successfully")
-        except subprocess.CalledProcessError as e:
-            print(f"⚠️ Clone failed: {e.stderr}")
-            print("Continuing with existing directory...")
-    else:
-        print("✅ Repository already exists, pulling latest changes...")
-        try:
-            subprocess.run(["git", "pull", "origin", BRANCH], check=True, cwd=REPO_FOLDER)
-        except subprocess.CalledProcessError:
-            print("⚠️ Pull failed, continuing anyway...")
-
-    # Remove LFS for Colab
-    print("⚙️ Configuring Git LFS...")
-    try:
-        subprocess.run(["git", "lfs", "uninstall"], check=False, cwd=REPO_FOLDER)
-        subprocess.run(
-            ["git", "lfs", "migrate", "export", "--include=*.csv"],
-            check=False,
-            cwd=REPO_FOLDER
-        )
-        print("✅ LFS configuration updated")
-    except Exception as e:
-        print(f"⚠️ LFS setup warning: {e}")
-
-else:
-    # Local environment
-    print("✅ Running locally")
-    if not (SAVE_FOLDER / ".git").exists():
-        print("⚠️ Not a git repository. Initialize manually if needed.")
-
-# ======================================================
-# Git Configuration
-# ======================================================
+# Configure Git identity
 GIT_USER_NAME = os.environ.get("GIT_USER_NAME", "Forex AI Bot")
 GIT_USER_EMAIL = os.environ.get("GIT_USER_EMAIL", "nakatonabira3@gmail.com")
 
-subprocess.run(["git", "config", "--global", "user.name", GIT_USER_NAME], check=False)
-subprocess.run(["git", "config", "--global", "user.email", GIT_USER_EMAIL], check=False)
-subprocess.run(["git", "config", "--global", "advice.detachedHead", "false"], check=False)
-
+subprocess.run(["git", "config", "--global", "user.name", GIT_USER_NAME], check=True)
+subprocess.run(["git", "config", "--global", "user.email", GIT_USER_EMAIL], check=True)
 print(f"✅ Git configured: {GIT_USER_NAME} <{GIT_USER_EMAIL}>")
 
 # ======================================================
-# Verify Working Environment
+# 5️⃣ Alpha Vantage Setup
 # ======================================================
-print("\n🧾 Environment Summary:")
-print(f"• Environment: {ENV_NAME}")
-print(f"• Working Directory: {os.getcwd()}")
-print(f"• Repository: https://github.com/{GITHUB_USERNAME}/{GITHUB_REPO}")
-print(f"• Git repo exists: {(Path.cwd() / '.git').exists()}")
-print("✅ Setup completed successfully")
+ALPHA_VANTAGE_KEY = os.environ.get("ALPHA_VANTAGE_KEY")
+if not ALPHA_VANTAGE_KEY:
+    raise ValueError("❌ ALPHA_VANTAGE_KEY missing!")
+
+FX_PAIRS = ["EUR/USD", "GBP/USD", "USD/JPY", "AUD/USD"]
+lock = threading.Lock()
+
+def ensure_tz_naive(df):
+    if df is None or df.empty:
+        return df
+    df.index = pd.to_datetime(df.index, errors='coerce')
+    if df.index.tz is not None:
+        df.index = df.index.tz_convert(None)
+    return df
+
+def file_hash(filepath, chunk_size=8192):
+    if not filepath.exists():
+        return None
+    md5 = hashlib.md5()
+    with open(filepath, "rb") as f:
+        for chunk in iter(lambda: f.read(chunk_size), b""):
+            md5.update(chunk)
+    return md5.hexdigest()
+
+def fetch_alpha_vantage_fx(pair, outputsize='full', max_retries=3, retry_delay=5):
+    base_url = 'https://www.alphavantage.co/query'
+    from_currency, to_currency = pair.split('/')
+    params = {
+        'function': 'FX_DAILY',
+        'from_symbol': from_currency,
+        'to_symbol': to_currency,
+        'outputsize': outputsize,
+        'datatype': 'json',
+        'apikey': ALPHA_VANTAGE_KEY
+    }
+    for attempt in range(max_retries):
+        try:
+            r = requests.get(base_url, params=params, timeout=30)
+            r.raise_for_status()
+            data = r.json()
+            if 'Time Series FX (Daily)' not in data:
+                raise ValueError(f"Unexpected API response: {data}")
+            ts = data['Time Series FX (Daily)']
+            df = pd.DataFrame(ts).T
+            df.index = pd.to_datetime(df.index)
+            df = df.sort_index()
+            df = df.rename(columns={
+                '1. open': 'open',
+                '2. high': 'high',
+                '3. low': 'low',
+                '4. close': 'close'
+            }).astype(float)
+            df = ensure_tz_naive(df)
+            return df
+        except Exception as e:
+            print(f"⚠️ Attempt {attempt + 1} failed fetching {pair}: {e}")
+            time.sleep(retry_delay)
+    print(f"❌ Failed to fetch {pair} after {max_retries} retries")
+    return pd.DataFrame()
+
+# ======================================================
+# 6️⃣ Process Pairs for Unified CSV Pipeline
+# ======================================================
+def process_pair(pair):
+    filename = pair.replace("/", "_") + ".csv"
+    filepath = CSV_FOLDER / filename
+
+    if filepath.exists():
+        existing_df = pd.read_csv(filepath, index_col=0, parse_dates=True)
+    else:
+        existing_df = pd.DataFrame()
+
+    old_hash = file_hash(filepath)
+    new_df = fetch_alpha_vantage_fx(pair)
+    if new_df.empty:
+        return None, f"No new data for {pair}"
+
+    combined_df = pd.concat([existing_df, new_df]) if not existing_df.empty else new_df
+    combined_df = combined_df[~combined_df.index.duplicated(keep='last')]
+    combined_df.sort_index(inplace=True)
+
+    with lock:
+        combined_df.to_csv(filepath)
+
+    new_hash = file_hash(filepath)
+    changed = old_hash != new_hash
+    print(f"ℹ️ {pair} total rows: {len(combined_df)}")
+    return str(filepath) if changed else None, f"{pair} {'updated' if changed else 'no changes'}"
+
+# ======================================================
+# 7️⃣ Execute All Pairs in Parallel
+# ======================================================
+changed_files = []
+tasks = []
+
+with ThreadPoolExecutor(max_workers=4) as executor:
+    for pair in FX_PAIRS:
+        tasks.append(executor.submit(process_pair, pair))
+    for future in as_completed(tasks):
+        filepath, msg = future.result()
+        print(msg)
+        if filepath:
+            changed_files.append(filepath)
+
+# ======================================================
+# 8️⃣ Commit & Push Changes
+# ======================================================
+if changed_files:
+    print(f"🚀 Committing {len(changed_files)} updated files...")
+    subprocess.run(["git", "add", "-A"], check=False)
+    subprocess.run(["git", "commit", "-m", "Update Alpha Vantage FX data"], check=False)
+    subprocess.run(["git", "push", "origin", BRANCH], check=False)
+else:
+    print("✅ No changes to commit.")
+
+print("✅ All FX pairs processed, saved, pushed successfully!")
+
 ------------------
 
+----- stdout -----
+Detected environment: GitHub/Local
+------------------
 
 [31m---------------------------------------------------------------------------[39m
-[31mNameError[39m                                 Traceback (most recent call last)
-[36mCell[39m[36m [39m[32mIn[1][39m[32m, line 15[39m
-[32m     12[39m GITHUB_REPO = [33m"[39m[33mforex-ai-models[39m[33m"[39m
-[32m     13[39m BRANCH = [33m"[39m[33mmain[39m[33m"[39m
-[32m---> [39m[32m15[39m [38;5;28mprint[39m([33mf[39m[33m"[39m[33m🔧 Running in: [39m[38;5;132;01m{[39;00m[43mENV_NAME[49m[38;5;132;01m}[39;00m[33m"[39m)
-[32m     16[39m [38;5;28mprint[39m([33mf[39m[33m"[39m[33m📂 Working directory: [39m[38;5;132;01m{[39;00mos.getcwd()[38;5;132;01m}[39;00m[33m"[39m)
-[32m     18[39m [38;5;66;03m# ======================================================[39;00m
-[32m     19[39m [38;5;66;03m# GitHub Token[39;00m
-[32m     20[39m [38;5;66;03m# ======================================================[39;00m
+[31mFileNotFoundError[39m                         Traceback (most recent call last)
+[36mCell[39m[36m [39m[32mIn[5][39m[32m, line 44[39m
+[32m     41[39m LOG_FOLDER = BASE_FOLDER / [33m"[39m[33mlogs[39m[33m"[39m
+[32m     43[39m [38;5;28;01mfor[39;00m folder [38;5;129;01min[39;00m [PICKLE_FOLDER, CSV_FOLDER, LOG_FOLDER]:
+[32m---> [39m[32m44[39m     [43mfolder[49m[43m.[49m[43mmkdir[49m[43m([49m[43mexist_ok[49m[43m=[49m[38;5;28;43;01mTrue[39;49;00m[43m)[49m
+[32m     46[39m [38;5;28mprint[39m([33mf[39m[33m"[39m[33m✅ Working directory: [39m[38;5;132;01m{[39;00mBASE_FOLDER.resolve()[38;5;132;01m}[39;00m[33m"[39m)
+[32m     47[39m [38;5;28mprint[39m([33mf[39m[33m"[39m[33m✅ Output folders ready: [39m[38;5;132;01m{[39;00mPICKLE_FOLDER[38;5;132;01m}[39;00m[33m, [39m[38;5;132;01m{[39;00mCSV_FOLDER[38;5;132;01m}[39;00m[33m, [39m[38;5;132;01m{[39;00mLOG_FOLDER[38;5;132;01m}[39;00m[33m"[39m)
 
-[31mNameError[39m: name 'ENV_NAME' is not defined
+[36mFile [39m[32m/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/pathlib.py:1116[39m, in [36mPath.mkdir[39m[34m(self, mode, parents, exist_ok)[39m
+[32m   1112[39m [38;5;250m[39m[33;03m"""[39;00m
+[32m   1113[39m [33;03mCreate a new directory at this given path.[39;00m
+[32m   1114[39m [33;03m"""[39;00m
+[32m   1115[39m [38;5;28;01mtry[39;00m:
+[32m-> [39m[32m1116[39m     [43mos[49m[43m.[49m[43mmkdir[49m[43m([49m[38;5;28;43mself[39;49m[43m,[49m[43m [49m[43mmode[49m[43m)[49m
+[32m   1117[39m [38;5;28;01mexcept[39;00m [38;5;167;01mFileNotFoundError[39;00m:
+[32m   1118[39m     [38;5;28;01mif[39;00m [38;5;129;01mnot[39;00m parents [38;5;129;01mor[39;00m [38;5;28mself[39m.parent == [38;5;28mself[39m:
+
+[31mFileNotFoundError[39m: [Errno 2] No such file or directory: 'forex-alpha-models/pickles'
 
 ============================================================

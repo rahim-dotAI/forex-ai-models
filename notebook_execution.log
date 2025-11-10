@@ -5,6 +5,7 @@
 
 🚀 Executing notebook...
 ============================================================
+Cloning into '/home/runner/work/forex-ai-models/forex-ai-models/forex-alpha-models/forex-ai-models'...
 
 ============================================================
 ❌ ERROR: Cell execution failed!
@@ -17,6 +18,7 @@ Error: An error occurred while executing the following cell:
 # - Loads from Colab secrets
 # - Cleans stale repo + skips LFS
 # - GitHub Actions + Colab Safe
+# - FIXED: Proper folder creation with parents=True
 # ======================================================
 import os
 import time
@@ -43,9 +45,18 @@ IN_GHA = "GITHUB_ACTIONS" in os.environ
 print(f"Detected environment: {'Colab' if IN_COLAB else 'GitHub/Local'}")
 
 # ======================================================
-# 2️⃣ Working directories
+# 2️⃣ Working directories - FIXED
 # ======================================================
-BASE_FOLDER = Path("/content/forex-alpha-models") if IN_COLAB else Path("./forex-alpha-models")
+if IN_COLAB:
+    BASE_FOLDER = Path("/content/forex-alpha-models")
+elif IN_GHA:
+    # In GitHub Actions, use current working directory
+    BASE_FOLDER = Path.cwd() / "forex-alpha-models"
+else:
+    # Local development
+    BASE_FOLDER = Path("./forex-alpha-models").resolve()
+
+# CRITICAL FIX: Create parent directory first
 BASE_FOLDER.mkdir(parents=True, exist_ok=True)
 os.chdir(BASE_FOLDER)
 
@@ -53,8 +64,9 @@ PICKLE_FOLDER = BASE_FOLDER / "pickles"
 CSV_FOLDER = BASE_FOLDER / "csvs"
 LOG_FOLDER = BASE_FOLDER / "logs"
 
+# Now create subdirectories - this will work because parent exists
 for folder in [PICKLE_FOLDER, CSV_FOLDER, LOG_FOLDER]:
-    folder.mkdir(exist_ok=True)
+    folder.mkdir(parents=True, exist_ok=True)
 
 print(f"✅ Working directory: {BASE_FOLDER.resolve()}")
 print(f"✅ Output folders ready: {PICKLE_FOLDER}, {CSV_FOLDER}, {LOG_FOLDER}")
@@ -227,31 +239,29 @@ else:
     print("✅ No changes to commit.")
 
 print("✅ All FX pairs processed, saved, pushed successfully!")
-
 ------------------
 
 ----- stdout -----
 Detected environment: GitHub/Local
+✅ Working directory: /home/runner/work/forex-ai-models/forex-ai-models/forex-alpha-models
+✅ Output folders ready: /home/runner/work/forex-ai-models/forex-ai-models/forex-alpha-models/pickles, /home/runner/work/forex-ai-models/forex-ai-models/forex-alpha-models/csvs, /home/runner/work/forex-ai-models/forex-ai-models/forex-alpha-models/logs
+🔗 Cloning repo (skipping LFS)...
+----- stderr -----
+Cloning into '/home/runner/work/forex-ai-models/forex-ai-models/forex-alpha-models/forex-ai-models'...
+----- stdout -----
+✅ Repo cloned successfully into /home/runner/work/forex-ai-models/forex-ai-models/forex-alpha-models/forex-ai-models
+✅ Git configured: Forex AI Bot <nakatonabira3@gmail.com>
 ------------------
 
 [31m---------------------------------------------------------------------------[39m
-[31mFileNotFoundError[39m                         Traceback (most recent call last)
-[36mCell[39m[36m [39m[32mIn[5][39m[32m, line 44[39m
-[32m     41[39m LOG_FOLDER = BASE_FOLDER / [33m"[39m[33mlogs[39m[33m"[39m
-[32m     43[39m [38;5;28;01mfor[39;00m folder [38;5;129;01min[39;00m [PICKLE_FOLDER, CSV_FOLDER, LOG_FOLDER]:
-[32m---> [39m[32m44[39m     [43mfolder[49m[43m.[49m[43mmkdir[49m[43m([49m[43mexist_ok[49m[43m=[49m[38;5;28;43;01mTrue[39;49;00m[43m)[49m
-[32m     46[39m [38;5;28mprint[39m([33mf[39m[33m"[39m[33m✅ Working directory: [39m[38;5;132;01m{[39;00mBASE_FOLDER.resolve()[38;5;132;01m}[39;00m[33m"[39m)
-[32m     47[39m [38;5;28mprint[39m([33mf[39m[33m"[39m[33m✅ Output folders ready: [39m[38;5;132;01m{[39;00mPICKLE_FOLDER[38;5;132;01m}[39;00m[33m, [39m[38;5;132;01m{[39;00mCSV_FOLDER[38;5;132;01m}[39;00m[33m, [39m[38;5;132;01m{[39;00mLOG_FOLDER[38;5;132;01m}[39;00m[33m"[39m)
+[31mValueError[39m                                Traceback (most recent call last)
+[36mCell[39m[36m [39m[32mIn[5][39m[32m, line 114[39m
+[32m    112[39m ALPHA_VANTAGE_KEY = os.environ.get([33m"[39m[33mALPHA_VANTAGE_KEY[39m[33m"[39m)
+[32m    113[39m [38;5;28;01mif[39;00m [38;5;129;01mnot[39;00m ALPHA_VANTAGE_KEY:
+[32m--> [39m[32m114[39m     [38;5;28;01mraise[39;00m [38;5;167;01mValueError[39;00m([33m"[39m[33m❌ ALPHA_VANTAGE_KEY missing![39m[33m"[39m)
+[32m    116[39m FX_PAIRS = [[33m"[39m[33mEUR/USD[39m[33m"[39m, [33m"[39m[33mGBP/USD[39m[33m"[39m, [33m"[39m[33mUSD/JPY[39m[33m"[39m, [33m"[39m[33mAUD/USD[39m[33m"[39m]
+[32m    117[39m lock = threading.Lock()
 
-[36mFile [39m[32m/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/pathlib.py:1116[39m, in [36mPath.mkdir[39m[34m(self, mode, parents, exist_ok)[39m
-[32m   1112[39m [38;5;250m[39m[33;03m"""[39;00m
-[32m   1113[39m [33;03mCreate a new directory at this given path.[39;00m
-[32m   1114[39m [33;03m"""[39;00m
-[32m   1115[39m [38;5;28;01mtry[39;00m:
-[32m-> [39m[32m1116[39m     [43mos[49m[43m.[49m[43mmkdir[49m[43m([49m[38;5;28;43mself[39;49m[43m,[49m[43m [49m[43mmode[49m[43m)[49m
-[32m   1117[39m [38;5;28;01mexcept[39;00m [38;5;167;01mFileNotFoundError[39;00m:
-[32m   1118[39m     [38;5;28;01mif[39;00m [38;5;129;01mnot[39;00m parents [38;5;129;01mor[39;00m [38;5;28mself[39m.parent == [38;5;28mself[39m:
-
-[31mFileNotFoundError[39m: [Errno 2] No such file or directory: 'forex-alpha-models/pickles'
+[31mValueError[39m: ❌ ALPHA_VANTAGE_KEY missing!
 
 ============================================================

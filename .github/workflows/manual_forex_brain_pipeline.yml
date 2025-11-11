@@ -39,6 +39,39 @@ jobs:
           lfs: true
           token: ${{ secrets.FOREX_PAT }}
 
+      - name: Fix submodule issue
+        run: |
+          echo "=========================================="
+          echo "🔧 FIXING SUBMODULE CONFIGURATION"
+          echo "=========================================="
+          
+          # Check if .gitmodules exists
+          if [ -f ".gitmodules" ]; then
+            echo "⚠️ Found .gitmodules file - removing it"
+            cat .gitmodules
+            
+            # Remove .gitmodules
+            rm -f .gitmodules
+            
+            # Remove submodule from git cache
+            git rm --cached -r forex-alpha-models 2>/dev/null || true
+            
+            # Remove the actual folder
+            rm -rf forex-alpha-models
+            
+            # Stage changes
+            git add .gitmodules 2>/dev/null || true
+            
+            echo "✅ Submodule configuration removed"
+          else
+            echo "✅ No .gitmodules file found"
+          fi
+          
+          # Remove any nested .git directories
+          find . -mindepth 2 -name ".git" -type d -exec rm -rf {} + 2>/dev/null || true
+          
+          echo "=========================================="
+
       - name: Detect Weekend vs Weekday Mode
         id: detect_mode
         run: |
@@ -333,20 +366,25 @@ jobs:
           done
           echo "=========================================="
 
-      - name: Clean up nested git repositories
+      - name: Clean up nested git repositories and folders
         if: always()
         run: |
           echo "=========================================="
-          echo "🧹 CLEANING NESTED GIT REPOSITORIES"
+          echo "🧹 CLEANING NESTED REPOSITORIES & FOLDERS"
           echo "=========================================="
           
-          # Find and remove all nested .git directories
+          # Remove the entire problematic nested structure
+          if [ -d "forex-alpha-models" ]; then
+            echo "🗑️  Removing entire forex-alpha-models folder (nested structure)"
+            rm -rf forex-alpha-models
+            echo "✅ Removed nested folder structure"
+          fi
+          
+          # Find and remove any other nested .git directories
           NESTED_REPOS=$(find . -mindepth 2 -type d -name ".git" 2>/dev/null)
           
-          if [ -z "$NESTED_REPOS" ]; then
-            echo "✅ No nested git repositories found"
-          else
-            echo "Found nested repositories:"
+          if [ -n "$NESTED_REPOS" ]; then
+            echo "Found additional nested repositories:"
             echo "$NESTED_REPOS"
             echo ""
             
@@ -358,15 +396,17 @@ jobs:
               fi
             done <<< "$NESTED_REPOS"
             
-            echo ""
             echo "✅ All nested git repositories removed"
+          else
+            echo "✅ No additional nested repositories found"
           fi
           
-          # Specific check for known problematic path
-          if [ -d "forex-alpha-models/forex-ai-models/.git" ]; then
-            echo "🗑️  Removing specific nested repo: forex-alpha-models/forex-ai-models/.git"
-            rm -rf forex-alpha-models/forex-ai-models/.git
-          fi
+          # Verify we're in a clean state
+          echo ""
+          echo "📊 Final state check:"
+          echo "Current directory: $(pwd)"
+          echo "Git status:"
+          git status --short || echo "Git status check failed"
           
           echo "=========================================="
 

@@ -11,32 +11,49 @@
 Cell index: unknown
 Error: An error occurred while executing the following cell:
 ------------------
-# ======================================================
-# FX CSV Combine + Incremental Indicators Pipeline
-# ✅ Works in: Colab + GitHub Actions + Local
-# ✅ Thread-safe, timezone-safe, Git-push-safe
-# ✅ Large dataset-ready with column validation
-# ✅ Environment-aware paths (NO permission errors)
-# ======================================================
+#!/usr/bin/env python3
+"""
+VERSION 3.6 – ULTRA-PERSISTENT SELF-LEARNING HYBRID FX PIPELINE (FIXED)
+========================================================================
+🚀 CRITICAL FIXES:
+- ✅ Environment detection (Colab vs GitHub Actions vs Local)
+- ✅ Proper path handling for each environment
+- ✅ SQLite INDEX syntax fixed (was causing crash)
+- ✅ Trades evaluated in NEXT iteration (after price has moved)
+- ✅ All data persists in Git repo (survives GitHub Actions)
+- ✅ Real accuracy tracking (not artificial 100%)
+- ✅ Proper minimum trade age before evaluation (1+ hours)
+- ✅ Learning system gets real performance data
+- ✅ Database auto-commits to Git after each run
 
-import os, time, hashlib, subprocess, shutil
+NEW IMPROVEMENTS:
+- ✅ Separate pending_trades and completed_trades tables
+- ✅ Minimum age requirement for trade evaluation
+- ✅ Better model performance comparison
+- ✅ CSV and pickle files persist properly
+- ✅ Proper SQLite index creation (separate statements)
+- ✅ Enhanced error handling and validation
+"""
+
+import os, time, json, re, shutil, subprocess, pickle, filecmp, sqlite3
 from pathlib import Path
-from concurrent.futures import ThreadPoolExecutor, as_completed
-import threading
+from datetime import datetime, timezone, timedelta
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
+import requests
 import ta
-from ta.momentum import WilliamsRIndicator
-from ta.volatility import AverageTrueRange
-
-print("=" * 70)
-print("🔧 CSV Combiner & Indicator Generator - Multi-Environment Edition")
-print("=" * 70)
+import logging
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.linear_model import SGDClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.exceptions import NotFittedError
+from collections import defaultdict
 
 # ======================================================
-# 0️⃣ FIXED: Environment Detection
+# 0️⃣ FIXED: Environment Detection & Path Setup
 # ======================================================
+
+# Detect environment
 try:
     import google.colab
     IN_COLAB = True
@@ -46,16 +63,13 @@ except ImportError:
     ENV_NAME = "Local/GitHub Actions"
 
 IN_GHA = "GITHUB_ACTIONS" in os.environ
-IN_LOCAL = not IN_COLAB and not IN_GHA
 
 if IN_GHA:
     ENV_NAME = "GitHub Actions"
 
 print(f"🌍 Detected Environment: {ENV_NAME}")
 
-# ======================================================
-# 1️⃣ FIXED: Working Directories (Environment-Aware)
-# ======================================================
+# CRITICAL FIX: Set paths based on environment
 if IN_COLAB:
     # Colab: Use /content (has permissions)
     ROOT_DIR = Path("/content/forex-alpha-models")
@@ -65,7 +79,7 @@ elif IN_GHA:
     ROOT_DIR = Path.cwd()
     print(f"📂 GitHub Actions: Using repo root: {ROOT_DIR}")
 else:
-    # Local: Use subdirectory
+    # Local: Use current directory or subdirectory
     ROOT_DIR = Path("./forex-alpha-models")
     ROOT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -78,537 +92,791 @@ LOGS_FOLDER = ROOT_DIR / "logs"
 for folder in [CSV_FOLDER, PICKLE_FOLDER, LOGS_FOLDER]:
     folder.mkdir(parents=True, exist_ok=True)
 
-print(f"✅ Root directory: {ROOT_DIR}")
-print(f"✅ Repo folder: {REPO_FOLDER}")
-print(f"✅ CSV folder: {CSV_FOLDER}")
-print(f"✅ Pickle folder: {PICKLE_FOLDER}")
-print(f"✅ Logs folder: {LOGS_FOLDER}")
+print(f"✅ Root Directory: {ROOT_DIR}")
+print(f"✅ Repo Folder: {REPO_FOLDER}")
+print(f"✅ CSV Folder: {CSV_FOLDER}")
+print(f"✅ Pickle Folder: {PICKLE_FOLDER}")
+print(f"✅ Logs Folder: {LOGS_FOLDER}")
 
-# Thread lock for file operations
-lock = threading.Lock()
+# Logging setup
+logging.basicConfig(
+    filename=LOGS_FOLDER / "pipeline.log",
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(message)s"
+)
 
 def print_status(msg, level="info"):
-    """Print status messages with icons"""
-    levels = {"info":"ℹ️","success":"✅","warn":"⚠️","error":"❌","debug":"🐞"}
-    print(f"{levels.get(level, 'ℹ️')} {msg}")
+    icons = {"info":"ℹ️","success":"✅","warn":"⚠️","debug":"🐞","error":"❌"}
+    getattr(logging, level if level != "warn" else "warning", logging.info)(msg)
+    print(f"{icons.get(level,'ℹ️')} {msg}")
+
+print_status(f"Environment: {ENV_NAME}", "success")
+print_status(f"Working Directory: {os.getcwd()}", "info")
 
 # ======================================================
-# 2️⃣ Git Configuration
+# 🆕 FIXED DATABASE - Stores in Git Repo
 # ======================================================
-GIT_NAME = os.environ.get("GIT_USER_NAME", "Forex AI Bot")
-GIT_EMAIL = os.environ.get("GIT_USER_EMAIL", "nakatonabira3@gmail.com")
-GITHUB_USERNAME = os.environ.get("GITHUB_USERNAME", "rahim-dotAI")
-GITHUB_REPO = os.environ.get("GITHUB_REPO", "forex-ai-models")
-FOREX_PAT = os.environ.get("FOREX_PAT", "").strip()
-BRANCH = "main"
+PERSISTENT_DB = REPO_FOLDER / "ml_persistent_memory.db"
 
-if not FOREX_PAT:
-    raise ValueError("❌ FOREX_PAT environment variable is required!")
-
-REPO_URL = f"https://{GITHUB_USERNAME}:{FOREX_PAT}@github.com/{GITHUB_USERNAME}/{GITHUB_REPO}.git"
-
-print(f"✅ Git configured: {GIT_NAME} <{GIT_EMAIL}>")
-
-subprocess.run(["git", "config", "--global", "user.name", GIT_NAME], check=False)
-subprocess.run(["git", "config", "--global", "user.email", GIT_EMAIL], check=False)
-subprocess.run(["git", "config", "--global", "credential.helper", "store"], check=False)
-
-cred_file = Path.home() / ".git-credentials"
-cred_file.write_text(f"https://{GITHUB_USERNAME}:{FOREX_PAT}@github.com\n")
-
-# ======================================================
-# 3️⃣ FIXED: Repository Management (Environment-Aware)
-# ======================================================
-def ensure_repo():
+class FixedTradeMemoryDatabase:
     """
-    Ensure repository exists with environment-aware handling
-    """
-    if IN_GHA:
-        # GitHub Actions: Repo already checked out
-        print_status("🤖 GitHub Actions: Repository already available", "info")
-        if not (REPO_FOLDER / ".git").exists() and (Path.cwd() / ".git").exists():
-            # We're in the repo root, update global variable
-            global REPO_FOLDER
-            REPO_FOLDER = Path.cwd()
-            print_status(f"✅ Using current directory as repo: {REPO_FOLDER}", "success")
-        elif (REPO_FOLDER / ".git").exists():
-            print_status(f"✅ Repository found at: {REPO_FOLDER}", "success")
-        else:
-            print_status("⚠️ Warning: .git directory not found", "warn")
-            print_status("   Make sure actions/checkout@v4 is in your workflow", "warn")
-        return
+    FIXED VERSION - SQLite compatible database
+    Now with proper environment handling
 
-    # For Colab and Local: Clone or update
-    if not (REPO_FOLDER / ".git").exists():
-        if REPO_FOLDER.exists():
-            shutil.rmtree(REPO_FOLDER)
-        print_status(f"Cloning repo into {REPO_FOLDER}...", "info")
+    IMPROVEMENTS:
+    - ✅ Proper SQLite INDEX syntax (created separately)
+    - ✅ Enhanced error handling
+    - ✅ Transaction management
+    - ✅ Data validation
+    - ✅ Backup and recovery
+    - ✅ Environment-aware paths
+
+    EVALUATION FLOW:
+    - Stores trades at end of iteration N
+    - Evaluates them at start of iteration N+1 (after 1+ hours)
+    - All data stored in Git repo for persistence
+    """
+
+    def __init__(self, db_path=PERSISTENT_DB):
+        self.db_path = db_path
+        # Ensure parent directory exists
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        self.conn = None
+        self.min_age_hours = 1  # Minimum hours before evaluation
+        self.initialize_database()
+
+    def initialize_database(self):
+        """
+        Create database in Git repo (persists across runs)
+        FIXED: Proper SQLite syntax for indexes
+        """
         try:
-            subprocess.run(
-                ["git", "clone", "-b", BRANCH, REPO_URL, str(REPO_FOLDER)],
-                check=True,
-                timeout=60
-            )
-            print_status("✅ Repository cloned successfully", "success")
-        except subprocess.TimeoutExpired:
-            print_status("❌ Clone timed out after 60 seconds", "error")
+            self.conn = sqlite3.connect(str(self.db_path), timeout=30)
+            self.conn.execute("PRAGMA journal_mode=WAL")  # Better concurrency
+            self.conn.execute("PRAGMA synchronous=NORMAL")  # Faster writes
+            cursor = self.conn.cursor()
+
+            # ===== TABLE 1: Pending trades (waiting to be evaluated) =====
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS pending_trades (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    created_at TEXT NOT NULL,
+                    iteration INTEGER NOT NULL,
+                    pair TEXT NOT NULL,
+                    timeframe TEXT NOT NULL,
+                    sgd_prediction INTEGER,
+                    rf_prediction INTEGER,
+                    ensemble_prediction INTEGER,
+                    entry_price REAL NOT NULL,
+                    sl_price REAL NOT NULL,
+                    tp_price REAL NOT NULL,
+                    confidence REAL,
+                    evaluated BOOLEAN DEFAULT 0
+                )
+            ''')
+
+            # Create indexes separately (SQLite proper syntax)
+            cursor.execute('''
+                CREATE INDEX IF NOT EXISTS idx_pending_eval
+                ON pending_trades(evaluated, created_at)
+            ''')
+
+            cursor.execute('''
+                CREATE INDEX IF NOT EXISTS idx_pending_pair
+                ON pending_trades(pair, evaluated)
+            ''')
+
+            # ===== TABLE 2: Completed trades (historical results) =====
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS completed_trades (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    pending_trade_id INTEGER,
+                    created_at TEXT NOT NULL,
+                    evaluated_at TEXT NOT NULL,
+                    iteration_created INTEGER,
+                    iteration_evaluated INTEGER,
+                    pair TEXT NOT NULL,
+                    timeframe TEXT NOT NULL,
+                    model_used TEXT NOT NULL,
+                    entry_price REAL NOT NULL,
+                    exit_price REAL NOT NULL,
+                    sl_price REAL NOT NULL,
+                    tp_price REAL NOT NULL,
+                    prediction INTEGER,
+                    hit_tp BOOLEAN NOT NULL,
+                    pnl REAL NOT NULL,
+                    duration_hours REAL,
+                    FOREIGN KEY (pending_trade_id) REFERENCES pending_trades(id)
+                )
+            ''')
+
+            # Create indexes separately
+            cursor.execute('''
+                CREATE INDEX IF NOT EXISTS idx_completed_model
+                ON completed_trades(model_used, evaluated_at)
+            ''')
+
+            cursor.execute('''
+                CREATE INDEX IF NOT EXISTS idx_completed_pair
+                ON completed_trades(pair, model_used, evaluated_at)
+            ''')
+
+            cursor.execute('''
+                CREATE INDEX IF NOT EXISTS idx_completed_timestamp
+                ON completed_trades(evaluated_at)
+            ''')
+
+            # ===== TABLE 3: Model performance cache =====
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS model_stats_cache (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    updated_at TEXT NOT NULL,
+                    pair TEXT NOT NULL,
+                    model_name TEXT NOT NULL,
+                    days INTEGER NOT NULL,
+                    total_trades INTEGER DEFAULT 0,
+                    winning_trades INTEGER DEFAULT 0,
+                    accuracy_pct REAL DEFAULT 0.0,
+                    total_pnl REAL DEFAULT 0.0,
+                    avg_pnl REAL DEFAULT 0.0,
+                    UNIQUE(pair, model_name, days) ON CONFLICT REPLACE
+                )
+            ''')
+
+            cursor.execute('''
+                CREATE INDEX IF NOT EXISTS idx_stats_lookup
+                ON model_stats_cache(pair, model_name, days)
+            ''')
+
+            # ===== TABLE 4: Pipeline execution log =====
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS execution_log (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT NOT NULL,
+                    iteration INTEGER NOT NULL,
+                    status TEXT NOT NULL,
+                    trades_stored INTEGER DEFAULT 0,
+                    trades_evaluated INTEGER DEFAULT 0,
+                    duration_seconds REAL,
+                    error_message TEXT
+                )
+            ''')
+
+            self.conn.commit()
+            print_status("✅ Fixed ML Database initialized (persists in Git)", "success")
+
+            # Verify database integrity
+            self._verify_database_integrity()
+
+        except sqlite3.Error as e:
+            print_status(f"❌ Database initialization failed: {e}", "error")
             raise
-        except Exception as e:
-            print_status(f"❌ Clone failed: {e}", "error")
-            raise
-    else:
-        print_status("Repo exists, pulling latest...", "info")
+
+    def _verify_database_integrity(self):
+        """Verify database structure is correct"""
         try:
-            subprocess.run(
-                ["git", "-C", str(REPO_FOLDER), "fetch", "origin"],
-                check=False,
-                timeout=30
-            )
-            subprocess.run(
-                ["git", "-C", str(REPO_FOLDER), "checkout", BRANCH],
-                check=False
-            )
-            subprocess.run(
-                ["git", "-C", str(REPO_FOLDER), "pull", "origin", BRANCH],
-                check=False,
-                timeout=30
-            )
-            print_status("✅ Repo synced successfully", "success")
-        except subprocess.TimeoutExpired:
-            print_status("⚠️ Update timed out - continuing with existing repo", "warn")
+            cursor = self.conn.cursor()
+
+            # Check if tables exist
+            cursor.execute("""
+                SELECT name FROM sqlite_master
+                WHERE type='table' AND name IN (
+                    'pending_trades', 'completed_trades',
+                    'model_stats_cache', 'execution_log'
+                )
+            """)
+
+            tables = [row[0] for row in cursor.fetchall()]
+            expected_tables = ['pending_trades', 'completed_trades',
+                             'model_stats_cache', 'execution_log']
+
+            for table in expected_tables:
+                if table in tables:
+                    print_status(f"  ✓ Table '{table}' exists", "debug")
+                else:
+                    print_status(f"  ✗ Table '{table}' missing!", "error")
+
+            # Check indexes
+            cursor.execute("""
+                SELECT name FROM sqlite_master
+                WHERE type='index' AND name LIKE 'idx_%'
+            """)
+
+            indexes = [row[0] for row in cursor.fetchall()]
+            print_status(f"  📊 Found {len(indexes)} indexes", "debug")
+
         except Exception as e:
-            print_status(f"⚠️ Update failed: {e} - continuing", "warn")
+            print_status(f"⚠️ Database verification warning: {e}", "warn")
 
-ensure_repo()
+    def store_new_signals(self, aggregated_signals, current_iteration):
+        """
+        Store signals at END of current iteration.
+        They will be evaluated in NEXT iteration.
 
-# ======================================================
-# 4️⃣ Helper Functions with Safeguards
-# ======================================================
-def ensure_tz_naive(df):
-    """Remove timezone information from DataFrame index"""
-    if df is None or df.empty:
-        return pd.DataFrame()
+        Args:
+            aggregated_signals: Dict of signals by pair
+            current_iteration: Current iteration number
 
-    df.index = pd.to_datetime(df.index, errors='coerce')
+        Returns:
+            int: Number of signals stored
+        """
+        if not aggregated_signals:
+            print_status("⚠️ No signals to store", "warn")
+            return 0
 
-    if df.index.tz is not None:
-        df.index = df.index.tz_localize(None)
+        cursor = self.conn.cursor()
+        stored_count = 0
+        failed_count = 0
 
-    return df
-
-def file_hash(filepath):
-    """Calculate MD5 hash of file to detect changes"""
-    if not filepath.exists():
-        return None
-
-    md5 = hashlib.md5()
-    with open(filepath, "rb") as f:
-        for chunk in iter(lambda: f.read(8192), b""):
-            md5.update(chunk)
-
-    return md5.hexdigest()
-
-def safe_numeric(df):
-    """
-    Handle infinity/NaN robustly before any scaling
-    WITH COLUMN VALIDATION
-    """
-    # Replace infinity values first
-    df.replace([np.inf, -np.inf], np.nan, inplace=True)
-
-    # Check if OHLC columns exist before trying to drop NaN rows
-    required_columns = ['open', 'high', 'low', 'close']
-    existing_columns = [col for col in required_columns if col in df.columns]
-
-    # Only drop NaN if we have at least some OHLC columns
-    if existing_columns:
-        df.dropna(subset=existing_columns, inplace=True)
-    else:
-        # If no OHLC columns, just drop rows that are completely empty
-        df.dropna(how='all', inplace=True)
-
-    return df
-
-# ======================================================
-# 5️⃣ Incremental CSV Combine
-# ======================================================
-def combine_csv(csv_path):
-    """
-    Combine CSV from CSV_FOLDER with existing data in REPO_FOLDER
-
-    Args:
-        csv_path: Path to CSV file in CSV_FOLDER
-
-    Returns:
-        Tuple of (combined_df, target_file)
-    """
-    target_file = REPO_FOLDER / csv_path.name
-
-    # Load existing data from repo if available
-    if target_file.exists():
         try:
-            existing_df = pd.read_csv(target_file, index_col=0, parse_dates=True)
-            existing_df = ensure_tz_naive(existing_df)
-            print_status(f"  📂 Loaded {len(existing_df)} existing rows from {csv_path.name}", "debug")
+            # Start transaction
+            cursor.execute("BEGIN TRANSACTION")
+
+            for pair, pair_data in aggregated_signals.items():
+                signals = pair_data.get('signals', {})
+
+                for tf_name, signal_data in signals.items():
+                    if not signal_data:
+                        continue
+
+                    # Validate required fields
+                    required_fields = ['live', 'SL', 'TP']
+                    if not all(signal_data.get(f, 0) > 0 for f in required_fields):
+                        print_status(
+                            f"⚠️ Skipping invalid signal for {pair} {tf_name}",
+                            "warn"
+                        )
+                        failed_count += 1
+                        continue
+
+                    try:
+                        cursor.execute('''
+                            INSERT INTO pending_trades
+                            (created_at, iteration, pair, timeframe,
+                             sgd_prediction, rf_prediction, ensemble_prediction,
+                             entry_price, sl_price, tp_price, confidence)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ''', (
+                            datetime.now(timezone.utc).isoformat(),
+                            current_iteration,
+                            pair,
+                            tf_name,
+                            signal_data.get('sgd_pred', 0),
+                            signal_data.get('rf_pred', 0),
+                            signal_data.get('signal', 0),
+                            signal_data.get('live', 0),
+                            signal_data.get('SL', 0),
+                            signal_data.get('TP', 0),
+                            signal_data.get('confidence', 0.5)
+                        ))
+                        stored_count += 1
+                    except sqlite3.Error as e:
+                        print_status(f"⚠️ Failed to store {pair} {tf_name}: {e}", "warn")
+                        failed_count += 1
+
+            # Commit transaction
+            self.conn.commit()
+
+            # Log execution
+            cursor.execute('''
+                INSERT INTO execution_log
+                (timestamp, iteration, status, trades_stored)
+                VALUES (?, ?, 'signals_stored', ?)
+            ''', (
+                datetime.now(timezone.utc).isoformat(),
+                current_iteration,
+                stored_count
+            ))
+            self.conn.commit()
+
+            print_status(
+                f"💾 Stored {stored_count} trades for next iteration "
+                f"({failed_count} failed)",
+                "success"
+            )
+            return stored_count
+
+        except sqlite3.Error as e:
+            self.conn.rollback()
+            print_status(f"❌ Transaction failed: {e}", "error")
+            return 0
+
+    def evaluate_pending_trades(self, current_prices, current_iteration):
+        """
+        Evaluate trades from PREVIOUS iterations.
+        Only evaluates trades older than min_age_hours.
+
+        Args:
+            current_prices: Dict of current prices by pair
+            current_iteration: Current iteration number
+
+        Returns:
+            dict: Evaluation results by model
+        """
+        if not current_prices:
+            print_status("⚠️ No current prices provided", "warn")
+            return {}
+
+        cursor = self.conn.cursor()
+
+        # Get unevaluated trades that are OLD ENOUGH
+        min_age = (datetime.now(timezone.utc) - timedelta(hours=self.min_age_hours)).isoformat()
+
+        try:
+            cursor.execute('''
+                SELECT id, pair, timeframe, sgd_prediction, rf_prediction,
+                       ensemble_prediction, entry_price, sl_price, tp_price,
+                       created_at, iteration
+                FROM pending_trades
+                WHERE evaluated = 0 AND created_at < ?
+                ORDER BY created_at ASC
+            ''', (min_age,))
+
+            pending_trades = cursor.fetchall()
+
+        except sqlite3.Error as e:
+            print_status(f"❌ Failed to fetch pending trades: {e}", "error")
+            return {}
+
+        if not pending_trades:
+            print_status(
+                f"ℹ️ No trades old enough to evaluate (need {self.min_age_hours}+ hours)",
+                "info"
+            )
+            return {}
+
+        print_status(
+            f"🔍 Evaluating {len(pending_trades)} trades from previous iteration(s)",
+            "info"
+        )
+
+        results_by_model = defaultdict(lambda: {
+            'closed_trades': 0,
+            'wins': 0,
+            'losses': 0,
+            'total_pnl': 0.0,
+            'trades': []
+        })
+
+        evaluated_count = 0
+        skipped_count = 0
+
+        try:
+            # Start transaction
+            cursor.execute("BEGIN TRANSACTION")
+
+            for trade in pending_trades:
+                (trade_id, pair, timeframe, sgd_pred, rf_pred, ensemble_pred,
+                 entry_price, sl_price, tp_price, created_at, created_iteration) = trade
+
+                current_price = current_prices.get(pair, 0)
+
+                if current_price <= 0:
+                    print_status(f"⚠️ No current price for {pair}, skipping", "warn")
+                    skipped_count += 1
+                    continue
+
+                # Validate prices
+                if not self._validate_trade_prices(entry_price, sl_price, tp_price, current_price):
+                    print_status(
+                        f"⚠️ Invalid prices for {pair} {timeframe}, skipping",
+                        "warn"
+                    )
+                    skipped_count += 1
+                    continue
+
+                # Evaluate for each model that made a prediction
+                for model_name, prediction in [
+                    ('SGD', sgd_pred),
+                    ('RandomForest', rf_pred),
+                    ('Ensemble', ensemble_pred)
+                ]:
+                    if prediction is None:
+                        continue
+
+                    # Check if TP or SL was hit
+                    hit_tp, hit_sl, exit_price = self._evaluate_trade_outcome(
+                        prediction, current_price, tp_price, sl_price
+                    )
+
+                    # If trade closed, record result
+                    if exit_price:
+                        # Calculate P&L
+                        pnl = self._calculate_pnl(
+                            prediction, entry_price, exit_price
+                        )
+
+                        # Duration
+                        duration_hours = self._calculate_duration_hours(created_at)
+
+                        # Insert into completed trades
+                        try:
+                            cursor.execute('''
+                                INSERT INTO completed_trades
+                                (pending_trade_id, created_at, evaluated_at,
+                                 iteration_created, iteration_evaluated,
+                                 pair, timeframe, model_used, entry_price, exit_price,
+                                 sl_price, tp_price, prediction, hit_tp, pnl, duration_hours)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            ''', (
+                                trade_id, created_at, datetime.now(timezone.utc).isoformat(),
+                                created_iteration, current_iteration,
+                                pair, timeframe, model_name, entry_price, exit_price,
+                                sl_price, tp_price, prediction, hit_tp, pnl, duration_hours
+                            ))
+                        except sqlite3.Error as e:
+                            print_status(
+                                f"⚠️ Failed to record completed trade: {e}",
+                                "warn"
+                            )
+                            continue
+
+                        # Accumulate results
+                        results_by_model[model_name]['closed_trades'] += 1
+                        results_by_model[model_name]['total_pnl'] += pnl
+
+                        if hit_tp:
+                            results_by_model[model_name]['wins'] += 1
+                        else:
+                            results_by_model[model_name]['losses'] += 1
+
+                        results_by_model[model_name]['trades'].append({
+                            'pair': pair,
+                            'timeframe': timeframe,
+                            'pnl': pnl,
+                            'hit_tp': hit_tp
+                        })
+
+                        status = "WIN ✅" if hit_tp else "LOSS ❌"
+                        print_status(
+                            f"{status} {model_name}: {pair} {timeframe} "
+                            f"Entry={entry_price:.5f} Exit={exit_price:.5f} "
+                            f"P&L=${pnl:.5f} ({duration_hours:.1f}h)",
+                            "success" if hit_tp else "warn"
+                        )
+
+                # Mark pending trade as evaluated
+                try:
+                    cursor.execute('''
+                        UPDATE pending_trades
+                        SET evaluated = 1
+                        WHERE id = ?
+                    ''', (trade_id,))
+                    evaluated_count += 1
+                except sqlite3.Error as e:
+                    print_status(f"⚠️ Failed to mark trade as evaluated: {e}", "warn")
+
+            # Commit transaction
+            self.conn.commit()
+
+            # Log execution
+            cursor.execute('''
+                INSERT INTO execution_log
+                (timestamp, iteration, status, trades_evaluated)
+                VALUES (?, ?, 'trades_evaluated', ?)
+            ''', (
+                datetime.now(timezone.utc).isoformat(),
+                current_iteration,
+                evaluated_count
+            ))
+            self.conn.commit()
+
+            print_status(
+                f"✅ Evaluated {evaluated_count} trades "
+                f"({skipped_count} skipped)",
+                "success"
+            )
+
+        except sqlite3.Error as e:
+            self.conn.rollback()
+            print_status(f"❌ Evaluation transaction failed: {e}", "error")
+            return {}
+
+        # Calculate accuracies
+        for model_name, results in results_by_model.items():
+            if results['closed_trades'] > 0:
+                results['accuracy'] = (results['wins'] / results['closed_trades']) * 100
+            else:
+                results['accuracy'] = 0.0
+
+        # Update model stats cache
+        self._update_stats_cache()
+
+        return dict(results_by_model)
+
+    def _validate_trade_prices(self, entry, sl, tp, current):
+        """Validate that trade prices are reasonable"""
+        try:
+            if any(p <= 0 for p in [entry, sl, tp, current]):
+                return False
+
+            # Prices shouldn't be wildly different (max 50% deviation)
+            prices = [entry, sl, tp, current]
+            avg_price = sum(prices) / len(prices)
+
+            for price in prices:
+                if abs(price - avg_price) / avg_price > 0.5:
+                    return False
+
+            return True
+        except:
+            return False
+
+    def _evaluate_trade_outcome(self, prediction, current_price, tp_price, sl_price):
+        """Determine if trade hit TP or SL"""
+        hit_tp = False
+        hit_sl = False
+        exit_price = None
+
+        try:
+            if prediction == 1:  # Long
+                if current_price >= tp_price:
+                    hit_tp = True
+                    exit_price = tp_price
+                elif current_price <= sl_price:
+                    hit_sl = True
+                    exit_price = sl_price
+            elif prediction == 0:  # Short
+                if current_price <= tp_price:
+                    hit_tp = True
+                    exit_price = tp_price
+                elif current_price >= sl_price:
+                    hit_sl = True
+                    exit_price = sl_price
+
         except Exception as e:
-            print_status(f"  ⚠️ Could not load existing data: {e}", "warn")
-            existing_df = pd.DataFrame()
-    else:
-        existing_df = pd.DataFrame()
+            print_status(f"⚠️ Trade evaluation error: {e}", "warn")
 
-    # Load new data from CSV folder
-    try:
-        new_df = pd.read_csv(csv_path, index_col=0, parse_dates=True)
-        new_df = ensure_tz_naive(new_df)
-    except Exception as e:
-        print_status(f"  ❌ Could not load new data: {e}", "error")
-        return existing_df, target_file
+        return hit_tp, hit_sl, exit_price
 
-    # Combine dataframes
-    combined_df = pd.concat([existing_df, new_df])
-    combined_df = combined_df[~combined_df.index.duplicated(keep="last")]
-    combined_df.sort_index(inplace=True)
+    def _calculate_pnl(self, prediction, entry_price, exit_price):
+        """Calculate profit/loss"""
+        try:
+            if prediction == 1:  # Long
+                return exit_price - entry_price
+            else:  # Short
+                return entry_price - exit_price
+        except:
+            return 0.0
 
-    return combined_df, target_file
+    def _calculate_duration_hours(self, created_at):
+        """Calculate trade duration in hours"""
+        try:
+            created_dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+            duration = (datetime.now(timezone.utc) - created_dt).total_seconds() / 3600
+            return max(0, duration)
+        except:
+            return 0.0
 
-# ======================================================
-# 6️⃣ Incremental Indicators with Validation
-# ======================================================
-def add_indicators_incremental(existing_df, combined_df):
-    """
-    Add technical indicators only to NEW rows
+    def _update_stats_cache(self):
+        """Update cached model performance statistics"""
+        cursor = self.conn.cursor()
 
-    Args:
-        existing_df: DataFrame with existing indicators
-        combined_df: Combined DataFrame with OHLC data
+        try:
+            # Get unique pairs and models
+            cursor.execute('SELECT DISTINCT pair FROM completed_trades')
+            pairs = [row[0] for row in cursor.fetchall()]
 
-    Returns:
-        DataFrame with new rows and indicators, or None if no new rows
-    """
-    # Identify new rows
-    if not existing_df.empty:
-        new_rows = combined_df.loc[~combined_df.index.isin(existing_df.index)]
-    else:
-        new_rows = combined_df.copy()
+            cursor.execute('SELECT DISTINCT model_used FROM completed_trades')
+            models = [row[0] for row in cursor.fetchall()]
 
-    if new_rows.empty:
-        return None
+            for pair in pairs:
+                for model in models:
+                    for days in [7, 30, 90]:
+                        since = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
 
-    # CRITICAL: Validate OHLC columns exist before processing
-    required_cols = ['open', 'high', 'low', 'close']
-    if not all(col in new_rows.columns for col in required_cols):
-        print_status(f"⚠️ Missing required OHLC columns. Found: {list(new_rows.columns)}", "warn")
-        return None
+                        cursor.execute('''
+                            SELECT
+                                COUNT(*) as total,
+                                SUM(CASE WHEN hit_tp THEN 1 ELSE 0 END) as wins,
+                                SUM(pnl) as total_pnl,
+                                AVG(pnl) as avg_pnl
+                            FROM completed_trades
+                            WHERE pair = ? AND model_used = ? AND evaluated_at > ?
+                        ''', (pair, model, since))
 
-    # Clean numeric data with validation
-    new_rows = safe_numeric(new_rows)
+                        result = cursor.fetchone()
+                        total, wins, total_pnl, avg_pnl = result
 
-    # Check if we still have data after cleaning
-    if new_rows.empty:
-        print_status("⚠️ No rows left after cleaning", "warn")
-        return None
+                        if total and total > 0:
+                            accuracy = (wins / total * 100) if total > 0 else 0.0
 
-    new_rows.sort_index(inplace=True)
+                            cursor.execute('''
+                                INSERT OR REPLACE INTO model_stats_cache
+                                (updated_at, pair, model_name, days, total_trades,
+                                 winning_trades, accuracy_pct, total_pnl, avg_pnl)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            ''', (
+                                datetime.now(timezone.utc).isoformat(),
+                                pair, model, days, total, wins or 0,
+                                accuracy, total_pnl or 0.0, avg_pnl or 0.0
+                            ))
 
-    # Calculate indicators
-    try:
-        # Trend indicators
-        trend_indicators = {
-            'SMA_10': lambda d: ta.trend.sma_indicator(d['close'], 10) if len(d) >= 10 else np.nan,
-            'SMA_50': lambda d: ta.trend.sma_indicator(d['close'], 50) if len(d) >= 50 else np.nan,
-            'SMA_200': lambda d: ta.trend.sma_indicator(d['close'], 200) if len(d) >= 200 else np.nan,
-            'EMA_10': lambda d: ta.trend.ema_indicator(d['close'], 10) if len(d) >= 10 else np.nan,
-            'EMA_50': lambda d: ta.trend.ema_indicator(d['close'], 50) if len(d) >= 50 else np.nan,
-            'EMA_200': lambda d: ta.trend.ema_indicator(d['close'], 200) if len(d) >= 200 else np.nan,
-            'MACD': lambda d: ta.trend.macd(d['close']) if len(d) >= 26 else np.nan,
-            'MACD_signal': lambda d: ta.trend.macd_signal(d['close']) if len(d) >= 26 else np.nan,
-            'ADX': lambda d: ta.trend.adx(d['high'], d['low'], d['close'], 14) if len(d) >= 14 else np.nan
-        }
+            self.conn.commit()
+            print_status("✅ Stats cache updated", "debug")
 
-        # Momentum indicators
-        momentum_indicators = {
-            'RSI_14': lambda d: ta.momentum.rsi(d['close'], 14) if len(d) >= 14 else np.nan,
-            'StochRSI': lambda d: ta.momentum.stochrsi(d['close'], 14) if len(d) >= 14 else np.nan,
-            'CCI': lambda d: ta.trend.cci(d['high'], d['low'], d['close'], 20) if len(d) >= 20 else np.nan,
-            'ROC': lambda d: ta.momentum.roc(d['close'], 12) if len(d) >= 12 else np.nan,
-            'Williams_%R': lambda d: WilliamsRIndicator(d['high'], d['low'], d['close'], 14).williams_r() if len(d) >= 14 else np.nan
-        }
+        except sqlite3.Error as e:
+            print_status(f"⚠️ Stats cache update failed: {e}", "warn")
 
-        # Volatility indicators
-        volatility_indicators = {
-            'Bollinger_High': lambda d: ta.volatility.bollinger_hband(d['close'], 20, 2) if len(d) >= 20 else np.nan,
-            'Bollinger_Low': lambda d: ta.volatility.bollinger_lband(d['close'], 20, 2) if len(d) >= 20 else np.nan,
-            'ATR': lambda d: ta.volatility.average_true_range(d['high'], d['low'], d['close'], 14) if len(d) >= 14 else np.nan,
-            'STDDEV_20': lambda d: d['close'].rolling(20).std() if len(d) >= 20 else np.nan
-        }
+    def get_model_performance(self, pair, model_name, days=7):
+        """
+        Get model performance from cache (fast)
 
-        # Volume-based indicators (if volume column exists)
-        volume_indicators = {}
-        if 'volume' in new_rows.columns:
-            volume_indicators = {
-                'OBV': lambda d: ta.volume.on_balance_volume(d['close'], d['volume']) if len(d) >= 1 else np.nan,
-                'MFI': lambda d: ta.volume.money_flow_index(d['high'], d['low'], d['close'], d['volume'], 14) if len(d) >= 14 else np.nan
+        Args:
+            pair: Currency pair (e.g., 'EUR/USD')
+            model_name: Model name ('SGD', 'RandomForest', 'Ensemble')
+            days: Number of days to look back
+
+        Returns:
+            dict: Performance metrics
+        """
+        cursor = self.conn.cursor()
+
+        try:
+            cursor.execute('''
+                SELECT total_trades, winning_trades, accuracy_pct,
+                       total_pnl, avg_pnl, updated_at
+                FROM model_stats_cache
+                WHERE pair = ? AND model_name = ? AND days = ?
+            ''', (pair, model_name, days))
+
+            result = cursor.fetchone()
+
+            if not result:
+                return {
+                    'total_trades': 0,
+                    'winning_trades': 0,
+                    'accuracy': 0.0,
+                    'total_pnl': 0.0,
+                    'avg_pnl': 0.0
+                }
+
+            total, wins, accuracy, total_pnl, avg_pnl, updated_at = result
+
+            return {
+                'total_trades': total,
+                'winning_trades': wins,
+                'accuracy': accuracy,
+                'total_pnl': total_pnl,
+                'avg_pnl': avg_pnl,
+                'updated_at': updated_at
             }
 
-        # Combine all indicators
-        all_indicators = {**trend_indicators, **momentum_indicators, **volatility_indicators, **volume_indicators}
+        except sqlite3.Error as e:
+            print_status(f"⚠️ Failed to get model performance: {e}", "warn")
+            return {
+                'total_trades': 0,
+                'winning_trades': 0,
+                'accuracy': 0.0,
+                'total_pnl': 0.0,
+                'avg_pnl': 0.0
+            }
 
-        # Calculate each indicator
-        for name, func in all_indicators.items():
-            try:
-                new_rows[name] = func(new_rows)
-            except Exception as e:
-                print_status(f"⚠️ Failed to calculate {name}: {e}", "warn")
-                new_rows[name] = np.nan
+    def get_best_model(self, pair, days=7, min_trades=3):
+        """
+        Determine which model performs best based on ACTUAL results
 
-        # Cross signals
-        if 'EMA_10' in new_rows.columns and 'EMA_50' in new_rows.columns:
-            new_rows['EMA_10_cross_EMA_50'] = (new_rows['EMA_10'] > new_rows['EMA_50']).astype(int)
+        Args:
+            pair: Currency pair
+            days: Number of days to look back
+            min_trades: Minimum number of trades required
 
-        if 'EMA_50' in new_rows.columns and 'EMA_200' in new_rows.columns:
-            new_rows['EMA_50_cross_EMA_200'] = (new_rows['EMA_50'] > new_rows['EMA_200']).astype(int)
+        Returns:
+            str: Best model name or 'Ensemble' as default
+        """
+        cursor = self.conn.cursor()
 
-        if 'SMA_10' in new_rows.columns and 'SMA_50' in new_rows.columns:
-            new_rows['SMA_10_cross_SMA_50'] = (new_rows['SMA_10'] > new_rows['SMA_50']).astype(int)
+        try:
+            cursor.execute('''
+                SELECT model_name, accuracy_pct, total_trades, total_pnl
+                FROM model_stats_cache
+                WHERE pair = ? AND days = ? AND total_trades >= ?
+                ORDER BY accuracy_pct DESC, total_pnl DESC
+                LIMIT 1
+            ''', (pair, days, min_trades))
 
-        if 'SMA_50' in new_rows.columns and 'SMA_200' in new_rows.columns:
-            new_rows['SMA_50_cross_SMA_200'] = (new_rows['SMA_50'] > new_rows['SMA_200']).astype(int)
+            result = cursor.fetchone()
 
-    except Exception as e:
-        print_status(f"⚠️ Indicator calculation error: {e}", "warn")
+            if result:
+                return result[0]
 
-    # Clean infinity/NaN values before scaling
-    numeric_cols = new_rows.select_dtypes(include=[np.number]).columns
+        except sqlite3.Error as e:
+            print_status(f"⚠️ Failed to get best model: {e}", "warn")
 
-    if len(numeric_cols) > 0 and not new_rows[numeric_cols].dropna(how='all').empty:
-        # Replace infinity values with NaN
-        new_rows[numeric_cols] = new_rows[numeric_cols].replace([np.inf, -np.inf], np.nan)
+        return 'Ensemble'  # Default fallback
 
-        # Forward fill NaN values, then backward fill, then fill remaining with 0
-        new_rows[numeric_cols] = new_rows[numeric_cols].ffill().bfill().fillna(0)
+    def get_database_stats(self):
+        """Get database statistics with error handling"""
+        cursor = self.conn.cursor()
+        stats = {}
 
-        # Clip extreme values to a reasonable range (5 standard deviations)
-        for col in numeric_cols:
-            if new_rows[col].std() > 0:
-                mean_val = new_rows[col].mean()
-                std_val = new_rows[col].std()
-                lower_bound = mean_val - (5 * std_val)
-                upper_bound = mean_val + (5 * std_val)
-                new_rows[col] = new_rows[col].clip(lower=lower_bound, upper=upper_bound)
+        try:
+            # Pending trades count
+            cursor.execute('SELECT COUNT(*) FROM pending_trades WHERE evaluated = 0')
+            stats['pending_trades'] = cursor.fetchone()[0]
 
-        # Scale numeric columns (except OHLC)
-        protected_cols = ['open', 'high', 'low', 'close', 'volume']
-        scalable_cols = [c for c in numeric_cols if c not in protected_cols]
+            # Completed trades count
+            cursor.execute('SELECT COUNT(*) FROM completed_trades')
+            stats['completed_trades'] = cursor.fetchone()[0]
 
-        if scalable_cols:
-            scaler = MinMaxScaler()
-            try:
-                new_rows[scalable_cols] = scaler.fit_transform(new_rows[scalable_cols])
-            except Exception as e:
-                print_status(f"⚠️ Scaling warning: {e} - using manual normalization", "warn")
-                # Manual normalization fallback
-                for col in scalable_cols:
-                    col_min = new_rows[col].min()
-                    col_max = new_rows[col].max()
-                    if col_max > col_min:
-                        new_rows[col] = (new_rows[col] - col_min) / (col_max - col_min)
+            # Total P&L
+            cursor.execute('SELECT SUM(pnl) FROM completed_trades')
+            result = cursor.fetchone()
+            stats['total_pnl'] = result[0] if result[0] else 0.0
 
-    return new_rows
-
-# ======================================================
-# 7️⃣ Worker Function with Validation
-# ======================================================
-def process_csv_file(csv_file):
-    """
-    Process a single CSV file: combine with existing data and add indicators
-
-    Args:
-        csv_file: Path to CSV file
-
-    Returns:
-        Tuple of (pickle_filepath_if_changed, status_message)
-    """
-    try:
-        # Combine CSV data
-        combined_df, target_file = combine_csv(csv_file)
-
-        # Validate combined dataframe has required columns
-        required_cols = ['open', 'high', 'low', 'close']
-        if not all(col in combined_df.columns for col in required_cols):
-            msg = f"⚠️ Skipped {csv_file.name}: Missing OHLC columns"
-            print_status(msg, "warn")
-            return None, msg
-
-        # Check for existing indicators pickle
-        existing_pickle = PICKLE_FOLDER / f"{csv_file.stem}_indicators.pkl"
-
-        if existing_pickle.exists():
-            try:
-                existing_df = pd.read_pickle(existing_pickle)
-            except Exception as e:
-                print_status(f"  ⚠️ Could not load existing pickle: {e}", "warn")
-                existing_df = pd.DataFrame()
-        else:
-            existing_df = pd.DataFrame()
-
-        # Calculate indicators for new rows only
-        new_indicators = add_indicators_incremental(existing_df, combined_df)
-
-        if new_indicators is not None:
-            # Combine existing indicators with new ones
-            updated_df = pd.concat([existing_df, new_indicators]).sort_index()
-
-            # Save files (thread-safe)
-            with lock:
-                updated_df.to_pickle(existing_pickle, protocol=4)
-                combined_df.to_csv(target_file)
-
-            msg = f"✅ {csv_file.name} updated with {len(new_indicators)} new rows (total: {len(combined_df)})"
-            print_status(msg, "success")
-            return str(existing_pickle), msg
-        else:
-            msg = f"ℹ️ {csv_file.name} no new rows (total: {len(combined_df)})"
-            print_status(msg, "info")
-            return None, msg
-
-    except Exception as e:
-        msg = f"❌ Failed {csv_file.name}: {e}"
-        print_status(msg, "error")
-        return None, msg
-
-# ======================================================
-# 8️⃣ Process All CSVs in Parallel
-# ======================================================
-print("\n" + "=" * 70)
-print("🚀 Processing CSV files...")
-print("=" * 70 + "\n")
-
-csv_files = list(CSV_FOLDER.glob("*.csv"))
-
-if not csv_files:
-    print_status("No CSVs found to process – pipeline will skip", "warn")
-else:
-    print_status(f"Found {len(csv_files)} CSV files to process", "info")
-
-changed_files = []
-
-if csv_files:
-    with ThreadPoolExecutor(max_workers=min(8, len(csv_files))) as executor:
-        futures = [executor.submit(process_csv_file, f) for f in csv_files]
-
-        for future in as_completed(futures):
-            file, msg = future.result()
-            if file:
-                changed_files.append(file)
-
-# ======================================================
-# 9️⃣ Commit & Push Updates (Skip in GitHub Actions)
-# ======================================================
-if IN_GHA:
-    print("\n" + "=" * 70)
-    print("🤖 GitHub Actions: Skipping git operations")
-    print("   (Workflow will handle commit and push)")
-    print("=" * 70)
-
-elif changed_files:
-    print("\n" + "=" * 70)
-    print("🚀 Committing changes to GitHub...")
-    print("=" * 70)
-
-    try:
-        print_status(f"Committing {len(changed_files)} updated files...", "info")
-
-        # Stage files
-        subprocess.run(
-            ["git", "-C", str(REPO_FOLDER), "add"] + changed_files,
-            check=False
-        )
-
-        # Commit
-        commit_result = subprocess.run(
-            ["git", "-C", str(REPO_FOLDER), "commit", "-m", "📈 Auto update FX CSVs & indicators"],
-            capture_output=True,
-            text=True,
-            check=False
-        )
-
-        if commit_result.returncode == 0:
-            print_status("✅ Changes committed", "success")
-        elif "nothing to commit" in commit_result.stdout:
-            print_status("ℹ️ No changes to commit", "info")
-        else:
-            print_status(f"⚠️ Commit warning: {commit_result.stderr}", "warn")
-
-        # Push with retry logic
-        max_attempts = 3
-        for attempt in range(max_attempts):
-            print_status(f"📤 Pushing to GitHub (attempt {attempt + 1}/{max_attempts})...", "info")
-
-            push_result = subprocess.run(
-                ["git", "-C", str(REPO_FOLDER), "push", "origin", BRANCH],
-                capture_output=True,
-                text=True,
-                timeout=30
-            )
-
-            if push_result.returncode == 0:
-                print_status("✅ Push successful", "success")
-                break
+            # Overall accuracy
+            cursor.execute('''
+                SELECT
+                    COUNT(*) as total,
+                    SUM(CASE WHEN hit_tp THEN 1 ELSE 0 END) as wins
+                FROM completed_trades
+            ''')
+            result = cursor.fetchone()
+            if result and result[0] > 0:
+                stats['overall_accuracy'] = (result[1] / result[0]) * 100
             else:
-                if attempt < max_attempts - 1:
-                    print_status(f"⚠️ Push attempt {attempt + 1} failed, retrying...", "warn")
-                    # Pull before retry
-                    subprocess.run(
-                        ["git", "-C", str(REPO_FOLDER), "pull", "--rebase", "origin", BRANCH],
-                        capture_output=True
-                    )
-                    time.sleep(5)
-                else:
-                    print_status(f"❌ Push failed after {max_attempts} attempts", "error")
-                    print_status(f"   Error: {push_result.stderr}", "error")
+                stats['overall_accuracy'] = 0.0
 
-    except subprocess.TimeoutExpired:
-        print_status("❌ Git operation timed out", "error")
-    except Exception as e:
-        print_status(f"❌ Git error: {e}", "error")
+            # Database size
+            if self.db_path.exists():
+                stats['db_size_mb'] = self.db_path.stat().st_size / (1024 * 1024)
+            else:
+                stats['db_size_mb'] = 0.0
 
-else:
-    print("\n" + "=" * 70)
-    print("ℹ️ No files changed – skipping git operations")
-    print("=" * 70)
+        except Exception as e:
+            print_status(f"⚠️ Failed to get database stats: {e}", "warn")
 
-# ======================================================
-# ✅ Completion
-# ======================================================
-print("\n" + "=" * 70)
-print("✅ CSV COMBINER WORKFLOW COMPLETED")
-print("=" * 70)
-print(f"Environment: {ENV_NAME}")
-print(f"CSV files processed: {len(csv_files)}")
-print(f"Pickle files updated: {len(changed_files)}")
-print(f"Status: {'Success' if csv_files else 'No CSVs found'}")
-print("=" * 70)
-print("\n🎯 All CSVs combined, incremental indicators added successfully!")
+        return stats
+
+    def cleanup_old_data(self, days_to_keep=90):
+        """
+        Clean up old data to prevent database bloat
+
+        Args:
+            days_to_keep: Number of days of data to keep
+        """
+        cursor = self.conn.cursor()
+        cutoff_date = (datetime.now(timezone.utc) - timedelta(days=days_to_keep)).isoformat()
+
+        try:
+            # Delete old evaluated pending trades
+            cursor.execute('''
+                DELETE FROM pending_trades
+                WHERE evaluated = 1 AND created_at < ?
+            ''', (cutoff_date,))
+            deleted_pending = cursor.rowcount
+
+            # Delete old execution logs
+            cursor.execute('''
+                DELETE FROM execution_log
+                WHERE timestamp < ?
 ------------------
 
------ stdout -----
-======================================================================
-🔧 CSV Combiner & Indicator Generator - Multi-Environment Edition
-======================================================================
-🌍 Detected Environment: GitHub Actions
-📂 GitHub Actions: Using repo root: /home/runner/work/forex-ai-models/forex-ai-models
-✅ Root directory: /home/runner/work/forex-ai-models/forex-ai-models
-✅ Repo folder: /home/runner/work/forex-ai-models/forex-ai-models/forex-ai-models
-✅ CSV folder: /home/runner/work/forex-ai-models/forex-ai-models/csvs
-✅ Pickle folder: /home/runner/work/forex-ai-models/forex-ai-models/pickles
-✅ Logs folder: /home/runner/work/forex-ai-models/forex-ai-models/logs
-✅ Git configured: Forex AI Bot <nakatonabira3@gmail.com>
-------------------
 
-  [36mCell[39m[36m [39m[32mIn[7][39m[32m, line 118[39m
-[31m    [39m[31mglobal REPO_FOLDER[39m
-    ^
-[31mSyntaxError[39m[31m:[39m name 'REPO_FOLDER' is used prior to global declaration
+  [36mCell[39m[36m [39m[32mIn[8][39m[32m, line 857[39m
+[31m    [39m[31mcursor.execute('''[39m
+                   ^
+[31mSyntaxError[39m[31m:[39m incomplete input
 
 
 ============================================================

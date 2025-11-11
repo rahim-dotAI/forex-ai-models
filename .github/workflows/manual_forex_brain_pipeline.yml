@@ -196,12 +196,13 @@ jobs:
           
           # CRITICAL FIX: Patch notebook to fix /content paths
           echo "🔧 Patching notebook for GitHub Actions environment..."
-          python3 << 'PATCH_EOF'
+          python3 << PATCH_EOF
 import json
 import sys
+import os
 
 try:
-    notebook_file = "$NOTEBOOK_FILE"
+    notebook_file = "${NOTEBOOK_FILE}"
     
     # Read notebook
     with open(notebook_file, 'r') as f:

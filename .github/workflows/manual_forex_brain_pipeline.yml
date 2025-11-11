@@ -194,74 +194,6 @@ jobs:
           echo "✅ Found: $NOTEBOOK_FILE"
           echo ""
           
-          # CRITICAL FIX: Patch notebook to fix /content paths
-          echo "🔧 Patching notebook for GitHub Actions environment..."
-          python3 << PATCH_EOF
-import json
-import sys
-import os
-
-try:
-    notebook_file = "${NOTEBOOK_FILE}"
-    
-    # Read notebook
-    with open(notebook_file, 'r') as f:
-        nb = json.load(f)
-    
-    patched_cells = 0
-    
-    # Fix each code cell
-    for cell in nb.get('cells', []):
-        if cell.get('cell_type') == 'code':
-            source = cell.get('source', [])
-            if isinstance(source, list):
-                source = ''.join(source)
-            
-            # Check if this cell has /content path issues
-            if '/content' in source and 'IN_COLAB' not in source:
-                # Replace /content paths with proper environment detection
-                original = source
-                
-                # Fix common patterns
-                source = source.replace(
-                    'ROOT_DIR = Path("/content/forex-alpha-models")',
-                    'ROOT_DIR = Path.cwd() if "GITHUB_ACTIONS" in os.environ else Path("/content/forex-alpha-models")'
-                )
-                
-                source = source.replace(
-                    'os.makedirs("/content/forex-alpha-models"',
-                    'os.makedirs(str(ROOT_DIR)'
-                )
-                
-                # Add environment check if missing
-                if 'Path("/content' in source and 'IN_COLAB' not in source:
-                    source = source.replace(
-                        'from pathlib import Path',
-                        'from pathlib import Path\nimport os\n\n# Auto-detect environment\nROOT_DIR = Path.cwd() if os.environ.get("GITHUB_ACTIONS") else Path("/content/forex-alpha-models")\n'
-                    )
-                
-                if source != original:
-                    cell['source'] = source.split('\n')
-                    if cell['source'][-1] == '':
-                        cell['source'] = [line + '\n' for line in cell['source'][:-1]] + [cell['source'][-1]]
-                    else:
-                        cell['source'] = [line + '\n' for line in cell['source']]
-                    patched_cells += 1
-    
-    # Save patched notebook
-    with open(notebook_file, 'w') as f:
-        json.dump(nb, f, indent=1)
-    
-    print(f"✅ Patched {patched_cells} cells")
-    
-except Exception as e:
-    print(f"⚠️ Patch warning: {e}")
-    print("Continuing anyway...")
-
-PATCH_EOF
-          
-          echo ""
-          
           # Create enhanced Python script with cell progress tracking
           cat > run_full_notebook.py << 'EOFPYTHON'
           import nbformat
@@ -280,7 +212,6 @@ PATCH_EOF
                   self.total_cells = 0
                   self.current_cell = 0
                   self.start_time = None
-                  self.cell_errors = []
                   
               def preprocess(self, nb, resources=None, km=None):
                   """Override to track total cells"""
@@ -323,59 +254,42 @@ PATCH_EOF
                   
                   # Execute the cell
                   cell_start = time.time()
+                  cell, resources = super().preprocess_cell(cell, resources, cell_index)
+                  cell_duration = time.time() - cell_start
                   
-                  try:
-                      cell, resources = super().preprocess_cell(cell, resources, cell_index)
-                      cell_duration = time.time() - cell_start
-                      
-                      # Show cell outputs (cleaned)
-                      if cell.outputs:
-                          for output in cell.outputs:
-                              # Handle different output types
-                              if output.output_type == 'stream':
-                                  text = output.text
-                                  # Clean up the output
+                  # Show cell outputs (cleaned)
+                  if cell.outputs:
+                      for output in cell.outputs:
+                          # Handle different output types
+                          if output.output_type == 'stream':
+                              text = output.text
+                              # Clean up the output
+                              text = self._clean_output(text)
+                              if text.strip():
+                                  print(text)
+                          
+                          elif output.output_type == 'execute_result':
+                              if 'text/plain' in output.data:
+                                  text = output.data['text/plain']
                                   text = self._clean_output(text)
                                   if text.strip():
                                       print(text)
-                              
-                              elif output.output_type == 'execute_result':
-                                  if 'text/plain' in output.data:
-                                      text = output.data['text/plain']
-                                      text = self._clean_output(text)
-                                      if text.strip():
-                                          print(text)
-                              
-                              elif output.output_type == 'error':
-                                  error_info = f"Cell {self.current_cell}: {output.ename}: {output.evalue}"
-                                  self.cell_errors.append(error_info)
-                                  print(f"❌ ERROR in cell {self.current_cell}:")
-                                  print(f"   {output.ename}: {output.evalue}")
-                                  if output.traceback:
-                                      # Show only last 3 lines of traceback
-                                      print("   Traceback (last 3 lines):")
-                                      for line in output.traceback[-3:]:
-                                          # Remove ANSI codes
-                                          line = re.sub(r'\x1b\[[0-9;]*m', '', line)
-                                          print(f"   {line}")
-                      
-                      # Show cell completion
-                      print("-" * 70)
-                      print(f"✅ Cell {self.current_cell}/{self.total_cells} completed in {cell_duration:.1f}s")
-                      print("=" * 70)
-                      
-                  except Exception as e:
-                      cell_duration = time.time() - cell_start
-                      error_msg = f"Cell {self.current_cell}: {type(e).__name__}: {str(e)}"
-                      self.cell_errors.append(error_msg)
-                      
-                      print("-" * 70)
-                      print(f"❌ Cell {self.current_cell}/{self.total_cells} FAILED after {cell_duration:.1f}s")
-                      print(f"   Error: {type(e).__name__}: {str(e)}")
-                      print("=" * 70)
-                      
-                      # Re-raise to stop execution
-                      raise
+                          
+                          elif output.output_type == 'error':
+                              print(f"❌ ERROR in cell {self.current_cell}:")
+                              print(f"   {output.ename}: {output.evalue}")
+                              if output.traceback:
+                                  # Show only last 5 lines of traceback
+                                  print("   Traceback (last 5 lines):")
+                                  for line in output.traceback[-5:]:
+                                      # Remove ANSI codes
+                                      line = re.sub(r'\x1b\[[0-9;]*m', '', line)
+                                      print(f"   {line}")
+                  
+                  # Show cell completion
+                  print("-" * 70)
+                  print(f"✅ Cell {self.current_cell}/{self.total_cells} completed in {cell_duration:.1f}s")
+                  print("=" * 70)
                   
                   return cell, resources
               
@@ -385,26 +299,19 @@ PATCH_EOF
                       return ""
                   
                   lines = []
-                  skip_patterns = [
-                      '[DEBUG]', 'WARNING:', 'DeprecationWarning',
-                      'FutureWarning', 'UserWarning', 'RuntimeWarning'
-                  ]
-                  
                   for line in text.split('\n'):
                       # Skip debug/verbose lines
-                      if any(skip in line for skip in skip_patterns):
+                      if any(skip in line for skip in ['[DEBUG]', 'WARNING:', 'DeprecationWarning']):
                           continue
                       
-                      # Skip very long lines (likely progress bars)
-                      if len(line) > 200:
+                      # Skip empty lines
+                      if not line.strip():
                           continue
                       
                       # Remove ANSI color codes
                       line = re.sub(r'\x1b\[[0-9;]*m', '', line)
                       
-                      # Keep the line if it has content
-                      if line.strip():
-                          lines.append(line)
+                      lines.append(line)
                   
                   return '\n'.join(lines)
           
@@ -413,12 +320,8 @@ PATCH_EOF
               print(f"📖 Reading notebook: {notebook_path}")
               
               # Read the notebook
-              try:
-                  with open(notebook_path, 'r', encoding='utf-8') as f:
-                      nb = nbformat.read(f, as_version=4)
-              except Exception as e:
-                  print(f"❌ Failed to read notebook: {e}")
-                  return False
+              with open(notebook_path, 'r', encoding='utf-8') as f:
+                  nb = nbformat.read(f, as_version=4)
               
               code_cells = sum(1 for c in nb.cells if c.cell_type == 'code')
               markdown_cells = sum(1 for c in nb.cells if c.cell_type == 'markdown')
@@ -453,22 +356,13 @@ PATCH_EOF
                   print(f"⏱️  Total execution time: {total_duration:.1f}s ({total_duration/60:.1f} minutes)")
                   print(f"📊 Cells executed: {code_cells}")
                   print(f"⚡ Average time per cell: {total_duration/code_cells:.1f}s")
-                  
-                  if ep.cell_errors:
-                      print(f"⚠️  Errors encountered: {len(ep.cell_errors)}")
-                      for error in ep.cell_errors:
-                          print(f"   - {error}")
-                  
                   print("=" * 70)
                   
                   # Save executed notebook
                   output_path = notebook_path.replace('.ipynb', '_executed.ipynb')
-                  try:
-                      with open(output_path, 'w', encoding='utf-8') as f:
-                          nbformat.write(nb, f)
-                      print(f"💾 Saved executed notebook: {output_path}")
-                  except Exception as e:
-                      print(f"⚠️  Could not save executed notebook: {e}")
+                  with open(output_path, 'w', encoding='utf-8') as f:
+                      nbformat.write(nb, f)
+                  print(f"💾 Saved executed notebook: {output_path}")
                   
                   return True
                   
@@ -479,25 +373,15 @@ PATCH_EOF
                   print("=" * 70)
                   
                   # Extract cell information
-                  cell_num = getattr(ep, 'current_cell', 'unknown')
-                  print(f"Failed at: Cell {cell_num}/{ep.total_cells}")
-                  
                   if hasattr(e, 'ename') and hasattr(e, 'evalue'):
                       print(f"Error type: {e.ename}")
                       print(f"Error message: {e.evalue}")
-                  else:
-                      print(f"Error: {str(e)}")
                   
-                  if hasattr(e, 'traceback') and e.traceback:
-                      print("\nTraceback (last 5 lines):")
-                      for line in e.traceback[-5:]:
+                  if hasattr(e, 'traceback'):
+                      print("\nTraceback:")
+                      for line in e.traceback[-10:]:  # Last 10 lines
                           line = re.sub(r'\x1b\[[0-9;]*m', '', line)
                           print(line)
-                  
-                  if ep.cell_errors:
-                      print(f"\nAll errors encountered ({len(ep.cell_errors)}):")
-                      for error in ep.cell_errors:
-                          print(f"   - {error}")
                   
                   print("=" * 70)
                   return False
@@ -509,12 +393,6 @@ PATCH_EOF
                   print("=" * 70)
                   print(f"Error type: {type(e).__name__}")
                   print(f"Error: {str(e)}")
-                  
-                  if hasattr(ep, 'cell_errors') and ep.cell_errors:
-                      print(f"\nErrors before crash ({len(ep.cell_errors)}):")
-                      for error in ep.cell_errors:
-                          print(f"   - {error}")
-                  
                   print("=" * 70)
                   return False
           
@@ -530,8 +408,6 @@ PATCH_EOF
               print("=" * 70)
               print(f"📅 Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
               print(f"📓 Notebook: {notebook}")
-              print(f"🌍 Environment: GitHub Actions")
-              print(f"📂 Working Directory: {os.getcwd()}")
               print("=" * 70)
               print()
               

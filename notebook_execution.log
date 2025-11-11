@@ -1,882 +1,750 @@
+======================================================================
+🧠 FOREX AI BRAIN - FULL NOTEBOOK EXECUTION
+======================================================================
+📅 Started: 2025-11-11 23:32:28 UTC
+📓 Notebook: AI_Forex_Brain_2.ipynb
+======================================================================
+
 📖 Reading notebook: AI_Forex_Brain_2.ipynb
-✅ Loaded 10 cells
-   - Code cells: 10
-   - Markdown cells: 0
+✅ Loaded notebook:
+   • Total cells: 10
+   • Code cells: 10
+   • Markdown cells: 0
 
-🚀 Executing notebook...
+🚀 Starting notebook execution...
+
+📊 Total code cells to execute: 10
+======================================================================
+
+
+======================================================================
+🔄 EXECUTING CELL 1/10 (10.0% complete)
+⏱️  Elapsed time: 1.6s
+📝 Cell preview: # ======================================================...
+----------------------------------------------------------------------
+✅ Alpha Vantage Key: 1W58...LHZ6
+✅ Browserless Token: 2St0...9c3d
+----------------------------------------------------------------------
+✅ Cell 1/10 completed in 0.0s
+======================================================================
+
+======================================================================
+🔄 EXECUTING CELL 2/10 (20.0% complete)
+⏱️  Elapsed time: 1.7s
+📝 Cell preview: # ======================================================...
+----------------------------------------------------------------------
 ============================================================
-
+🌍 Environment: GitHub Actions
+📂 Base Folder: /home/runner/work/forex-ai-models/forex-ai-models
+💾 Save Folder: /home/runner/work/forex-ai-models/forex-ai-models
+🔧 Python: 3.11.14
+📍 Working Dir: /home/runner/work/forex-ai-models/forex-ai-models
 ============================================================
-❌ ERROR: Cell execution failed!
-Cell index: unknown
-Error: An error occurred while executing the following cell:
-------------------
-#!/usr/bin/env python3
-"""
-VERSION 3.6 – ULTRA-PERSISTENT SELF-LEARNING HYBRID FX PIPELINE (FIXED)
-========================================================================
-🚀 CRITICAL FIXES:
-- ✅ Environment detection (Colab vs GitHub Actions vs Local)
-- ✅ Proper path handling for each environment
-- ✅ SQLite INDEX syntax fixed (was causing crash)
-- ✅ Trades evaluated in NEXT iteration (after price has moved)
-- ✅ All data persists in Git repo (survives GitHub Actions)
-- ✅ Real accuracy tracking (not artificial 100%)
-- ✅ Proper minimum trade age before evaluation (1+ hours)
-- ✅ Learning system gets real performance data
-- ✅ Database auto-commits to Git after each run
-
-NEW IMPROVEMENTS:
-- ✅ Separate pending_trades and completed_trades tables
-- ✅ Minimum age requirement for trade evaluation
-- ✅ Better model performance comparison
-- ✅ CSV and pickle files persist properly
-- ✅ Proper SQLite index creation (separate statements)
-- ✅ Enhanced error handling and validation
-"""
-
-import os, time, json, re, shutil, subprocess, pickle, filecmp, sqlite3
-from pathlib import Path
-from datetime import datetime, timezone, timedelta
-import pandas as pd
-import numpy as np
-import requests
-import ta
-import logging
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.linear_model import SGDClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.exceptions import NotFittedError
-from collections import defaultdict
-
-# ======================================================
-# 0️⃣ FIXED: Environment Detection & Path Setup
-# ======================================================
-
-# Detect environment
-try:
-    import google.colab
-    IN_COLAB = True
-    ENV_NAME = "Google Colab"
-except ImportError:
-    IN_COLAB = False
-    ENV_NAME = "Local/GitHub Actions"
-
-IN_GHA = "GITHUB_ACTIONS" in os.environ
-
-if IN_GHA:
-    ENV_NAME = "GitHub Actions"
-
-print(f"🌍 Detected Environment: {ENV_NAME}")
-
-# CRITICAL FIX: Set paths based on environment
-if IN_COLAB:
-    # Colab: Use /content (has permissions)
-    ROOT_DIR = Path("/content/forex-alpha-models")
-    ROOT_DIR.mkdir(parents=True, exist_ok=True)
-elif IN_GHA:
-    # GitHub Actions: Use current working directory (repo root)
-    ROOT_DIR = Path.cwd()
-    print(f"📂 GitHub Actions: Using repo root: {ROOT_DIR}")
-else:
-    # Local: Use current directory or subdirectory
-    ROOT_DIR = Path("./forex-alpha-models")
-    ROOT_DIR.mkdir(parents=True, exist_ok=True)
-
-# Setup subdirectories
-REPO_FOLDER = ROOT_DIR / "forex-ai-models"
-CSV_FOLDER = ROOT_DIR / "csvs"
-PICKLE_FOLDER = ROOT_DIR / "pickles"
-LOGS_FOLDER = ROOT_DIR / "logs"
-
-for folder in [CSV_FOLDER, PICKLE_FOLDER, LOGS_FOLDER]:
-    folder.mkdir(parents=True, exist_ok=True)
-
-print(f"✅ Root Directory: {ROOT_DIR}")
-print(f"✅ Repo Folder: {REPO_FOLDER}")
-print(f"✅ CSV Folder: {CSV_FOLDER}")
-print(f"✅ Pickle Folder: {PICKLE_FOLDER}")
-print(f"✅ Logs Folder: {LOGS_FOLDER}")
-
-# Logging setup
-logging.basicConfig(
-    filename=LOGS_FOLDER / "pipeline.log",
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(message)s"
-)
-
-def print_status(msg, level="info"):
-    icons = {"info":"ℹ️","success":"✅","warn":"⚠️","debug":"🐞","error":"❌"}
-    getattr(logging, level if level != "warn" else "warning", logging.info)(msg)
-    print(f"{icons.get(level,'ℹ️')} {msg}")
-
-print_status(f"Environment: {ENV_NAME}", "success")
-print_status(f"Working Directory: {os.getcwd()}", "info")
-
-# ======================================================
-# 🆕 FIXED DATABASE - Stores in Git Repo
-# ======================================================
-PERSISTENT_DB = REPO_FOLDER / "ml_persistent_memory.db"
-
-class FixedTradeMemoryDatabase:
-    """
-    FIXED VERSION - SQLite compatible database
-    Now with proper environment handling
-
-    IMPROVEMENTS:
-    - ✅ Proper SQLite INDEX syntax (created separately)
-    - ✅ Enhanced error handling
-    - ✅ Transaction management
-    - ✅ Data validation
-    - ✅ Backup and recovery
-    - ✅ Environment-aware paths
-
-    EVALUATION FLOW:
-    - Stores trades at end of iteration N
-    - Evaluates them at start of iteration N+1 (after 1+ hours)
-    - All data stored in Git repo for persistence
-    """
-
-    def __init__(self, db_path=PERSISTENT_DB):
-        self.db_path = db_path
-        # Ensure parent directory exists
-        self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        self.conn = None
-        self.min_age_hours = 1  # Minimum hours before evaluation
-        self.initialize_database()
-
-    def initialize_database(self):
-        """
-        Create database in Git repo (persists across runs)
-        FIXED: Proper SQLite syntax for indexes
-        """
-        try:
-            self.conn = sqlite3.connect(str(self.db_path), timeout=30)
-            self.conn.execute("PRAGMA journal_mode=WAL")  # Better concurrency
-            self.conn.execute("PRAGMA synchronous=NORMAL")  # Faster writes
-            cursor = self.conn.cursor()
-
-            # ===== TABLE 1: Pending trades (waiting to be evaluated) =====
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS pending_trades (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    created_at TEXT NOT NULL,
-                    iteration INTEGER NOT NULL,
-                    pair TEXT NOT NULL,
-                    timeframe TEXT NOT NULL,
-                    sgd_prediction INTEGER,
-                    rf_prediction INTEGER,
-                    ensemble_prediction INTEGER,
-                    entry_price REAL NOT NULL,
-                    sl_price REAL NOT NULL,
-                    tp_price REAL NOT NULL,
-                    confidence REAL,
-                    evaluated BOOLEAN DEFAULT 0
-                )
-            ''')
-
-            # Create indexes separately (SQLite proper syntax)
-            cursor.execute('''
-                CREATE INDEX IF NOT EXISTS idx_pending_eval
-                ON pending_trades(evaluated, created_at)
-            ''')
-
-            cursor.execute('''
-                CREATE INDEX IF NOT EXISTS idx_pending_pair
-                ON pending_trades(pair, evaluated)
-            ''')
-
-            # ===== TABLE 2: Completed trades (historical results) =====
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS completed_trades (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    pending_trade_id INTEGER,
-                    created_at TEXT NOT NULL,
-                    evaluated_at TEXT NOT NULL,
-                    iteration_created INTEGER,
-                    iteration_evaluated INTEGER,
-                    pair TEXT NOT NULL,
-                    timeframe TEXT NOT NULL,
-                    model_used TEXT NOT NULL,
-                    entry_price REAL NOT NULL,
-                    exit_price REAL NOT NULL,
-                    sl_price REAL NOT NULL,
-                    tp_price REAL NOT NULL,
-                    prediction INTEGER,
-                    hit_tp BOOLEAN NOT NULL,
-                    pnl REAL NOT NULL,
-                    duration_hours REAL,
-                    FOREIGN KEY (pending_trade_id) REFERENCES pending_trades(id)
-                )
-            ''')
-
-            # Create indexes separately
-            cursor.execute('''
-                CREATE INDEX IF NOT EXISTS idx_completed_model
-                ON completed_trades(model_used, evaluated_at)
-            ''')
-
-            cursor.execute('''
-                CREATE INDEX IF NOT EXISTS idx_completed_pair
-                ON completed_trades(pair, model_used, evaluated_at)
-            ''')
-
-            cursor.execute('''
-                CREATE INDEX IF NOT EXISTS idx_completed_timestamp
-                ON completed_trades(evaluated_at)
-            ''')
-
-            # ===== TABLE 3: Model performance cache =====
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS model_stats_cache (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    updated_at TEXT NOT NULL,
-                    pair TEXT NOT NULL,
-                    model_name TEXT NOT NULL,
-                    days INTEGER NOT NULL,
-                    total_trades INTEGER DEFAULT 0,
-                    winning_trades INTEGER DEFAULT 0,
-                    accuracy_pct REAL DEFAULT 0.0,
-                    total_pnl REAL DEFAULT 0.0,
-                    avg_pnl REAL DEFAULT 0.0,
-                    UNIQUE(pair, model_name, days) ON CONFLICT REPLACE
-                )
-            ''')
-
-            cursor.execute('''
-                CREATE INDEX IF NOT EXISTS idx_stats_lookup
-                ON model_stats_cache(pair, model_name, days)
-            ''')
-
-            # ===== TABLE 4: Pipeline execution log =====
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS execution_log (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    timestamp TEXT NOT NULL,
-                    iteration INTEGER NOT NULL,
-                    status TEXT NOT NULL,
-                    trades_stored INTEGER DEFAULT 0,
-                    trades_evaluated INTEGER DEFAULT 0,
-                    duration_seconds REAL,
-                    error_message TEXT
-                )
-            ''')
-
-            self.conn.commit()
-            print_status("✅ Fixed ML Database initialized (persists in Git)", "success")
-
-            # Verify database integrity
-            self._verify_database_integrity()
-
-        except sqlite3.Error as e:
-            print_status(f"❌ Database initialization failed: {e}", "error")
-            raise
-
-    def _verify_database_integrity(self):
-        """Verify database structure is correct"""
-        try:
-            cursor = self.conn.cursor()
-
-            # Check if tables exist
-            cursor.execute("""
-                SELECT name FROM sqlite_master
-                WHERE type='table' AND name IN (
-                    'pending_trades', 'completed_trades',
-                    'model_stats_cache', 'execution_log'
-                )
-            """)
-
-            tables = [row[0] for row in cursor.fetchall()]
-            expected_tables = ['pending_trades', 'completed_trades',
-                             'model_stats_cache', 'execution_log']
-
-            for table in expected_tables:
-                if table in tables:
-                    print_status(f"  ✓ Table '{table}' exists", "debug")
-                else:
-                    print_status(f"  ✗ Table '{table}' missing!", "error")
-
-            # Check indexes
-            cursor.execute("""
-                SELECT name FROM sqlite_master
-                WHERE type='index' AND name LIKE 'idx_%'
-            """)
-
-            indexes = [row[0] for row in cursor.fetchall()]
-            print_status(f"  📊 Found {len(indexes)} indexes", "debug")
-
-        except Exception as e:
-            print_status(f"⚠️ Database verification warning: {e}", "warn")
-
-    def store_new_signals(self, aggregated_signals, current_iteration):
-        """
-        Store signals at END of current iteration.
-        They will be evaluated in NEXT iteration.
-
-        Args:
-            aggregated_signals: Dict of signals by pair
-            current_iteration: Current iteration number
-
-        Returns:
-            int: Number of signals stored
-        """
-        if not aggregated_signals:
-            print_status("⚠️ No signals to store", "warn")
-            return 0
-
-        cursor = self.conn.cursor()
-        stored_count = 0
-        failed_count = 0
-
-        try:
-            # Start transaction
-            cursor.execute("BEGIN TRANSACTION")
-
-            for pair, pair_data in aggregated_signals.items():
-                signals = pair_data.get('signals', {})
-
-                for tf_name, signal_data in signals.items():
-                    if not signal_data:
-                        continue
-
-                    # Validate required fields
-                    required_fields = ['live', 'SL', 'TP']
-                    if not all(signal_data.get(f, 0) > 0 for f in required_fields):
-                        print_status(
-                            f"⚠️ Skipping invalid signal for {pair} {tf_name}",
-                            "warn"
-                        )
-                        failed_count += 1
-                        continue
-
-                    try:
-                        cursor.execute('''
-                            INSERT INTO pending_trades
-                            (created_at, iteration, pair, timeframe,
-                             sgd_prediction, rf_prediction, ensemble_prediction,
-                             entry_price, sl_price, tp_price, confidence)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        ''', (
-                            datetime.now(timezone.utc).isoformat(),
-                            current_iteration,
-                            pair,
-                            tf_name,
-                            signal_data.get('sgd_pred', 0),
-                            signal_data.get('rf_pred', 0),
-                            signal_data.get('signal', 0),
-                            signal_data.get('live', 0),
-                            signal_data.get('SL', 0),
-                            signal_data.get('TP', 0),
-                            signal_data.get('confidence', 0.5)
-                        ))
-                        stored_count += 1
-                    except sqlite3.Error as e:
-                        print_status(f"⚠️ Failed to store {pair} {tf_name}: {e}", "warn")
-                        failed_count += 1
-
-            # Commit transaction
-            self.conn.commit()
-
-            # Log execution
-            cursor.execute('''
-                INSERT INTO execution_log
-                (timestamp, iteration, status, trades_stored)
-                VALUES (?, ?, 'signals_stored', ?)
-            ''', (
-                datetime.now(timezone.utc).isoformat(),
-                current_iteration,
-                stored_count
-            ))
-            self.conn.commit()
-
-            print_status(
-                f"💾 Stored {stored_count} trades for next iteration "
-                f"({failed_count} failed)",
-                "success"
-            )
-            return stored_count
-
-        except sqlite3.Error as e:
-            self.conn.rollback()
-            print_status(f"❌ Transaction failed: {e}", "error")
-            return 0
-
-    def evaluate_pending_trades(self, current_prices, current_iteration):
-        """
-        Evaluate trades from PREVIOUS iterations.
-        Only evaluates trades older than min_age_hours.
-
-        Args:
-            current_prices: Dict of current prices by pair
-            current_iteration: Current iteration number
-
-        Returns:
-            dict: Evaluation results by model
-        """
-        if not current_prices:
-            print_status("⚠️ No current prices provided", "warn")
-            return {}
-
-        cursor = self.conn.cursor()
-
-        # Get unevaluated trades that are OLD ENOUGH
-        min_age = (datetime.now(timezone.utc) - timedelta(hours=self.min_age_hours)).isoformat()
-
-        try:
-            cursor.execute('''
-                SELECT id, pair, timeframe, sgd_prediction, rf_prediction,
-                       ensemble_prediction, entry_price, sl_price, tp_price,
-                       created_at, iteration
-                FROM pending_trades
-                WHERE evaluated = 0 AND created_at < ?
-                ORDER BY created_at ASC
-            ''', (min_age,))
-
-            pending_trades = cursor.fetchall()
-
-        except sqlite3.Error as e:
-            print_status(f"❌ Failed to fetch pending trades: {e}", "error")
-            return {}
-
-        if not pending_trades:
-            print_status(
-                f"ℹ️ No trades old enough to evaluate (need {self.min_age_hours}+ hours)",
-                "info"
-            )
-            return {}
-
-        print_status(
-            f"🔍 Evaluating {len(pending_trades)} trades from previous iteration(s)",
-            "info"
-        )
-
-        results_by_model = defaultdict(lambda: {
-            'closed_trades': 0,
-            'wins': 0,
-            'losses': 0,
-            'total_pnl': 0.0,
-            'trades': []
-        })
-
-        evaluated_count = 0
-        skipped_count = 0
-
-        try:
-            # Start transaction
-            cursor.execute("BEGIN TRANSACTION")
-
-            for trade in pending_trades:
-                (trade_id, pair, timeframe, sgd_pred, rf_pred, ensemble_pred,
-                 entry_price, sl_price, tp_price, created_at, created_iteration) = trade
-
-                current_price = current_prices.get(pair, 0)
-
-                if current_price <= 0:
-                    print_status(f"⚠️ No current price for {pair}, skipping", "warn")
-                    skipped_count += 1
-                    continue
-
-                # Validate prices
-                if not self._validate_trade_prices(entry_price, sl_price, tp_price, current_price):
-                    print_status(
-                        f"⚠️ Invalid prices for {pair} {timeframe}, skipping",
-                        "warn"
-                    )
-                    skipped_count += 1
-                    continue
-
-                # Evaluate for each model that made a prediction
-                for model_name, prediction in [
-                    ('SGD', sgd_pred),
-                    ('RandomForest', rf_pred),
-                    ('Ensemble', ensemble_pred)
-                ]:
-                    if prediction is None:
-                        continue
-
-                    # Check if TP or SL was hit
-                    hit_tp, hit_sl, exit_price = self._evaluate_trade_outcome(
-                        prediction, current_price, tp_price, sl_price
-                    )
-
-                    # If trade closed, record result
-                    if exit_price:
-                        # Calculate P&L
-                        pnl = self._calculate_pnl(
-                            prediction, entry_price, exit_price
-                        )
-
-                        # Duration
-                        duration_hours = self._calculate_duration_hours(created_at)
-
-                        # Insert into completed trades
-                        try:
-                            cursor.execute('''
-                                INSERT INTO completed_trades
-                                (pending_trade_id, created_at, evaluated_at,
-                                 iteration_created, iteration_evaluated,
-                                 pair, timeframe, model_used, entry_price, exit_price,
-                                 sl_price, tp_price, prediction, hit_tp, pnl, duration_hours)
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                            ''', (
-                                trade_id, created_at, datetime.now(timezone.utc).isoformat(),
-                                created_iteration, current_iteration,
-                                pair, timeframe, model_name, entry_price, exit_price,
-                                sl_price, tp_price, prediction, hit_tp, pnl, duration_hours
-                            ))
-                        except sqlite3.Error as e:
-                            print_status(
-                                f"⚠️ Failed to record completed trade: {e}",
-                                "warn"
-                            )
-                            continue
-
-                        # Accumulate results
-                        results_by_model[model_name]['closed_trades'] += 1
-                        results_by_model[model_name]['total_pnl'] += pnl
-
-                        if hit_tp:
-                            results_by_model[model_name]['wins'] += 1
-                        else:
-                            results_by_model[model_name]['losses'] += 1
-
-                        results_by_model[model_name]['trades'].append({
-                            'pair': pair,
-                            'timeframe': timeframe,
-                            'pnl': pnl,
-                            'hit_tp': hit_tp
-                        })
-
-                        status = "WIN ✅" if hit_tp else "LOSS ❌"
-                        print_status(
-                            f"{status} {model_name}: {pair} {timeframe} "
-                            f"Entry={entry_price:.5f} Exit={exit_price:.5f} "
-                            f"P&L=${pnl:.5f} ({duration_hours:.1f}h)",
-                            "success" if hit_tp else "warn"
-                        )
-
-                # Mark pending trade as evaluated
-                try:
-                    cursor.execute('''
-                        UPDATE pending_trades
-                        SET evaluated = 1
-                        WHERE id = ?
-                    ''', (trade_id,))
-                    evaluated_count += 1
-                except sqlite3.Error as e:
-                    print_status(f"⚠️ Failed to mark trade as evaluated: {e}", "warn")
-
-            # Commit transaction
-            self.conn.commit()
-
-            # Log execution
-            cursor.execute('''
-                INSERT INTO execution_log
-                (timestamp, iteration, status, trades_evaluated)
-                VALUES (?, ?, 'trades_evaluated', ?)
-            ''', (
-                datetime.now(timezone.utc).isoformat(),
-                current_iteration,
-                evaluated_count
-            ))
-            self.conn.commit()
-
-            print_status(
-                f"✅ Evaluated {evaluated_count} trades "
-                f"({skipped_count} skipped)",
-                "success"
-            )
-
-        except sqlite3.Error as e:
-            self.conn.rollback()
-            print_status(f"❌ Evaluation transaction failed: {e}", "error")
-            return {}
-
-        # Calculate accuracies
-        for model_name, results in results_by_model.items():
-            if results['closed_trades'] > 0:
-                results['accuracy'] = (results['wins'] / results['closed_trades']) * 100
-            else:
-                results['accuracy'] = 0.0
-
-        # Update model stats cache
-        self._update_stats_cache()
-
-        return dict(results_by_model)
-
-    def _validate_trade_prices(self, entry, sl, tp, current):
-        """Validate that trade prices are reasonable"""
-        try:
-            if any(p <= 0 for p in [entry, sl, tp, current]):
-                return False
-
-            # Prices shouldn't be wildly different (max 50% deviation)
-            prices = [entry, sl, tp, current]
-            avg_price = sum(prices) / len(prices)
-
-            for price in prices:
-                if abs(price - avg_price) / avg_price > 0.5:
-                    return False
-
-            return True
-        except:
-            return False
-
-    def _evaluate_trade_outcome(self, prediction, current_price, tp_price, sl_price):
-        """Determine if trade hit TP or SL"""
-        hit_tp = False
-        hit_sl = False
-        exit_price = None
-
-        try:
-            if prediction == 1:  # Long
-                if current_price >= tp_price:
-                    hit_tp = True
-                    exit_price = tp_price
-                elif current_price <= sl_price:
-                    hit_sl = True
-                    exit_price = sl_price
-            elif prediction == 0:  # Short
-                if current_price <= tp_price:
-                    hit_tp = True
-                    exit_price = tp_price
-                elif current_price >= sl_price:
-                    hit_sl = True
-                    exit_price = sl_price
-
-        except Exception as e:
-            print_status(f"⚠️ Trade evaluation error: {e}", "warn")
-
-        return hit_tp, hit_sl, exit_price
-
-    def _calculate_pnl(self, prediction, entry_price, exit_price):
-        """Calculate profit/loss"""
-        try:
-            if prediction == 1:  # Long
-                return exit_price - entry_price
-            else:  # Short
-                return entry_price - exit_price
-        except:
-            return 0.0
-
-    def _calculate_duration_hours(self, created_at):
-        """Calculate trade duration in hours"""
-        try:
-            created_dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
-            duration = (datetime.now(timezone.utc) - created_dt).total_seconds() / 3600
-            return max(0, duration)
-        except:
-            return 0.0
-
-    def _update_stats_cache(self):
-        """Update cached model performance statistics"""
-        cursor = self.conn.cursor()
-
-        try:
-            # Get unique pairs and models
-            cursor.execute('SELECT DISTINCT pair FROM completed_trades')
-            pairs = [row[0] for row in cursor.fetchall()]
-
-            cursor.execute('SELECT DISTINCT model_used FROM completed_trades')
-            models = [row[0] for row in cursor.fetchall()]
-
-            for pair in pairs:
-                for model in models:
-                    for days in [7, 30, 90]:
-                        since = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
-
-                        cursor.execute('''
-                            SELECT
-                                COUNT(*) as total,
-                                SUM(CASE WHEN hit_tp THEN 1 ELSE 0 END) as wins,
-                                SUM(pnl) as total_pnl,
-                                AVG(pnl) as avg_pnl
-                            FROM completed_trades
-                            WHERE pair = ? AND model_used = ? AND evaluated_at > ?
-                        ''', (pair, model, since))
-
-                        result = cursor.fetchone()
-                        total, wins, total_pnl, avg_pnl = result
-
-                        if total and total > 0:
-                            accuracy = (wins / total * 100) if total > 0 else 0.0
-
-                            cursor.execute('''
-                                INSERT OR REPLACE INTO model_stats_cache
-                                (updated_at, pair, model_name, days, total_trades,
-                                 winning_trades, accuracy_pct, total_pnl, avg_pnl)
-                                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                            ''', (
-                                datetime.now(timezone.utc).isoformat(),
-                                pair, model, days, total, wins or 0,
-                                accuracy, total_pnl or 0.0, avg_pnl or 0.0
-                            ))
-
-            self.conn.commit()
-            print_status("✅ Stats cache updated", "debug")
-
-        except sqlite3.Error as e:
-            print_status(f"⚠️ Stats cache update failed: {e}", "warn")
-
-    def get_model_performance(self, pair, model_name, days=7):
-        """
-        Get model performance from cache (fast)
-
-        Args:
-            pair: Currency pair (e.g., 'EUR/USD')
-            model_name: Model name ('SGD', 'RandomForest', 'Ensemble')
-            days: Number of days to look back
-
-        Returns:
-            dict: Performance metrics
-        """
-        cursor = self.conn.cursor()
-
-        try:
-            cursor.execute('''
-                SELECT total_trades, winning_trades, accuracy_pct,
-                       total_pnl, avg_pnl, updated_at
-                FROM model_stats_cache
-                WHERE pair = ? AND model_name = ? AND days = ?
-            ''', (pair, model_name, days))
-
-            result = cursor.fetchone()
-
-            if not result:
-                return {
-                    'total_trades': 0,
-                    'winning_trades': 0,
-                    'accuracy': 0.0,
-                    'total_pnl': 0.0,
-                    'avg_pnl': 0.0
-                }
-
-            total, wins, accuracy, total_pnl, avg_pnl, updated_at = result
-
-            return {
-                'total_trades': total,
-                'winning_trades': wins,
-                'accuracy': accuracy,
-                'total_pnl': total_pnl,
-                'avg_pnl': avg_pnl,
-                'updated_at': updated_at
-            }
-
-        except sqlite3.Error as e:
-            print_status(f"⚠️ Failed to get model performance: {e}", "warn")
-            return {
-                'total_trades': 0,
-                'winning_trades': 0,
-                'accuracy': 0.0,
-                'total_pnl': 0.0,
-                'avg_pnl': 0.0
-            }
-
-    def get_best_model(self, pair, days=7, min_trades=3):
-        """
-        Determine which model performs best based on ACTUAL results
-
-        Args:
-            pair: Currency pair
-            days: Number of days to look back
-            min_trades: Minimum number of trades required
-
-        Returns:
-            str: Best model name or 'Ensemble' as default
-        """
-        cursor = self.conn.cursor()
-
-        try:
-            cursor.execute('''
-                SELECT model_name, accuracy_pct, total_trades, total_pnl
-                FROM model_stats_cache
-                WHERE pair = ? AND days = ? AND total_trades >= ?
-                ORDER BY accuracy_pct DESC, total_pnl DESC
-                LIMIT 1
-            ''', (pair, days, min_trades))
-
-            result = cursor.fetchone()
-
-            if result:
-                return result[0]
-
-        except sqlite3.Error as e:
-            print_status(f"⚠️ Failed to get best model: {e}", "warn")
-
-        return 'Ensemble'  # Default fallback
-
-    def get_database_stats(self):
-        """Get database statistics with error handling"""
-        cursor = self.conn.cursor()
-        stats = {}
-
-        try:
-            # Pending trades count
-            cursor.execute('SELECT COUNT(*) FROM pending_trades WHERE evaluated = 0')
-            stats['pending_trades'] = cursor.fetchone()[0]
-
-            # Completed trades count
-            cursor.execute('SELECT COUNT(*) FROM completed_trades')
-            stats['completed_trades'] = cursor.fetchone()[0]
-
-            # Total P&L
-            cursor.execute('SELECT SUM(pnl) FROM completed_trades')
-            result = cursor.fetchone()
-            stats['total_pnl'] = result[0] if result[0] else 0.0
-
-            # Overall accuracy
-            cursor.execute('''
-                SELECT
-                    COUNT(*) as total,
-                    SUM(CASE WHEN hit_tp THEN 1 ELSE 0 END) as wins
-                FROM completed_trades
-            ''')
-            result = cursor.fetchone()
-            if result and result[0] > 0:
-                stats['overall_accuracy'] = (result[1] / result[0]) * 100
-            else:
-                stats['overall_accuracy'] = 0.0
-
-            # Database size
-            if self.db_path.exists():
-                stats['db_size_mb'] = self.db_path.stat().st_size / (1024 * 1024)
-            else:
-                stats['db_size_mb'] = 0.0
-
-        except Exception as e:
-            print_status(f"⚠️ Failed to get database stats: {e}", "warn")
-
-        return stats
-
-    def cleanup_old_data(self, days_to_keep=90):
-        """
-        Clean up old data to prevent database bloat
-
-        Args:
-            days_to_keep: Number of days of data to keep
-        """
-        cursor = self.conn.cursor()
-        cutoff_date = (datetime.now(timezone.utc) - timedelta(days=days_to_keep)).isoformat()
-
-        try:
-            # Delete old evaluated pending trades
-            cursor.execute('''
-                DELETE FROM pending_trades
-                WHERE evaluated = 1 AND created_at < ?
-            ''', (cutoff_date,))
-            deleted_pending = cursor.rowcount
-
-            # Delete old execution logs
-            cursor.execute('''
-                DELETE FROM execution_log
-                WHERE timestamp < ?
-------------------
-
-
-  [36mCell[39m[36m [39m[32mIn[8][39m[32m, line 857[39m
-[31m    [39m[31mcursor.execute('''[39m
-                   ^
-[31mSyntaxError[39m[31m:[39m incomplete input
-
-
-============================================================
+✅ All required environment variables present
+----------------------------------------------------------------------
+✅ Cell 2/10 completed in 0.0s
+======================================================================
+
+======================================================================
+🔄 EXECUTING CELL 3/10 (30.0% complete)
+⏱️  Elapsed time: 1.7s
+📝 Cell preview: # ======================================================...
+----------------------------------------------------------------------
+🤖 GitHub Actions Mode: Using current directory
+======================================================================
+🔧 Running in: GitHub Actions
+📂 Working directory: /home/runner/work/forex-ai-models/forex-ai-models
+💾 Save folder: /home/runner/work/forex-ai-models/forex-ai-models
+📦 Repo folder: /home/runner/work/forex-ai-models/forex-ai-models
+🐍 Python: 3.11.14
+======================================================================
+✅ GitHub token configured
+🤖 GitHub Actions Mode
+✅ Repository already checked out by actions/checkout
+📂 Current directory: /home/runner/work/forex-ai-models/forex-ai-models
+✅ Git repository confirmed
+🔧 Configuring Git...
+✅ Git configured: Forex AI Bot <nakatonabira3@gmail.com>
+======================================================================
+🧾 ENVIRONMENT SUMMARY
+======================================================================
+Environment:      GitHub Actions
+Working Dir:      /home/runner/work/forex-ai-models/forex-ai-models
+Save Folder:      /home/runner/work/forex-ai-models/forex-ai-models
+Repo Folder:      /home/runner/work/forex-ai-models/forex-ai-models
+Repository:       https://github.com/rahim-dotAI/forex-ai-models
+Branch:           main
+Git Repo Exists:  True
+FOREX_PAT Set:    ✅ Yes
+📋 Critical Paths:
+  ✅ Repo .git: /home/runner/work/forex-ai-models/forex-ai-models/.git (exists)
+  ✅ Save Folder: /home/runner/work/forex-ai-models/forex-ai-models (exists)
+  ✅ Repo Folder: /home/runner/work/forex-ai-models/forex-ai-models (exists)
+======================================================================
+✅ Setup completed successfully!
+======================================================================
+✅ All environment variables exported for downstream cells
+----------------------------------------------------------------------
+✅ Cell 3/10 completed in 0.0s
+======================================================================
+
+======================================================================
+🔄 EXECUTING CELL 4/10 (40.0% complete)
+⏱️  Elapsed time: 1.7s
+📝 Cell preview: !pip install mplfinance firebase-admin dropbox requests beau...
+----------------------------------------------------------------------
+Collecting mplfinance
+  Downloading mplfinance-0.12.10b0-py3-none-any.whl.metadata (19 kB)
+Collecting firebase-admin
+  Downloading firebase_admin-7.1.0-py3-none-any.whl.metadata (1.7 kB)
+Collecting dropbox
+  Downloading dropbox-12.0.2-py3-none-any.whl.metadata (4.3 kB)
+Requirement already satisfied: requests in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (2.32.5)
+Requirement already satisfied: beautifulsoup4 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (4.14.2)
+Requirement already satisfied: pandas in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (2.3.3)
+Requirement already satisfied: numpy in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (2.3.4)
+Requirement already satisfied: ta in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (0.11.0)
+Collecting yfinance
+  Downloading yfinance-0.2.66-py2.py3-none-any.whl.metadata (6.0 kB)
+Collecting pyppeteer
+  Downloading pyppeteer-2.0.0-py3-none-any.whl.metadata (7.1 kB)
+Requirement already satisfied: nest_asyncio in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (1.6.0)
+Collecting lightgbm
+  Downloading lightgbm-4.6.0-py3-none-manylinux_2_28_x86_64.whl.metadata (17 kB)
+Requirement already satisfied: joblib in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (1.5.2)
+Collecting matplotlib
+  Downloading matplotlib-3.10.7-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (11 kB)
+Collecting alpha_vantage
+  Downloading alpha_vantage-3.0.0-py3-none-any.whl.metadata (12 kB)
+Collecting tqdm
+  Downloading tqdm-4.67.1-py3-none-any.whl.metadata (57 kB)
+Requirement already satisfied: scikit-learn in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (1.7.2)
+Collecting river
+  Downloading river-0.22.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (9.0 kB)
+Collecting cachecontrol>=0.14.3 (from firebase-admin)
+  Downloading cachecontrol-0.14.3-py3-none-any.whl.metadata (3.1 kB)
+Collecting google-api-core<3.0.0dev,>=2.25.1 (from google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin)
+  Downloading google_api_core-2.28.1-py3-none-any.whl.metadata (3.3 kB)
+Collecting google-cloud-firestore>=2.21.0 (from firebase-admin)
+  Downloading google_cloud_firestore-2.21.0-py3-none-any.whl.metadata (9.9 kB)
+Collecting google-cloud-storage>=3.1.1 (from firebase-admin)
+  Downloading google_cloud_storage-3.5.0-py3-none-any.whl.metadata (13 kB)
+Collecting pyjwt>=2.10.1 (from pyjwt[crypto]>=2.10.1->firebase-admin)
+  Downloading PyJWT-2.10.1-py3-none-any.whl.metadata (4.0 kB)
+Requirement already satisfied: httpx==0.28.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from httpx[http2]==0.28.1->firebase-admin) (0.28.1)
+Requirement already satisfied: anyio in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from httpx==0.28.1->httpx[http2]==0.28.1->firebase-admin) (4.11.0)
+Requirement already satisfied: certifi in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from httpx==0.28.1->httpx[http2]==0.28.1->firebase-admin) (2025.10.5)
+Requirement already satisfied: httpcore==1.* in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from httpx==0.28.1->httpx[http2]==0.28.1->firebase-admin) (1.0.9)
+Requirement already satisfied: idna in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from httpx==0.28.1->httpx[http2]==0.28.1->firebase-admin) (3.11)
+Collecting h2<5,>=3 (from httpx[http2]==0.28.1->firebase-admin)
+  Downloading h2-4.3.0-py3-none-any.whl.metadata (5.1 kB)
+Collecting googleapis-common-protos<2.0.0,>=1.56.2 (from google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin)
+  Downloading googleapis_common_protos-1.72.0-py3-none-any.whl.metadata (9.4 kB)
+Collecting protobuf!=3.20.0,!=3.20.1,!=4.21.0,!=4.21.1,!=4.21.2,!=4.21.3,!=4.21.4,!=4.21.5,<7.0.0,>=3.19.5 (from google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin)
+  Downloading protobuf-6.33.0-cp39-abi3-manylinux2014_x86_64.whl.metadata (593 bytes)
+Collecting proto-plus<2.0.0,>=1.22.3 (from google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin)
+  Downloading proto_plus-1.26.1-py3-none-any.whl.metadata (2.2 kB)
+Collecting google-auth<3.0.0,>=2.14.1 (from google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin)
+  Downloading google_auth-2.43.0-py2.py3-none-any.whl.metadata (6.6 kB)
+Requirement already satisfied: charset_normalizer<4,>=2 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from requests) (3.4.4)
+Requirement already satisfied: urllib3<3,>=1.21.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from requests) (2.5.0)
+Collecting grpcio<2.0.0,>=1.33.2 (from google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin)
+  Downloading grpcio-1.76.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (3.7 kB)
+Collecting grpcio-status<2.0.0,>=1.33.2 (from google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin)
+  Downloading grpcio_status-1.76.0-py3-none-any.whl.metadata (1.1 kB)
+Collecting cachetools<7.0,>=2.0.0 (from google-auth<3.0.0,>=2.14.1->google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin)
+  Downloading cachetools-6.2.1-py3-none-any.whl.metadata (5.5 kB)
+Collecting pyasn1-modules>=0.2.1 (from google-auth<3.0.0,>=2.14.1->google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin)
+  Downloading pyasn1_modules-0.4.2-py3-none-any.whl.metadata (3.5 kB)
+Collecting rsa<5,>=3.1.4 (from google-auth<3.0.0,>=2.14.1->google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin)
+  Downloading rsa-4.9.1-py3-none-any.whl.metadata (5.6 kB)
+Requirement already satisfied: typing-extensions~=4.12 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from grpcio<2.0.0,>=1.33.2->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin) (4.15.0)
+Collecting hyperframe<7,>=6.1 (from h2<5,>=3->httpx[http2]==0.28.1->firebase-admin)
+  Downloading hyperframe-6.1.0-py3-none-any.whl.metadata (4.3 kB)
+Collecting hpack<5,>=4.1 (from h2<5,>=3->httpx[http2]==0.28.1->firebase-admin)
+  Downloading hpack-4.1.0-py3-none-any.whl.metadata (4.6 kB)
+Requirement already satisfied: h11>=0.16 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from httpcore==1.*->httpx==0.28.1->httpx[http2]==0.28.1->firebase-admin) (0.16.0)
+Collecting pyasn1>=0.1.3 (from rsa<5,>=3.1.4->google-auth<3.0.0,>=2.14.1->google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin)
+  Downloading pyasn1-0.6.1-py3-none-any.whl.metadata (8.4 kB)
+Requirement already satisfied: six>=1.12.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from dropbox) (1.17.0)
+Collecting stone<3.3.3,>=2 (from dropbox)
+  Downloading stone-3.3.1-py3-none-any.whl.metadata (8.0 kB)
+Collecting ply>=3.4 (from stone<3.3.3,>=2->dropbox)
+  Downloading ply-3.11-py2.py3-none-any.whl.metadata (844 bytes)
+Requirement already satisfied: soupsieve>1.2 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from beautifulsoup4) (2.8)
+Requirement already satisfied: python-dateutil>=2.8.2 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from pandas) (2.9.0.post0)
+Requirement already satisfied: pytz>=2020.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from pandas) (2025.2)
+Requirement already satisfied: tzdata>=2022.7 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from pandas) (2025.2)
+Collecting multitasking>=0.0.7 (from yfinance)
+  Downloading multitasking-0.0.12.tar.gz (19 kB)
+  Installing build dependencies ... [?25l
+-
+ \
+ done
+[?25h  Getting requirements to build wheel ... [?25l
+-
+ done
+[?25h  Preparing metadata (pyproject.toml) ... [?25l
+-
+ done
+[?25hRequirement already satisfied: platformdirs>=2.0.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from yfinance) (4.5.0)
+Collecting frozendict>=2.3.4 (from yfinance)
+  Downloading frozendict-2.4.7-py3-none-any.whl.metadata (23 kB)
+Collecting peewee>=3.16.2 (from yfinance)
+  Downloading peewee-3.18.3.tar.gz (3.0 MB)
+[?25l     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/3.0 MB ? eta -:--:--
+[2K     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.0/3.0 MB 52.4 MB/s  0:00:00
+[?25h
+  Installing build dependencies ... [?25l
+-
+ \
+ done
+[?25h  Getting requirements to build wheel ... [?25l
+-
+ done
+[?25h  Preparing metadata (pyproject.toml) ... [?25l
+-
+ done
+[?25h
+Collecting curl_cffi>=0.7 (from yfinance)
+  Downloading curl_cffi-0.13.0-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (13 kB)
+Collecting websockets>=13.0 (from yfinance)
+  Downloading websockets-15.0.1-cp311-cp311-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.8 kB)
+Collecting appdirs<2.0.0,>=1.4.3 (from pyppeteer)
+  Downloading appdirs-1.4.4-py2.py3-none-any.whl.metadata (9.0 kB)
+Collecting importlib-metadata>=1.4 (from pyppeteer)
+  Downloading importlib_metadata-8.7.0-py3-none-any.whl.metadata (4.8 kB)
+Collecting pyee<12.0.0,>=11.0.0 (from pyppeteer)
+  Downloading pyee-11.1.1-py3-none-any.whl.metadata (2.8 kB)
+Collecting urllib3<3,>=1.21.1 (from requests)
+  Downloading urllib3-1.26.20-py2.py3-none-any.whl.metadata (50 kB)
+INFO: pip is looking at multiple versions of pyppeteer to determine which version is compatible with other requirements. This could take a while.
+Collecting pyppeteer
+  Downloading pyppeteer-1.0.2-py3-none-any.whl.metadata (6.9 kB)
+Collecting pyee<9.0.0,>=8.1.0 (from pyppeteer)
+  Downloading pyee-8.2.2-py2.py3-none-any.whl.metadata (1.7 kB)
+Collecting pyppeteer
+  Downloading pyppeteer-1.0.1-py3-none-any.whl.metadata (6.9 kB)
+  Downloading pyppeteer-1.0.0-py3-none-any.whl.metadata (6.9 kB)
+  Downloading pyppeteer-0.2.6-py3-none-any.whl.metadata (6.9 kB)
+  Downloading pyppeteer-0.2.5-py3-none-any.whl.metadata (6.9 kB)
+  Downloading pyppeteer-0.2.4-py3-none-any.whl.metadata (6.8 kB)
+  Downloading pyppeteer-0.2.3-py3-none-any.whl.metadata (6.8 kB)
+Collecting pyee<8.0.0,>=7.0.1 (from pyppeteer)
+  Downloading pyee-7.0.4-py2.py3-none-any.whl.metadata (1.8 kB)
+INFO: pip is still looking at multiple versions of pyppeteer to determine which version is compatible with other requirements. This could take a while.
+Collecting pyppeteer
+  Downloading pyppeteer-0.2.2-py3-none-any.whl.metadata (6.6 kB)
+  Downloading pyppeteer-0.0.25.tar.gz (1.2 MB)
+[?25l     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/1.2 MB ? eta -:--:--
+[2K     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 153.9 MB/s  0:00:00
+[?25h
+  Installing build dependencies ... [?25l
+-
+ \
+ done
+[?25h  Getting requirements to build wheel ... [?25l
+-
+ done
+[?25h  Preparing metadata (pyproject.toml) ... [?25l
+-
+ done
+[?25hCollecting pyee (from pyppeteer)
+  Downloading pyee-13.0.0-py3-none-any.whl.metadata (2.9 kB)
+Requirement already satisfied: scipy in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from lightgbm) (1.16.3)
+Collecting contourpy>=1.0.1 (from matplotlib)
+  Downloading contourpy-1.3.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (5.5 kB)
+Collecting cycler>=0.10 (from matplotlib)
+  Downloading cycler-0.12.1-py3-none-any.whl.metadata (3.8 kB)
+Collecting fonttools>=4.22.0 (from matplotlib)
+  Downloading fonttools-4.60.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (112 kB)
+Collecting kiwisolver>=1.3.1 (from matplotlib)
+  Downloading kiwisolver-1.4.9-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (6.3 kB)
+Requirement already satisfied: packaging>=20.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from matplotlib) (25.0)
+Collecting pillow>=8 (from matplotlib)
+  Downloading pillow-12.0.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (8.8 kB)
+Collecting pyparsing>=3 (from matplotlib)
+  Downloading pyparsing-3.2.5-py3-none-any.whl.metadata (5.0 kB)
+Collecting aiohttp (from alpha_vantage)
+  Downloading aiohttp-3.13.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.1 kB)
+Requirement already satisfied: threadpoolctl>=3.1.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from scikit-learn) (3.6.0)
+Collecting msgpack<2.0.0,>=0.5.2 (from cachecontrol>=0.14.3->firebase-admin)
+  Downloading msgpack-1.1.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.1 kB)
+Requirement already satisfied: cffi>=1.12.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from curl_cffi>=0.7->yfinance) (2.0.0)
+Requirement already satisfied: pycparser in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from cffi>=1.12.0->curl_cffi>=0.7->yfinance) (2.23)
+Collecting google-cloud-core<3.0.0,>=1.4.1 (from google-cloud-firestore>=2.21.0->firebase-admin)
+  Downloading google_cloud_core-2.5.0-py3-none-any.whl.metadata (3.1 kB)
+Collecting google-resumable-media<3.0.0,>=2.7.2 (from google-cloud-storage>=3.1.1->firebase-admin)
+  Downloading google_resumable_media-2.7.2-py2.py3-none-any.whl.metadata (2.2 kB)
+Collecting google-crc32c<2.0.0,>=1.1.3 (from google-cloud-storage>=3.1.1->firebase-admin)
+  Downloading google_crc32c-1.7.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (2.3 kB)
+Collecting cryptography>=3.4.0 (from pyjwt[crypto]>=2.10.1->firebase-admin)
+  Downloading cryptography-46.0.3-cp311-abi3-manylinux_2_34_x86_64.whl.metadata (5.7 kB)
+Collecting aiohappyeyeballs>=2.5.0 (from aiohttp->alpha_vantage)
+  Downloading aiohappyeyeballs-2.6.1-py3-none-any.whl.metadata (5.9 kB)
+Collecting aiosignal>=1.4.0 (from aiohttp->alpha_vantage)
+  Downloading aiosignal-1.4.0-py3-none-any.whl.metadata (3.7 kB)
+Requirement already satisfied: attrs>=17.3.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from aiohttp->alpha_vantage) (25.4.0)
+Collecting frozenlist>=1.1.1 (from aiohttp->alpha_vantage)
+  Downloading frozenlist-1.8.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl.metadata (20 kB)
+Collecting multidict<7.0,>=4.5 (from aiohttp->alpha_vantage)
+  Downloading multidict-6.7.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (5.3 kB)
+Collecting propcache>=0.2.0 (from aiohttp->alpha_vantage)
+  Downloading propcache-0.4.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (13 kB)
+Collecting yarl<2.0,>=1.17.0 (from aiohttp->alpha_vantage)
+  Downloading yarl-1.22.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (75 kB)
+Requirement already satisfied: sniffio>=1.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from anyio->httpx==0.28.1->httpx[http2]==0.28.1->firebase-admin) (1.3.1)
+Downloading mplfinance-0.12.10b0-py3-none-any.whl (75 kB)
+Downloading firebase_admin-7.1.0-py3-none-any.whl (137 kB)
+Downloading google_api_core-2.28.1-py3-none-any.whl (173 kB)
+Downloading google_auth-2.43.0-py2.py3-none-any.whl (223 kB)
+Downloading cachetools-6.2.1-py3-none-any.whl (11 kB)
+Downloading googleapis_common_protos-1.72.0-py3-none-any.whl (297 kB)
+Downloading grpcio-1.76.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (6.6 MB)
+[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/6.6 MB ? eta -:--:--
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.6/6.6 MB 130.5 MB/s  0:00:00
+[?25hDownloading grpcio_status-1.76.0-py3-none-any.whl (14 kB)
+Downloading h2-4.3.0-py3-none-any.whl (61 kB)
+Downloading hpack-4.1.0-py3-none-any.whl (34 kB)
+Downloading hyperframe-6.1.0-py3-none-any.whl (13 kB)
+Downloading proto_plus-1.26.1-py3-none-any.whl (50 kB)
+Downloading protobuf-6.33.0-cp39-abi3-manylinux2014_x86_64.whl (323 kB)
+Downloading rsa-4.9.1-py3-none-any.whl (34 kB)
+Downloading dropbox-12.0.2-py3-none-any.whl (572 kB)
+[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/572.1 kB ? eta -:--:--[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 572.1/572.1 kB 94.1 MB/s  0:00:00
+[?25hDownloading stone-3.3.1-py3-none-any.whl (162 kB)
+Downloading yfinance-0.2.66-py2.py3-none-any.whl (123 kB)
+Downloading lightgbm-4.6.0-py3-none-manylinux_2_28_x86_64.whl (3.6 MB)
+[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/3.6 MB ? eta -:--:--[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.6/3.6 MB 156.5 MB/s  0:00:00
+[?25h
+Downloading matplotlib-3.10.7-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (8.7 MB)
+[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/8.7 MB ? eta -:--:--
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.7/8.7 MB 177.8 MB/s  0:00:00
+[?25hDownloading alpha_vantage-3.0.0-py3-none-any.whl (35 kB)
+Downloading tqdm-4.67.1-py3-none-any.whl (78 kB)
+Downloading river-0.22.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.2 MB)
+[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/3.2 MB ? eta -:--:--[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.2/3.2 MB 147.2 MB/s  0:00:00
+[?25h
+Downloading cachecontrol-0.14.3-py3-none-any.whl (21 kB)
+Downloading msgpack-1.1.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (426 kB)
+Downloading contourpy-1.3.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (355 kB)
+Downloading curl_cffi-0.13.0-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (8.3 MB)
+[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/8.3 MB ? eta -:--:--
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.3/8.3 MB 133.6 MB/s  0:00:00
+[?25hDownloading cycler-0.12.1-py3-none-any.whl (8.3 kB)
+Downloading fonttools-4.60.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (5.0 MB)
+[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/5.0 MB ? eta -:--:--
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.0/5.0 MB 127.6 MB/s  0:00:00
+[?25hDownloading frozendict-2.4.7-py3-none-any.whl (16 kB)
+Downloading google_cloud_firestore-2.21.0-py3-none-any.whl (368 kB)
+Downloading google_cloud_core-2.5.0-py3-none-any.whl (29 kB)
+Downloading google_cloud_storage-3.5.0-py3-none-any.whl (289 kB)
+Downloading google_crc32c-1.7.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (32 kB)
+Downloading google_resumable_media-2.7.2-py2.py3-none-any.whl (81 kB)
+Downloading kiwisolver-1.4.9-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.4 MB)
+[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/1.4 MB ? eta -:--:--[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.4/1.4 MB 134.1 MB/s  0:00:00
+[?25h
+Downloading pillow-12.0.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (7.0 MB)
+[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/7.0 MB ? eta -:--:--
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.0/7.0 MB 197.1 MB/s  0:00:00
+[?25hDownloading ply-3.11-py2.py3-none-any.whl (49 kB)
+Downloading pyasn1-0.6.1-py3-none-any.whl (83 kB)
+Downloading pyasn1_modules-0.4.2-py3-none-any.whl (181 kB)
+Downloading PyJWT-2.10.1-py3-none-any.whl (22 kB)
+Downloading cryptography-46.0.3-cp311-abi3-manylinux_2_34_x86_64.whl (4.5 MB)
+[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/4.5 MB ? eta -:--:--
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 201.7 MB/s  0:00:00
+[?25hDownloading pyparsing-3.2.5-py3-none-any.whl (113 kB)
+Downloading websockets-15.0.1-cp311-cp311-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (182 kB)
+Downloading aiohttp-3.13.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.7 MB)
+[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/1.7 MB ? eta -:--:--[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 200.7 MB/s  0:00:00
+[?25h
+Downloading multidict-6.7.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (246 kB)
+Downloading yarl-1.22.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (365 kB)
+Downloading aiohappyeyeballs-2.6.1-py3-none-any.whl (15 kB)
+Downloading aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
+Downloading frozenlist-1.8.0-cp311-cp311-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (231 kB)
+Downloading propcache-0.4.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (210 kB)
+Downloading appdirs-1.4.4-py2.py3-none-any.whl (9.6 kB)
+Downloading pyee-13.0.0-py3-none-any.whl (15 kB)
+Building wheels for collected packages: pyppeteer, multitasking, peewee
+  Building wheel for pyppeteer (pyproject.toml) ... [?25l
+-
+ done
+[?25h  Created wheel for pyppeteer: filename=pyppeteer-0.0.25-py3-none-any.whl size=78442 sha256=a6c152011d352d2edc064c1aa56b6a45029be6f24c1e6cd3101dfbb593747e22
+  Stored in directory: /home/runner/.cache/pip/wheels/73/a3/1e/3a15782836222d82b917f1ebf652f9db54eec93f3268a42bcf
+  Building wheel for multitasking (pyproject.toml) ... [?25l
+-
+ done
+[?25h  Created wheel for multitasking: filename=multitasking-0.0.12-py3-none-any.whl size=15636 sha256=0b08228bacee652f5361d7dbdf7aa1e0688599a294eae07667961fc67cf94462
+  Stored in directory: /home/runner/.cache/pip/wheels/42/d6/84/bf57a755f4569494cd00de4bb46ef064874823f4d19c82e960
+  Building wheel for peewee (pyproject.toml) ... [?25l
+-
+ \
+ |
+ /
+ done
+[?25h  Created wheel for peewee: filename=peewee-3.18.3-cp311-cp311-linux_x86_64.whl size=1064053 sha256=92e30ea1dde252160515ca987aae8f9196a4ea14d8923f3904a414bd38b6eb86
+  Stored in directory: /home/runner/.cache/pip/wheels/05/dc/94/4ba26d23cac9aee7481d3dfcc7e99ce2cc5731230ec10f7ec1
+Successfully built pyppeteer multitasking peewee
+Installing collected packages: ply, peewee, multitasking, appdirs, websockets, tqdm, stone, pyparsing, pyjwt, pyee, pyasn1, protobuf, propcache, pillow, multidict, msgpack, kiwisolver, hyperframe, hpack, grpcio, google-crc32c, frozenlist, frozendict, fonttools, cycler, contourpy, cachetools, aiohappyeyeballs, yarl, rsa, pyppeteer, pyasn1-modules, proto-plus, matplotlib, lightgbm, h2, googleapis-common-protos, google-resumable-media, dropbox, curl_cffi, cryptography, cachecontrol, aiosignal, yfinance, river, mplfinance, grpcio-status, google-auth, aiohttp, google-api-core, alpha_vantage, google-cloud-core, google-cloud-storage, google-cloud-firestore, firebase-admin
+[?25l
+[2K   ━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  2/55 [multitasking]
+[2K   ━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  6/55 [stone]
+[2K   ━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10/55 [pyasn1]
+[2K   ━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13/55 [pillow]
+[2K   ━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13/55 [pillow]
+[2K   ━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16/55 [kiwisolver]
+[2K   ━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━━━━━━━ 19/55 [grpcio]
+[2K   ━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━━━━ 23/55 [fonttools]
+[2K   ━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━━━━ 23/55 [fonttools]
+[2K   ━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━━━━ 23/55 [fonttools]
+[2K   ━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━━━━ 23/55 [fonttools]
+[2K   ━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━━━━ 23/55 [fonttools]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━ 31/55 [pyasn1-modules]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━ 33/55 [matplotlib]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━ 33/55 [matplotlib]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━ 33/55 [matplotlib]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━ 33/55 [matplotlib]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━ 33/55 [matplotlib]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━ 33/55 [matplotlib]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━ 33/55 [matplotlib]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━ 33/55 [matplotlib]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━ 34/55 [lightgbm]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━ 38/55 [dropbox]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━ 38/55 [dropbox]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━ 38/55 [dropbox]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━ 40/55 [cryptography]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━ 43/55 [yfinance]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━ 44/55 [river]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━ 44/55 [river]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━ 44/55 [river]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━ 47/55 [google-auth]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸━━━━━ 48/55 [aiohttp]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸━━ 52/55 [google-cloud-storage]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸━ 53/55 [google-cloud-firestore]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺ 54/55 [firebase-admin]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 55/55 [firebase-admin]
+[?25h[1A[2KSuccessfully installed aiohappyeyeballs-2.6.1 aiohttp-3.13.2 aiosignal-1.4.0 alpha_vantage-3.0.0 appdirs-1.4.4 cachecontrol-0.14.3 cachetools-6.2.1 contourpy-1.3.3 cryptography-46.0.3 curl_cffi-0.13.0 cycler-0.12.1 dropbox-12.0.2 firebase-admin-7.1.0 fonttools-4.60.1 frozendict-2.4.7 frozenlist-1.8.0 google-api-core-2.28.1 google-auth-2.43.0 google-cloud-core-2.5.0 google-cloud-firestore-2.21.0 google-cloud-storage-3.5.0 google-crc32c-1.7.1 google-resumable-media-2.7.2 googleapis-common-protos-1.72.0 grpcio-1.76.0 grpcio-status-1.76.0 h2-4.3.0 hpack-4.1.0 hyperframe-6.1.0 kiwisolver-1.4.9 lightgbm-4.6.0 matplotlib-3.10.7 mplfinance-0.12.10b0 msgpack-1.1.2 multidict-6.7.0 multitasking-0.0.12 peewee-3.18.3 pillow-12.0.0 ply-3.11 propcache-0.4.1 proto-plus-1.26.1 protobuf-6.33.0 pyasn1-0.6.1 pyasn1-modules-0.4.2 pyee-13.0.0 pyjwt-2.10.1 pyparsing-3.2.5 pyppeteer-0.0.25 river-0.22.0 rsa-4.9.1 stone-3.3.1 tqdm-4.67.1 websockets-15.0.1 yarl-1.22.0 yfinance-0.2.66
+----------------------------------------------------------------------
+✅ Cell 4/10 completed in 32.5s
+======================================================================
+
+======================================================================
+🔄 EXECUTING CELL 5/10 (50.0% complete)
+⏱️  Elapsed time: 34.2s
+📝 Cell preview: # ======================================================...
+----------------------------------------------------------------------
+======================================================================
+🚀 Alpha Vantage FX Data Fetcher
+======================================================================
+📍 Environment: GitHub Actions
+🤖 GitHub Actions detected - using repository root
+📂 Base folder: /home/runner/work/forex-ai-models/forex-ai-models
+📦 Repo folder: /home/runner/work/forex-ai-models/forex-ai-models
+💾 CSV folder: /home/runner/work/forex-ai-models/forex-ai-models/csvs
+======================================================================
+✅ GitHub credentials configured
+🤖 GitHub Actions: Repository already available
+✅ Git repository verified
+✅ Git configured: Forex AI Bot <nakatonabira3@gmail.com>
+✅ Alpha Vantage API key: 1W58...LHZ6
+======================================================================
+🚀 Fetching FX data from Alpha Vantage...
+======================================================================
+🔄 Processing EUR/USD...
+🔄 Processing GBP/USD...
+🔄 Processing USD/JPY...
+🔄 Processing AUD/USD...
+  📊 Loaded 5002 existing rows
+  📊 Loaded 5001 existing rows
+  📊 Loaded 5002 existing rows
+  📊 Loaded 5001 existing rows
+  Fetching GBP/USD (attempt 1/3)...
+  Fetching EUR/USD (attempt 1/3)...
+  Fetching USD/JPY (attempt 1/3)...
+  Fetching AUD/USD (attempt 1/3)...
+  ✅ Fetched 5000 rows for AUD/USD
+  ✅ Fetched 5000 rows for USD/JPY
+  ✅ Fetched 5000 rows for EUR/USD
+  ℹ️ No changes - Total rows: 5001
+  ℹ️ No changes - Total rows: 5002
+  ℹ️ No changes - Total rows: 5001
+  ✅ Fetched 5000 rows for GBP/USD
+  ℹ️ No changes - Total rows: 5002
+======================================================================
+📊 PROCESSING SUMMARY
+======================================================================
+ℹ️ No changes AUD/USD (5001 rows)
+ℹ️ No changes USD/JPY (5002 rows)
+ℹ️ No changes EUR/USD (5001 rows)
+ℹ️ No changes GBP/USD (5002 rows)
+Total pairs processed: 4
+Files updated: 0
+======================================================================
+🤖 GitHub Actions: Skipping git operations
+   (Workflow will handle commit and push)
+======================================================================
+======================================================================
+✅ ALPHA VANTAGE WORKFLOW COMPLETED
+======================================================================
+Environment: GitHub Actions
+Pairs processed: 4
+Files updated: 0
+Status: Success
+======================================================================
+----------------------------------------------------------------------
+✅ Cell 5/10 completed in 2.5s
+======================================================================
+
+======================================================================
+🔄 EXECUTING CELL 6/10 (60.0% complete)
+⏱️  Elapsed time: 36.7s
+📝 Cell preview: # ======================================================...
+----------------------------------------------------------------------
+======================================================================
+🚀 YFinance FX Data Fetcher - Multi-Environment Edition
+======================================================================
+🌍 Detected Environment: GitHub Actions
+📂 GitHub Actions: Using repo root: /home/runner/work/forex-ai-models/forex-ai-models
+✅ Working directory: /home/runner/work/forex-ai-models/forex-ai-models
+✅ Pickle folder: /home/runner/work/forex-ai-models/forex-ai-models/pickles
+✅ CSV folder: /home/runner/work/forex-ai-models/forex-ai-models/csvs
+✅ Log folder: /home/runner/work/forex-ai-models/forex-ai-models/logs
+✅ Git configured: Forex AI Bot <nakatonabira3@gmail.com>
+🤖 GitHub Actions: Repository already available
+✅ Using current directory as repo: /home/runner/work/forex-ai-models/forex-ai-models
+📊 Configuration:
+   Pairs: 4
+   Timeframes: 5
+   Total tasks: 20
+======================================================================
+🚀 Starting parallel data download...
+======================================================================
+  📂 Loaded 7351 existing rows for EUR/USD 1d_5y
+  📂 Loaded 8104 existing rows for GBP/USD 1h_2y
+  📂 Loaded 7351 existing rows for GBP/USD 1d_5y
+  📂 Loaded 8106 existing rows for EUR/USD 1h_2y
+  📂 Loaded 8104 existing rows for GBP/USD 15m_60d
+  📂 Loaded 8104 existing rows for EUR/USD 15m_60d
+  📂 Loaded 8104 existing rows for EUR/USD 5m_1mo
+  📂 Loaded 8104 existing rows for EUR/USD 1m_7d
+  🔽 Fetching EUR/USD 1d_5y (attempt 1/3)...
+  🔽 Fetching EUR/USD 1h_2y (attempt 1/3)...
+  🔽 Fetching GBP/USD 1d_5y (attempt 1/3)...
+  🔽 Fetching GBP/USD 1h_2y (attempt 1/3)...
+  🔽 Fetching GBP/USD 15m_60d (attempt 1/3)...
+  🔽 Fetching EUR/USD 5m_1mo (attempt 1/3)...
+  🔽 Fetching EUR/USD 15m_60d (attempt 1/3)...
+  🔽 Fetching EUR/USD 1m_7d (attempt 1/3)...
+  ✅ Updated GBP/USD 1d_5y - Total rows: 7351
+  ✅ Updated EUR/USD 15m_60d - Total rows: 8104
+  ✅ Updated EUR/USD 1h_2y - Total rows: 8106
+  📂 Loaded 26200 existing rows for GBP/USD 5m_1mo
+  ✅ Updated EUR/USD 1d_5y - Total rows: 7351
+  🔽 Fetching GBP/USD 5m_1mo (attempt 1/3)...
+  📂 Loaded 26963 existing rows for GBP/USD 1m_7d
+  ✅ Updated EUR/USD 5m_1mo - Total rows: 8104
+  📂 Loaded 26881 existing rows for USD/JPY 1d_5y
+  📂 Loaded 26940 existing rows for USD/JPY 1h_2y
+  ✅ Updated GBP/USD 1h_2y - Total rows: 8104
+  📂 Loaded 26212 existing rows for USD/JPY 15m_60d
+  🔽 Fetching GBP/USD 1m_7d (attempt 1/3)...
+  ✅ Updated GBP/USD 15m_60d - Total rows: 8104
+  ✅ Updated EUR/USD 1m_7d - Total rows: 8104
+  🔽 Fetching USD/JPY 1d_5y (attempt 1/3)...
+  🔽 Fetching USD/JPY 1h_2y (attempt 1/3)...
+  📂 Loaded 26212 existing rows for USD/JPY 5m_1mo
+  🔽 Fetching USD/JPY 15m_60d (attempt 1/3)...
+  📂 Loaded 26206 existing rows for USD/JPY 1m_7d
+  📂 Loaded 26865 existing rows for AUD/USD 1d_5y
+  🔽 Fetching USD/JPY 5m_1mo (attempt 1/3)...
+  🔽 Fetching USD/JPY 1m_7d (attempt 1/3)...
+  🔽 Fetching AUD/USD 1d_5y (attempt 1/3)...
+  ✅ Updated GBP/USD 5m_1mo - Total rows: 26204
+  📂 Loaded 22511 existing rows for AUD/USD 1h_2y
+  ✅ Updated USD/JPY 15m_60d - Total rows: 26677
+  🔽 Fetching AUD/USD 1h_2y (attempt 1/3)...
+  📂 Loaded 22511 existing rows for AUD/USD 15m_60d
+  ✅ Updated USD/JPY 1d_5y - Total rows: 26881
+  🔽 Fetching AUD/USD 15m_60d (attempt 1/3)...
+  📂 Loaded 22539 existing rows for AUD/USD 5m_1mo
+  ✅ Updated GBP/USD 1m_7d - Total rows: 26963
+  🔽 Fetching AUD/USD 5m_1mo (attempt 1/3)...
+  📂 Loaded 22874 existing rows for AUD/USD 1m_7d
+  ✅ Updated USD/JPY 1h_2y - Total rows: 26940
+  🔽 Fetching AUD/USD 1m_7d (attempt 1/3)...
+  ✅ Updated USD/JPY 5m_1mo - Total rows: 28900
+  ✅ Updated USD/JPY 1m_7d - Total rows: 26270
+  ✅ Updated AUD/USD 1d_5y - Total rows: 26878
+  ✅ Updated AUD/USD 1h_2y - Total rows: 22511
+  ✅ Updated AUD/USD 15m_60d - Total rows: 22511
+  ✅ Updated AUD/USD 5m_1mo - Total rows: 22544
+  ✅ Updated AUD/USD 1m_7d - Total rows: 22886
+======================================================================
+📊 PROCESSING SUMMARY
+======================================================================
+📈 Updated GBP/USD 1d_5y (7351 rows)
+📈 Updated EUR/USD 15m_60d (8104 rows)
+📈 Updated EUR/USD 1h_2y (8106 rows)
+📈 Updated EUR/USD 1d_5y (7351 rows)
+📈 Updated EUR/USD 5m_1mo (8104 rows)
+📈 Updated GBP/USD 1h_2y (8104 rows)
+📈 Updated GBP/USD 15m_60d (8104 rows)
+📈 Updated EUR/USD 1m_7d (8104 rows)
+📈 Updated GBP/USD 5m_1mo (26204 rows)
+📈 Updated USD/JPY 15m_60d (26677 rows)
+📈 Updated USD/JPY 1d_5y (26881 rows)
+📈 Updated GBP/USD 1m_7d (26963 rows)
+📈 Updated USD/JPY 1h_2y (26940 rows)
+📈 Updated USD/JPY 5m_1mo (28900 rows)
+📈 Updated USD/JPY 1m_7d (26270 rows)
+📈 Updated AUD/USD 1d_5y (26878 rows)
+📈 Updated AUD/USD 1h_2y (22511 rows)
+📈 Updated AUD/USD 15m_60d (22511 rows)
+📈 Updated AUD/USD 5m_1mo (22544 rows)
+📈 Updated AUD/USD 1m_7d (22886 rows)
+Total tasks: 20
+Files updated: 20
+======================================================================
+🤖 GitHub Actions: Skipping git operations
+   (Workflow will handle commit and push)
+======================================================================
+======================================================================
+✅ YFINANCE WORKFLOW COMPLETED
+======================================================================
+Environment: GitHub Actions
+Pairs processed: 4
+Timeframes per pair: 5
+Files updated: 20
+Status: Success
+======================================================================
+🎯 All FX pairs & timeframes processed with maximum historical data!
+----------------------------------------------------------------------
+✅ Cell 6/10 completed in 8.8s
+======================================================================
+
+======================================================================
+🔄 EXECUTING CELL 7/10 (70.0% complete)
+⏱️  Elapsed time: 45.6s
+📝 Cell preview: # ======================================================...
+----------------------------------------------------------------------
+======================================================================
+🔧 CSV Combiner & Indicator Generator - Multi-Environment Edition
+======================================================================
+🌍 Detected Environment: GitHub Actions
+📂 GitHub Actions: Using repo root: /home/runner/work/forex-ai-models/forex-ai-models
+✅ Root directory: /home/runner/work/forex-ai-models/forex-ai-models
+✅ Repo folder: /home/runner/work/forex-ai-models/forex-ai-models/forex-ai-models
+✅ CSV folder: /home/runner/work/forex-ai-models/forex-ai-models/csvs
+✅ Pickle folder: /home/runner/work/forex-ai-models/forex-ai-models/pickles
+✅ Logs folder: /home/runner/work/forex-ai-models/forex-ai-models/logs
+✅ Git configured: Forex AI Bot <nakatonabira3@gmail.com>
+ℹ️ 🤖 GitHub Actions: Repository already available
+✅ ✅ Using current directory as repo: /home/runner/work/forex-ai-models/forex-ai-models
+======================================================================
+🚀 Processing CSV files...
+======================================================================
+⚠️ No CSVs found to process – pipeline will skip
+======================================================================
+🤖 GitHub Actions: Skipping git operations
+   (Workflow will handle commit and push)
+======================================================================
+======================================================================
+✅ CSV COMBINER WORKFLOW COMPLETED
+======================================================================
+Environment: GitHub Actions
+CSV files processed: 0
+Pickle files updated: 0
+Status: No CSVs found
+======================================================================
+🎯 All CSVs combined, incremental indicators added successfully!
+----------------------------------------------------------------------
+✅ Cell 7/10 completed in 0.8s
+======================================================================
+
+======================================================================
+🔄 EXECUTING CELL 8/10 (80.0% complete)
+⏱️  Elapsed time: 46.3s
+📝 Cell preview: #!/usr/bin/env python3...
+----------------------------------------------------------------------
+🌍 Detected Environment: GitHub Actions
+📂 GitHub Actions: Using repo root: /home/runner/work/forex-ai-models/forex-ai-models
+✅ Root Directory: /home/runner/work/forex-ai-models/forex-ai-models
+✅ Repo Folder: /home/runner/work/forex-ai-models/forex-ai-models/forex-ai-models
+✅ CSV Folder: /home/runner/work/forex-ai-models/forex-ai-models/csvs
+✅ Pickle Folder: /home/runner/work/forex-ai-models/forex-ai-models/pickles
+✅ Logs Folder: /home/runner/work/forex-ai-models/forex-ai-models/logs
+✅ Backup Folder: /home/runner/work/forex-ai-models/forex-ai-models/backups
+✅ Environment: GitHub Actions
+ℹ️ Working Directory: /home/runner/work/forex-ai-models/forex-ai-models
+ℹ️ ============================================================
+✅ ENHANCED FX PIPELINE v3.7 - Database Test
+ℹ️ ============================================================
+✅ ✅ Enhanced Database v3.7 initialized
+🐞   ✓ Table 'pending_trades' exists (0 rows)
+🐞   ✓ Table 'completed_trades' exists (0 rows)
+🐞   ✓ Table 'model_stats_cache' exists (0 rows)
+🐞   ✓ Table 'execution_log' exists (0 rows)
+🐞   ✓ Table 'performance_metrics' exists (0 rows)
+ℹ️ 
+📊 Current Database Statistics:
+  pending_trades: 0
+  completed_trades: 0
+  total_pnl: 0.0
+  overall_accuracy: 0.0
+  avg_duration_hours: 0.0
+  best_model: None
+  best_model_trades: 0
+  best_model_wins: 0
+  db_size_mb: 0.00390625
+  trades_last_24h: 0
+✅ 💾 Stored 1 trades in 0ms (0 failed)
+✅ 
+✅ Stored 1 test signals
+ℹ️ ℹ️ No trades old enough to evaluate (need 1+ hours)
+ℹ️ 
+📋 Performance Report:
+  Total Models: 0
+  Total Pairs: 0
+ℹ️ 
+🧹 Running cleanup...
+✅ 💾 Backup created: db_backup_20251111_233314.db
+✅ 🧹 Cleanup complete: Removed 0 pending trades, 0 logs, 0 metrics
+✅ ✅ Database connection closed
+✅ 
+✅ Enhanced Database v3.7 Test Complete!
+----------------------------------------------------------------------
+✅ Cell 8/10 completed in 0.2s
+======================================================================
+
+======================================================================
+🔄 EXECUTING CELL 9/10 (90.0% complete)
+⏱️  Elapsed time: 46.6s
+📝 Cell preview: # ======================================================...
+----------------------------------------------------------------------
+
+======================================================================
+❌ CELL EXECUTION FAILED!
+======================================================================
+Error type: PermissionError
+Error message: [Errno 13] Permission denied: '/content'
+
+Traceback:
+/
+c
+o
+n
+t
+e
+n
+t
+'
+
+
+======================================================================
+
+======================================================================
+❌ EXECUTION FAILED
+📅 Finished: 2025-11-11 23:33:15 UTC
+======================================================================

@@ -1,7 +1,7 @@
 ======================================================================
 🧠 FOREX AI BRAIN - FULL NOTEBOOK EXECUTION
 ======================================================================
-📅 Started: 2025-11-12 00:21:29 UTC
+📅 Started: 2025-11-12 20:10:09 UTC
 📓 Notebook: AI_Forex_Brain_2.ipynb
 ======================================================================
 
@@ -30,7 +30,7 @@
 
 ======================================================================
 🔄 EXECUTING CELL 2/10 (20.0% complete)
-⏱️  Elapsed time: 1.4s
+⏱️  Elapsed time: 1.3s
 📝 Cell preview: # ======================================================...
 ----------------------------------------------------------------------
 ============================================================
@@ -47,7 +47,7 @@
 
 ======================================================================
 🔄 EXECUTING CELL 3/10 (30.0% complete)
-⏱️  Elapsed time: 1.4s
+⏱️  Elapsed time: 1.3s
 📝 Cell preview: # ======================================================...
 ----------------------------------------------------------------------
 🤖 GitHub Actions Mode: Using current directory
@@ -133,7 +133,7 @@ Collecting pyjwt>=2.10.1 (from pyjwt[crypto]>=2.10.1->firebase-admin)
   Downloading PyJWT-2.10.1-py3-none-any.whl.metadata (4.0 kB)
 Requirement already satisfied: httpx==0.28.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from httpx[http2]==0.28.1->firebase-admin) (0.28.1)
 Requirement already satisfied: anyio in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from httpx==0.28.1->httpx[http2]==0.28.1->firebase-admin) (4.11.0)
-Requirement already satisfied: certifi in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from httpx==0.28.1->httpx[http2]==0.28.1->firebase-admin) (2025.10.5)
+Requirement already satisfied: certifi in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from httpx==0.28.1->httpx[http2]==0.28.1->firebase-admin) (2025.11.12)
 Requirement already satisfied: httpcore==1.* in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from httpx==0.28.1->httpx[http2]==0.28.1->firebase-admin) (1.0.9)
 Requirement already satisfied: idna in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from httpx==0.28.1->httpx[http2]==0.28.1->firebase-admin) (3.11)
 Collecting h2<5,>=3 (from httpx[http2]==0.28.1->firebase-admin)
@@ -185,14 +185,13 @@ Collecting multitasking>=0.0.7 (from yfinance)
 -
  done
 [?25h  Preparing metadata (pyproject.toml) ... [?25l
--
- done
+- done
 [?25hRequirement already satisfied: platformdirs>=2.0.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from yfinance) (4.5.0)
 Collecting frozendict>=2.3.4 (from yfinance)
   Downloading frozendict-2.4.7-py3-none-any.whl.metadata (23 kB)
 Collecting peewee>=3.16.2 (from yfinance)
   Downloading peewee-3.18.3.tar.gz (3.0 MB)
-[?25l     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/3.0 MB ? eta -:--:--[2K     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.0/3.0 MB 145.6 MB/s  0:00:00
+[?25l     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/3.0 MB ? eta -:--:--[2K     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.0/3.0 MB 181.1 MB/s  0:00:00
 [?25h
   Installing build dependencies ... [?25l
 -
@@ -235,8 +234,7 @@ INFO: pip is still looking at multiple versions of pyppeteer to determine which 
 Collecting pyppeteer
   Downloading pyppeteer-0.2.2-py3-none-any.whl.metadata (6.6 kB)
   Downloading pyppeteer-0.0.25.tar.gz (1.2 MB)
-[?25l
-     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/1.2 MB ? eta -:--:--[2K     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 157.4 MB/s  0:00:00
+[?25l     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/1.2 MB ? eta -:--:--[2K     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 138.0 MB/s  0:00:00
 [?25h
   Installing build dependencies ... [?25l
 -
@@ -248,7 +246,8 @@ Collecting pyppeteer
 [?25h  Preparing metadata (pyproject.toml) ... [?25l
 -
  done
-[?25hCollecting pyee (from pyppeteer)
+[?25h
+Collecting pyee (from pyppeteer)
   Downloading pyee-13.0.0-py3-none-any.whl.metadata (2.9 kB)
 Requirement already satisfied: scipy in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from lightgbm) (1.16.3)
 Collecting contourpy>=1.0.1 (from matplotlib)
@@ -300,8 +299,9 @@ Downloading google_auth-2.43.0-py2.py3-none-any.whl (223 kB)
 Downloading cachetools-6.2.1-py3-none-any.whl (11 kB)
 Downloading googleapis_common_protos-1.72.0-py3-none-any.whl (297 kB)
 Downloading grpcio-1.76.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (6.6 MB)
-[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/6.6 MB ? eta -:--:--[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.6/6.6 MB 217.3 MB/s  0:00:00
-[?25hDownloading grpcio_status-1.76.0-py3-none-any.whl (14 kB)
+[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/6.6 MB ? eta -:--:--[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.6/6.6 MB 173.8 MB/s  0:00:00
+[?25h
+Downloading grpcio_status-1.76.0-py3-none-any.whl (14 kB)
 Downloading h2-4.3.0-py3-none-any.whl (61 kB)
 Downloading hpack-4.1.0-py3-none-any.whl (34 kB)
 Downloading hyperframe-6.1.0-py3-none-any.whl (13 kB)
@@ -309,29 +309,30 @@ Downloading proto_plus-1.26.1-py3-none-any.whl (50 kB)
 Downloading protobuf-6.33.0-cp39-abi3-manylinux2014_x86_64.whl (323 kB)
 Downloading rsa-4.9.1-py3-none-any.whl (34 kB)
 Downloading dropbox-12.0.2-py3-none-any.whl (572 kB)
-[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/572.1 kB ? eta -:--:--[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 572.1/572.1 kB 91.9 MB/s  0:00:00
+[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/572.1 kB ? eta -:--:--
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 572.1/572.1 kB 89.0 MB/s  0:00:00
 [?25hDownloading stone-3.3.1-py3-none-any.whl (162 kB)
 Downloading yfinance-0.2.66-py2.py3-none-any.whl (123 kB)
 Downloading lightgbm-4.6.0-py3-none-manylinux_2_28_x86_64.whl (3.6 MB)
-[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/3.6 MB ? eta -:--:--[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.6/3.6 MB 172.1 MB/s  0:00:00
+[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/3.6 MB ? eta -:--:--[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.6/3.6 MB 205.4 MB/s  0:00:00
 [?25hDownloading matplotlib-3.10.7-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (8.7 MB)
 [?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/8.7 MB ? eta -:--:--
-[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.7/8.7 MB 154.7 MB/s  0:00:00
-[?25h
-Downloading alpha_vantage-3.0.0-py3-none-any.whl (35 kB)
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸━━━━━━ 7.3/8.7 MB 124.5 MB/s eta 0:00:01
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.7/8.7 MB 21.7 MB/s  0:00:00
+[?25hDownloading alpha_vantage-3.0.0-py3-none-any.whl (35 kB)
 Downloading tqdm-4.67.1-py3-none-any.whl (78 kB)
 Downloading river-0.22.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.2 MB)
-[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/3.2 MB ? eta -:--:--[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.2/3.2 MB 74.8 MB/s  0:00:00
+[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/3.2 MB ? eta -:--:--[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.2/3.2 MB 80.5 MB/s  0:00:00
 [?25hDownloading cachecontrol-0.14.3-py3-none-any.whl (21 kB)
 Downloading msgpack-1.1.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (426 kB)
 Downloading contourpy-1.3.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (355 kB)
 Downloading curl_cffi-0.13.0-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (8.3 MB)
 [?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/8.3 MB ? eta -:--:--
-[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.3/8.3 MB 192.3 MB/s  0:00:00
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.3/8.3 MB 177.3 MB/s  0:00:00
 [?25hDownloading cycler-0.12.1-py3-none-any.whl (8.3 kB)
 Downloading fonttools-4.60.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (5.0 MB)
 [?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/5.0 MB ? eta -:--:--
-[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.0/5.0 MB 141.6 MB/s  0:00:00
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.0/5.0 MB 129.3 MB/s  0:00:00
 [?25hDownloading frozendict-2.4.7-py3-none-any.whl (16 kB)
 Downloading google_cloud_firestore-2.21.0-py3-none-any.whl (368 kB)
 Downloading google_cloud_core-2.5.0-py3-none-any.whl (29 kB)
@@ -339,21 +340,21 @@ Downloading google_cloud_storage-3.5.0-py3-none-any.whl (289 kB)
 Downloading google_crc32c-1.7.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (32 kB)
 Downloading google_resumable_media-2.7.2-py2.py3-none-any.whl (81 kB)
 Downloading kiwisolver-1.4.9-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.4 MB)
-[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/1.4 MB ? eta -:--:--[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.4/1.4 MB 132.3 MB/s  0:00:00
+[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/1.4 MB ? eta -:--:--[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.4/1.4 MB 177.7 MB/s  0:00:00
 [?25hDownloading pillow-12.0.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (7.0 MB)
 [?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/7.0 MB ? eta -:--:--
-[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.0/7.0 MB 108.8 MB/s  0:00:00
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.0/7.0 MB 107.9 MB/s  0:00:00
 [?25hDownloading ply-3.11-py2.py3-none-any.whl (49 kB)
 Downloading pyasn1-0.6.1-py3-none-any.whl (83 kB)
 Downloading pyasn1_modules-0.4.2-py3-none-any.whl (181 kB)
 Downloading PyJWT-2.10.1-py3-none-any.whl (22 kB)
 Downloading cryptography-46.0.3-cp311-abi3-manylinux_2_34_x86_64.whl (4.5 MB)
 [?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/4.5 MB ? eta -:--:--
-[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 194.8 MB/s  0:00:00
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 212.7 MB/s  0:00:00
 [?25hDownloading pyparsing-3.2.5-py3-none-any.whl (113 kB)
 Downloading websockets-15.0.1-cp311-cp311-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (182 kB)
 Downloading aiohttp-3.13.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.7 MB)
-[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/1.7 MB ? eta -:--:--[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 137.6 MB/s  0:00:00
+[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/1.7 MB ? eta -:--:--[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 166.6 MB/s  0:00:00
 [?25hDownloading multidict-6.7.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (246 kB)
 Downloading yarl-1.22.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (365 kB)
 Downloading aiohappyeyeballs-2.6.1-py3-none-any.whl (15 kB)
@@ -366,12 +367,12 @@ Building wheels for collected packages: pyppeteer, multitasking, peewee
   Building wheel for pyppeteer (pyproject.toml) ... [?25l
 -
  done
-[?25h  Created wheel for pyppeteer: filename=pyppeteer-0.0.25-py3-none-any.whl size=78442 sha256=ca440c89b407d334a00a6f5abf6092eaca9ddf7186e129d5fff254f155d4ff5d
+[?25h  Created wheel for pyppeteer: filename=pyppeteer-0.0.25-py3-none-any.whl size=78442 sha256=13db3e0edc7e424c99e0d6f35b07921799e5e5ad19c296d3e402d2f23eaa68ac
   Stored in directory: /home/runner/.cache/pip/wheels/73/a3/1e/3a15782836222d82b917f1ebf652f9db54eec93f3268a42bcf
   Building wheel for multitasking (pyproject.toml) ... [?25l
 -
  done
-[?25h  Created wheel for multitasking: filename=multitasking-0.0.12-py3-none-any.whl size=15636 sha256=b9a01c21ec13b220e2d09a144ca14aed88bcd1a4d845fbe0c2c10ec65bbf1f1f
+[?25h  Created wheel for multitasking: filename=multitasking-0.0.12-py3-none-any.whl size=15636 sha256=8972510a2e6d9191fd06b17bf652321068683aea95ad23e83e799c59b5168ff2
   Stored in directory: /home/runner/.cache/pip/wheels/42/d6/84/bf57a755f4569494cd00de4bb46ef064874823f4d19c82e960
   Building wheel for peewee (pyproject.toml) ... [?25l
 -
@@ -379,7 +380,7 @@ Building wheels for collected packages: pyppeteer, multitasking, peewee
  |
  /
  done
-[?25h  Created wheel for peewee: filename=peewee-3.18.3-cp311-cp311-linux_x86_64.whl size=1064054 sha256=2838809376bcdbba0db25e1d0578a1b27f63b616eefc1fd63396a10540cda248
+[?25h  Created wheel for peewee: filename=peewee-3.18.3-cp311-cp311-linux_x86_64.whl size=1064052 sha256=ed105de6f4f550a31a262e582f9db9ce4074843b9f0ffeea0b74b46fc36c2f21
   Stored in directory: /home/runner/.cache/pip/wheels/05/dc/94/4ba26d23cac9aee7481d3dfcc7e99ce2cc5731230ec10f7ec1
 Successfully built pyppeteer multitasking peewee
 Installing collected packages: ply, peewee, multitasking, appdirs, websockets, tqdm, stone, pyparsing, pyjwt, pyee, pyasn1, protobuf, propcache, pillow, multidict, msgpack, kiwisolver, hyperframe, hpack, grpcio, google-crc32c, frozenlist, frozendict, fonttools, cycler, contourpy, cachetools, aiohappyeyeballs, yarl, rsa, pyppeteer, pyasn1-modules, proto-plus, matplotlib, lightgbm, h2, googleapis-common-protos, google-resumable-media, dropbox, curl_cffi, cryptography, cachecontrol, aiosignal, yfinance, river, mplfinance, grpcio-status, google-auth, aiohttp, google-api-core, alpha_vantage, google-cloud-core, google-cloud-storage, google-cloud-firestore, firebase-admin
@@ -389,15 +390,15 @@ Installing collected packages: ply, peewee, multitasking, appdirs, websockets, t
 [2K   ━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10/55 [pyasn1]
 [2K   ━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11/55 [protobuf]
 [2K   ━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13/55 [pillow]
-[2K   ━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 15/55 [msgpack]
+[2K   ━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16/55 [kiwisolver]
 [2K   ━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━━━━━━━ 19/55 [grpcio]
 [2K   ━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━━━━ 23/55 [fonttools]
 [2K   ━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━━━━ 23/55 [fonttools]
 [2K   ━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━━━━ 23/55 [fonttools]
 [2K   ━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━━━━ 23/55 [fonttools]
 [2K   ━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━━━━ 23/55 [fonttools]
-[2K   ━━━━━━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━ 30/55 [pyppeteer]
-[2K   ━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━ 32/55 [proto-plus]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━ 31/55 [pyasn1-modules]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━ 33/55 [matplotlib]
 [2K   ━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━ 33/55 [matplotlib]
 [2K   ━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━ 33/55 [matplotlib]
 [2K   ━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━ 33/55 [matplotlib]
@@ -418,15 +419,15 @@ Installing collected packages: ply, peewee, multitasking, appdirs, websockets, t
 [2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸━━━━━ 48/55 [aiohttp]
 [2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸━━ 52/55 [google-cloud-storage]
 [2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸━ 53/55 [google-cloud-firestore]
-[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺ 54/55 [firebase-admin][2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 55/55 [firebase-admin]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 55/55 [firebase-admin]
 [?25h[1A[2KSuccessfully installed aiohappyeyeballs-2.6.1 aiohttp-3.13.2 aiosignal-1.4.0 alpha_vantage-3.0.0 appdirs-1.4.4 cachecontrol-0.14.3 cachetools-6.2.1 contourpy-1.3.3 cryptography-46.0.3 curl_cffi-0.13.0 cycler-0.12.1 dropbox-12.0.2 firebase-admin-7.1.0 fonttools-4.60.1 frozendict-2.4.7 frozenlist-1.8.0 google-api-core-2.28.1 google-auth-2.43.0 google-cloud-core-2.5.0 google-cloud-firestore-2.21.0 google-cloud-storage-3.5.0 google-crc32c-1.7.1 google-resumable-media-2.7.2 googleapis-common-protos-1.72.0 grpcio-1.76.0 grpcio-status-1.76.0 h2-4.3.0 hpack-4.1.0 hyperframe-6.1.0 kiwisolver-1.4.9 lightgbm-4.6.0 matplotlib-3.10.7 mplfinance-0.12.10b0 msgpack-1.1.2 multidict-6.7.0 multitasking-0.0.12 peewee-3.18.3 pillow-12.0.0 ply-3.11 propcache-0.4.1 proto-plus-1.26.1 protobuf-6.33.0 pyasn1-0.6.1 pyasn1-modules-0.4.2 pyee-13.0.0 pyjwt-2.10.1 pyparsing-3.2.5 pyppeteer-0.0.25 river-0.22.0 rsa-4.9.1 stone-3.3.1 tqdm-4.67.1 websockets-15.0.1 yarl-1.22.0 yfinance-0.2.66
 ----------------------------------------------------------------------
-✅ Cell 4/10 completed in 30.7s
+✅ Cell 4/10 completed in 31.5s
 ======================================================================
 
 ======================================================================
 🔄 EXECUTING CELL 5/10 (50.0% complete)
-⏱️  Elapsed time: 32.2s
+⏱️  Elapsed time: 32.8s
 📝 Cell preview: # ======================================================...
 ----------------------------------------------------------------------
 ======================================================================
@@ -450,29 +451,29 @@ Installing collected packages: ply, peewee, multitasking, appdirs, websockets, t
 🔄 Processing GBP/USD...
 🔄 Processing USD/JPY...
 🔄 Processing AUD/USD...
-  📊 Loaded 5001 existing rows
+  📊 Loaded 5002 existing rows
+  📊 Loaded 5002 existing rows
   📊 Loaded 5002 existing rows
   📊 Loaded 5001 existing rows
-  📊 Loaded 5002 existing rows
-  Fetching USD/JPY (attempt 1/3)...
-  Fetching AUD/USD (attempt 1/3)...
-  Fetching EUR/USD (attempt 1/3)...
   Fetching GBP/USD (attempt 1/3)...
-  ✅ Fetched 5000 rows for USD/JPY
-  ℹ️ No changes - Total rows: 5002
-  ✅ Fetched 5000 rows for AUD/USD
-  ℹ️ No changes - Total rows: 5001
+  Fetching USD/JPY (attempt 1/3)...
+  Fetching EUR/USD (attempt 1/3)...
+  Fetching AUD/USD (attempt 1/3)...
   ✅ Fetched 5000 rows for GBP/USD
-  ℹ️ No changes - Total rows: 5002
+  ✅ Fetched 5000 rows for AUD/USD
+  ✅ Fetched 5000 rows for USD/JPY
   ✅ Fetched 5000 rows for EUR/USD
+  ℹ️ No changes - Total rows: 5002
   ✅ Updated - Total rows: 5002
+  ℹ️ No changes - Total rows: 5002
+  ℹ️ No changes - Total rows: 5002
 ======================================================================
 📊 PROCESSING SUMMARY
 ======================================================================
-ℹ️ No changes USD/JPY (5002 rows)
-ℹ️ No changes AUD/USD (5001 rows)
 ℹ️ No changes GBP/USD (5002 rows)
-✅ Updated EUR/USD (5002 rows)
+✅ Updated AUD/USD (5002 rows)
+ℹ️ No changes USD/JPY (5002 rows)
+ℹ️ No changes EUR/USD (5002 rows)
 Total pairs processed: 4
 Files updated: 1
 ======================================================================
@@ -488,12 +489,12 @@ Files updated: 1
 Status: Success
 ======================================================================
 ----------------------------------------------------------------------
-✅ Cell 5/10 completed in 2.4s
+✅ Cell 5/10 completed in 1.4s
 ======================================================================
 
 ======================================================================
 🔄 EXECUTING CELL 6/10 (60.0% complete)
-⏱️  Elapsed time: 34.6s
+⏱️  Elapsed time: 34.2s
 📝 Cell preview: # ======================================================...
 ----------------------------------------------------------------------
 ======================================================================
@@ -515,89 +516,89 @@ Status: Success
 ======================================================================
 🚀 Starting parallel data download...
 ======================================================================
-  📂 Loaded 8311 existing rows for EUR/USD 1h_2y
-  📂 Loaded 8311 existing rows for EUR/USD 1m_7d
-  📂 Loaded 8311 existing rows for EUR/USD 15m_60d
-  📂 Loaded 7534 existing rows for GBP/USD 1d_5y
-  📂 Loaded 7534 existing rows for EUR/USD 1d_5y
-  📂 Loaded 8311 existing rows for EUR/USD 5m_1mo
-  📂 Loaded 8311 existing rows for GBP/USD 1h_2y
-  📂 Loaded 8311 existing rows for GBP/USD 15m_60d
+  📂 Loaded 8312 existing rows for GBP/USD 15m_60d
+  📂 Loaded 8312 existing rows for EUR/USD 1h_2y
+  📂 Loaded 7535 existing rows for EUR/USD 1d_5y
+  📂 Loaded 8312 existing rows for EUR/USD 15m_60d
+  📂 Loaded 8312 existing rows for EUR/USD 1m_7d
+  📂 Loaded 7535 existing rows for GBP/USD 1d_5y
+  📂 Loaded 8312 existing rows for GBP/USD 1h_2y
+  📂 Loaded 8312 existing rows for EUR/USD 5m_1mo
   🔽 Fetching EUR/USD 1h_2y (attempt 1/3)...
-  🔽 Fetching EUR/USD 15m_60d (attempt 1/3)...
-  🔽 Fetching GBP/USD 1d_5y (attempt 1/3)...
-  🔽 Fetching EUR/USD 1d_5y (attempt 1/3)...
-  🔽 Fetching EUR/USD 1m_7d (attempt 1/3)...
-  🔽 Fetching GBP/USD 1h_2y (attempt 1/3)...
   🔽 Fetching GBP/USD 15m_60d (attempt 1/3)...
+  🔽 Fetching GBP/USD 1d_5y (attempt 1/3)...
   🔽 Fetching EUR/USD 5m_1mo (attempt 1/3)...
-  ✅ Updated EUR/USD 5m_1mo - Total rows: 8312
+  🔽 Fetching EUR/USD 1d_5y (attempt 1/3)...
+  🔽 Fetching EUR/USD 15m_60d (attempt 1/3)...
+  🔽 Fetching GBP/USD 1h_2y (attempt 1/3)...
+  🔽 Fetching EUR/USD 1m_7d (attempt 1/3)...
   ✅ Updated EUR/USD 1d_5y - Total rows: 7535
-  ✅ Updated EUR/USD 1m_7d - Total rows: 8312
-  📂 Loaded 26204 existing rows for GBP/USD 5m_1mo
-  ✅ Updated GBP/USD 1h_2y - Total rows: 8312
-  📂 Loaded 26963 existing rows for GBP/USD 1m_7d
-  ✅ Updated GBP/USD 1d_5y - Total rows: 7535
-  ✅ Updated EUR/USD 1h_2y - Total rows: 8312
-  📂 Loaded 26881 existing rows for USD/JPY 1d_5y
-  🔽 Fetching GBP/USD 5m_1mo (attempt 1/3)...
   ✅ Updated EUR/USD 15m_60d - Total rows: 8312
-  📂 Loaded 26940 existing rows for USD/JPY 1h_2y
-  🔽 Fetching GBP/USD 1m_7d (attempt 1/3)...
-  📂 Loaded 26677 existing rows for USD/JPY 15m_60d
+  ✅ Updated GBP/USD 1d_5y - Total rows: 7535
+  📂 Loaded 26209 existing rows for GBP/USD 5m_1mo
   ✅ Updated GBP/USD 15m_60d - Total rows: 8312
-  📂 Loaded 28900 existing rows for USD/JPY 5m_1mo
-  🔽 Fetching USD/JPY 1d_5y (attempt 1/3)...
+  ✅ Updated EUR/USD 1h_2y - Total rows: 8312
+  📂 Loaded 26968 existing rows for GBP/USD 1m_7d
+  📂 Loaded 26951 existing rows for USD/JPY 1d_5y
+  ✅ Updated EUR/USD 5m_1mo - Total rows: 8312
+  🔽 Fetching GBP/USD 5m_1mo (attempt 1/3)...
+  📂 Loaded 26941 existing rows for USD/JPY 1h_2y
+  ✅ Updated EUR/USD 1m_7d - Total rows: 8312
+  ✅ Updated GBP/USD 1h_2y - Total rows: 8312
+  📂 Loaded 29304 existing rows for USD/JPY 15m_60d
+  🔽 Fetching GBP/USD 1m_7d (attempt 1/3)...
   🔽 Fetching USD/JPY 1h_2y (attempt 1/3)...
-  📂 Loaded 26270 existing rows for USD/JPY 1m_7d
+  🔽 Fetching USD/JPY 1d_5y (attempt 1/3)...
+  📂 Loaded 28920 existing rows for USD/JPY 5m_1mo
   🔽 Fetching USD/JPY 15m_60d (attempt 1/3)...
-  📂 Loaded 26878 existing rows for AUD/USD 1d_5y
+  📂 Loaded 27041 existing rows for USD/JPY 1m_7d
   🔽 Fetching USD/JPY 5m_1mo (attempt 1/3)...
+  📂 Loaded 26955 existing rows for AUD/USD 1d_5y
   🔽 Fetching USD/JPY 1m_7d (attempt 1/3)...
   🔽 Fetching AUD/USD 1d_5y (attempt 1/3)...
-  ✅ Updated GBP/USD 1m_7d - Total rows: 26968
-  📂 Loaded 22511 existing rows for AUD/USD 1h_2y
-  ✅ Updated GBP/USD 5m_1mo - Total rows: 26209
-  🔽 Fetching AUD/USD 1h_2y (attempt 1/3)...
-  📂 Loaded 22511 existing rows for AUD/USD 15m_60d
   ✅ Updated USD/JPY 1h_2y - Total rows: 26941
-  🔽 Fetching AUD/USD 15m_60d (attempt 1/3)...
-  📂 Loaded 22548 existing rows for AUD/USD 5m_1mo
+  📂 Loaded 22512 existing rows for AUD/USD 1h_2y
+  ✅ Updated GBP/USD 1m_7d - Total rows: 26968
+  🔽 Fetching AUD/USD 1h_2y (attempt 1/3)...
+  📂 Loaded 22512 existing rows for AUD/USD 15m_60d
   ✅ Updated USD/JPY 1d_5y - Total rows: 26951
+  🔽 Fetching AUD/USD 15m_60d (attempt 1/3)...
+  📂 Loaded 22553 existing rows for AUD/USD 5m_1mo
   🔽 Fetching AUD/USD 5m_1mo (attempt 1/3)...
-  📂 Loaded 22895 existing rows for AUD/USD 1m_7d
-  ✅ Updated USD/JPY 5m_1mo - Total rows: 28920
-  🔽 Fetching AUD/USD 1m_7d (attempt 1/3)...
   ✅ Updated USD/JPY 15m_60d - Total rows: 29304
+  📂 Loaded 22909 existing rows for AUD/USD 1m_7d
   ✅ Updated AUD/USD 1d_5y - Total rows: 26955
+  🔽 Fetching AUD/USD 1m_7d (attempt 1/3)...
   ✅ Updated USD/JPY 1m_7d - Total rows: 27041
-  ✅ Updated AUD/USD 1h_2y - Total rows: 22512
-  ✅ Updated AUD/USD 15m_60d - Total rows: 22512
-  ✅ Updated AUD/USD 5m_1mo - Total rows: 22553
-  ✅ Updated AUD/USD 1m_7d - Total rows: 22909
+  ✅ Updated GBP/USD 5m_1mo - Total rows: 26209
+  ✅ Updated USD/JPY 5m_1mo - Total rows: 29385
+  ✅ Updated AUD/USD 1h_2y - Total rows: 22532
+  ✅ Updated AUD/USD 15m_60d - Total rows: 25019
+  ✅ Updated AUD/USD 5m_1mo - Total rows: 22791
+  ✅ Updated AUD/USD 1m_7d - Total rows: 23503
 ======================================================================
 📊 PROCESSING SUMMARY
 ======================================================================
-📈 Updated EUR/USD 5m_1mo (8312 rows)
 📈 Updated EUR/USD 1d_5y (7535 rows)
+📈 Updated EUR/USD 15m_60d (8312 rows)
+📈 Updated GBP/USD 1d_5y (7535 rows)
+📈 Updated GBP/USD 15m_60d (8312 rows)
+📈 Updated EUR/USD 1h_2y (8312 rows)
+📈 Updated EUR/USD 5m_1mo (8312 rows)
 📈 Updated EUR/USD 1m_7d (8312 rows)
 📈 Updated GBP/USD 1h_2y (8312 rows)
-📈 Updated GBP/USD 1d_5y (7535 rows)
-📈 Updated EUR/USD 1h_2y (8312 rows)
-📈 Updated EUR/USD 15m_60d (8312 rows)
-📈 Updated GBP/USD 15m_60d (8312 rows)
-📈 Updated GBP/USD 1m_7d (26968 rows)
-📈 Updated GBP/USD 5m_1mo (26209 rows)
 📈 Updated USD/JPY 1h_2y (26941 rows)
+📈 Updated GBP/USD 1m_7d (26968 rows)
 📈 Updated USD/JPY 1d_5y (26951 rows)
-📈 Updated USD/JPY 5m_1mo (28920 rows)
 📈 Updated USD/JPY 15m_60d (29304 rows)
 📈 Updated AUD/USD 1d_5y (26955 rows)
 📈 Updated USD/JPY 1m_7d (27041 rows)
-📈 Updated AUD/USD 1h_2y (22512 rows)
-📈 Updated AUD/USD 15m_60d (22512 rows)
-📈 Updated AUD/USD 5m_1mo (22553 rows)
-📈 Updated AUD/USD 1m_7d (22909 rows)
+📈 Updated GBP/USD 5m_1mo (26209 rows)
+📈 Updated USD/JPY 5m_1mo (29385 rows)
+📈 Updated AUD/USD 1h_2y (22532 rows)
+📈 Updated AUD/USD 15m_60d (25019 rows)
+📈 Updated AUD/USD 5m_1mo (22791 rows)
+📈 Updated AUD/USD 1m_7d (23503 rows)
 Total tasks: 20
 Files updated: 20
 ======================================================================
@@ -615,31 +616,30 @@ Status: Success
 ======================================================================
 🎯 All FX pairs & timeframes processed with maximum historical data!
 ----------------------------------------------------------------------
-✅ Cell 6/10 completed in 9.9s
+✅ Cell 6/10 completed in 9.6s
 ======================================================================
 
 ======================================================================
 🔄 EXECUTING CELL 7/10 (70.0% complete)
-⏱️  Elapsed time: 44.5s
+⏱️  Elapsed time: 43.8s
 📝 Cell preview: # ======================================================...
 ----------------------------------------------------------------------
 ======================================================================
-🔧 CSV Combiner & Indicator Generator - Multi-Environment Edition
+🔧 CSV Combiner & Indicator Generator v3.7 - FIXED PATHS
 ======================================================================
 🌍 Detected Environment: GitHub Actions
 📂 GitHub Actions: Using repo root: /home/runner/work/forex-ai-models/forex-ai-models
 ✅ Root directory: /home/runner/work/forex-ai-models/forex-ai-models
-✅ Repo folder: /home/runner/work/forex-ai-models/forex-ai-models/forex-ai-models
+✅ Repo folder: /home/runner/work/forex-ai-models/forex-ai-models
 ✅ CSV folder: /home/runner/work/forex-ai-models/forex-ai-models/csvs
 ✅ Pickle folder: /home/runner/work/forex-ai-models/forex-ai-models/pickles
 ✅ Logs folder: /home/runner/work/forex-ai-models/forex-ai-models/logs
 ✅ Git configured: Forex AI Bot <nakatonabira3@gmail.com>
 ℹ️ 🤖 GitHub Actions: Repository already available
-✅ ✅ Using current directory as repo: /home/runner/work/forex-ai-models/forex-ai-models
 ======================================================================
 🚀 Processing CSV files...
 ======================================================================
-⚠️ No CSVs found to process – pipeline will skip
+⚠️ ⚪ No CSVs found – skipping
 ======================================================================
 🤖 GitHub Actions: Skipping git operations
    (Workflow will handle commit and push)
@@ -650,22 +650,21 @@ Status: Success
 Environment: GitHub Actions
 CSV files processed: 0
 Pickle files updated: 0
-Status: No CSVs found
 ======================================================================
-🎯 All CSVs combined, incremental indicators added successfully!
+🎯 All CSVs combined with incremental indicators!
 ----------------------------------------------------------------------
-✅ Cell 7/10 completed in 0.8s
+✅ Cell 7/10 completed in 0.7s
 ======================================================================
 
 ======================================================================
 🔄 EXECUTING CELL 8/10 (80.0% complete)
-⏱️  Elapsed time: 45.3s
+⏱️  Elapsed time: 44.5s
 📝 Cell preview: #!/usr/bin/env python3...
 ----------------------------------------------------------------------
 🌍 Detected Environment: GitHub Actions
 📂 GitHub Actions: Using repo root: /home/runner/work/forex-ai-models/forex-ai-models
 ✅ Root Directory: /home/runner/work/forex-ai-models/forex-ai-models
-✅ Repo Folder: /home/runner/work/forex-ai-models/forex-ai-models/forex-ai-models
+✅ Repo Folder: /home/runner/work/forex-ai-models/forex-ai-models
 ✅ CSV Folder: /home/runner/work/forex-ai-models/forex-ai-models/csvs
 ✅ Pickle Folder: /home/runner/work/forex-ai-models/forex-ai-models/pickles
 ✅ Logs Folder: /home/runner/work/forex-ai-models/forex-ai-models/logs
@@ -678,14 +677,14 @@ Status: No CSVs found
 ℹ️ 📁 Database path: /home/runner/work/forex-ai-models/forex-ai-models/memory_v85.db
 ✅ ✅ Connected to existing database: memory_v85.db
 ✅ ✅ Enhanced Database v3.7 initialized
-🐞   ✓ Table 'pending_trades' exists (0 rows)
+🐞   ✓ Table 'pending_trades' exists (1 rows)
 🐞   ✓ Table 'completed_trades' exists (0 rows)
 🐞   ✓ Table 'model_stats_cache' exists (0 rows)
-🐞   ✓ Table 'execution_log' exists (0 rows)
-🐞   ✓ Table 'performance_metrics' exists (0 rows)
+🐞   ✓ Table 'execution_log' exists (1 rows)
+🐞   ✓ Table 'performance_metrics' exists (1 rows)
 ℹ️ 
 📊 Current Database Statistics:
-  pending_trades: 0
+  pending_trades: 1
   completed_trades: 0
   total_pnl: 0.0
   overall_accuracy: 0.0
@@ -693,32 +692,38 @@ Status: No CSVs found
   best_model: None
   best_model_trades: 0
   best_model_wins: 0
-  db_size_mb: 0.03515625
+  db_size_mb: 0.1015625
   trades_last_24h: 0
 ✅ 💾 Stored 1 trades in 0ms (0 failed)
 ✅ 
 ✅ Stored 1 test signals
-ℹ️ ℹ️ No trades old enough to evaluate (need 1+ hours)
+ℹ️ 🔍 Evaluating 1 trades from previous iteration(s)
+🐞 ✅ Stats cache updated
+ℹ️ 
+📊 Model Performance (Last 7 days):
+⚡ 
+🏆 Best Model: Ensemble
 ℹ️ 
 📋 Performance Report:
   Total Models: 0
   Total Pairs: 0
 ℹ️ 
 🧹 Running cleanup...
-✅ 💾 Backup created: db_backup_20251112_002215.db
+✅ 💾 Backup created: db_backup_20251112_201054.db
 ✅ 🧹 Cleanup complete: Removed 0 pending trades, 0 logs, 0 metrics
 ✅ ✅ Database connection closed
 ✅ 
 ✅ Enhanced Database v3.7 Test Complete!
-✅ ✅ Using database: /home/runner/work/forex-ai-models/forex-ai-models/memory_v85.db
+✅ ✅ Database location: /home/runner/work/forex-ai-models/forex-ai-models/memory_v85.db
+✅ ✅ Fixed for GitHub Actions (no nested paths)
 ----------------------------------------------------------------------
 ✅ Cell 8/10 completed in 0.2s
 ======================================================================
 
 ======================================================================
 🔄 EXECUTING CELL 9/10 (90.0% complete)
-⏱️  Elapsed time: 45.5s
-📝 Cell preview: # ======================================================...
+⏱️  Elapsed time: 44.7s
+📝 Cell preview: #!/usr/bin/env python3...
 ----------------------------------------------------------------------
 🌍 Detected Environment: GitHub Actions
 📂 GitHub Actions: Using repo root: /home/runner/work/forex-ai-models/forex-ai-models
@@ -726,8 +731,8 @@ Status: No CSVs found
 ✅ CSV Folder: /home/runner/work/forex-ai-models/forex-ai-models/csvs
 ✅ Pickle Folder: /home/runner/work/forex-ai-models/forex-ai-models/pickles
 ✅ Temp Folder: /home/runner/work/forex-ai-models/forex-ai-models/temp_pickles
-✅ Repo Folder: /home/runner/work/forex-ai-models/forex-ai-models/forex-ai-models
-✅ JSON File: /home/runner/work/forex-ai-models/forex-ai-models/forex-ai-models/latest_signals.json
+✅ Repo Folder: /home/runner/work/forex-ai-models/forex-ai-models
+✅ JSON File: /home/runner/work/forex-ai-models/forex-ai-models/latest_signals.json
 ======================================================================
 🚀 UNIFIED PICKLE MERGER v3.7
 ======================================================================
@@ -737,9 +742,30 @@ CSV Folder: /home/runner/work/forex-ai-models/forex-ai-models/csvs
 Output Folder: /home/runner/work/forex-ai-models/forex-ai-models/pickles
 ======================================================================
 📋 Step 1: Processing JSON signals...
-⚪ JSON file not found: /home/runner/work/forex-ai-models/forex-ai-models/forex-ai-models/latest_signals.json
+📊 Processing JSON signals for 4 pairs...
+⚠️ No valid price data after filtering
+⚠️ No valid price data after filtering
+⚠️ No valid price data after filtering
+⚠️ No valid price data after filtering
+⚠️ No valid price data after filtering
+⚠️ No valid price data after filtering
+⚠️ No valid price data after filtering
+⚠️ No valid price data after filtering
+⚠️ No valid price data after filtering
+⚠️ No valid price data after filtering
+⚠️ No valid price data after filtering
+⚠️ No valid price data after filtering
+⚠️ No valid price data after filtering
+⚠️ No valid price data after filtering
+⚠️ No valid price data after filtering
+⚠️ No valid price data after filtering
+⚠️ No valid price data after filtering
+⚠️ No valid price data after filtering
+⚠️ No valid price data after filtering
+⚠️ No valid price data after filtering
+✅ JSON processing complete: 0 files
 📋 Step 2: Processing CSV files...
-⚪ No CSV files found to process
+⚪ No CSV files found
 📋 Step 3: Merging pickle files...
 ⚪ No temporary pickles to merge.
 ======================================================================
@@ -752,90 +778,36 @@ Output Folder: /home/runner/work/forex-ai-models/forex-ai-models/pickles
 ✅ Pipeline completed successfully!
 📁 Final pickles saved in: /home/runner/work/forex-ai-models/forex-ai-models/pickles
 ----------------------------------------------------------------------
-✅ Cell 9/10 completed in 0.0s
+✅ Cell 9/10 completed in 0.1s
 ======================================================================
 
 ======================================================================
 🔄 EXECUTING CELL 10/10 (100.0% complete)
-⏱️  Elapsed time: 45.5s
+⏱️  Elapsed time: 44.8s
 📝 Cell preview: # TAG: pipeline_main...
 ----------------------------------------------------------------------
-ℹ️ 📁 Memory DB location: forex-alpha-models/memory_v85.db
-ℹ️ 📁 Learning file location: forex-alpha-models/learning_v85.pkl
-ℹ️ 📁 Iteration file location: forex-alpha-models/iteration_v85.pkl
-ℹ️ 📊 Iteration counter initialized: Total runs = 0
-ℹ️ 📁 Initializing memory database: forex-alpha-models/memory_v85.db
-ℹ️ 🆕 Creating new database
-✅ ✅ Memory system initialized with 4 tables
-ℹ️   📋 signals_history: 0 records
-ℹ️   📋 sqlite_sequence: 0 records
-ℹ️   📋 trade_results: 0 records
-ℹ️   📋 competition_results: 0 records
-ℹ️ 📚 Initializing learning system: forex-alpha-models/learning_v85.pkl
-🚀 ======================================================================
-🚀 🚀 FOREX PIPELINE v8.5.1 - FIXED MEMORY DB EDITION
-🚀 ======================================================================
-ℹ️ 
-📊 Iteration #1 | Mode: NORMAL
-ℹ️ Total Runs: 0 | Days: 1 | Avg/Day: 0.0
-ℹ️ 
-📦 Loading data...
-✅ ✅ Loaded 4 pairs
-📊 
-🏆 Running Competition...
-ℹ️ 🔴 Training Alpha Momentum...
-ℹ️   Gen 5/20: Best=0.0000
-ℹ️   Gen 10/20: Best=0.0000
-ℹ️   Gen 15/20: Best=0.0000
-ℹ️   Gen 20/20: Best=0.0000
-✅   ✅ Alpha Momentum: 0.0% accuracy | $0.0000 PnL | 0 trades
-ℹ️ 🔵 Training Beta Conservative...
-ℹ️   Gen 5/15: Best=0.0000
-ℹ️   Gen 10/15: Best=0.0000
-ℹ️   Gen 15/15: Best=0.0000
-✅   ✅ Beta Conservative: 0.0% accuracy | $0.0000 PnL | 0 trades
-ℹ️ 🟢 Training Gamma Adaptive...
-ℹ️   Gen 5/22: Best=0.0000
-ℹ️   Gen 10/22: Best=0.0000
-ℹ️   Gen 15/22: Best=0.0000
-ℹ️   Gen 20/22: Best=0.0000
-✅   ✅ Gamma Adaptive: 0.0% accuracy | $0.0000 PnL | 0 trades
-ℹ️ 
-📈 Evaluating trade outcomes...
-✅ ✅ Learning data saved: Iteration 1
-🧠 
-🧠 Learning: 📉 Adjusting | Score: 0.0/100
-ℹ️ 
-💾 Saving signals...
-❌ 
-❌ Fatal error: [Errno 2] No such file or directory: 'forex-alpha-models/forex-ai-models/broker_signals.json'
-✅ ✅ Iteration saved: #1
-✅ ✅ Memory database closed
-ℹ️ Cleanup complete
-ℹ️ Database location: forex-alpha-models/memory_v85.db
-ℹ️ Pipeline shutdown complete
-Traceback (most recent call last):
-  File "/tmp/ipykernel_2379/3841632697.py", line 1201, in main
-    with open(SIGNALS_JSON_PATH, 'w') as f:
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/IPython/core/interactiveshell.py", line 343, in _modified_open
-    return io_open(file, *args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-FileNotFoundError: [Errno 2] No such file or directory: 'forex-alpha-models/forex-ai-models/broker_signals.json'
-----------------------------------------------------------------------
-✅ Cell 10/10 completed in 1.2s
+
+======================================================================
+❌ CELL EXECUTION FAILED!
+======================================================================
+Error type: KeyError
+Error message: 'history'
+
+Traceback:
+'
+h
+i
+s
+t
+o
+r
+y
+'
+
+
 ======================================================================
 
 ======================================================================
-✅ NOTEBOOK EXECUTION COMPLETED SUCCESSFULLY!
-======================================================================
-⏱️  Total execution time: 47.1s (0.8 minutes)
-📊 Cells executed: 10
-⚡ Average time per cell: 4.7s
-======================================================================
-💾 Saved executed notebook: AI_Forex_Brain_2_executed.ipynb
-
-======================================================================
-✅ EXECUTION COMPLETED SUCCESSFULLY
-📅 Finished: 2025-11-12 00:22:16 UTC
+❌ EXECUTION FAILED
+📅 Finished: 2025-11-12 20:10:55 UTC
 ======================================================================

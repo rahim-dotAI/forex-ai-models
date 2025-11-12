@@ -42,3 +42,90 @@
 2025-11-11 23:52:32,423 | INFO | ✅ Database connection closed
 2025-11-11 23:52:32,423 | INFO | 
 ✅ Enhanced Database v3.7 Test Complete!
+2025-11-12 00:22:15,198 | INFO | Environment: GitHub Actions
+2025-11-12 00:22:15,199 | INFO | Working Directory: /home/runner/work/forex-ai-models/forex-ai-models
+2025-11-12 00:22:15,203 | INFO | ============================================================
+2025-11-12 00:22:15,203 | INFO | ENHANCED FX PIPELINE v3.7 - Database Test
+2025-11-12 00:22:15,203 | INFO | ============================================================
+2025-11-12 00:22:15,203 | INFO | 📁 Database path: /home/runner/work/forex-ai-models/forex-ai-models/memory_v85.db
+2025-11-12 00:22:15,208 | INFO | ✅ Connected to existing database: memory_v85.db
+2025-11-12 00:22:15,208 | INFO | ✅ Enhanced Database v3.7 initialized
+2025-11-12 00:22:15,209 | INFO | 
+📊 Current Database Statistics:
+2025-11-12 00:22:15,209 | INFO | 💾 Stored 1 trades in 0ms (0 failed)
+2025-11-12 00:22:15,209 | INFO | 
+✅ Stored 1 test signals
+2025-11-12 00:22:15,209 | INFO | ℹ️ No trades old enough to evaluate (need 1+ hours)
+2025-11-12 00:22:15,210 | INFO | 
+📋 Performance Report:
+2025-11-12 00:22:15,210 | INFO | 
+🧹 Running cleanup...
+2025-11-12 00:22:15,210 | INFO | 💾 Backup created: db_backup_20251112_002215.db
+2025-11-12 00:22:15,210 | INFO | 🧹 Cleanup complete: Removed 0 pending trades, 0 logs, 0 metrics
+2025-11-12 00:22:15,212 | INFO | ✅ Database connection closed
+2025-11-12 00:22:15,212 | INFO | 
+✅ Enhanced Database v3.7 Test Complete!
+2025-11-12 00:22:15,212 | INFO | ✅ Using database: /home/runner/work/forex-ai-models/forex-ai-models/memory_v85.db
+2025-11-12 00:22:15,488 | INFO | 📁 Memory DB location: forex-alpha-models/memory_v85.db
+2025-11-12 00:22:15,488 | INFO | 📁 Learning file location: forex-alpha-models/learning_v85.pkl
+2025-11-12 00:22:15,488 | INFO | 📁 Iteration file location: forex-alpha-models/iteration_v85.pkl
+2025-11-12 00:22:15,490 | INFO | 📊 Iteration counter initialized: Total runs = 0
+2025-11-12 00:22:15,490 | INFO | 📁 Initializing memory database: forex-alpha-models/memory_v85.db
+2025-11-12 00:22:15,491 | INFO | 🆕 Creating new database
+2025-11-12 00:22:15,493 | INFO | ✅ Memory system initialized with 4 tables
+2025-11-12 00:22:15,493 | INFO |   📋 signals_history: 0 records
+2025-11-12 00:22:15,494 | INFO |   📋 sqlite_sequence: 0 records
+2025-11-12 00:22:15,494 | INFO |   📋 trade_results: 0 records
+2025-11-12 00:22:15,494 | INFO |   📋 competition_results: 0 records
+2025-11-12 00:22:15,495 | INFO | 📚 Initializing learning system: forex-alpha-models/learning_v85.pkl
+2025-11-12 00:22:15,500 | INFO | ======================================================================
+2025-11-12 00:22:15,500 | INFO | 🚀 FOREX PIPELINE v8.5.1 - FIXED MEMORY DB EDITION
+2025-11-12 00:22:15,500 | INFO | ======================================================================
+2025-11-12 00:22:15,500 | INFO | 
+📊 Iteration #1 | Mode: NORMAL
+2025-11-12 00:22:15,500 | INFO | Total Runs: 0 | Days: 1 | Avg/Day: 0.0
+2025-11-12 00:22:15,500 | INFO | 
+📦 Loading data...
+2025-11-12 00:22:15,501 | INFO | ✅ Loaded 4 pairs
+2025-11-12 00:22:15,501 | INFO | 
+🏆 Running Competition...
+2025-11-12 00:22:15,501 | INFO | 🔴 Training Alpha Momentum...
+2025-11-12 00:22:15,506 | INFO |   Gen 5/20: Best=0.0000
+2025-11-12 00:22:15,509 | INFO |   Gen 10/20: Best=0.0000
+2025-11-12 00:22:15,512 | INFO |   Gen 15/20: Best=0.0000
+2025-11-12 00:22:15,515 | INFO |   Gen 20/20: Best=0.0000
+2025-11-12 00:22:15,515 | INFO |   ✅ Alpha Momentum: 0.0% accuracy | $0.0000 PnL | 0 trades
+2025-11-12 00:22:15,515 | INFO | 🔵 Training Beta Conservative...
+2025-11-12 00:22:15,518 | INFO |   Gen 5/15: Best=0.0000
+2025-11-12 00:22:15,521 | INFO |   Gen 10/15: Best=0.0000
+2025-11-12 00:22:15,523 | INFO |   Gen 15/15: Best=0.0000
+2025-11-12 00:22:15,523 | INFO |   ✅ Beta Conservative: 0.0% accuracy | $0.0000 PnL | 0 trades
+2025-11-12 00:22:15,524 | INFO | 🟢 Training Gamma Adaptive...
+2025-11-12 00:22:15,529 | INFO |   Gen 5/22: Best=0.0000
+2025-11-12 00:22:15,533 | INFO |   Gen 10/22: Best=0.0000
+2025-11-12 00:22:15,536 | INFO |   Gen 15/22: Best=0.0000
+2025-11-12 00:22:15,540 | INFO |   Gen 20/22: Best=0.0000
+2025-11-12 00:22:15,542 | INFO |   ✅ Gamma Adaptive: 0.0% accuracy | $0.0000 PnL | 0 trades
+2025-11-12 00:22:15,542 | INFO | 
+📈 Evaluating trade outcomes...
+2025-11-12 00:22:16,409 | INFO | ✅ Learning data saved: Iteration 1
+2025-11-12 00:22:16,409 | INFO | 
+🧠 Learning: 📉 Adjusting | Score: 0.0/100
+2025-11-12 00:22:16,409 | INFO | 
+💾 Saving signals...
+2025-11-12 00:22:16,409 | ERROR | 
+❌ Fatal error: [Errno 2] No such file or directory: 'forex-alpha-models/forex-ai-models/broker_signals.json'
+2025-11-12 00:22:16,410 | ERROR | Fatal error
+Traceback (most recent call last):
+  File "/tmp/ipykernel_2379/3841632697.py", line 1201, in main
+    with open(SIGNALS_JSON_PATH, 'w') as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/IPython/core/interactiveshell.py", line 343, in _modified_open
+    return io_open(file, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'forex-alpha-models/forex-ai-models/broker_signals.json'
+2025-11-12 00:22:16,411 | INFO | ✅ Iteration saved: #1
+2025-11-12 00:22:16,413 | INFO | ✅ Memory database closed
+2025-11-12 00:22:16,413 | INFO | Cleanup complete
+2025-11-12 00:22:16,413 | INFO | Database location: forex-alpha-models/memory_v85.db
+2025-11-12 00:22:16,413 | INFO | Pipeline shutdown complete

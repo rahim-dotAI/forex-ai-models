@@ -1,0 +1,11 @@
+2025-11-12 00:22:16,409 | ERROR | 
+❌ Fatal error: [Errno 2] No such file or directory: 'forex-alpha-models/forex-ai-models/broker_signals.json'
+2025-11-12 00:22:16,410 | ERROR | Fatal error
+Traceback (most recent call last):
+  File "/tmp/ipykernel_2379/3841632697.py", line 1201, in main
+    with open(SIGNALS_JSON_PATH, 'w') as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/IPython/core/interactiveshell.py", line 343, in _modified_open
+    return io_open(file, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'forex-alpha-models/forex-ai-models/broker_signals.json'

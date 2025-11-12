@@ -1,7 +1,7 @@
 ======================================================================
 🧠 FOREX AI BRAIN - FULL NOTEBOOK EXECUTION
 ======================================================================
-📅 Started: 2025-11-12 20:29:47 UTC
+📅 Started: 2025-11-12 20:49:40 UTC
 📓 Notebook: AI_Forex_Brain_2.ipynb
 ======================================================================
 
@@ -19,10 +19,10 @@
 
 ======================================================================
 🔄 EXECUTING CELL 1/10 (10.0% complete)
-⏱️  Elapsed time: 1.4s
+⏱️  Elapsed time: 1.3s
 📝 Cell preview: # ======================================================...
 ----------------------------------------------------------------------
-✅ Alpha Vantage Key: 1W58...LHZ6
+✅ Alpha Vantage Key: BCJ6...KPXK
 ✅ Browserless Token: 2St0...9c3d
 ----------------------------------------------------------------------
 ✅ Cell 1/10 completed in 0.0s
@@ -90,7 +90,7 @@ FOREX_PAT Set:    ✅ Yes
 
 ======================================================================
 🔄 EXECUTING CELL 4/10 (40.0% complete)
-⏱️  Elapsed time: 1.5s
+⏱️  Elapsed time: 1.4s
 📝 Cell preview: !pip install mplfinance firebase-admin dropbox requests beau...
 ----------------------------------------------------------------------
 Collecting mplfinance
@@ -192,7 +192,8 @@ Collecting frozendict>=2.3.4 (from yfinance)
   Downloading frozendict-2.4.7-py3-none-any.whl.metadata (23 kB)
 Collecting peewee>=3.16.2 (from yfinance)
   Downloading peewee-3.18.3.tar.gz (3.0 MB)
-[?25l     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/3.0 MB ? eta -:--:--[2K     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.0/3.0 MB 112.3 MB/s  0:00:00
+[?25l     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/3.0 MB ? eta -:--:--
+[2K     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.0/3.0 MB 107.3 MB/s  0:00:00
 [?25h
   Installing build dependencies ... [?25l
 -
@@ -235,7 +236,8 @@ INFO: pip is still looking at multiple versions of pyppeteer to determine which 
 Collecting pyppeteer
   Downloading pyppeteer-0.2.2-py3-none-any.whl.metadata (6.6 kB)
   Downloading pyppeteer-0.0.25.tar.gz (1.2 MB)
-[?25l     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/1.2 MB ? eta -:--:--[2K     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 160.9 MB/s  0:00:00
+[?25l
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/1.2 MB ? eta -:--:--[2K     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 153.6 MB/s  0:00:00
 [?25h
   Installing build dependencies ... [?25l
 -
@@ -300,7 +302,7 @@ Downloading cachetools-6.2.1-py3-none-any.whl (11 kB)
 Downloading googleapis_common_protos-1.72.0-py3-none-any.whl (297 kB)
 Downloading grpcio-1.76.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (6.6 MB)
 [?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/6.6 MB ? eta -:--:--
-[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.6/6.6 MB 220.4 MB/s  0:00:00
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.6/6.6 MB 223.8 MB/s  0:00:00
 [?25hDownloading grpcio_status-1.76.0-py3-none-any.whl (14 kB)
 Downloading h2-4.3.0-py3-none-any.whl (61 kB)
 Downloading hpack-4.1.0-py3-none-any.whl (34 kB)
@@ -309,53 +311,55 @@ Downloading proto_plus-1.26.1-py3-none-any.whl (50 kB)
 Downloading protobuf-6.33.0-cp39-abi3-manylinux2014_x86_64.whl (323 kB)
 Downloading rsa-4.9.1-py3-none-any.whl (34 kB)
 Downloading dropbox-12.0.2-py3-none-any.whl (572 kB)
-[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/572.1 kB ? eta -:--:--[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 572.1/572.1 kB 69.6 MB/s  0:00:00
+[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/572.1 kB ? eta -:--:--
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 572.1/572.1 kB 83.8 MB/s  0:00:00
 [?25hDownloading stone-3.3.1-py3-none-any.whl (162 kB)
 Downloading yfinance-0.2.66-py2.py3-none-any.whl (123 kB)
 Downloading lightgbm-4.6.0-py3-none-manylinux_2_28_x86_64.whl (3.6 MB)
 [?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/3.6 MB ? eta -:--:--
-[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.6/3.6 MB 216.0 MB/s  0:00:00
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.6/3.6 MB 164.2 MB/s  0:00:00
 [?25hDownloading matplotlib-3.10.7-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (8.7 MB)
 [?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/8.7 MB ? eta -:--:--
-[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.7/8.7 MB 119.7 MB/s  0:00:00
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.7/8.7 MB 244.0 MB/s  0:00:00
 [?25hDownloading alpha_vantage-3.0.0-py3-none-any.whl (35 kB)
 Downloading tqdm-4.67.1-py3-none-any.whl (78 kB)
 Downloading river-0.22.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.2 MB)
-[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/3.2 MB ? eta -:--:--[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.2/3.2 MB 147.1 MB/s  0:00:00
+[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/3.2 MB ? eta -:--:--
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.2/3.2 MB 125.7 MB/s  0:00:00
 [?25hDownloading cachecontrol-0.14.3-py3-none-any.whl (21 kB)
 Downloading msgpack-1.1.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (426 kB)
 Downloading contourpy-1.3.3-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (355 kB)
 Downloading curl_cffi-0.13.0-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (8.3 MB)
 [?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/8.3 MB ? eta -:--:--
-[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.3/8.3 MB 110.8 MB/s  0:00:00
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.3/8.3 MB 149.2 MB/s  0:00:00
 [?25hDownloading cycler-0.12.1-py3-none-any.whl (8.3 kB)
 Downloading fonttools-4.60.1-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (5.0 MB)
 [?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/5.0 MB ? eta -:--:--
-[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.0/5.0 MB 82.0 MB/s  0:00:00
-[?25h
-Downloading frozendict-2.4.7-py3-none-any.whl (16 kB)
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.0/5.0 MB 233.5 MB/s  0:00:00
+[?25hDownloading frozendict-2.4.7-py3-none-any.whl (16 kB)
 Downloading google_cloud_firestore-2.21.0-py3-none-any.whl (368 kB)
 Downloading google_cloud_core-2.5.0-py3-none-any.whl (29 kB)
 Downloading google_cloud_storage-3.5.0-py3-none-any.whl (289 kB)
 Downloading google_crc32c-1.7.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (32 kB)
 Downloading google_resumable_media-2.7.2-py2.py3-none-any.whl (81 kB)
 Downloading kiwisolver-1.4.9-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.4 MB)
-[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/1.4 MB ? eta -:--:--
-[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.4/1.4 MB 46.6 MB/s  0:00:00
+[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/1.4 MB ? eta -:--:--[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.4/1.4 MB 174.6 MB/s  0:00:00
 [?25hDownloading pillow-12.0.0-cp311-cp311-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (7.0 MB)
-[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/7.0 MB ? eta -:--:--
-[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.0/7.0 MB 246.3 MB/s  0:00:00
+[?25l
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/7.0 MB ? eta -:--:--[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.0/7.0 MB 220.4 MB/s  0:00:00
 [?25hDownloading ply-3.11-py2.py3-none-any.whl (49 kB)
 Downloading pyasn1-0.6.1-py3-none-any.whl (83 kB)
 Downloading pyasn1_modules-0.4.2-py3-none-any.whl (181 kB)
 Downloading PyJWT-2.10.1-py3-none-any.whl (22 kB)
 Downloading cryptography-46.0.3-cp311-abi3-manylinux_2_34_x86_64.whl (4.5 MB)
-[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/4.5 MB ? eta -:--:--[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 219.8 MB/s  0:00:00
+[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/4.5 MB ? eta -:--:--
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.5/4.5 MB 229.2 MB/s  0:00:00
 [?25hDownloading pyparsing-3.2.5-py3-none-any.whl (113 kB)
 Downloading websockets-15.0.1-cp311-cp311-manylinux_2_5_x86_64.manylinux1_x86_64.manylinux_2_17_x86_64.manylinux2014_x86_64.whl (182 kB)
 Downloading aiohttp-3.13.2-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.7 MB)
-[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/1.7 MB ? eta -:--:--[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 197.4 MB/s  0:00:00
-[?25hDownloading multidict-6.7.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (246 kB)
+[?25l   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 0.0/1.7 MB ? eta -:--:--[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 195.4 MB/s  0:00:00
+[?25h
+Downloading multidict-6.7.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (246 kB)
 Downloading yarl-1.22.0-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (365 kB)
 Downloading aiohappyeyeballs-2.6.1-py3-none-any.whl (15 kB)
 Downloading aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
@@ -367,12 +371,12 @@ Building wheels for collected packages: pyppeteer, multitasking, peewee
   Building wheel for pyppeteer (pyproject.toml) ... [?25l
 -
  done
-[?25h  Created wheel for pyppeteer: filename=pyppeteer-0.0.25-py3-none-any.whl size=78442 sha256=2340b373c28e1d99772f9d4ad59122b660d0d312b1979ba63130b27ba539ec63
+[?25h  Created wheel for pyppeteer: filename=pyppeteer-0.0.25-py3-none-any.whl size=78442 sha256=9a309f011c5f9bdc7e845c8e4f7cff511bb0fe94ead413067c68ae36202ba8d2
   Stored in directory: /home/runner/.cache/pip/wheels/73/a3/1e/3a15782836222d82b917f1ebf652f9db54eec93f3268a42bcf
   Building wheel for multitasking (pyproject.toml) ... [?25l
 -
  done
-[?25h  Created wheel for multitasking: filename=multitasking-0.0.12-py3-none-any.whl size=15636 sha256=02b43d10bd84f5b45d9025f5fb092fc8b58468e758e706a0040a386310563b45
+[?25h  Created wheel for multitasking: filename=multitasking-0.0.12-py3-none-any.whl size=15636 sha256=ff36c720743499b83d4e4709b24c1932b4a4cece35550f7b0d381e2d2941a0bb
   Stored in directory: /home/runner/.cache/pip/wheels/42/d6/84/bf57a755f4569494cd00de4bb46ef064874823f4d19c82e960
   Building wheel for peewee (pyproject.toml) ... [?25l
 -
@@ -380,23 +384,24 @@ Building wheels for collected packages: pyppeteer, multitasking, peewee
  |
  /
  done
-[?25h  Created wheel for peewee: filename=peewee-3.18.3-cp311-cp311-linux_x86_64.whl size=1064051 sha256=6ca0e9934686ab284a6d4aa0a9ad189b3ed38f3c320a5cca9f3bae32c2b04069
+[?25h  Created wheel for peewee: filename=peewee-3.18.3-cp311-cp311-linux_x86_64.whl size=1064052 sha256=15cd4fa7a8c7de4ad0bc12fc70b810d8ea830c7258f6cce70d2cca885d88e6f1
   Stored in directory: /home/runner/.cache/pip/wheels/05/dc/94/4ba26d23cac9aee7481d3dfcc7e99ce2cc5731230ec10f7ec1
 Successfully built pyppeteer multitasking peewee
 Installing collected packages: ply, peewee, multitasking, appdirs, websockets, tqdm, stone, pyparsing, pyjwt, pyee, pyasn1, protobuf, propcache, pillow, multidict, msgpack, kiwisolver, hyperframe, hpack, grpcio, google-crc32c, frozenlist, frozendict, fonttools, cycler, contourpy, cachetools, aiohappyeyeballs, yarl, rsa, pyppeteer, pyasn1-modules, proto-plus, matplotlib, lightgbm, h2, googleapis-common-protos, google-resumable-media, dropbox, curl_cffi, cryptography, cachecontrol, aiosignal, yfinance, river, mplfinance, grpcio-status, google-auth, aiohttp, google-api-core, alpha_vantage, google-cloud-core, google-cloud-storage, google-cloud-firestore, firebase-admin
 [?25l
-[2K   ━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  2/55 [multitasking]
+[2K   ╸━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  1/55 [peewee]
 [2K   ━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  6/55 [stone]
-[2K   ━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10/55 [pyasn1]
+[2K   ━━━━━━╸━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  9/55 [pyee]
+[2K   ━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 11/55 [protobuf]
 [2K   ━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13/55 [pillow]
-[2K   ━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 13/55 [pillow]
-[2K   ━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16/55 [kiwisolver]
+[2K   ━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 14/55 [multidict]
 [2K   ━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━━━━━━━ 19/55 [grpcio]
 [2K   ━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━━━━ 23/55 [fonttools]
 [2K   ━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━━━━ 23/55 [fonttools]
 [2K   ━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━━━━ 23/55 [fonttools]
 [2K   ━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━━━━ 23/55 [fonttools]
-[2K   ━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━ 25/55 [contourpy]
+[2K   ━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━━━━━━ 23/55 [fonttools]
+[2K   ━━━━━━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━━ 30/55 [pyppeteer]
 [2K   ━━━━━━━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━━━ 31/55 [pyasn1-modules]
 [2K   ━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━ 33/55 [matplotlib]
 [2K   ━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━ 33/55 [matplotlib]
@@ -405,8 +410,8 @@ Installing collected packages: ply, peewee, multitasking, appdirs, websockets, t
 [2K   ━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━ 33/55 [matplotlib]
 [2K   ━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━ 33/55 [matplotlib]
 [2K   ━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━ 33/55 [matplotlib]
-[2K   ━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━ 33/55 [matplotlib]
-[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━━ 35/55 [h2]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━━━━ 34/55 [lightgbm]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━━━━ 36/55 [googleapis-common-protos]
 [2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━ 38/55 [dropbox]
 [2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━╸━━━━━━━━━━━━ 38/55 [dropbox]
 [2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━━━━ 40/55 [cryptography]
@@ -414,19 +419,20 @@ Installing collected packages: ply, peewee, multitasking, appdirs, websockets, t
 [2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━ 44/55 [river]
 [2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━ 44/55 [river]
 [2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━━━ 44/55 [river]
-[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸━━━━━ 48/55 [aiohttp]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺━━━━━ 47/55 [google-auth]
 [2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸━━━━━ 48/55 [aiohttp]
 [2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸━━ 52/55 [google-cloud-storage]
 [2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╸━ 53/55 [google-cloud-firestore]
+[2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╺ 54/55 [firebase-admin]
 [2K   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 55/55 [firebase-admin]
 [?25h[1A[2KSuccessfully installed aiohappyeyeballs-2.6.1 aiohttp-3.13.2 aiosignal-1.4.0 alpha_vantage-3.0.0 appdirs-1.4.4 cachecontrol-0.14.3 cachetools-6.2.1 contourpy-1.3.3 cryptography-46.0.3 curl_cffi-0.13.0 cycler-0.12.1 dropbox-12.0.2 firebase-admin-7.1.0 fonttools-4.60.1 frozendict-2.4.7 frozenlist-1.8.0 google-api-core-2.28.1 google-auth-2.43.0 google-cloud-core-2.5.0 google-cloud-firestore-2.21.0 google-cloud-storage-3.5.0 google-crc32c-1.7.1 google-resumable-media-2.7.2 googleapis-common-protos-1.72.0 grpcio-1.76.0 grpcio-status-1.76.0 h2-4.3.0 hpack-4.1.0 hyperframe-6.1.0 kiwisolver-1.4.9 lightgbm-4.6.0 matplotlib-3.10.7 mplfinance-0.12.10b0 msgpack-1.1.2 multidict-6.7.0 multitasking-0.0.12 peewee-3.18.3 pillow-12.0.0 ply-3.11 propcache-0.4.1 proto-plus-1.26.1 protobuf-6.33.0 pyasn1-0.6.1 pyasn1-modules-0.4.2 pyee-13.0.0 pyjwt-2.10.1 pyparsing-3.2.5 pyppeteer-0.0.25 river-0.22.0 rsa-4.9.1 stone-3.3.1 tqdm-4.67.1 websockets-15.0.1 yarl-1.22.0 yfinance-0.2.66
 ----------------------------------------------------------------------
-✅ Cell 4/10 completed in 30.8s
+✅ Cell 4/10 completed in 31.5s
 ======================================================================
 
 ======================================================================
 🔄 EXECUTING CELL 5/10 (50.0% complete)
-⏱️  Elapsed time: 32.3s
+⏱️  Elapsed time: 32.9s
 📝 Cell preview: # ======================================================...
 ----------------------------------------------------------------------
 ======================================================================
@@ -442,7 +448,7 @@ Installing collected packages: ply, peewee, multitasking, appdirs, websockets, t
 🤖 GitHub Actions: Repository already available
 ✅ Git repository verified
 ✅ Git configured: Forex AI Bot <nakatonabira3@gmail.com>
-✅ Alpha Vantage API key: 1W58...LHZ6
+✅ Alpha Vantage API key: BCJ6...KPXK
 ======================================================================
 🚀 Fetching FX data from Alpha Vantage...
 ======================================================================
@@ -456,39 +462,23 @@ Installing collected packages: ply, peewee, multitasking, appdirs, websockets, t
   📊 Loaded 5002 existing rows
   Fetching USD/JPY (attempt 1/3)...
   Fetching EUR/USD (attempt 1/3)...
-  Fetching AUD/USD (attempt 1/3)...
   Fetching GBP/USD (attempt 1/3)...
-  ⚠️ Error: Unexpected response format: ['Information']
-  ⚠️ Error: Unexpected response format: ['Information']
-  ⚠️ Error: Unexpected response format: ['Information']
-  ⚠️ Error: Unexpected response format: ['Information']
-  Fetching EUR/USD (attempt 2/3)...
-  Fetching AUD/USD (attempt 2/3)...
-  Fetching USD/JPY (attempt 2/3)...
-  Fetching GBP/USD (attempt 2/3)...
-  ⚠️ Error: Unexpected response format: ['Information']
-  ⚠️ Error: Unexpected response format: ['Information']
-  ⚠️ Error: Unexpected response format: ['Information']
-  ⚠️ Error: Unexpected response format: ['Information']
-  Fetching EUR/USD (attempt 3/3)...
-  Fetching GBP/USD (attempt 3/3)...
-  Fetching AUD/USD (attempt 3/3)...
-  Fetching USD/JPY (attempt 3/3)...
-  ⚠️ Error: Unexpected response format: ['Information']
-  ❌ Failed after 3 attempts
-  ⚠️ Error: Unexpected response format: ['Information']
-  ❌ Failed after 3 attempts
-  ⚠️ Error: Unexpected response format: ['Information']
-  ❌ Failed after 3 attempts
-  ⚠️ Error: Unexpected response format: ['Information']
-  ❌ Failed after 3 attempts
+  Fetching AUD/USD (attempt 1/3)...
+  ✅ Fetched 5000 rows for USD/JPY
+  ℹ️ No changes - Total rows: 5002
+  ✅ Fetched 5000 rows for AUD/USD
+  ✅ Fetched 5000 rows for EUR/USD
+  ℹ️ No changes - Total rows: 5002
+  ℹ️ No changes - Total rows: 5002
+  ✅ Fetched 5000 rows for GBP/USD
+  ℹ️ No changes - Total rows: 5002
 ======================================================================
 📊 PROCESSING SUMMARY
 ======================================================================
-❌ EUR/USD: No data fetched
-❌ GBP/USD: No data fetched
-❌ AUD/USD: No data fetched
-❌ USD/JPY: No data fetched
+ℹ️ No changes USD/JPY (5002 rows)
+ℹ️ No changes AUD/USD (5002 rows)
+ℹ️ No changes EUR/USD (5002 rows)
+ℹ️ No changes GBP/USD (5002 rows)
 Total pairs processed: 4
 Files updated: 0
 ======================================================================
@@ -504,12 +494,12 @@ Files updated: 0
 Status: Success
 ======================================================================
 ----------------------------------------------------------------------
-✅ Cell 5/10 completed in 10.7s
+✅ Cell 5/10 completed in 3.1s
 ======================================================================
 
 ======================================================================
 🔄 EXECUTING CELL 6/10 (60.0% complete)
-⏱️  Elapsed time: 43.0s
+⏱️  Elapsed time: 36.0s
 📝 Cell preview: # ======================================================...
 ----------------------------------------------------------------------
 ======================================================================
@@ -531,89 +521,89 @@ Status: Success
 ======================================================================
 🚀 Starting parallel data download...
 ======================================================================
-  📂 Loaded 7535 existing rows for EUR/USD 1d_5y
-  📂 Loaded 8312 existing rows for EUR/USD 15m_60d
-  📂 Loaded 8312 existing rows for EUR/USD 1h_2y
-  📂 Loaded 8312 existing rows for GBP/USD 15m_60d
-  📂 Loaded 8312 existing rows for EUR/USD 5m_1mo
-  📂 Loaded 8312 existing rows for EUR/USD 1m_7d
-  📂 Loaded 8312 existing rows for GBP/USD 1h_2y
-  📂 Loaded 7535 existing rows for GBP/USD 1d_5y
-  🔽 Fetching EUR/USD 1d_5y (attempt 1/3)...
+  📂 Loaded 8347 existing rows for EUR/USD 1h_2y
+  📂 Loaded 8559 existing rows for EUR/USD 15m_60d
+  📂 Loaded 7782 existing rows for EUR/USD 1d_5y
+  📂 Loaded 8559 existing rows for EUR/USD 5m_1mo
+  📂 Loaded 7782 existing rows for GBP/USD 1d_5y
+  📂 Loaded 8559 existing rows for EUR/USD 1m_7d
+  📂 Loaded 8559 existing rows for GBP/USD 15m_60d
+  📂 Loaded 8559 existing rows for GBP/USD 1h_2y
   🔽 Fetching EUR/USD 1h_2y (attempt 1/3)...
-  🔽 Fetching EUR/USD 5m_1mo (attempt 1/3)...
   🔽 Fetching EUR/USD 15m_60d (attempt 1/3)...
-  🔽 Fetching GBP/USD 1d_5y (attempt 1/3)...
-  🔽 Fetching GBP/USD 1h_2y (attempt 1/3)...
-  🔽 Fetching GBP/USD 15m_60d (attempt 1/3)...
+  🔽 Fetching EUR/USD 1d_5y (attempt 1/3)...
+  🔽 Fetching EUR/USD 5m_1mo (attempt 1/3)...
   🔽 Fetching EUR/USD 1m_7d (attempt 1/3)...
-  ✅ Updated GBP/USD 15m_60d - Total rows: 8559
-  ✅ Updated EUR/USD 1d_5y - Total rows: 7782
+  🔽 Fetching GBP/USD 1h_2y (attempt 1/3)...
+  🔽 Fetching GBP/USD 1d_5y (attempt 1/3)...
+  🔽 Fetching GBP/USD 15m_60d (attempt 1/3)...
+  ✅ Updated EUR/USD 1h_2y - Total rows: 8347
   ✅ Updated EUR/USD 5m_1mo - Total rows: 8559
-  📂 Loaded 26209 existing rows for GBP/USD 5m_1mo
   ✅ Updated EUR/USD 1m_7d - Total rows: 8559
-  📂 Loaded 26968 existing rows for GBP/USD 1m_7d
+  ✅ Updated GBP/USD 1d_5y - Total rows: 7782
+  📂 Loaded 26456 existing rows for GBP/USD 5m_1mo
+  ✅ Updated EUR/USD 1d_5y - Total rows: 7782
+  ✅ Updated GBP/USD 15m_60d - Total rows: 8559
+  📂 Loaded 27219 existing rows for GBP/USD 1m_7d
+  📂 Loaded 26951 existing rows for USD/JPY 1d_5y
   ✅ Updated EUR/USD 15m_60d - Total rows: 8559
   ✅ Updated GBP/USD 1h_2y - Total rows: 8559
   🔽 Fetching GBP/USD 5m_1mo (attempt 1/3)...
-  📂 Loaded 26951 existing rows for USD/JPY 1d_5y
-  📂 Loaded 26941 existing rows for USD/JPY 1h_2y
-  ✅ Updated GBP/USD 1d_5y - Total rows: 7782
+  📂 Loaded 27406 existing rows for USD/JPY 1h_2y
   🔽 Fetching GBP/USD 1m_7d (attempt 1/3)...
-  ✅ Updated EUR/USD 1h_2y - Total rows: 8347
   🔽 Fetching USD/JPY 1d_5y (attempt 1/3)...
-  📂 Loaded 29385 existing rows for USD/JPY 5m_1mo
-  📂 Loaded 29304 existing rows for USD/JPY 15m_60d
+  📂 Loaded 29395 existing rows for USD/JPY 15m_60d
   🔽 Fetching USD/JPY 1h_2y (attempt 1/3)...
-  📂 Loaded 27041 existing rows for USD/JPY 1m_7d
-  📂 Loaded 26955 existing rows for AUD/USD 1d_5y
+  📂 Loaded 29467 existing rows for USD/JPY 5m_1mo
   🔽 Fetching USD/JPY 15m_60d (attempt 1/3)...
+  📂 Loaded 29720 existing rows for USD/JPY 1m_7d
   🔽 Fetching USD/JPY 5m_1mo (attempt 1/3)...
+  📂 Loaded 27197 existing rows for AUD/USD 1d_5y
   🔽 Fetching USD/JPY 1m_7d (attempt 1/3)...
   🔽 Fetching AUD/USD 1d_5y (attempt 1/3)...
-  ✅ Updated GBP/USD 5m_1mo - Total rows: 26456
-  ✅ Updated GBP/USD 1m_7d - Total rows: 27219
+  ✅ Updated USD/JPY 15m_60d - Total rows: 29607
   📂 Loaded 22532 existing rows for AUD/USD 1h_2y
+  ✅ Updated AUD/USD 1d_5y - Total rows: 27201
   🔽 Fetching AUD/USD 1h_2y (attempt 1/3)...
-  📂 Loaded 25019 existing rows for AUD/USD 15m_60d
-  ✅ Updated USD/JPY 1h_2y - Total rows: 27406
+  📂 Loaded 25020 existing rows for AUD/USD 15m_60d
+  ✅ Updated USD/JPY 5m_1mo - Total rows: 29679
   🔽 Fetching AUD/USD 15m_60d (attempt 1/3)...
-  📂 Loaded 22791 existing rows for AUD/USD 5m_1mo
-  ✅ Updated USD/JPY 1d_5y - Total rows: 26951
+  ✅ Updated GBP/USD 5m_1mo - Total rows: 26460
+  📂 Loaded 23654 existing rows for AUD/USD 5m_1mo
   🔽 Fetching AUD/USD 5m_1mo (attempt 1/3)...
-  📂 Loaded 23503 existing rows for AUD/USD 1m_7d
-  ✅ Updated USD/JPY 15m_60d - Total rows: 29395
+  ✅ Updated USD/JPY 1d_5y - Total rows: 27197
+  📂 Loaded 23513 existing rows for AUD/USD 1m_7d
   🔽 Fetching AUD/USD 1m_7d (attempt 1/3)...
-  ✅ Updated USD/JPY 1m_7d - Total rows: 29720
-  ✅ Updated USD/JPY 5m_1mo - Total rows: 29467
-  ✅ Updated AUD/USD 1d_5y - Total rows: 27197
+  ✅ Updated USD/JPY 1h_2y - Total rows: 27687
+  ✅ Updated GBP/USD 1m_7d - Total rows: 27223
+  ✅ Updated USD/JPY 1m_7d - Total rows: 29885
   ✅ Updated AUD/USD 1h_2y - Total rows: 22532
-  ✅ Updated AUD/USD 15m_60d - Total rows: 25020
-  ✅ Updated AUD/USD 5m_1mo - Total rows: 23654
-  ✅ Updated AUD/USD 1m_7d - Total rows: 23513
+  ✅ Updated AUD/USD 15m_60d - Total rows: 25022
+  ✅ Updated AUD/USD 5m_1mo - Total rows: 23660
+  ✅ Updated AUD/USD 1m_7d - Total rows: 23523
 ======================================================================
 📊 PROCESSING SUMMARY
 ======================================================================
-📈 Updated GBP/USD 15m_60d (8559 rows)
-📈 Updated EUR/USD 1d_5y (7782 rows)
+📈 Updated EUR/USD 1h_2y (8347 rows)
 📈 Updated EUR/USD 5m_1mo (8559 rows)
 📈 Updated EUR/USD 1m_7d (8559 rows)
+📈 Updated GBP/USD 1d_5y (7782 rows)
+📈 Updated EUR/USD 1d_5y (7782 rows)
+📈 Updated GBP/USD 15m_60d (8559 rows)
 📈 Updated EUR/USD 15m_60d (8559 rows)
 📈 Updated GBP/USD 1h_2y (8559 rows)
-📈 Updated GBP/USD 1d_5y (7782 rows)
-📈 Updated EUR/USD 1h_2y (8347 rows)
-📈 Updated GBP/USD 5m_1mo (26456 rows)
-📈 Updated GBP/USD 1m_7d (27219 rows)
-📈 Updated USD/JPY 1h_2y (27406 rows)
-📈 Updated USD/JPY 1d_5y (26951 rows)
-📈 Updated USD/JPY 15m_60d (29395 rows)
-📈 Updated USD/JPY 1m_7d (29720 rows)
-📈 Updated USD/JPY 5m_1mo (29467 rows)
-📈 Updated AUD/USD 1d_5y (27197 rows)
+📈 Updated USD/JPY 15m_60d (29607 rows)
+📈 Updated AUD/USD 1d_5y (27201 rows)
+📈 Updated USD/JPY 5m_1mo (29679 rows)
+📈 Updated GBP/USD 5m_1mo (26460 rows)
+📈 Updated USD/JPY 1d_5y (27197 rows)
+📈 Updated USD/JPY 1h_2y (27687 rows)
+📈 Updated GBP/USD 1m_7d (27223 rows)
+📈 Updated USD/JPY 1m_7d (29885 rows)
 📈 Updated AUD/USD 1h_2y (22532 rows)
-📈 Updated AUD/USD 15m_60d (25020 rows)
-📈 Updated AUD/USD 5m_1mo (23654 rows)
-📈 Updated AUD/USD 1m_7d (23513 rows)
+📈 Updated AUD/USD 15m_60d (25022 rows)
+📈 Updated AUD/USD 5m_1mo (23660 rows)
+📈 Updated AUD/USD 1m_7d (23523 rows)
 Total tasks: 20
 Files updated: 20
 ======================================================================
@@ -631,12 +621,12 @@ Status: Success
 ======================================================================
 🎯 All FX pairs & timeframes processed with maximum historical data!
 ----------------------------------------------------------------------
-✅ Cell 6/10 completed in 10.2s
+✅ Cell 6/10 completed in 11.1s
 ======================================================================
 
 ======================================================================
 🔄 EXECUTING CELL 7/10 (70.0% complete)
-⏱️  Elapsed time: 53.2s
+⏱️  Elapsed time: 47.1s
 📝 Cell preview: # ======================================================...
 ----------------------------------------------------------------------
 ======================================================================
@@ -658,83 +648,215 @@ Status: Success
 🐞   📂 Found 26 CSV(s) in: /home/runner/work/forex-ai-models/forex-ai-models
 🐞   📂 Found 26 CSV(s) in: /home/runner/work/forex-ai-models/forex-ai-models
 ✅ 📊 Total unique CSV files found: 26
-🐞   • GBP_USD_15m_60d.csv (1328.5 KB)
-🐞   • AUD_USD_1h_2y.csv (3510.3 KB)
-🐞   • GBP_USD_1d_5y.csv (1208.0 KB)
-🐞   • GBP_USD_5m_1mo.csv (4102.1 KB)
-🐞   • AUD_USD_5m_1mo.csv (3685.2 KB)
+🐞   • EUR_USD_1h_2y.csv (1054.1 KB)
+🐞   • AUD_USD_1m_7d.csv (3779.7 KB)
+🐞   • EUR_USD_5m_1mo.csv (1368.4 KB)
+🐞   • best_ga_params.csv (2.8 KB)
+🐞   • USD_JPY_1h_2y.csv (4427.8 KB)
 🐞   ... and 21 more
 ======================================================================
 ⚙️ Processing 26 CSV file(s)...
 ======================================================================
-🐞   📂 Loaded 5002 existing rows
-✅ ✅ AUD_USD.csv updated: 5002 new rows
-🐞   📂 Loaded 7782 existing rows
-🐞   📂 Loaded 8559 existing rows
-🐞   📂 Loaded 8559 existing rows
-🐞   📂 Loaded 8559 existing rows
-🐞   📂 Loaded 7782 existing rows
-✅ ✅ GBP_USD_1d_5y.csv updated: 3 new rows
-🐞   📂 Loaded 3 existing rows
-⚠️ ⚠️ Skipped performance_log.csv: Missing OHLC
-🐞   📂 Loaded 22532 existing rows
-🐞   📂 Loaded 23654 existing rows
-/tmp/ipykernel_2381/1069144535.py:199: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
-  existing_df = pd.read_csv(target_file, index_col=0, parse_dates=True)
-/tmp/ipykernel_2381/1069144535.py:168: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
-  df.index = pd.to_datetime(df.index, errors='coerce')
-/tmp/ipykernel_2381/1069144535.py:210: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
-  new_df = pd.read_csv(csv_path, index_col=0, parse_dates=True)
-/tmp/ipykernel_2381/1069144535.py:168: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
-  df.index = pd.to_datetime(df.index, errors='coerce')
-🐞   📂 Loaded 26456 existing rows
-✅ ✅ EUR_USD_15m_60d.csv updated: 3 new rows
-✅ ✅ GBP_USD_15m_60d.csv updated: 3 new rows
-🐞   📂 Loaded 8559 existing rows
-✅ ✅ EUR_USD_1m_7d.csv updated: 3 new rows
-✅ ✅ EUR_USD_1d_5y.csv updated: 3 new rows
-🐞   📂 Loaded 27197 existing rows
-🐞   📂 Loaded 8347 existing rows
-🐞   📂 Loaded 25020 existing rows
-✅ ✅ AUD_USD_1h_2y.csv updated: 765 new rows
-✅ ✅ EUR_USD_5m_1mo.csv updated: 3 new rows
-🐞   📂 Loaded 5002 existing rows
-🐞   📂 Loaded 29467 existing rows
-🐞   📂 Loaded 29720 existing rows
-✅ ✅ GBP_USD_5m_1mo.csv updated: 71 new rows
-✅ ✅ AUD_USD_5m_1mo.csv updated: 765 new rows
-✅ ✅ EUR_USD_1h_2y.csv updated: 3 new rows
-🐞   📂 Loaded 29395 existing rows
-🐞   📂 Loaded 26951 existing rows
-✅ ✅ AUD_USD_1d_5y.csv updated: 70 new rows
-✅ ✅ USD_JPY.csv updated: 5002 new rows
-🐞   📂 Loaded 5002 existing rows
-🐞   📂 Loaded 27219 existing rows
-✅ ✅ AUD_USD_15m_60d.csv updated: 557 new rows
-🐞   📂 Loaded 5002 existing rows
-🐞   📂 Loaded 27406 existing rows
-✅ ✅ USD_JPY_5m_1mo.csv updated: 70 new rows
 🐞   📂 Loaded 14 existing rows
 ⚠️ ⚠️ Skipped best_ga_params.csv: Missing OHLC
-/tmp/ipykernel_2381/1069144535.py:199: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+🐞   📂 Loaded 5002 existing rows
+ℹ️ ℹ️ AUD_USD.csv no new rows
+🐞   📂 Loaded 5002 existing rows
+ℹ️ ℹ️ EUR_USD.csv no new rows
+🐞   📂 Loaded 3 existing rows
+⚠️ ⚠️ Skipped performance_log.csv: Missing OHLC
+/tmp/ipykernel_2379/1069144535.py:199: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
   existing_df = pd.read_csv(target_file, index_col=0, parse_dates=True)
-/tmp/ipykernel_2381/1069144535.py:168: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+/tmp/ipykernel_2379/1069144535.py:168: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
   df.index = pd.to_datetime(df.index, errors='coerce')
-/tmp/ipykernel_2381/1069144535.py:210: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+/tmp/ipykernel_2379/1069144535.py:210: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
   new_df = pd.read_csv(csv_path, index_col=0, parse_dates=True)
-/tmp/ipykernel_2381/1069144535.py:168: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+/tmp/ipykernel_2379/1069144535.py:168: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  df.index = pd.to_datetime(df.index, errors='coerce')
+/tmp/ipykernel_2379/1069144535.py:199: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  existing_df = pd.read_csv(target_file, index_col=0, parse_dates=True)
+/tmp/ipykernel_2379/1069144535.py:168: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  df.index = pd.to_datetime(df.index, errors='coerce')
+/tmp/ipykernel_2379/1069144535.py:210: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
+  new_df = pd.read_csv(csv_path, index_col=0, parse_dates=True)
+/tmp/ipykernel_2379/1069144535.py:168: UserWarning: Could not infer format, so each element will be parsed individually, falling back to `dateutil`. To ensure parsing is consistent and as-expected, please specify a format.
   df.index = pd.to_datetime(df.index, errors='coerce')
 🐞   📂 Loaded 8559 existing rows
-✅ ✅ USD_JPY_1m_7d.csv updated: 70 new rows
-✅ ✅ EUR_USD.csv updated: 5002 new rows
-✅ ✅ USD_JPY_15m_60d.csv updated: 70 new rows
-🐞   📂 Loaded 23513 existing rows
-✅ ✅ USD_JPY_1d_5y.csv updated: 71 new rows
-✅ ✅ GBP_USD.csv updated: 5002 new rows
-✅ ✅ GBP_USD_1m_7d.csv updated: 129 new rows
-✅ ✅ USD_JPY_1h_2y.csv updated: 127 new rows
-✅ ✅ GBP_USD_1h_2y.csv updated: 3 new rows
-✅ ✅ AUD_USD_1m_7d.csv updated: 765 new rows
+🐞   📂 Loaded 8347 existing rows
+🐞   📂 Loaded 8559 existing rows
+🐞   📂 Loaded 8559 existing rows
+ℹ️ ℹ️ GBP_USD_1h_2y.csv no new rows
+ℹ️ ℹ️ EUR_USD_1h_2y.csv no new rows
+/tmp/ipykernel_2379/1069144535.py:177: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.replace([np.inf, -np.inf], np.nan, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:183: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.dropna(subset=existing_columns, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:177: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.replace([np.inf, -np.inf], np.nan, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:183: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.dropna(subset=existing_columns, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:177: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.replace([np.inf, -np.inf], np.nan, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:183: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.dropna(subset=existing_columns, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:177: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.replace([np.inf, -np.inf], np.nan, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:183: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.dropna(subset=existing_columns, inplace=True)
+🐞   📂 Loaded 5002 existing rows
+ℹ️ ℹ️ GBP_USD.csv no new rows
+ℹ️ ℹ️ EUR_USD_5m_1mo.csv no new rows
+🐞   📂 Loaded 23523 existing rows
+ℹ️ ℹ️ EUR_USD_1m_7d.csv no new rows
+🐞   📂 Loaded 7782 existing rows
+🐞   📂 Loaded 8559 existing rows
+🐞   📂 Loaded 27223 existing rows
+🐞   📂 Loaded 27687 existing rows
+🐞   📂 Loaded 29885 existing rows
+🐞   📂 Loaded 8559 existing rows
+ℹ️ ℹ️ GBP_USD_1d_5y.csv no new rows
+🐞   📂 Loaded 5002 existing rows
+ℹ️ ℹ️ USD_JPY.csv no new rows
+ℹ️ ℹ️ GBP_USD_15m_60d.csv no new rows
+🐞   📂 Loaded 25022 existing rows
+/tmp/ipykernel_2379/1069144535.py:177: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.replace([np.inf, -np.inf], np.nan, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:183: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.dropna(subset=existing_columns, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:177: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.replace([np.inf, -np.inf], np.nan, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:183: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.dropna(subset=existing_columns, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:177: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.replace([np.inf, -np.inf], np.nan, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:183: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.dropna(subset=existing_columns, inplace=True)
+ℹ️ ℹ️ EUR_USD_15m_60d.csv no new rows
+🐞   📂 Loaded 7782 existing rows
+ℹ️ ℹ️ AUD_USD_1m_7d.csv no new rows
+/tmp/ipykernel_2379/1069144535.py:177: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.replace([np.inf, -np.inf], np.nan, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:183: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.dropna(subset=existing_columns, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:177: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.replace([np.inf, -np.inf], np.nan, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:183: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.dropna(subset=existing_columns, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:177: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.replace([np.inf, -np.inf], np.nan, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:183: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.dropna(subset=existing_columns, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:183: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.dropna(subset=existing_columns, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:177: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.replace([np.inf, -np.inf], np.nan, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:183: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.dropna(subset=existing_columns, inplace=True)
+ℹ️ ℹ️ EUR_USD_1d_5y.csv no new rows
+ℹ️ ℹ️ GBP_USD_1m_7d.csv no new rows
+ℹ️ ℹ️ USD_JPY_1h_2y.csv no new rows
+ℹ️ ℹ️ USD_JPY_1m_7d.csv no new rows
+🐞   📂 Loaded 27197 existing rows
+🐞   📂 Loaded 22532 existing rows
+/tmp/ipykernel_2379/1069144535.py:177: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.replace([np.inf, -np.inf], np.nan, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:183: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.dropna(subset=existing_columns, inplace=True)
+ℹ️ ℹ️ AUD_USD_15m_60d.csv no new rows
+🐞   📂 Loaded 23660 existing rows
+🐞   📂 Loaded 29607 existing rows
+🐞   📂 Loaded 29679 existing rows
+🐞   📂 Loaded 27201 existing rows
+🐞   📂 Loaded 26460 existing rows
+ℹ️ ℹ️ AUD_USD_1h_2y.csv no new rows
+ℹ️ ℹ️ USD_JPY_1d_5y.csv no new rows
+ℹ️ ℹ️ AUD_USD_5m_1mo.csv no new rows
+ℹ️ ℹ️ USD_JPY_15m_60d.csv no new rows
+/tmp/ipykernel_2379/1069144535.py:177: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.replace([np.inf, -np.inf], np.nan, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:183: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.dropna(subset=existing_columns, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:177: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.replace([np.inf, -np.inf], np.nan, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:183: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.dropna(subset=existing_columns, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:177: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.replace([np.inf, -np.inf], np.nan, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:183: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.dropna(subset=existing_columns, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:177: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.replace([np.inf, -np.inf], np.nan, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:183: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.dropna(subset=existing_columns, inplace=True)
+ℹ️ ℹ️ AUD_USD_1d_5y.csv no new rows
+ℹ️ ℹ️ GBP_USD_5m_1mo.csv no new rows
+ℹ️ ℹ️ USD_JPY_5m_1mo.csv no new rows
 ======================================================================
 🤖 GitHub Actions: Skipping git operations
    (Workflow will handle commit and push)
@@ -745,16 +867,40 @@ Status: Success
 Environment: GitHub Actions
 CSV files found: 26
 CSV files processed: 26
-Pickle files updated: 24
+Pickle files updated: 0
 ======================================================================
 🎯 All CSVs combined with incremental indicators!
+/tmp/ipykernel_2379/1069144535.py:177: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.replace([np.inf, -np.inf], np.nan, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:183: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.dropna(subset=existing_columns, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:177: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.replace([np.inf, -np.inf], np.nan, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:183: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.dropna(subset=existing_columns, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:177: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.replace([np.inf, -np.inf], np.nan, inplace=True)
+/tmp/ipykernel_2379/1069144535.py:183: SettingWithCopyWarning: 
+A value is trying to be set on a copy of a slice from a DataFrame
+See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
+  df.dropna(subset=existing_columns, inplace=True)
 ----------------------------------------------------------------------
-✅ Cell 7/10 completed in 10.8s
+✅ Cell 7/10 completed in 2.8s
 ======================================================================
 
 ======================================================================
 🔄 EXECUTING CELL 8/10 (80.0% complete)
-⏱️  Elapsed time: 64.1s
+⏱️  Elapsed time: 49.9s
 📝 Cell preview: #!/usr/bin/env python3...
 ----------------------------------------------------------------------
 🌍 Detected Environment: GitHub Actions
@@ -773,14 +919,14 @@ Pickle files updated: 24
 ℹ️ 📁 Database path: /home/runner/work/forex-ai-models/forex-ai-models/memory_v85.db
 ✅ ✅ Connected to existing database: memory_v85.db
 ✅ ✅ Enhanced Database v3.7 initialized
-🐞   ✓ Table 'pending_trades' exists (2 rows)
+🐞   ✓ Table 'pending_trades' exists (3 rows)
 🐞   ✓ Table 'completed_trades' exists (0 rows)
 🐞   ✓ Table 'model_stats_cache' exists (0 rows)
-🐞   ✓ Table 'execution_log' exists (2 rows)
-🐞   ✓ Table 'performance_metrics' exists (2 rows)
+🐞   ✓ Table 'execution_log' exists (3 rows)
+🐞   ✓ Table 'performance_metrics' exists (3 rows)
 ℹ️ 
 📊 Current Database Statistics:
-  pending_trades: 2
+  pending_trades: 3
   completed_trades: 0
   total_pnl: 0.0
   overall_accuracy: 0.0
@@ -805,7 +951,8 @@ Pickle files updated: 24
   Total Pairs: 0
 ℹ️ 
 🧹 Running cleanup...
-✅ 💾 Backup created: db_backup_20251112_203051.db
+🐞 🗑️ Removed old backup: db_backup_20251111_233314.db
+✅ 💾 Backup created: db_backup_20251112_205031.db
 ✅ 🧹 Cleanup complete: Removed 0 pending trades, 0 logs, 0 metrics
 ✅ ✅ Database connection closed
 ✅ 
@@ -818,7 +965,7 @@ Pickle files updated: 24
 
 ======================================================================
 🔄 EXECUTING CELL 9/10 (90.0% complete)
-⏱️  Elapsed time: 64.2s
+⏱️  Elapsed time: 50.1s
 📝 Cell preview: #!/usr/bin/env python3...
 ----------------------------------------------------------------------
 🌍 Detected Environment: GitHub Actions
@@ -879,7 +1026,7 @@ Output Folder: /home/runner/work/forex-ai-models/forex-ai-models/pickles
 
 ======================================================================
 🔄 EXECUTING CELL 10/10 (100.0% complete)
-⏱️  Elapsed time: 64.3s
+⏱️  Elapsed time: 50.1s
 📝 Cell preview: # TAG: pipeline_main...
 ----------------------------------------------------------------------
 
@@ -905,5 +1052,5 @@ y
 
 ======================================================================
 ❌ EXECUTION FAILED
-📅 Finished: 2025-11-12 20:43:02 UTC
+📅 Finished: 2025-11-12 21:02:59 UTC
 ======================================================================

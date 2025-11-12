@@ -9,3 +9,39 @@ Traceback (most recent call last):
     return io_open(file, *args, **kwargs)
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 FileNotFoundError: [Errno 2] No such file or directory: 'forex-alpha-models/forex-ai-models/broker_signals.json'
+2025-11-12 21:18:05,028 | ERROR | Alpha Momentum GA error
+Traceback (most recent call last):
+  File "/tmp/ipykernel_2405/871957076.py", line 604, in run_ga
+    metrics = backtest_strategy(data, tf_map, chrom)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/ipykernel_2405/871957076.py", line 557, in backtest_strategy
+    atr = max(row.get('atr', MIN_ATR), MIN_ATR)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pandas/core/generic.py", line 1580, in __nonzero__
+    raise ValueError(
+ValueError: The truth value of a Series is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all().
+2025-11-12 21:18:05,030 | ERROR | ❌ Alpha Momentum failed: The truth value of a Series is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all().
+2025-11-12 21:18:07,858 | ERROR | Beta Conservative GA error
+Traceback (most recent call last):
+  File "/tmp/ipykernel_2405/871957076.py", line 604, in run_ga
+    metrics = backtest_strategy(data, tf_map, chrom)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/ipykernel_2405/871957076.py", line 557, in backtest_strategy
+    atr = max(row.get('atr', MIN_ATR), MIN_ATR)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pandas/core/generic.py", line 1580, in __nonzero__
+    raise ValueError(
+ValueError: The truth value of a Series is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all().
+2025-11-12 21:18:07,858 | ERROR | ❌ Beta Conservative failed: The truth value of a Series is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all().
+2025-11-12 21:18:10,497 | ERROR | Gamma Adaptive GA error
+Traceback (most recent call last):
+  File "/tmp/ipykernel_2405/871957076.py", line 604, in run_ga
+    metrics = backtest_strategy(data, tf_map, chrom)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/ipykernel_2405/871957076.py", line 557, in backtest_strategy
+    atr = max(row.get('atr', MIN_ATR), MIN_ATR)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pandas/core/generic.py", line 1580, in __nonzero__
+    raise ValueError(
+ValueError: The truth value of a Series is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all().
+2025-11-12 21:18:10,498 | ERROR | ❌ Gamma Adaptive failed: The truth value of a Series is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all().

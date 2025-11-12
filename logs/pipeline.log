@@ -395,3 +395,114 @@ FileNotFoundError: [Errno 2] No such file or directory: 'forex-alpha-models/fore
 2025-11-12 21:02:58,279 | INFO | Iteration: #13
 2025-11-12 21:02:58,279 | INFO | Models: 3
 2025-11-12 21:02:58,279 | INFO | Signals: 3
+2025-11-12 21:18:01,808 | INFO | Environment: GitHub Actions
+2025-11-12 21:18:01,809 | INFO | Working Directory: /home/runner/work/forex-ai-models/forex-ai-models
+2025-11-12 21:18:01,813 | INFO | ============================================================
+2025-11-12 21:18:01,813 | INFO | ENHANCED FX PIPELINE v3.7 - Database Test
+2025-11-12 21:18:01,813 | INFO | ============================================================
+2025-11-12 21:18:01,813 | INFO | 📁 Database path: /home/runner/work/forex-ai-models/forex-ai-models/memory_v85.db
+2025-11-12 21:18:01,814 | INFO | ✅ Connected to existing database: memory_v85.db
+2025-11-12 21:18:01,814 | INFO | ✅ Enhanced Database v3.7 initialized
+2025-11-12 21:18:01,816 | INFO | 
+📊 Current Database Statistics:
+2025-11-12 21:18:01,816 | INFO | 💾 Stored 1 trades in 0ms (0 failed)
+2025-11-12 21:18:01,816 | INFO | 
+✅ Stored 1 test signals
+2025-11-12 21:18:01,817 | INFO | 🔍 Evaluating 2 trades from previous iteration(s)
+2025-11-12 21:18:01,817 | INFO | 
+📊 Model Performance (Last 7 days):
+2025-11-12 21:18:01,817 | INFO | 
+🏆 Best Model: Ensemble
+2025-11-12 21:18:01,817 | INFO | 
+📋 Performance Report:
+2025-11-12 21:18:01,817 | INFO | 
+🧹 Running cleanup...
+2025-11-12 21:18:01,818 | INFO | 💾 Backup created: db_backup_20251112_211801.db
+2025-11-12 21:18:01,818 | INFO | 🧹 Cleanup complete: Removed 0 pending trades, 0 logs, 0 metrics
+2025-11-12 21:18:01,819 | INFO | ✅ Database connection closed
+2025-11-12 21:18:01,820 | INFO | 
+✅ Enhanced Database v3.7 Test Complete!
+2025-11-12 21:18:01,820 | INFO | ✅ Database location: /home/runner/work/forex-ai-models/forex-ai-models/memory_v85.db
+2025-11-12 21:18:01,820 | INFO | ✅ Fixed for GitHub Actions (no nested paths)
+2025-11-12 21:18:03,415 | INFO | 🌍 Environment: GitHub Actions
+2025-11-12 21:18:03,415 | INFO | 🤖 GitHub Actions: Using /home/runner/work/forex-ai-models/forex-ai-models
+2025-11-12 21:18:03,415 | INFO | ✅ Root: /home/runner/work/forex-ai-models/forex-ai-models
+2025-11-12 21:18:03,416 | INFO | ✅ Repo: /home/runner/work/forex-ai-models/forex-ai-models
+2025-11-12 21:18:03,416 | INFO | ✅ Pickles: /home/runner/work/forex-ai-models/forex-ai-models/pickles
+2025-11-12 21:18:03,416 | INFO | 📁 Memory file: /home/runner/work/forex-ai-models/forex-ai-models/memory_v85.pkl
+2025-11-12 21:18:03,417 | INFO | 📁 Learning file: /home/runner/work/forex-ai-models/forex-ai-models/learning_v85.pkl
+2025-11-12 21:18:03,417 | INFO | 📁 Iteration file: /home/runner/work/forex-ai-models/forex-ai-models/iteration_v85.pkl
+2025-11-12 21:18:03,417 | INFO | ✅ Loaded: 12 iterations
+2025-11-12 21:18:03,417 | INFO | 📊 Iteration counter: Total runs = 12
+2025-11-12 21:18:03,418 | INFO | ✅ Loaded memory: 6 signals
+2025-11-12 21:18:03,418 | INFO | 📁 Memory system initialized: 6 signals
+2025-11-12 21:18:03,419 | INFO | 📚 Learning system: /home/runner/work/forex-ai-models/forex-ai-models/learning_v85.pkl
+2025-11-12 21:18:03,419 | INFO | ✅ Loaded learning: 23 iterations
+2025-11-12 21:18:03,423 | INFO | ======================================================================
+2025-11-12 21:18:03,423 | INFO | 🚀 FOREX PIPELINE v8.5.2 - FIXED PATHS EDITION
+2025-11-12 21:18:03,423 | INFO | ======================================================================
+2025-11-12 21:18:03,423 | INFO | 
+📊 Iteration #13 | Mode: NORMAL
+2025-11-12 21:18:03,423 | INFO | Total Runs: 12 | Days: 3 | Avg/Day: 4.0
+2025-11-12 21:18:03,423 | INFO | 
+📦 Loading data...
+2025-11-12 21:18:03,497 | INFO | ✅ Loaded 4 pairs
+2025-11-12 21:18:03,497 | INFO | 
+🏆 Running Competition...
+2025-11-12 21:18:03,497 | INFO | 🔴 Training Alpha Momentum...
+2025-11-12 21:18:05,028 | ERROR | Alpha Momentum GA error
+Traceback (most recent call last):
+  File "/tmp/ipykernel_2405/871957076.py", line 604, in run_ga
+    metrics = backtest_strategy(data, tf_map, chrom)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/ipykernel_2405/871957076.py", line 557, in backtest_strategy
+    atr = max(row.get('atr', MIN_ATR), MIN_ATR)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pandas/core/generic.py", line 1580, in __nonzero__
+    raise ValueError(
+ValueError: The truth value of a Series is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all().
+2025-11-12 21:18:05,030 | ERROR | ❌ Alpha Momentum failed: The truth value of a Series is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all().
+2025-11-12 21:18:05,030 | INFO | 🔵 Training Beta Conservative...
+2025-11-12 21:18:07,858 | ERROR | Beta Conservative GA error
+Traceback (most recent call last):
+  File "/tmp/ipykernel_2405/871957076.py", line 604, in run_ga
+    metrics = backtest_strategy(data, tf_map, chrom)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/ipykernel_2405/871957076.py", line 557, in backtest_strategy
+    atr = max(row.get('atr', MIN_ATR), MIN_ATR)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pandas/core/generic.py", line 1580, in __nonzero__
+    raise ValueError(
+ValueError: The truth value of a Series is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all().
+2025-11-12 21:18:07,858 | ERROR | ❌ Beta Conservative failed: The truth value of a Series is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all().
+2025-11-12 21:18:07,859 | INFO | 🟢 Training Gamma Adaptive...
+2025-11-12 21:18:10,497 | ERROR | Gamma Adaptive GA error
+Traceback (most recent call last):
+  File "/tmp/ipykernel_2405/871957076.py", line 604, in run_ga
+    metrics = backtest_strategy(data, tf_map, chrom)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/ipykernel_2405/871957076.py", line 557, in backtest_strategy
+    atr = max(row.get('atr', MIN_ATR), MIN_ATR)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/pandas/core/generic.py", line 1580, in __nonzero__
+    raise ValueError(
+ValueError: The truth value of a Series is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all().
+2025-11-12 21:18:10,498 | ERROR | ❌ Gamma Adaptive failed: The truth value of a Series is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all().
+2025-11-12 21:18:10,499 | INFO | ✅ Learning saved: Iteration 24
+2025-11-12 21:18:10,499 | INFO | 
+🧠 Learning: 📉 Adjusting | Score: 50.0/100
+2025-11-12 21:18:10,499 | INFO | 
+💾 Saving signals...
+2025-11-12 21:18:10,499 | INFO | ✅ Saved: /home/runner/work/forex-ai-models/forex-ai-models/broker_signals.json
+2025-11-12 21:18:10,500 | INFO | ✅ Saved: /home/runner/work/forex-ai-models/forex-ai-models/ensemble_signals.json
+2025-11-12 21:18:10,500 | INFO | Email skipped (replay mode or no credentials)
+2025-11-12 21:18:10,500 | INFO | 
+🔄 Git operations...
+2025-11-12 21:18:10,500 | INFO | 🤖 GitHub Actions: Skipping Git push (workflow handles it)
+2025-11-12 21:18:10,500 | INFO | 
+======================================================================
+2025-11-12 21:18:10,500 | INFO | ✅ PIPELINE COMPLETED SUCCESSFULLY
+2025-11-12 21:18:10,500 | INFO | ======================================================================
+2025-11-12 21:18:10,500 | INFO | Iteration: #13
+2025-11-12 21:18:10,500 | INFO | Models: 0
+2025-11-12 21:18:10,500 | INFO | Signals: 0

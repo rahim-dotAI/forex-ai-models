@@ -1,11 +1,10 @@
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
 *.so
 .Python
-env/
 venv/
+env/
 *.egg-info/
 dist/
 build/
@@ -14,9 +13,12 @@ build/
 data/raw/**/*.csv
 data/processed/*.pkl
 data/models/*.pkl
+
+# Database files
 *.db
 *.db-shm
 *.db-wal
+database/*.db*
 
 # Logs
 logs/*.log
@@ -25,9 +27,11 @@ logs/*.log
 # Temporary
 temp/
 temp_pickles/
-quarantine*/
-backups/
 cache/
+*.tmp
+
+# Archives
+archive/
 
 # Secrets
 .env
@@ -40,5 +44,16 @@ Thumbs.db
 .idea/
 .vscode/
 
+# Jupyter
+.ipynb_checkpoints/
+*_executed.ipynb
+*_output_*.ipynb
+
 # Keep directory structure
 !**/.gitkeep
+
+# Allow specific files
+!README.md
+!requirements.txt
+!run_pipeline.py
+!forex_pipeline_v85.py

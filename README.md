@@ -7,31 +7,26 @@ Automated forex trading signal generation using machine learning.
 ```
 forex-ai-models/
 ├── data/
-│   ├── raw/          - CSV data files (gitignored)
-│   ├── processed/    - Processed pickle files (gitignored)
-│   └── models/       - Trained ML models (gitignored)
+│   ├── raw/          - CSV data (gitignored)
+│   ├── processed/    - Processed pickles (gitignored)
+│   └── models/       - ML models (gitignored)
 ├── outputs/          - Trading signals (JSON)
-├── scripts/          - Executable Python scripts
-├── notebooks/        - Jupyter notebooks
-├── logs/             - Execution logs (gitignored)
-├── database/         - SQLite databases (gitignored)
-└── config/           - Configuration files
+├── scripts/          - Python scripts
+├── notebooks/        - Jupyter notebooks (gitignored)
+├── logs/             - Logs (gitignored)
+├── database/         - SQLite files (gitignored)
+└── config/           - Configuration
+
+Only essential files are tracked in git. Large data files are gitignored.
 ```
 
 ## 🚀 Quick Start
 
 ```bash
-# Install dependencies
 pip install -r requirements.txt
-
-# Run main pipeline
 python run_pipeline.py
 ```
 
-## ⚙️ Configuration
-
-Edit `config/settings.py` to customize trading pairs, timeframes, and model parameters.
-
 ## ⚠️ Disclaimer
 
-For educational purposes only. Not financial advice. Trade at your own risk.
+For educational purposes only. Not financial advice.

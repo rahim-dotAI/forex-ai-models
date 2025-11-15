@@ -1,59 +1,31 @@
 # Python
 __pycache__/
 *.py[cod]
-*.so
 .Python
 venv/
-env/
-*.egg-info/
-dist/
-build/
 
-# Data files (too large for git)
+# Data (too large)
 data/raw/**/*.csv
 data/processed/*.pkl
 data/models/*.pkl
-
-# Database files
-*.db
-*.db-shm
-*.db-wal
-database/*.db*
-
-# Logs
+*.db*
 logs/*.log
-*.log
 
-# Temporary
+# Temp
 temp/
-temp_pickles/
-cache/
-*.tmp
-
-# Archives
 archive/
+cache/
 
 # Secrets
 .env
 .git-credentials
-*.key
 
-# OS
-.DS_Store
-Thumbs.db
-.idea/
-.vscode/
-
-# Jupyter
-.ipynb_checkpoints/
-*_executed.ipynb
+# Notebooks (keep only main ones in root)
+notebooks/*.ipynb
 *_output_*.ipynb
+*_executed.ipynb
 
-# Keep directory structure
+# Keep structure
 !**/.gitkeep
-
-# Allow specific files
 !README.md
 !requirements.txt
-!run_pipeline.py
-!forex_pipeline_v85.py

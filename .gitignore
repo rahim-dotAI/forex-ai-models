@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Data files (too large for git)
+data/raw/**/*.csv
+data/processed/*.pkl
+data/models/*.pkl
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+logs/*.log
+*.log
+
+# Temporary
+temp/
+temp_pickles/
+quarantine*/
+backups/
+cache/
+
+# Secrets
+.env
+.git-credentials
+*.key
+
+# OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Keep directory structure
+!**/.gitkeep

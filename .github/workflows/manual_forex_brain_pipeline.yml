@@ -1,4 +1,4 @@
-name: Smart Forex Brain Pipeline (Weekday Full / Weekend Tagged)
+name: Smart Forex Brain Pipeline (Adaptive Schedule)
 
 on:
   workflow_dispatch:
@@ -8,7 +8,10 @@ on:
     branches:
       - main
   schedule:
-    - cron: '0 */4 * * *'
+    # Weekdays (Mon-Fri): Every 4 hours
+    - cron: '0 */4 * * 1-5'
+    # Weekends (Sat-Sun): Every 1 hour
+    - cron: '0 * * * 0,6'
 
 jobs:
   run-forex-brain:
@@ -63,21 +66,32 @@ jobs:
         id: detect_mode
         run: |
           DAY_OF_WEEK=$(date +%u)
+          HOUR=$(date +%H)
           
           echo "=========================================="
-          echo "🗓️  DAY DETECTION"
+          echo "🗓️  EXECUTION MODE DETECTION"
           echo "=========================================="
           echo "Current day: $DAY_OF_WEEK (1=Mon, 7=Sun)"
+          echo "Current hour: $HOUR UTC"
           echo "Date: $(date +'%A, %B %d, %Y %H:%M UTC')"
+          echo ""
           
           if [ $DAY_OF_WEEK -eq 6 ] || [ $DAY_OF_WEEK -eq 7 ]; then
             echo "is_weekend=true" >> $GITHUB_OUTPUT
-            echo "execution_mode=weekend_tagged_cell" >> $GITHUB_OUTPUT
-            echo "🎯 MODE: WEEKEND (Tagged Cell v8.5 Only)"
+            echo "execution_mode=weekend_tagged_cells" >> $GITHUB_OUTPUT
+            echo "schedule_type=hourly" >> $GITHUB_OUTPUT
+            echo "🎯 MODE: WEEKEND"
+            echo "   • Execution: Tagged cells only (Ultra-Persistent + Omega)"
+            echo "   • Schedule: Every 1 hour"
+            echo "   • Focus: Learning & optimization"
           else
             echo "is_weekend=false" >> $GITHUB_OUTPUT
             echo "execution_mode=weekday_full_notebook" >> $GITHUB_OUTPUT
-            echo "🎯 MODE: WEEKDAY (Full Notebook Execution)"
+            echo "schedule_type=4hourly" >> $GITHUB_OUTPUT
+            echo "🎯 MODE: WEEKDAY"
+            echo "   • Execution: Full notebook (all cells)"
+            echo "   • Schedule: Every 4 hours"
+            echo "   • Focus: Live trading + data collection"
           fi
           echo "=========================================="
 
@@ -89,9 +103,15 @@ jobs:
 
       - name: Install dependencies
         run: |
+          echo "📦 Installing Python dependencies..."
           python -m pip install --upgrade pip wheel setuptools
           pip install --no-cache-dir \
-            pandas numpy requests beautifulsoup4 scikit-learn jupyter nbconvert ta nbformat
+            pandas numpy requests beautifulsoup4 scikit-learn \
+            jupyter nbconvert nbformat ta yfinance \
+            mplfinance firebase-admin dropbox \
+            pyppeteer nest_asyncio lightgbm joblib matplotlib \
+            alpha_vantage tqdm river scipy
+          echo "✅ Dependencies installed"
 
       - name: Configure Git
         run: |
@@ -99,91 +119,116 @@ jobs:
           git config --global user.email "${GIT_USER_EMAIL}"
           git config --global credential.helper store
           echo "https://${GITHUB_USERNAME}:${FOREX_PAT}@github.com" > ~/.git-credentials
+          echo "✅ Git configured"
 
-      - name: Verify data files exist (WEEKEND ONLY)
+      - name: Run Weekend Tagged Cells (Ultra-Persistent + Omega)
         if: steps.detect_mode.outputs.is_weekend == 'true'
         run: |
           echo "=========================================="
-          echo "VERIFYING DATA FILES FOR WEEKEND RUN"
+          echo "🎯 WEEKEND MODE: TAGGED CELLS EXECUTION"
           echo "=========================================="
-          
-          PICKLE_COUNT=$(find . -maxdepth 1 -name "*_2244.pkl" -type f 2>/dev/null | wc -l)
-          
-          if [ $PICKLE_COUNT -lt 4 ]; then
-            echo "❌ ERROR: Only $PICKLE_COUNT/4 pickle files found"
-            echo "Weekend mode requires existing data files!"
-            echo ""
-            echo "Available files:"
-            ls -lh *.pkl 2>/dev/null || echo "No pickle files found"
-            echo ""
-            echo "💡 TIP: Run the workflow on a weekday first to generate data files"
-            exit 1
-          fi
-          
-          echo "✅ Found all required data files ($PICKLE_COUNT)"
-          echo "Files:"
-          ls -lh *_2244.pkl
-          echo "=========================================="
-
-      - name: Run Tagged Cell v8.5 Pipeline (WEEKEND ONLY)
-        if: steps.detect_mode.outputs.is_weekend == 'true'
-        run: |
-          echo "=========================================="
-          echo "🟢 RUNNING TAGGED CELL v8.5 PIPELINE"
-          echo "=========================================="
-          echo "Mode: ${{ steps.detect_mode.outputs.execution_mode }}"
+          echo "Executing: Ultra-Persistent Pipeline + Omega v9.0"
           echo ""
           
-          PIPELINE_FILE=""
-          if [ -f "forex_pipeline_v851.py" ]; then
-            PIPELINE_FILE="forex_pipeline_v851.py"
-          elif [ -f "forex_pipeline_v85.py" ]; then
-            PIPELINE_FILE="forex_pipeline_v85.py"
-          elif [ -f "Ultimate_Forex_Pipeline_v851.py" ]; then
-            PIPELINE_FILE="Ultimate_Forex_Pipeline_v851.py"
-          fi
+          # Create Python script to extract and run tagged cells
+          cat > run_tagged_cells.py << 'EOFPYTHON'
+          import nbformat
+          import sys
+          import os
+          from datetime import datetime
           
-          if [ -z "$PIPELINE_FILE" ]; then
-            echo "❌ ERROR: Could not find v8.5 pipeline file!"
-            exit 1
-          fi
+          def extract_and_run_tagged_cells(notebook_path):
+              """Extract and execute cells with TAG: pipeline_main"""
+              print(f"📖 Reading notebook: {notebook_path}")
+              
+              with open(notebook_path, 'r', encoding='utf-8') as f:
+                  nb = nbformat.read(f, as_version=4)
+              
+              tagged_cells = []
+              cell_numbers = []
+              
+              # Find cells with TAG: pipeline_main
+              for i, cell in enumerate(nb.cells):
+                  if cell.cell_type == 'code':
+                      source = cell.source
+                      if '# TAG: pipeline_main' in source or '#TAG: pipeline_main' in source:
+                          tagged_cells.append(source)
+                          cell_numbers.append(i + 1)
+              
+              if not tagged_cells:
+                  print("❌ No tagged cells found with 'TAG: pipeline_main'")
+                  return False
+              
+              print(f"✅ Found {len(tagged_cells)} tagged cell(s): {cell_numbers}")
+              print("=" * 70)
+              print()
+              
+              # Execute each tagged cell
+              for idx, (cell_num, code) in enumerate(zip(cell_numbers, tagged_cells), 1):
+                  print(f"🔄 Executing tagged cell {idx}/{len(tagged_cells)} (cell #{cell_num})")
+                  print("-" * 70)
+                  
+                  # Remove the TAG comment before execution
+                  code_lines = [line for line in code.split('\n') 
+                               if not line.strip().startswith('# TAG:')]
+                  clean_code = '\n'.join(code_lines)
+                  
+                  try:
+                      # Execute the code
+                      exec(clean_code, globals())
+                      print("-" * 70)
+                      print(f"✅ Cell {idx} completed successfully")
+                      print("=" * 70)
+                      print()
+                  except Exception as e:
+                      print("-" * 70)
+                      print(f"❌ Cell {idx} failed with error:")
+                      print(f"   {type(e).__name__}: {str(e)}")
+                      print("=" * 70)
+                      return False
+              
+              print()
+              print("=" * 70)
+              print("✅ ALL TAGGED CELLS EXECUTED SUCCESSFULLY")
+              print("=" * 70)
+              return True
           
-          echo "✅ Found: $PIPELINE_FILE"
-          echo ""
+          if __name__ == "__main__":
+              notebook = sys.argv[1] if len(sys.argv) > 1 else "AI_Forex_Brain_2.ipynb"
+              
+              if not os.path.exists(notebook):
+                  print(f"❌ ERROR: Notebook not found: {notebook}")
+                  sys.exit(1)
+              
+              print("=" * 70)
+              print("🎯 WEEKEND MODE - TAGGED CELLS EXECUTION")
+              print("=" * 70)
+              print(f"📅 Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
+              print(f"📓 Notebook: {notebook}")
+              print(f"🎯 Target: Cells with 'TAG: pipeline_main'")
+              print("=" * 70)
+              print()
+              
+              success = extract_and_run_tagged_cells(notebook)
+              
+              print()
+              print("=" * 70)
+              if success:
+                  print("✅ WEEKEND EXECUTION COMPLETED")
+              else:
+                  print("❌ WEEKEND EXECUTION FAILED")
+              print(f"📅 Finished: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
+              print("=" * 70)
+              
+              sys.exit(0 if success else 1)
+          EOFPYTHON
           
-          # Run with clean output (suppress verbose logs)
-          python "$PIPELINE_FILE" 2>&1 | grep -v "^\[DEBUG\]" | tee pipeline_output.log
-          
-          EXIT_CODE=${PIPESTATUS[0]}
-          if [ $EXIT_CODE -ne 0 ]; then
-            echo ""
-            echo "❌ Pipeline failed with exit code $EXIT_CODE"
-            tail -n 100 pipeline_output.log
-            exit $EXIT_CODE
-          fi
-          
-          echo ""
-          echo "✅ Pipeline completed successfully"
-        timeout-minutes: 25
-
-      - name: Run Full Notebook (WEEKDAY ONLY - Monday to Friday)
-        if: steps.detect_mode.outputs.is_weekend == 'false'
-        run: |
-          echo "=========================================="
-          echo "📓 RUNNING FULL NOTEBOOK"
-          echo "=========================================="
-          echo "Mode: ${{ steps.detect_mode.outputs.execution_mode }}"
-          echo "Day: $(date +'%A')"
-          echo ""
-          
-          # Check if notebook exists
+          # Find the notebook file
           NOTEBOOK_FILE=""
           if [ -f "AI_Forex_Brain_2.ipynb" ]; then
             NOTEBOOK_FILE="AI_Forex_Brain_2.ipynb"
           elif [ -f "AI_Forex_Brain.ipynb" ]; then
             NOTEBOOK_FILE="AI_Forex_Brain.ipynb"
-          elif [ -f "forex_brain.ipynb" ]; then
-            NOTEBOOK_FILE="forex_brain.ipynb"
           fi
           
           if [ -z "$NOTEBOOK_FILE" ]; then
@@ -192,6 +237,31 @@ jobs:
           fi
           
           echo "✅ Found: $NOTEBOOK_FILE"
+          echo ""
+          
+          # Execute tagged cells
+          python run_tagged_cells.py "$NOTEBOOK_FILE" 2>&1 | tee weekend_execution.log
+          
+          EXIT_CODE=${PIPESTATUS[0]}
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo ""
+            echo "❌ Weekend execution failed with exit code $EXIT_CODE"
+            tail -n 100 weekend_execution.log
+            exit $EXIT_CODE
+          fi
+          
+          echo ""
+          echo "✅ Weekend tagged cells executed successfully"
+        timeout-minutes: 50
+
+      - name: Run Full Notebook (WEEKDAY - Monday to Friday)
+        if: steps.detect_mode.outputs.is_weekend == 'false'
+        run: |
+          echo "=========================================="
+          echo "📓 WEEKDAY MODE: FULL NOTEBOOK EXECUTION"
+          echo "=========================================="
+          echo "Day: $(date +'%A')"
+          echo "Executing: All cells in sequence"
           echo ""
           
           # Create enhanced Python script with cell progress tracking
@@ -215,7 +285,6 @@ jobs:
                   
               def preprocess(self, nb, resources=None, km=None):
                   """Override to track total cells"""
-                  # Count code cells
                   self.total_cells = sum(1 for cell in nb.cells if cell.cell_type == 'code')
                   self.current_cell = 0
                   self.start_time = time.time()
@@ -244,10 +313,10 @@ jobs:
                         f"({progress_pct:.1f}% complete)")
                   print(f"⏱️  Elapsed time: {elapsed:.1f}s")
                   
-                  # Show first line of cell source (if not too long)
+                  # Show first line of cell source
                   if cell.source:
                       first_line = cell.source.split('\n')[0][:60]
-                      if first_line.strip():
+                      if first_line.strip() and not first_line.strip().startswith('#'):
                           print(f"📝 Cell preview: {first_line}...")
                   
                   print("-" * 70)
@@ -260,10 +329,8 @@ jobs:
                   # Show cell outputs (cleaned)
                   if cell.outputs:
                       for output in cell.outputs:
-                          # Handle different output types
                           if output.output_type == 'stream':
                               text = output.text
-                              # Clean up the output
                               text = self._clean_output(text)
                               if text.strip():
                                   print(text)
@@ -279,10 +346,7 @@ jobs:
                               print(f"❌ ERROR in cell {self.current_cell}:")
                               print(f"   {output.ename}: {output.evalue}")
                               if output.traceback:
-                                  # Show only last 5 lines of traceback
-                                  print("   Traceback (last 5 lines):")
                                   for line in output.traceback[-5:]:
-                                      # Remove ANSI codes
                                       line = re.sub(r'\x1b\[[0-9;]*m', '', line)
                                       print(f"   {line}")
                   
@@ -294,23 +358,17 @@ jobs:
                   return cell, resources
               
               def _clean_output(self, text):
-                  """Clean output text - remove debug logs, empty lines, etc."""
+                  """Clean output text"""
                   if not text:
                       return ""
                   
                   lines = []
                   for line in text.split('\n'):
-                      # Skip debug/verbose lines
                       if any(skip in line for skip in ['[DEBUG]', 'WARNING:', 'DeprecationWarning']):
                           continue
-                      
-                      # Skip empty lines
                       if not line.strip():
                           continue
-                      
-                      # Remove ANSI color codes
                       line = re.sub(r'\x1b\[[0-9;]*m', '', line)
-                      
                       lines.append(line)
                   
                   return '\n'.join(lines)
@@ -319,20 +377,16 @@ jobs:
               """Execute entire Jupyter notebook with progress tracking"""
               print(f"📖 Reading notebook: {notebook_path}")
               
-              # Read the notebook
               with open(notebook_path, 'r', encoding='utf-8') as f:
                   nb = nbformat.read(f, as_version=4)
               
               code_cells = sum(1 for c in nb.cells if c.cell_type == 'code')
-              markdown_cells = sum(1 for c in nb.cells if c.cell_type == 'markdown')
               
               print(f"✅ Loaded notebook:")
               print(f"   • Total cells: {len(nb.cells)}")
               print(f"   • Code cells: {code_cells}")
-              print(f"   • Markdown cells: {markdown_cells}")
               print()
               
-              # Configure custom executor
               ep = ProgressTrackingExecutor(
                   timeout=2400,  # 40 minutes per cell
                   kernel_name='python3',
@@ -340,29 +394,22 @@ jobs:
                   store_widget_state=True
               )
               
-              print("🚀 Starting notebook execution...")
+              print("🚀 Starting full notebook execution...")
               print()
               
               try:
-                  # Execute the notebook
                   start_time = time.time()
                   ep.preprocess(nb, {'metadata': {'path': '.'}})
                   total_duration = time.time() - start_time
                   
                   print()
                   print("=" * 70)
-                  print("✅ NOTEBOOK EXECUTION COMPLETED SUCCESSFULLY!")
+                  print("✅ FULL NOTEBOOK EXECUTION COMPLETED!")
                   print("=" * 70)
-                  print(f"⏱️  Total execution time: {total_duration:.1f}s ({total_duration/60:.1f} minutes)")
+                  print(f"⏱️  Total time: {total_duration:.1f}s ({total_duration/60:.1f} min)")
                   print(f"📊 Cells executed: {code_cells}")
-                  print(f"⚡ Average time per cell: {total_duration/code_cells:.1f}s")
+                  print(f"⚡ Avg time/cell: {total_duration/code_cells:.1f}s")
                   print("=" * 70)
-                  
-                  # Save executed notebook
-                  output_path = notebook_path.replace('.ipynb', '_executed.ipynb')
-                  with open(output_path, 'w', encoding='utf-8') as f:
-                      nbformat.write(nb, f)
-                  print(f"💾 Saved executed notebook: {output_path}")
                   
                   return True
                   
@@ -371,18 +418,7 @@ jobs:
                   print("=" * 70)
                   print("❌ CELL EXECUTION FAILED!")
                   print("=" * 70)
-                  
-                  # Extract cell information
-                  if hasattr(e, 'ename') and hasattr(e, 'evalue'):
-                      print(f"Error type: {e.ename}")
-                      print(f"Error message: {e.evalue}")
-                  
-                  if hasattr(e, 'traceback'):
-                      print("\nTraceback:")
-                      for line in e.traceback[-10:]:  # Last 10 lines
-                          line = re.sub(r'\x1b\[[0-9;]*m', '', line)
-                          print(line)
-                  
+                  print(f"Error: {e.ename}: {e.evalue}")
                   print("=" * 70)
                   return False
               
@@ -391,8 +427,7 @@ jobs:
                   print("=" * 70)
                   print("❌ UNEXPECTED ERROR!")
                   print("=" * 70)
-                  print(f"Error type: {type(e).__name__}")
-                  print(f"Error: {str(e)}")
+                  print(f"Error: {type(e).__name__}: {str(e)}")
                   print("=" * 70)
                   return False
           
@@ -404,7 +439,7 @@ jobs:
                   sys.exit(1)
               
               print("=" * 70)
-              print("🧠 FOREX AI BRAIN - FULL NOTEBOOK EXECUTION")
+              print("🧠 WEEKDAY MODE - FULL NOTEBOOK EXECUTION")
               print("=" * 70)
               print(f"📅 Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
               print(f"📓 Notebook: {notebook}")
@@ -425,7 +460,20 @@ jobs:
               sys.exit(0 if success else 1)
           EOFPYTHON
           
-          echo "🔧 Created enhanced notebook executor"
+          # Find the notebook file
+          NOTEBOOK_FILE=""
+          if [ -f "AI_Forex_Brain_2.ipynb" ]; then
+            NOTEBOOK_FILE="AI_Forex_Brain_2.ipynb"
+          elif [ -f "AI_Forex_Brain.ipynb" ]; then
+            NOTEBOOK_FILE="AI_Forex_Brain.ipynb"
+          fi
+          
+          if [ -z "$NOTEBOOK_FILE" ]; then
+            echo "❌ ERROR: No notebook file found!"
+            exit 1
+          fi
+          
+          echo "✅ Found: $NOTEBOOK_FILE"
           echo ""
           
           # Execute the notebook
@@ -435,8 +483,6 @@ jobs:
           if [ $EXIT_CODE -ne 0 ]; then
             echo ""
             echo "❌ Notebook execution failed with exit code $EXIT_CODE"
-            echo ""
-            echo "Last 200 lines of output:"
             tail -n 200 notebook_execution.log
             exit $EXIT_CODE
           fi
@@ -452,75 +498,63 @@ jobs:
           echo "📋 CHECKING OUTPUT FILES"
           echo "=========================================="
           
-          # Check for pickle files
-          echo "Pickle files:"
-          if ls *_2244.pkl 1> /dev/null 2>&1; then
-            ls -lh *_2244.pkl
-          else
-            echo "  ⚠️  No pickle files found"
-          fi
+          # Check for output folders
+          echo "Output directories:"
+          for dir in outputs data/processed database logs omega_state; do
+            if [ -d "$dir" ]; then
+              FILE_COUNT=$(find "$dir" -type f 2>/dev/null | wc -l)
+              echo "  ✅ $dir/ (${FILE_COUNT} files)"
+            else
+              echo "  ⚠️  $dir/ not found"
+            fi
+          done
           echo ""
           
           # Check for signal files
           echo "Signal files:"
-          if [ -f "broker_signals.json" ]; then
-            FILE_SIZE=$(wc -c < "broker_signals.json")
-            echo "  ✅ broker_signals.json (${FILE_SIZE} bytes)"
-          else
-            echo "  ⚠️  broker_signals.json not found"
-          fi
-          
-          if [ -f "ensemble_signals.json" ]; then
-            FILE_SIZE=$(wc -c < "ensemble_signals.json")
-            echo "  ✅ ensemble_signals.json (${FILE_SIZE} bytes)"
-          else
-            echo "  ⚠️  ensemble_signals.json not found"
-          fi
-          echo ""
-          
-          # Check for learning files
-          echo "Learning files:"
-          for file in learning_v85.pkl iteration_v85.pkl memory_v85.db; do
+          for file in outputs/latest_signals.json outputs/omega_signals.json; do
             if [ -f "$file" ]; then
-              FILE_SIZE=$(wc -c < "$file")
+              FILE_SIZE=$(wc -c < "$file" 2>/dev/null || echo "0")
               echo "  ✅ $file (${FILE_SIZE} bytes)"
             else
               echo "  ⚠️  $file not found"
             fi
           done
+          echo ""
+          
+          # Check for learning/state files
+          echo "Learning & state files:"
+          for file in omega_state/*.pkl database/*.db; do
+            if [ -f "$file" ]; then
+              FILE_SIZE=$(wc -c < "$file" 2>/dev/null || echo "0")
+              echo "  ✅ $file (${FILE_SIZE} bytes)"
+            fi
+          done
+          echo ""
+          
+          # Check for pickle data files
+          PICKLE_COUNT=$(find data/processed -name "*.pkl" -type f 2>/dev/null | wc -l)
+          if [ $PICKLE_COUNT -gt 0 ]; then
+            echo "  ✅ ${PICKLE_COUNT} processed pickle files in data/processed/"
+          fi
+          
           echo "=========================================="
 
-      - name: Clean up nested git repositories and folders
+      - name: Clean up nested repositories
         if: always()
         run: |
           echo "=========================================="
-          echo "🧹 CLEANING NESTED REPOSITORIES & FOLDERS"
+          echo "🧹 CLEANING NESTED REPOSITORIES"
           echo "=========================================="
           
+          find . -mindepth 2 -type d -name ".git" -exec rm -rf {} + 2>/dev/null || true
+          
           if [ -d "forex-alpha-models" ]; then
-            echo "🗑️  Removing entire forex-alpha-models folder"
             rm -rf forex-alpha-models
-            echo "✅ Removed nested folder structure"
+            echo "✅ Removed forex-alpha-models folder"
           fi
           
-          NESTED_REPOS=$(find . -mindepth 2 -type d -name ".git" 2>/dev/null)
-          
-          if [ -n "$NESTED_REPOS" ]; then
-            echo "Found additional nested repositories:"
-            echo "$NESTED_REPOS"
-            
-            while IFS= read -r git_dir; do
-              if [ -n "$git_dir" ] && [ -d "$git_dir" ]; then
-                echo "🗑️  Removing: $git_dir"
-                rm -rf "$git_dir"
-              fi
-            done <<< "$NESTED_REPOS"
-            
-            echo "✅ All nested git repositories removed"
-          else
-            echo "✅ No additional nested repositories found"
-          fi
-          
+          echo "✅ Cleanup complete"
           echo "=========================================="
 
       - name: Commit and push changes
@@ -532,16 +566,23 @@ jobs:
             echo "ℹ️  No changes to commit"
           else
             MODE="${{ steps.detect_mode.outputs.execution_mode }}"
+            SCHEDULE="${{ steps.detect_mode.outputs.schedule_type }}"
             TIMESTAMP=$(date +'%Y-%m-%d %H:%M:%S UTC')
             DAY=$(date +'%A')
             
-            git commit -m "🤖 Auto-update [$MODE] - $DAY: $TIMESTAMP" || true
+            if [ "${{ steps.detect_mode.outputs.is_weekend }}" = "true" ]; then
+              COMMIT_MSG="🎯 Weekend Learning [$SCHEDULE] - $DAY: $TIMESTAMP"
+            else
+              COMMIT_MSG="🤖 Weekday Trading [$SCHEDULE] - $DAY: $TIMESTAMP"
+            fi
+            
+            git commit -m "$COMMIT_MSG" || true
             
             echo "Syncing with remote..."
             for i in {1..3}; do
               echo "Attempt $i: Pulling latest changes..."
               if git pull --rebase origin main 2>&1 | grep -q "CONFLICT"; then
-                echo "⚠️  Conflict detected, resolving with ours strategy..."
+                echo "⚠️  Conflict detected, resolving..."
                 git checkout --ours .
                 git add -A
                 git rebase --continue || true
@@ -554,15 +595,11 @@ jobs:
               else
                 echo "⚠️  Push failed on attempt $i"
                 if [ $i -lt 3 ]; then
-                  echo "Waiting 3 seconds before retry..."
                   sleep 3
                   git fetch origin main
                   git reset --soft origin/main
                   git add -A
-                  git commit -m "🤖 Auto-update [$MODE] - $DAY: $TIMESTAMP" || true
-                else
-                  echo "❌ All push attempts failed"
-                  exit 1
+                  git commit -m "$COMMIT_MSG" || true
                 fi
               fi
             done
@@ -572,58 +609,46 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pipeline-logs-${{ github.run_number }}
+          name: execution-logs-${{ github.run_number }}
           path: |
-            pipeline_output.log
+            weekend_execution.log
             notebook_execution.log
-            *_executed.ipynb
+            run_tagged_cells.py
             run_full_notebook.py
-            forex_pipeline_v85.log
-            pipeline.log
+            logs/*.log
           retention-days: 7
           if-no-files-found: ignore
 
-      - name: Summary
+      - name: Execution Summary
         if: always()
         run: |
           echo "=========================================="
           echo "📊 EXECUTION SUMMARY"
           echo "=========================================="
           echo "Mode: ${{ steps.detect_mode.outputs.execution_mode }}"
+          echo "Schedule: ${{ steps.detect_mode.outputs.schedule_type }}"
           echo "Weekend: ${{ steps.detect_mode.outputs.is_weekend }}"
           echo "Day: $(date +'%A')"
-          echo "Date: $(date +'%B %d, %Y %H:%M UTC')"
+          echo "Time: $(date +'%B %d, %Y %H:%M UTC')"
           echo ""
+          
+          if [ "${{ steps.detect_mode.outputs.is_weekend }}" = "true" ]; then
+            echo "🎯 Weekend Mode Active:"
+            echo "   • Executed: Tagged cells (Ultra-Persistent + Omega)"
+            echo "   • Next run: In ~1 hour"
+            echo "   • Purpose: Learning & optimization"
+          else
+            echo "🤖 Weekday Mode Active:"
+            echo "   • Executed: Full notebook (all cells)"
+            echo "   • Next run: In ~4 hours"
+            echo "   • Purpose: Live trading + data collection"
+          fi
+          echo ""
+          
           echo "Generated Files:"
+          find outputs -type f -exec sh -c 'echo "  ✅ $(basename {}) ($(wc -c < {} 2>/dev/null || echo 0) bytes)"' \; 2>/dev/null | head -10
           
-          if [ -f "broker_signals.json" ]; then
-            FILE_SIZE=$(wc -c < "broker_signals.json" 2>/dev/null || echo "0")
-            echo "  ✅ broker_signals.json (${FILE_SIZE} bytes)"
-          fi
-          
-          if [ -f "ensemble_signals.json" ]; then
-            FILE_SIZE=$(wc -c < "ensemble_signals.json" 2>/dev/null || echo "0")
-            echo "  ✅ ensemble_signals.json (${FILE_SIZE} bytes)"
-          fi
-          
-          if [ -f "learning_v85.pkl" ]; then
-            FILE_SIZE=$(wc -c < "learning_v85.pkl" 2>/dev/null || echo "0")
-            echo "  ✅ learning_v85.pkl (${FILE_SIZE} bytes)"
-          fi
-          
-          if [ -f "iteration_v85.pkl" ]; then
-            FILE_SIZE=$(wc -c < "iteration_v85.pkl" 2>/dev/null || echo "0")
-            echo "  ✅ iteration_v85.pkl (${FILE_SIZE} bytes)"
-          fi
-          
-          if [ -f "memory_v85.db" ]; then
-            FILE_SIZE=$(wc -c < "memory_v85.db" 2>/dev/null || echo "0")
-            echo "  ✅ memory_v85.db (${FILE_SIZE} bytes)"
-          fi
-          
-          PICKLE_COUNT=$(find . -maxdepth 1 -name "*_2244.pkl" -type f 2>/dev/null | wc -l)
-          if [ $PICKLE_COUNT -gt 0 ]; then
-            echo "  ✅ ${PICKLE_COUNT} pickle data files"
-          fi
-          
+          echo ""
+          echo "=========================================="
+          echo "✅ Pipeline execution completed"
           echo "=========================================="

@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-11-16T15:56:59.140003+00:00",
-  "iteration": 7,
+  "timestamp": "2025-11-16T20:54:17.680860+00:00",
+  "iteration": 1,
   "system": "OMEGA",
   "version": "v9.0-ultrafast-antioverfit-fully-fixed",
   "mode": "weekend_learning",
@@ -11,15 +11,12 @@
   },
   "environment": "Google Colab",
   "learning": {
-    "iterations": 4,
-    "adaptation_score": 37.7063424774353,
-    "total_successes": 12,
+    "iterations": 1,
+    "adaptation_score": 36.905268481748315,
+    "total_successes": 2,
     "trend": "\ud83d\udcc9 Adjusting",
     "learning_curve": [
-      28.321084519552954,
-      32.68873343959177,
-      35.297712202728036,
-      38.5317123871765
+      34.52634240874156
     ]
   },
   "circuit_breaker_status": "closed",
@@ -39,5 +36,11 @@
     "macd_calculation",
     "indentation_errors",
     "run_ga_incomplete_code"
-  ]
+  ],
+  "ai_features": {
+    "anti_overfit_ai": true,
+    "generalization_tracking": true,
+    "adaptive_regularization": true,
+    "intelligent_early_stopping": true
+  }
 }

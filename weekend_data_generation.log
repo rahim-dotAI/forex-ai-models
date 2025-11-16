@@ -1,7 +1,7 @@
 ======================================================================
 📓 WEEKEND DATA GENERATION MODE
 ======================================================================
-📅 2025-11-16 22:17:52 UTC
+📅 2025-11-16 23:01:57 UTC
 📓 AI_Forex_Brain_2.ipynb
 🎯 Purpose: Create data files for future learning runs
 ======================================================================
@@ -116,7 +116,7 @@ Requirement already satisfied: dropbox in /opt/hostedtoolcache/Python/3.11.14/x6
 Requirement already satisfied: requests in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (2.32.5)
 Requirement already satisfied: beautifulsoup4 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (4.14.2)
 Requirement already satisfied: pandas in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (2.3.3)
-Requirement already satisfied: numpy in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (2.3.4)
+Requirement already satisfied: numpy in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (2.3.5)
 Requirement already satisfied: ta in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (0.11.0)
 Requirement already satisfied: yfinance in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (0.2.66)
 Requirement already satisfied: pyppeteer in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (0.0.25)
@@ -225,30 +225,30 @@ Requirement already satisfied: sniffio>=1.1 in /opt/hostedtoolcache/Python/3.11.
 🔄 Processing EUR/USD...
 🔄 Processing GBP/USD...
 🔄 Processing USD/JPY...
-  🔽 Fetching EUR/USD (attempt 1/3)...
-🔄 Processing AUD/USD...
-  🔽 Fetching AUD/USD (attempt 1/3)...
   🔽 Fetching GBP/USD (attempt 1/3)...
   🔽 Fetching USD/JPY (attempt 1/3)...
-  ✅ Fetched 5000 rows for EUR/USD
-  📊 Quality score: 96.0/100
+🔄 Processing AUD/USD...
+  🔽 Fetching EUR/USD (attempt 1/3)...
+  🔽 Fetching AUD/USD (attempt 1/3)...
   ✅ Fetched 5000 rows for AUD/USD
   📊 Quality score: 96.1/100
-  ✅ Fetched 5000 rows for GBP/USD
-  📊 Quality score: 97.0/100
-  ✅ Updated - 5000 rows, quality: 96.0/100
   ✅ Updated - 5000 rows, quality: 96.1/100
-  ✅ Updated - 5000 rows, quality: 97.0/100
   ✅ Fetched 5000 rows for USD/JPY
   📊 Quality score: 96.9/100
   ✅ Updated - 5000 rows, quality: 96.9/100
+  ✅ Fetched 5000 rows for GBP/USD
+  📊 Quality score: 97.0/100
+  ✅ Fetched 5000 rows for EUR/USD
+  📊 Quality score: 96.0/100
+  ✅ Updated - 5000 rows, quality: 97.0/100
+  ✅ Updated - 5000 rows, quality: 96.0/100
 ======================================================================
 📊 PROCESSING SUMMARY
 ======================================================================
-✅ Updated EUR/USD (5000 rows, Q:96)
 ✅ Updated AUD/USD (5000 rows, Q:96)
-✅ Updated GBP/USD (5000 rows, Q:97)
 ✅ Updated USD/JPY (5000 rows, Q:97)
+✅ Updated GBP/USD (5000 rows, Q:97)
+✅ Updated EUR/USD (5000 rows, Q:96)
 Total pairs processed: 4
 Files updated: 4
 ======================================================================
@@ -280,12 +280,12 @@ Status: ✅ Success
 🎯 Both sources in organized folders!
 ======================================================================
 ----------------------------------------------------------------------
-✅ Cell 5 completed in 2.2s
+✅ Cell 5 completed in 1.3s
 ======================================================================
 
 ======================================================================
 🔄 CELL 6/9 (66.7%)
-⏱️  Elapsed: 4.5s
+⏱️  Elapsed: 3.6s
 ----------------------------------------------------------------------
 ======================================================================
 🚀 YFinance FX Data Fetcher - Clean Structure Edition
@@ -356,7 +356,7 @@ Status: ✅ Success
 Total tasks: 20
 Successful: 20/20
 Files updated: 20
-Time: 1.4 min
+Time: 1.3 min
 Average quality: 92.4/100
 ======================================================================
 📊 QUALITY REPORT
@@ -402,12 +402,12 @@ Rate limiter: 20 requests
 🎯 All data sources in organized folders!
 ======================================================================
 ----------------------------------------------------------------------
-✅ Cell 6 completed in 84.4s
+✅ Cell 6 completed in 80.3s
 ======================================================================
 
 ======================================================================
 🔄 CELL 7/9 (77.8%)
-⏱️  Elapsed: 89.0s
+⏱️  Elapsed: 83.8s
 ----------------------------------------------------------------------
 ======================================================================
 🔧 CSV Combiner & Multi-Type Handler - Clean Structure Edition
@@ -444,24 +444,24 @@ Rate limiter: 20 requests
 ℹ️ 📋 Processing: EUR_USD_1d_5y.csv
 ℹ️ 📋 Processing: USD_JPY_5m_1mo.csv
 ℹ️ 📋 Processing: EUR_USD_1h_2y.csv
+🐞   📊 Quality score: 100.0/100
 ℹ️ 📋 Processing: USD_JPY_15m_60d.csv
-ℹ️ 📋 Processing: AUD_USD_1m_7d.csv
-🐞   📊 Quality score: 100.0/100
 🐞   🔧 Calculating indicators on 1303 rows
+ℹ️ 📋 Processing: AUD_USD_1m_7d.csv
 🐞   📊 Quality score: 86.6/100
-🐞   🔧 Calculating indicators on 6521 rows
-🐞   📊 Quality score: 85.9/100
-🐞   📊 Quality score: 100.0/100
-🐞   🔧 Calculating indicators on 5571 rows
-🐞   📊 Quality score: 76.4/100
-🐞   🔧 Calculating indicators on 5545 rows
-🐞   🔧 Calculating indicators on 4944 rows
 🐞   📊 Quality score: 58.8/100
+🐞   📊 Quality score: 85.9/100
+🐞   🔧 Calculating indicators on 6521 rows
+🐞   🔧 Calculating indicators on 5571 rows
 🐞   🔧 Calculating indicators on 9893 rows
 🐞   📊 Quality score: 100.0/100
 🐞   🔧 Calculating indicators on 6493 rows
 🐞   📊 Quality score: 100.0/100
+🐞   📊 Quality score: 100.0/100
+🐞   📊 Quality score: 76.4/100
+🐞   🔧 Calculating indicators on 4944 rows
 🐞   🔧 Calculating indicators on 12379 rows
+🐞   🔧 Calculating indicators on 5545 rows
 🐞   📊 ATR median: 0.00816775
 🐞   📊 ATR median: 0.00015697
 🐞   📊 ATR median: 0.00007547
@@ -471,12 +471,12 @@ Rate limiter: 20 requests
 🐞   📊 ATR median: 0.00006644
 🐞   📊 ATR median: 0.00112470
 🐞   ✅ Scaled 26 features (ATR protected)
-🐞   ✅ Scaled 26 features (ATR protected)
 ✅ ✅ EUR_USD_1d_5y.csv: 1303 rows, Q:100, ATR:0.00816775
 ℹ️ 📋 Processing: USD_JPY_1m_7d.csv
 🐞   ✅ Scaled 26 features (ATR protected)
 🐞   📊 Quality score: 88.5/100
 🐞   🔧 Calculating indicators on 9833 rows
+🐞   ✅ Scaled 26 features (ATR protected)
 🐞   ✅ Scaled 26 features (ATR protected)
 🐞   ✅ Scaled 26 features (ATR protected)
 🐞   ✅ Scaled 26 features (ATR protected)
@@ -490,19 +490,19 @@ Rate limiter: 20 requests
 🐞   🔧 Calculating indicators on 1303 rows
 🐞   📊 ATR median: 0.01034486
 🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ AUD_USD_1m_7d.csv: 4944 rows, Q:76, ATR:0.00007547
+✅ ✅ AUD_USD_5m_1mo.csv: 6521 rows, Q:87, ATR:0.00015697
 ℹ️ 📋 Processing: AUD_USD_15m_60d.csv
 🐞   📊 Quality score: 98.2/100
 🐞   🔧 Calculating indicators on 5583 rows
 🐞   📊 ATR median: 0.00032526
 🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ USD_JPY_15m_60d.csv: 5545 rows, Q:100, ATR:0.10008806
+✅ ✅ AUD_USD_1m_7d.csv: 4944 rows, Q:76, ATR:0.00007547
 ℹ️ 📋 Processing: GBP_USD_5m_1mo.csv
 🐞   📊 Quality score: 100.0/100
 🐞   🔧 Calculating indicators on 6510 rows
 🐞   📊 ATR median: 0.00030426
 🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ AUD_USD_5m_1mo.csv: 6521 rows, Q:87, ATR:0.00015697
+✅ ✅ USD_JPY_15m_60d.csv: 5545 rows, Q:100, ATR:0.10008806
 ℹ️ 📋 Processing: USD_JPY_1h_2y.csv
 🐞   📊 Quality score: 100.0/100
 🐞   🔧 Calculating indicators on 12307 rows
@@ -635,15 +635,15 @@ Files quarantined: 0
    Quarantine: /home/runner/work/forex-ai-models/forex-ai-models/data/quarantine/combiner
 ======================================================================
 ----------------------------------------------------------------------
-✅ Cell 7 completed in 8.0s
+✅ Cell 7 completed in 8.1s
 ======================================================================
 
 ======================================================================
 🔄 CELL 8/9 (88.9%)
-⏱️  Elapsed: 97.0s
+⏱️  Elapsed: 92.0s
 ----------------------------------------------------------------------
-[main fe09f73] 📈 Update signals - Iteration 1
- 1 file changed, 121 insertions(+), 121 deletions(-)
+[main 70dd62a] 📈 Update signals - Iteration 1
+ 1 file changed, 13 insertions(+), 13 deletions(-)
 ======================================================================
 🚀 Ultra-Persistent FX Pipeline v4.0 - Clean Structure Edition
 ======================================================================
@@ -678,19 +678,19 @@ Files quarantined: 0
 ℹ️ 📂 Looking in: /home/runner/work/forex-ai-models/forex-ai-models/data/processed
 ✅ ✅ Found 24 processed pickle files
 ℹ️ EUR/USD | 15m | Ens:0 (SGD:0 RF:0) | Price:1.16252 | SL:1.16182 | TP:1.16322
-ℹ️ GBP/USD | 15m | Ens:0 (SGD:0 RF:0) | Price:1.31719 | SL:1.31606 | TP:1.31833
-ℹ️ USD/JPY | 1d | Ens:0 (SGD:0 RF:0) | Price:154.54000 | SL:152.32134 | TP:156.75866
+ℹ️ GBP/USD | 15m | Ens:1 (SGD:1 RF:0) | Price:1.31719 | SL:1.31606 | TP:1.31833
+ℹ️ USD/JPY | 1d | Ens:1 (SGD:1 RF:0) | Price:154.54000 | SL:152.32134 | TP:156.75866
 ℹ️ GBP/USD | 1h | Ens:0 (SGD:0 RF:0) | Price:1.31719 | SL:1.31350 | TP:1.32089
-ℹ️ EUR/USD | 1d | Ens:1 (SGD:1 RF:0) | Price:1.16225 | SL:1.15010 | TP:1.17440
+ℹ️ EUR/USD | 1d | Ens:1 (SGD:1 RF:0) | Price:1.16266 | SL:1.15050 | TP:1.17481
 ℹ️ GBP/USD | 5m | Ens:0 (SGD:0 RF:0) | Price:1.31719 | SL:1.31685 | TP:1.31753
-ℹ️ USD/JPY | 1d | Ens:0 (SGD:0 RF:0) | Price:154.53799 | SL:152.22614 | TP:156.84985
+ℹ️ USD/JPY | 1d | Ens:0 (SGD:0 RF:0) | Price:154.45599 | SL:152.14414 | TP:156.76785
 ℹ️ AUD/USD | 1m | Ens:0 (SGD:0 RF:0) | Price:0.65389 | SL:0.65385 | TP:0.65394
 ℹ️ EUR/USD | 1m | Ens:0 (SGD:0 RF:0) | Price:1.16252 | SL:1.16249 | TP:1.16255
 ℹ️ USD/JPY | 1h | Ens:0 (SGD:0 RF:0) | Price:154.49300 | SL:154.05865 | TP:154.92734
-ℹ️ EUR/USD | 1h | Ens:1 (SGD:1 RF:0) | Price:1.16252 | SL:1.16047 | TP:1.16457
+ℹ️ EUR/USD | 1h | Ens:0 (SGD:0 RF:0) | Price:1.16252 | SL:1.16047 | TP:1.16457
 ℹ️ USD/JPY | 5m | Ens:0 (SGD:0 RF:0) | Price:154.49300 | SL:154.41501 | TP:154.57099
 ℹ️ AUD/USD | 15m | Ens:0 (SGD:0 RF:0) | Price:0.65389 | SL:0.65331 | TP:0.65448
-ℹ️ AUD/USD | 1d | Ens:1 (SGD:1 RF:1) | Price:0.65389 | SL:0.64452 | TP:0.66327
+ℹ️ AUD/USD | 1d | Ens:1 (SGD:1 RF:1) | Price:0.65330 | SL:0.64392 | TP:0.66267
 ℹ️ GBP/USD | 1m | Ens:1 (SGD:1 RF:0) | Price:1.31719 | SL:1.31717 | TP:1.31722
 ℹ️ EUR/USD | 5m | Ens:0 (SGD:0 RF:0) | Price:1.16252 | SL:1.16224 | TP:1.16280
 ℹ️ GBP/USD | 1d | Ens:0 (SGD:0 RF:0) | Price:1.31680 | SL:1.29960 | TP:1.33400
@@ -700,7 +700,7 @@ Files quarantined: 0
 ℹ️ USD/JPY | 15m | Ens:0 (SGD:0 RF:0) | Price:154.49300 | SL:154.32941 | TP:154.65659
 ℹ️ EUR/USD | 1d | Ens:0 (SGD:0 RF:0) | Price:1.16200 | SL:1.15040 | TP:1.17360
 ℹ️ AUD/USD | 1d | Ens:1 (SGD:1 RF:1) | Price:0.65360 | SL:0.64387 | TP:0.66333
-ℹ️ GBP/USD | 1d | Ens:1 (SGD:1 RF:1) | Price:1.31676 | SL:1.29911 | TP:1.33441
+ℹ️ GBP/USD | 1d | Ens:1 (SGD:1 RF:1) | Price:1.31707 | SL:1.29942 | TP:1.33472
 ℹ️ 
 💾 STORING SIGNALS
 ✅ 💾 Stored 20 trades
@@ -711,8 +711,8 @@ Files quarantined: 0
 ℹ️ 
 📝 EXPORTING TO JSON
 ℹ️ 📤 Pushing to GitHub...
-[main fe09f73] 📈 Update signals - Iteration 1
- 1 file changed, 121 insertions(+), 121 deletions(-)
+[main 70dd62a] 📈 Update signals - Iteration 1
+ 1 file changed, 13 insertions(+), 13 deletions(-)
 ✅ ✅ Pushed to GitHub
 📊 
 📊 FINAL DATABASE STATS
@@ -733,12 +733,12 @@ Files quarantined: 0
 ✅ 
 ✅ ALL OPERATIONS COMPLETED!
 ----------------------------------------------------------------------
-✅ Cell 8 completed in 20.2s
+✅ Cell 8 completed in 12.5s
 ======================================================================
 
 ======================================================================
 🔄 CELL 9/9 (100.0%)
-⏱️  Elapsed: 117.2s
+⏱️  Elapsed: 104.5s
 ----------------------------------------------------------------------
 ======================================================================
 🔴 OMEGA v9.0 - Ultra-Fast + Anti-Overfit (FIXED)
@@ -749,8 +749,8 @@ Files quarantined: 0
 🔴 🔴 OMEGA v9.0 - ULTRA-FAST + ANTI-OVERFIT (FULLY FIXED)
 🔴 ======================================================================
 ℹ️ 
-📊 Iteration #5 | GitHub Actions
-ℹ️ Total: 4 | Days: 1 | Avg/Day: 4.0
+📊 Iteration #6 | GitHub Actions
+ℹ️ Total: 5 | Days: 1 | Avg/Day: 5.0
 ℹ️ 📚 Weekend Learning Mode
 ℹ️ 
 📦 Loading data...
@@ -791,29 +791,42 @@ Files quarantined: 0
     Candidates: 21/24 (88%)
     Candidates: 23/24 (96%)
     Candidates: 24/24 (100%)
-✅   ✅ Init ready | Best: 146.06
+✅   ✅ Init ready | Best: 167.68
 ℹ️   🧬 Evolution...
-ℹ️   📈 Gen 1/8: Best=204.61 | Avg=123.46 | Div=0.16 | Mut=0.150 | T=4.1s
-ℹ️   📊 Gen 2/8: Best=204.61 | Avg=130.03 | Div=0.12 | Mut=0.150 | T=4.1s
-⚠️   🛡️ Overfitting detected (severity=0.19, consistency=0.06)
-✅   🛡️ New best: GenScore=-0.00 (base=-0.01, consistency=0.06)
-ℹ️   📊 Gen 3/8: Best=204.61 | Avg=162.36 | Div=0.11 | Mut=0.150 | GenScore=-0.00 | T=6.8s
-ℹ️   📊 Gen 4/8: Best=204.61 | Avg=167.48 | Div=0.06 | Mut=0.150 | GenScore=-0.00 | T=4.0s
-⚠️   🛡️ Overfitting detected (severity=0.19, consistency=0.06)
-ℹ️   📊 Gen 5/8: Best=204.61 | Avg=149.73 | Div=0.05 | Mut=0.150 | GenScore=-0.00 | T=6.8s
-ℹ️   📈 Gen 6/8: Best=296.86 | Avg=188.90 | Div=0.04 | Mut=0.150 | GenScore=-0.00 | T=4.2s
-⚠️   🛡️ Overfitting detected (severity=0.16, consistency=0.06)
-ℹ️   📈 Gen 7/8: Best=302.36 | Avg=218.24 | Div=0.04 | Mut=0.150 | GenScore=-0.00 | T=7.0s
-ℹ️   📈 Gen 8/8: Best=305.93 | Avg=250.85 | Div=0.04 | Mut=0.150 | GenScore=-0.00 | T=4.2s
-✅   🛡️ Using best generalization model (score=-0.00)
+ℹ️   📊 Gen 1/8: Best=167.68 | Avg=60.01 | Div=0.17 | Mut=0.150 | T=3.8s
+ℹ️   📈 Gen 2/8: Best=174.12 | Avg=101.17 | Div=0.17 | Mut=0.150 | T=3.7s
+⚠️   🛡️ Overfitting detected (severity=1.09, consistency=1.00)
+ℹ️     → Increase regularization (mutation rate)
+ℹ️     → Reduce model complexity
+ℹ️     → Use simpler features
+❌   🛡️ Very severe overfitting: Applied maximum regularization
+✅   🛡️ New best: GenScore=-0.17 (base=-0.17, consistency=1.00)
+ℹ️   📊 Gen 3/8: Best=174.12 | Avg=-40.39 | Div=0.09 | Mut=0.270 | GenScore=-0.17 | T=5.9s
+ℹ️   📊 Gen 4/8: Best=174.12 | Avg=-20.45 | Div=0.12 | Mut=0.270 | GenScore=-0.17 | T=3.2s
+⚠️   🛡️ Overfitting detected (severity=1.09, consistency=1.00)
+ℹ️     → Increase regularization (mutation rate)
+ℹ️     → Reduce model complexity
+ℹ️     → Use simpler features
+❌   🛡️ Very severe overfitting: Applied maximum regularization
+ℹ️   📊 Gen 5/8: Best=174.12 | Avg=-19.88 | Div=0.13 | Mut=0.450 | GenScore=-0.17 | T=6.1s
+ℹ️   📈 Gen 6/8: Best=28900.75 | Avg=2446.52 | Div=0.12 | Mut=0.450 | GenScore=-0.17 | T=3.5s
+⚠️   🛡️ Overfitting detected (severity=0.53, consistency=0.28)
+ℹ️     → Increase regularization (mutation rate)
+ℹ️     → Reduce model complexity
+ℹ️     → Use simpler features
+⚠️   🛡️ Severe overfitting: Applied strong regularization
+✅   🛡️ New best: GenScore=0.12 (base=0.42, consistency=0.28)
+ℹ️   📊 Gen 7/8: Best=28900.75 | Avg=2145.32 | Div=0.14 | Mut=0.375 | GenScore=0.12 | T=5.5s
+ℹ️   📊 Gen 8/8: Best=28900.75 | Avg=2274.09 | Div=0.12 | Mut=0.375 | GenScore=0.12 | T=2.8s
+✅   🛡️ Using best generalization model (score=0.12)
 ℹ️   🔧 Fine-tuning with overfitting prevention...
 ℹ️   📊 Final validation on full data...
-ℹ️   📊 Train: 37.8% | $11.69
+ℹ️   📊 Train: 33.3% | $1.15
 ℹ️   📊 Val: 0.0% | $-0.00
-❌   🛡️ AI: Severe overfitting detected (severity=1.70, ratio=0.00)
-ℹ️   🛡️ AI Report: GenScore=-0.78 | 📈 Improving
-✅   ✅ Alpha Momentum: Sharpe=2.14 | Sortino=3.93 | MaxDD=5.7%
-ℹ️   📚 Test: 40.0% | $-5.28 | Sharpe=-2.41
+❌   🛡️ AI: Severe overfitting detected (severity=1.30, ratio=0.00)
+ℹ️   🛡️ AI Report: GenScore=-1.96 | 📈 Improving
+✅   ✅ Alpha Momentum: Sharpe=0.55 | Sortino=0.84 | MaxDD=4.3%
+ℹ️   📚 Test: 0.0% | $-2.17 | Sharpe=-3.31
 ℹ️ 🔵 Training Beta Conservative...
 ℹ️   📊 Pop: 10 | Gen: 6
 ℹ️   🛡️ Anti-Overfitting AI: Active (target ratio ≥0.80)
@@ -837,25 +850,24 @@ Files quarantined: 0
     Candidates: 18/20 (90%)
     Candidates: 19/20 (95%)
     Candidates: 20/20 (100%)
-✅   ✅ Init ready | Best: 352.47
+✅   ✅ Init ready | Best: 381.35
 ℹ️   🧬 Evolution...
-ℹ️   📊 Gen 1/6: Best=352.47 | Avg=325.58 | Div=0.06 | Mut=0.120 | T=3.3s
-ℹ️   📊 Gen 2/6: Best=352.47 | Avg=326.32 | Div=0.02 | Mut=0.120 | T=3.3s
-✅   🛡️ New best: GenScore=0.78 (base=0.82, consistency=0.96)
-ℹ️   📈 Gen 3/6: Best=356.86 | Avg=333.31 | Div=0.03 | Mut=0.120 | GenScore=0.78 | T=6.1s
-ℹ️   📊 Gen 4/6: Best=356.86 | Avg=302.03 | Div=0.04 | Mut=0.120 | GenScore=0.78 | T=3.3s
-✅   🛡️ New best: GenScore=0.82 (base=0.85, consistency=0.96)
-ℹ️   📊 Gen 5/6: Best=356.86 | Avg=332.25 | Div=0.06 | Mut=0.120 | GenScore=0.82 | T=6.1s
-ℹ️   📊 Gen 6/6: Best=356.86 | Avg=345.84 | Div=0.03 | Mut=0.120 | GenScore=0.82 | T=3.3s
-✅   🛡️ Using best generalization model (score=0.82)
+ℹ️   📈 Gen 1/6: Best=404.33 | Avg=341.63 | Div=0.05 | Mut=0.120 | T=3.3s
+ℹ️   📊 Gen 2/6: Best=404.33 | Avg=363.99 | Div=0.07 | Mut=0.120 | T=3.3s
+✅   🛡️ New best: GenScore=0.61 (base=0.82, consistency=0.75)
+ℹ️   📊 Gen 3/6: Best=404.33 | Avg=355.28 | Div=0.07 | Mut=0.120 | GenScore=0.61 | T=6.1s
+ℹ️   📊 Gen 4/6: Best=404.33 | Avg=390.26 | Div=0.05 | Mut=0.120 | GenScore=0.61 | T=3.3s
+ℹ️   📊 Gen 5/6: Best=404.33 | Avg=380.84 | Div=0.02 | Mut=0.120 | GenScore=0.61 | T=6.1s
+ℹ️   📈 Gen 6/6: Best=409.14 | Avg=382.88 | Div=0.03 | Mut=0.120 | GenScore=0.61 | T=3.3s
+✅   🛡️ Using best generalization model (score=0.61)
 ℹ️   🔧 Fine-tuning with overfitting prevention...
 ℹ️   📊 Final validation on full data...
-ℹ️   📊 Train: 41.2% | $16.82
-ℹ️   📊 Val: 26.3% | $2.62
+ℹ️   📊 Train: 41.2% | $16.66
+ℹ️   📊 Val: 26.3% | $2.73
 ℹ️   🛡️ AI: Minor overfitting (Val/Train=0.64)
 ℹ️   🛡️ AI Report: GenScore=0.65 | 📈 Improving
-✅   ✅ Beta Conservative: Sharpe=4.40 | Sortino=15.56 | MaxDD=3.7%
-ℹ️   📚 Test: 14.3% | $-4.37 | Sharpe=-4.06
+✅   ✅ Beta Conservative: Sharpe=4.19 | Sortino=15.05 | MaxDD=3.9%
+ℹ️   📚 Test: 14.3% | $-4.50 | Sharpe=-4.03
 ℹ️ 🟢 Training Gamma Adaptive...
 ℹ️   📊 Pop: 14 | Gen: 10
 ℹ️   🛡️ Anti-Overfitting AI: Active (target ratio ≥0.80)
@@ -875,39 +887,38 @@ Files quarantined: 0
     Candidates: 24/28 (86%)
     Candidates: 26/28 (93%)
     Candidates: 28/28 (100%)
-✅   ✅ Init ready | Best: 69.45
+✅   ✅ Init ready | Best: 193.33
 ℹ️   🧬 Evolution...
-ℹ️   📈 Gen 1/10: Best=111.70 | Avg=19.97 | Div=0.14 | Mut=0.180 | T=4.6s
-ℹ️   📈 Gen 2/10: Best=175.19 | Avg=94.27 | Div=0.13 | Mut=0.180 | T=4.7s
-✅   🛡️ New best: GenScore=0.39 (base=0.75, consistency=0.52)
-ℹ️   📈 Gen 3/10: Best=192.53 | Avg=89.80 | Div=0.12 | Mut=0.180 | GenScore=0.39 | T=7.4s
-ℹ️   📈 Gen 4/10: Best=200.49 | Avg=112.37 | Div=0.12 | Mut=0.180 | GenScore=0.39 | T=4.8s
-✅   🛡️ New best: GenScore=0.40 (base=0.77, consistency=0.52)
-ℹ️   📈 Gen 5/10: Best=223.09 | Avg=120.36 | Div=0.09 | Mut=0.180 | GenScore=0.40 | T=7.6s
-ℹ️   📈 Gen 6/10: Best=229.90 | Avg=130.14 | Div=0.08 | Mut=0.180 | GenScore=0.40 | T=4.9s
-ℹ️   📈 Gen 7/10: Best=257.51 | Avg=203.84 | Div=0.07 | Mut=0.180 | GenScore=0.40 | T=7.5s
-ℹ️   📈 Gen 8/10: Best=284.48 | Avg=215.81 | Div=0.05 | Mut=0.180 | GenScore=0.40 | T=4.7s
-ℹ️   📈 Gen 9/10: Best=341.25 | Avg=226.05 | Div=0.06 | Mut=0.180 | GenScore=0.40 | T=7.5s
-ℹ️   📈 Gen 10/10: Best=345.08 | Avg=284.10 | Div=0.07 | Mut=0.180 | GenScore=0.40 | T=4.7s
-✅   🛡️ Using best generalization model (score=0.40)
+ℹ️   📈 Gen 1/10: Best=237.85 | Avg=131.26 | Div=0.15 | Mut=0.180 | T=4.9s
+ℹ️   📈 Gen 2/10: Best=241.70 | Avg=-111.67 | Div=0.14 | Mut=0.180 | T=4.9s
+✅   🛡️ New best: GenScore=0.75 (base=0.80, consistency=0.94)
+ℹ️   📈 Gen 3/10: Best=290.49 | Avg=208.31 | Div=0.10 | Mut=0.180 | GenScore=0.75 | T=7.4s
+ℹ️   📊 Gen 4/10: Best=293.20 | Avg=189.64 | Div=0.07 | Mut=0.180 | GenScore=0.75 | T=4.7s
+ℹ️   📊 Gen 5/10: Best=293.20 | Avg=212.16 | Div=0.07 | Mut=0.180 | GenScore=0.75 | T=7.5s
+ℹ️   📊 Gen 6/10: Best=293.20 | Avg=245.51 | Div=0.09 | Mut=0.180 | GenScore=0.75 | T=4.8s
+ℹ️   📈 Gen 7/10: Best=293.56 | Avg=291.81 | Div=0.05 | Mut=0.180 | GenScore=0.75 | T=7.6s
+ℹ️   📈 Gen 8/10: Best=324.94 | Avg=288.46 | Div=0.02 | Mut=0.180 | GenScore=0.75 | T=4.8s
+ℹ️   📊 Gen 9/10: Best=324.94 | Avg=268.44 | Div=0.04 | Mut=0.180 | GenScore=0.75 | T=7.5s
+ℹ️   📊 Gen 10/10: Best=325.28 | Avg=260.26 | Div=0.05 | Mut=0.180 | GenScore=0.75 | T=4.7s
+✅   🛡️ Using best generalization model (score=0.75)
 ℹ️   🔧 Fine-tuning with overfitting prevention...
 ℹ️   📊 Final validation on full data...
-ℹ️   📊 Train: 37.8% | $3.70
-ℹ️   📊 Val: 26.7% | $-2.59
-ℹ️   🛡️ AI: Minor overfitting (Val/Train=0.70)
+ℹ️   📊 Train: 43.5% | $13.65
+ℹ️   📊 Val: 33.3% | $0.04
+ℹ️   🛡️ AI: Minor overfitting (Val/Train=0.77)
 ℹ️   🛡️ AI Report: GenScore=0.64 | 📈 Improving
-✅   ✅ Gamma Adaptive: Sharpe=1.12 | Sortino=2.57 | MaxDD=5.9%
-ℹ️   📚 Test: 8.7% | $-3.49 | Sharpe=-5.60
+✅   ✅ Gamma Adaptive: Sharpe=3.89 | Sortino=9.96 | MaxDD=4.9%
+ℹ️   📚 Test: 5.3% | $-4.12 | Sharpe=-6.45
 🧠 
 🧠 Learning: 📉 Adjusting | Score: 36.5/100
 📊 
 🏆 Model Rankings by Generalization Quality:
-ℹ️   🥇 Gamma Adaptive: Quality=68.8 | Val/Train=0.70 | Test=8.7% | GenScore=0.64
-ℹ️   🥈 Beta Conservative: Quality=65.5 | Val/Train=0.64 | Test=14.3% | GenScore=0.65
-ℹ️   🥉 Alpha Momentum: Quality=-30.3 | Val/Train=0.00 | Test=40.0% | GenScore=-0.78
+ℹ️   🥇 Gamma Adaptive: Quality=72.7 | Val/Train=0.77 | Test=5.3% | GenScore=0.64
+ℹ️   🥈 Beta Conservative: Quality=65.2 | Val/Train=0.64 | Test=14.3% | GenScore=0.65
+ℹ️   🥉 Alpha Momentum: Quality=-77.5 | Val/Train=0.00 | Test=0.0% | GenScore=-1.96
 ✅ 
 🎯 Recommended for Live Trading: Gamma Adaptive
-ℹ️    Reason: Best generalization quality (score=68.8)
+ℹ️    Reason: Best generalization quality (score=72.7)
 ℹ️ 
 💾 Saving signals...
 ✅ ✅ Saved to omega_signals.json
@@ -920,7 +931,7 @@ Files quarantined: 0
 ✅ ✅ OMEGA v9.0 - ULTRA-FAST + ANTI-OVERFIT COMPLETED
 ✅ ======================================================================
 ℹ️ Mode: Learning | Env: GitHub Actions
-ℹ️ Iteration: #5 | Models: 3
+ℹ️ Iteration: #6 | Models: 3
 ℹ️ Weekend Learning: Historical optimization complete
 ℹ️ Circuit Breaker: ✅ Closed
 🚀 ⚡ Optimizations: 87% faster | Parallel | Smart TF
@@ -929,18 +940,18 @@ Files quarantined: 0
 ✅ ✅ All Fixes Applied: MACD + indentation + run_ga
 🔴 🔴 Omega pipeline complete
 ----------------------------------------------------------------------
-✅ Cell 9 completed in 218.7s
+✅ Cell 9 completed in 212.1s
 ======================================================================
 
 ======================================================================
 ✅ FULL NOTEBOOK COMPLETED!
 ======================================================================
-⏱️  Time: 336.3s (5.6 min)
+⏱️  Time: 317.0s (5.3 min)
 📊 Cells: 9
 ======================================================================
 
 ======================================================================
 ✅ DATA GENERATION COMPLETED
 💡 Next weekend: Will use tagged cells only!
-📅 2025-11-16 22:23:28 UTC
+📅 2025-11-16 23:07:14 UTC
 ======================================================================

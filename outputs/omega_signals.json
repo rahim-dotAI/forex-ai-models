@@ -1,8 +1,8 @@
 {
-  "timestamp": "2025-11-16T13:58:34.383359+00:00",
-  "iteration": 2,
+  "timestamp": "2025-11-16T15:24:34.661962+00:00",
+  "iteration": 5,
   "system": "OMEGA",
-  "version": "v9.0-ultrafast",
+  "version": "v9.0-ultrafast-antioverfit-fully-fixed",
   "mode": "weekend_learning",
   "models": {
     "Alpha Momentum": {},
@@ -11,19 +11,31 @@
   },
   "environment": "Google Colab",
   "learning": {
-    "iterations": 1,
-    "adaptation_score": 35.66421690391059,
-    "total_successes": 3,
+    "iterations": 2,
+    "adaptation_score": 36.53774668791836,
+    "total_successes": 6,
     "trend": "\ud83d\udcc9 Adjusting",
     "learning_curve": [
-      28.321084519552954
+      28.321084519552954,
+      32.68873343959177
     ]
   },
   "circuit_breaker_status": "closed",
   "optimizations": {
     "sample_rate": "20%",
-    "parallel_processing": true,
-    "timeframes_per_pair": 2,
-    "total_speedup": "~85%"
-  }
+    "parallel": true,
+    "tfs_per_pair": 2,
+    "speedup": "87%"
+  },
+  "anti_overfit": {
+    "val_weight": "50%",
+    "overfit_penalty": true,
+    "complexity_penalty": true,
+    "higher_confidence": true
+  },
+  "fixes": [
+    "macd_calculation",
+    "indentation_errors",
+    "run_ga_incomplete_code"
+  ]
 }

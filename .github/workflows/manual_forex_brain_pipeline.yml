@@ -121,13 +121,52 @@ jobs:
           echo "https://${GITHUB_USERNAME}:${FOREX_PAT}@github.com" > ~/.git-credentials
           echo "✅ Git configured"
 
-      - name: Run Weekend Tagged Cells (Ultra-Persistent + Omega)
+      - name: Check for Required Data Files (Weekend)
         if: steps.detect_mode.outputs.is_weekend == 'true'
+        id: check_data
+        run: |
+          echo "=========================================="
+          echo "🔍 CHECKING FOR REQUIRED DATA FILES"
+          echo "=========================================="
+          
+          # Check for processed pickle files
+          PICKLE_COUNT=$(find data/processed -name "*.pkl" -type f 2>/dev/null | wc -l)
+          
+          # Check for database file
+          DB_EXISTS=false
+          if [ -f "database/memory_v85.db" ]; then
+            DB_EXISTS=true
+          fi
+          
+          echo "📊 Data Status:"
+          echo "   Pickle files: $PICKLE_COUNT"
+          echo "   Database: $DB_EXISTS"
+          echo ""
+          
+          # Decision logic: need at least 4 pickle files for tagged cells
+          if [ $PICKLE_COUNT -ge 4 ]; then
+            echo "has_data=true" >> $GITHUB_OUTPUT
+            echo "execution_type=tagged_cells" >> $GITHUB_OUTPUT
+            echo "✅ Sufficient data found - will run TAGGED CELLS only"
+            echo "   • Ultra-Persistent Pipeline"
+            echo "   • Omega v9.0"
+          else
+            echo "has_data=false" >> $GITHUB_OUTPUT
+            echo "execution_type=full_notebook" >> $GITHUB_OUTPUT
+            echo "⚠️  Insufficient data ($PICKLE_COUNT/4 pickle files)"
+            echo "   • Will run FULL NOTEBOOK to generate data"
+            echo "   • This creates the foundation for future runs"
+          fi
+          echo "=========================================="
+
+      - name: Run Weekend Tagged Cells (Ultra-Persistent + Omega)
+        if: steps.detect_mode.outputs.is_weekend == 'true' && steps.check_data.outputs.has_data == 'true'
         run: |
           echo "=========================================="
           echo "🎯 WEEKEND MODE: TAGGED CELLS EXECUTION"
           echo "=========================================="
           echo "Executing: Ultra-Persistent Pipeline + Omega v9.0"
+          echo "Data available: Yes (proceeding with learning mode)"
           echo ""
           
           # Create Python script to extract and run tagged cells

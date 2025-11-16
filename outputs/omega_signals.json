@@ -1,8 +1,8 @@
 {
-  "timestamp": "2025-11-16T02:04:01.826785+00:00",
-  "iteration": 6,
+  "timestamp": "2025-11-16T13:58:34.383359+00:00",
+  "iteration": 2,
   "system": "OMEGA",
-  "version": "v9.0",
+  "version": "v9.0-ultrafast",
   "mode": "weekend_learning",
   "models": {
     "Alpha Momentum": {},
@@ -11,14 +11,19 @@
   },
   "environment": "Google Colab",
   "learning": {
-    "iterations": 2,
-    "adaptation_score": 32.07692487111569,
-    "total_successes": 5,
+    "iterations": 1,
+    "adaptation_score": 35.66421690391059,
+    "total_successes": 3,
     "trend": "\ud83d\udcc9 Adjusting",
     "learning_curve": [
-      430.43673335603785,
-      10.384624355578467
+      28.321084519552954
     ]
   },
-  "circuit_breaker_status": "closed"
+  "circuit_breaker_status": "closed",
+  "optimizations": {
+    "sample_rate": "20%",
+    "parallel_processing": true,
+    "timeframes_per_pair": 2,
+    "total_speedup": "~85%"
+  }
 }

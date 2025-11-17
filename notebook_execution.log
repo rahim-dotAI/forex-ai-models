@@ -1,7 +1,7 @@
 ======================================================================
 🧠 WEEKDAY MODE - FULL NOTEBOOK EXECUTION
 ======================================================================
-📅 Started: 2025-11-17 04:30:49 UTC
+📅 Started: 2025-11-17 21:21:44 UTC
 📓 Notebook: AI_Forex_Brain_2.ipynb
 ======================================================================
 
@@ -132,7 +132,7 @@ Requirement already satisfied: river in /opt/hostedtoolcache/Python/3.11.14/x64/
 Requirement already satisfied: cachecontrol>=0.14.3 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from firebase-admin) (0.14.4)
 Requirement already satisfied: google-api-core<3.0.0dev,>=2.25.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin) (2.28.1)
 Requirement already satisfied: google-cloud-firestore>=2.21.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from firebase-admin) (2.21.0)
-Requirement already satisfied: google-cloud-storage>=3.1.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from firebase-admin) (3.5.0)
+Requirement already satisfied: google-cloud-storage>=3.1.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from firebase-admin) (3.6.0)
 Requirement already satisfied: pyjwt>=2.10.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from pyjwt[crypto]>=2.10.1->firebase-admin) (2.10.1)
 Requirement already satisfied: httpx==0.28.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from httpx[http2]==0.28.1->firebase-admin) (0.28.1)
 Requirement already satisfied: anyio in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from httpx==0.28.1->httpx[http2]==0.28.1->firebase-admin) (4.11.0)
@@ -185,7 +185,7 @@ Requirement already satisfied: msgpack<2.0.0,>=0.5.2 in /opt/hostedtoolcache/Pyt
 Requirement already satisfied: cffi>=1.12.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from curl_cffi>=0.7->yfinance) (2.0.0)
 Requirement already satisfied: pycparser in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from cffi>=1.12.0->curl_cffi>=0.7->yfinance) (2.23)
 Requirement already satisfied: google-cloud-core<3.0.0,>=1.4.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from google-cloud-firestore>=2.21.0->firebase-admin) (2.5.0)
-Requirement already satisfied: google-resumable-media<3.0.0,>=2.7.2 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from google-cloud-storage>=3.1.1->firebase-admin) (2.7.2)
+Requirement already satisfied: google-resumable-media<3.0.0,>=2.7.2 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from google-cloud-storage>=3.1.1->firebase-admin) (2.8.0)
 Requirement already satisfied: google-crc32c<2.0.0,>=1.1.3 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from google-cloud-storage>=3.1.1->firebase-admin) (1.7.1)
 Requirement already satisfied: cryptography>=3.4.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from pyjwt[crypto]>=2.10.1->firebase-admin) (46.0.3)
 Requirement already satisfied: aiohappyeyeballs>=2.5.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from aiohttp->alpha_vantage) (2.6.1)
@@ -226,30 +226,30 @@ Requirement already satisfied: sniffio>=1.1 in /opt/hostedtoolcache/Python/3.11.
 🔄 Processing EUR/USD...
 🔄 Processing GBP/USD...
 🔄 Processing USD/JPY...
-🔄 Processing AUD/USD...
   🔽 Fetching EUR/USD (attempt 1/3)...
+🔄 Processing AUD/USD...
   🔽 Fetching AUD/USD (attempt 1/3)...
   🔽 Fetching GBP/USD (attempt 1/3)...
   🔽 Fetching USD/JPY (attempt 1/3)...
-  ✅ Fetched 5000 rows for AUD/USD
-  📊 Quality score: 96.1/100
-  ✅ Fetched 5000 rows for EUR/USD
-  📊 Quality score: 96.0/100
-  ✅ Updated - 5000 rows, quality: 96.1/100
-  ✅ Updated - 5000 rows, quality: 96.0/100
-  ✅ Fetched 5000 rows for USD/JPY
-  📊 Quality score: 96.9/100
   ✅ Fetched 5000 rows for GBP/USD
   📊 Quality score: 97.0/100
-  ✅ Updated - 5000 rows, quality: 96.9/100
   ✅ Updated - 5000 rows, quality: 97.0/100
+  ✅ Fetched 5000 rows for AUD/USD
+  📊 Quality score: 96.1/100
+  ✅ Updated - 5000 rows, quality: 96.1/100
+  ✅ Fetched 5000 rows for USD/JPY
+  ✅ Fetched 5000 rows for EUR/USD
+  📊 Quality score: 96.9/100
+  📊 Quality score: 96.0/100
+  ✅ Updated - 5000 rows, quality: 96.9/100
+  ✅ Updated - 5000 rows, quality: 96.0/100
 ======================================================================
 📊 PROCESSING SUMMARY
 ======================================================================
-✅ Updated AUD/USD (5000 rows, Q:96)
-✅ Updated EUR/USD (5000 rows, Q:96)
-✅ Updated USD/JPY (5000 rows, Q:97)
 ✅ Updated GBP/USD (5000 rows, Q:97)
+✅ Updated AUD/USD (5000 rows, Q:96)
+✅ Updated USD/JPY (5000 rows, Q:97)
+✅ Updated EUR/USD (5000 rows, Q:96)
 Total pairs processed: 4
 Files updated: 4
 ======================================================================
@@ -281,12 +281,12 @@ Status: ✅ Success
 🎯 Both sources in organized folders!
 ======================================================================
 ----------------------------------------------------------------------
-✅ Cell 5/9 completed in 2.6s
+✅ Cell 5/9 completed in 3.5s
 ======================================================================
 
 ======================================================================
 🔄 EXECUTING CELL 6/9 (66.7% complete)
-⏱️  Elapsed time: 5.0s
+⏱️  Elapsed time: 6.0s
 ----------------------------------------------------------------------
 ======================================================================
 🚀 YFinance FX Data Fetcher - Clean Structure Edition
@@ -311,59 +311,59 @@ Status: ✅ Success
 ======================================================================
 🚀 Starting YFinance data download...
 ======================================================================
-  ✅ EUR/USD 1d_5y - 1302 rows, Q:100
   ✅ EUR/USD 1h_2y - 12332 rows, Q:100
-  ✅ EUR/USD 15m_60d - 5590 rows, Q:86
-  ✅ EUR/USD 5m_1mo - 5946 rows, Q:76
-  ✅ EUR/USD 1m_7d - 8725 rows, Q:54
+  ✅ EUR/USD 1d_5y - 1302 rows, Q:100
+  ✅ EUR/USD 15m_60d - 5657 rows, Q:86
+  ✅ EUR/USD 5m_1mo - 5946 rows, Q:72
+  ✅ EUR/USD 1m_7d - 9731 rows, Q:53
   ✅ GBP/USD 1d_5y - 1302 rows, Q:100
   ✅ GBP/USD 1h_2y - 12333 rows, Q:100
-  ✅ GBP/USD 15m_60d - 5585 rows, Q:100
+  ✅ GBP/USD 15m_60d - 5652 rows, Q:100
   ✅ GBP/USD 5m_1mo - 5946 rows, Q:100
-  ✅ GBP/USD 1m_7d - 8725 rows, Q:67
+  ✅ GBP/USD 1m_7d - 9733 rows, Q:65
   ✅ USD/JPY 1d_5y - 1302 rows, Q:100
   ✅ USD/JPY 1h_2y - 12260 rows, Q:100
-  ✅ USD/JPY 15m_60d - 5564 rows, Q:100
+  ✅ USD/JPY 15m_60d - 5631 rows, Q:100
   ✅ USD/JPY 5m_1mo - 5929 rows, Q:100
-  ✅ USD/JPY 1m_7d - 8668 rows, Q:86
+  ✅ USD/JPY 1m_7d - 9676 rows, Q:87
   ✅ AUD/USD 1d_5y - 1302 rows, Q:100
   ✅ AUD/USD 1h_2y - 12399 rows, Q:100
-  ✅ AUD/USD 15m_60d - 5602 rows, Q:98
-  ✅ AUD/USD 5m_1mo - 5958 rows, Q:89
-  ✅ AUD/USD 1m_7d - 4361 rows, Q:75
+  ✅ AUD/USD 15m_60d - 5669 rows, Q:98
+  ✅ AUD/USD 5m_1mo - 5958 rows, Q:86
+  ✅ AUD/USD 1m_7d - 4864 rows, Q:73
 ======================================================================
 📊 PROCESSING SUMMARY
 ======================================================================
-✅ EUR/USD 1d_5y - 1302 rows, Q:100
 ✅ EUR/USD 1h_2y - 12332 rows, Q:100
-✅ EUR/USD 15m_60d - 5590 rows, Q:86
-✅ EUR/USD 5m_1mo - 5946 rows, Q:76
-✅ EUR/USD 1m_7d - 8725 rows, Q:54
+✅ EUR/USD 1d_5y - 1302 rows, Q:100
+✅ EUR/USD 15m_60d - 5657 rows, Q:86
+✅ EUR/USD 5m_1mo - 5946 rows, Q:72
+✅ EUR/USD 1m_7d - 9731 rows, Q:53
 ✅ GBP/USD 1d_5y - 1302 rows, Q:100
 ✅ GBP/USD 1h_2y - 12333 rows, Q:100
-✅ GBP/USD 15m_60d - 5585 rows, Q:100
+✅ GBP/USD 15m_60d - 5652 rows, Q:100
 ✅ GBP/USD 5m_1mo - 5946 rows, Q:100
-✅ GBP/USD 1m_7d - 8725 rows, Q:67
+✅ GBP/USD 1m_7d - 9733 rows, Q:65
 ✅ USD/JPY 1d_5y - 1302 rows, Q:100
 ✅ USD/JPY 1h_2y - 12260 rows, Q:100
-✅ USD/JPY 15m_60d - 5564 rows, Q:100
+✅ USD/JPY 15m_60d - 5631 rows, Q:100
 ✅ USD/JPY 5m_1mo - 5929 rows, Q:100
-✅ USD/JPY 1m_7d - 8668 rows, Q:86
+✅ USD/JPY 1m_7d - 9676 rows, Q:87
 ✅ AUD/USD 1d_5y - 1302 rows, Q:100
 ✅ AUD/USD 1h_2y - 12399 rows, Q:100
-✅ AUD/USD 15m_60d - 5602 rows, Q:98
-✅ AUD/USD 5m_1mo - 5958 rows, Q:89
-✅ AUD/USD 1m_7d - 4361 rows, Q:75
+✅ AUD/USD 15m_60d - 5669 rows, Q:98
+✅ AUD/USD 5m_1mo - 5958 rows, Q:86
+✅ AUD/USD 1m_7d - 4864 rows, Q:73
 Total tasks: 20
 Successful: 20/20
 Files updated: 20
 Time: 1.3 min
-Average quality: 91.6/100
+Average quality: 91.0/100
 ======================================================================
 📊 QUALITY REPORT
 ======================================================================
-  ✅ EUR_USD_1d_5y.csv: 100.0/100
   ✅ EUR_USD_1h_2y.csv: 100.0/100
+  ✅ EUR_USD_1d_5y.csv: 100.0/100
   ✅ GBP_USD_1d_5y.csv: 100.0/100
   ✅ GBP_USD_1h_2y.csv: 100.0/100
   ✅ GBP_USD_15m_60d.csv: 100.0/100
@@ -374,14 +374,14 @@ Average quality: 91.6/100
   ✅ USD_JPY_5m_1mo.csv: 100.0/100
   ✅ AUD_USD_1d_5y.csv: 100.0/100
   ✅ AUD_USD_1h_2y.csv: 100.0/100
-  ✅ AUD_USD_15m_60d.csv: 98.1/100
-  ✅ AUD_USD_5m_1mo.csv: 88.7/100
-  ✅ USD_JPY_1m_7d.csv: 86.3/100
-  ✅ EUR_USD_15m_60d.csv: 85.8/100
-  ✅ EUR_USD_5m_1mo.csv: 76.4/100
-  ✅ AUD_USD_1m_7d.csv: 75.3/100
-  ✅ GBP_USD_1m_7d.csv: 67.3/100
-  ✅ EUR_USD_1m_7d.csv: 54.2/100
+  ✅ AUD_USD_15m_60d.csv: 97.8/100
+  ✅ USD_JPY_1m_7d.csv: 87.4/100
+  ✅ AUD_USD_5m_1mo.csv: 86.2/100
+  ✅ EUR_USD_15m_60d.csv: 85.6/100
+  ✅ AUD_USD_1m_7d.csv: 73.4/100
+  ✅ EUR_USD_5m_1mo.csv: 72.4/100
+  ✅ GBP_USD_1m_7d.csv: 64.6/100
+  ✅ EUR_USD_1m_7d.csv: 53.0/100
 ======================================================================
 🤖 GitHub Actions: Skipping git operations
 ======================================================================
@@ -391,7 +391,7 @@ Average quality: 91.6/100
 Environment: GitHub Actions
 Files updated: 20
 Quality validated: ✅
-Average quality: 91.6/100
+Average quality: 91.0/100
 Status: ✅ Success
 Rate limiter: 20 requests
 ======================================================================
@@ -403,12 +403,12 @@ Rate limiter: 20 requests
 🎯 All data sources in organized folders!
 ======================================================================
 ----------------------------------------------------------------------
-✅ Cell 6/9 completed in 80.6s
+✅ Cell 6/9 completed in 79.4s
 ======================================================================
 
 ======================================================================
 🔄 EXECUTING CELL 7/9 (77.8% complete)
-⏱️  Elapsed time: 85.6s
+⏱️  Elapsed time: 85.4s
 ----------------------------------------------------------------------
 ======================================================================
 🔧 CSV Combiner & Multi-Type Handler - Clean Structure Edition
@@ -430,9 +430,9 @@ Rate limiter: 20 requests
 🐞 📂 Found 20 YFinance CSV(s)
 🐞 📂 Found 4 Alpha Vantage CSV(s)
 ✅ 📊 Total CSV files found: 24
-🐞   • EUR_USD_15m_60d.csv (529.2 KB)
-🐞   • AUD_USD_5m_1mo.csv (567.6 KB)
-🐞   • EUR_USD_1m_7d.csv (824.7 KB)
+🐞   • EUR_USD_15m_60d.csv (535.5 KB)
+🐞   • AUD_USD_5m_1mo.csv (567.5 KB)
+🐞   • EUR_USD_1m_7d.csv (919.5 KB)
 🐞   • EUR_USD_1d_5y.csv (123.4 KB)
 🐞   • USD_JPY_5m_1mo.csv (555.6 KB)
 🐞   ... and 19 more
@@ -449,85 +449,85 @@ Rate limiter: 20 requests
 ℹ️ 📋 Processing: AUD_USD_1m_7d.csv
 🐞   📊 Quality score: 100.0/100
 🐞   🔧 Calculating indicators on 1302 rows
-🐞   📊 Quality score: 75.3/100
-🐞   📊 Quality score: 85.8/100
-🐞   🔧 Calculating indicators on 4361 rows
-🐞   📊 Quality score: 100.0/100
-🐞   📊 Quality score: 88.7/100
-🐞   🔧 Calculating indicators on 5590 rows
-🐞   🔧 Calculating indicators on 5929 rows
-🐞   📊 Quality score: 54.2/100
-🐞   📊 Quality score: 100.0/100
-🐞   🔧 Calculating indicators on 8725 rows
+🐞   📊 Quality score: 85.6/100
+🐞   📊 Quality score: 86.2/100
+🐞   🔧 Calculating indicators on 5657 rows
 🐞   🔧 Calculating indicators on 5958 rows
+🐞   📊 Quality score: 53.0/100
 🐞   📊 Quality score: 100.0/100
-🐞   🔧 Calculating indicators on 5564 rows
-🐞   🔧 Calculating indicators on 12332 rows
+🐞   🔧 Calculating indicators on 9731 rows
+🐞   📊 Quality score: 100.0/100
+🐞   🔧 Calculating indicators on 5631 rows
+🐞   📊 Quality score: 73.4/100
+🐞   📊 Quality score: 100.0/100
+🐞   🔧 Calculating indicators on 5929 rows
+🐞   🔧 Calculating indicators on 4864 rows
 🐞   📊 ATR median: 0.00816901
-🐞   📊 ATR median: 0.00049098
-🐞   📊 ATR median: 0.00007507
-🐞   📊 ATR median: 0.00015426
-🐞   📊 ATR median: 0.10001398
-🐞   📊 ATR median: 0.00006587
-🐞   📊 ATR median: 0.05842171
-🐞   📊 ATR median: 0.00112372
+🐞   🔧 Calculating indicators on 12332 rows
+🐞   📊 ATR median: 0.00048887
+🐞   📊 ATR median: 0.00015325
+🐞   📊 ATR median: 0.00007569
+🐞   📊 ATR median: 0.09969587
+🐞   📊 ATR median: 0.05733984
+🐞   📊 ATR median: 0.00006591
+🐞   📊 ATR median: 0.00112245
 🐞   ✅ Scaled 26 features (ATR protected)
 ✅ ✅ EUR_USD_1d_5y.csv: 1302 rows, Q:100, ATR:0.00816901
 ℹ️ 📋 Processing: USD_JPY_1m_7d.csv
-🐞   📊 Quality score: 86.3/100
-🐞   🔧 Calculating indicators on 8668 rows
+🐞   📊 Quality score: 87.4/100
+🐞   🔧 Calculating indicators on 9676 rows
 🐞   ✅ Scaled 26 features (ATR protected)
 🐞   ✅ Scaled 26 features (ATR protected)
 🐞   ✅ Scaled 26 features (ATR protected)
 🐞   ✅ Scaled 26 features (ATR protected)
 🐞   ✅ Scaled 26 features (ATR protected)
-🐞   📊 ATR median: 0.02473522
+🐞   📊 ATR median: 0.02421136
 🐞   ✅ Scaled 26 features (ATR protected)
 🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ AUD_USD_1m_7d.csv: 4361 rows, Q:75, ATR:0.00007507
+🐞   ✅ Scaled 26 features (ATR protected)
+✅ ✅ EUR_USD_15m_60d.csv: 5657 rows, Q:86, ATR:0.00048887
 ℹ️ 📋 Processing: GBP_USD_1d_5y.csv
 🐞   📊 Quality score: 100.0/100
 🐞   🔧 Calculating indicators on 1302 rows
-🐞   ✅ Scaled 26 features (ATR protected)
 🐞   📊 ATR median: 0.01034722
 🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ EUR_USD_15m_60d.csv: 5590 rows, Q:86, ATR:0.00049098
+✅ ✅ USD_JPY_5m_1mo.csv: 5929 rows, Q:100, ATR:0.05733984
 ℹ️ 📋 Processing: AUD_USD_15m_60d.csv
-🐞   📊 Quality score: 98.1/100
-🐞   🔧 Calculating indicators on 5602 rows
-🐞   📊 ATR median: 0.00032539
+🐞   📊 Quality score: 97.8/100
+🐞   🔧 Calculating indicators on 5669 rows
+🐞   📊 ATR median: 0.00032554
 🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ AUD_USD_5m_1mo.csv: 5958 rows, Q:89, ATR:0.00015426
+✅ ✅ USD_JPY_15m_60d.csv: 5631 rows, Q:100, ATR:0.09969587
 ℹ️ 📋 Processing: GBP_USD_5m_1mo.csv
 🐞   📊 Quality score: 100.0/100
 🐞   🔧 Calculating indicators on 5946 rows
-🐞   📊 ATR median: 0.00029795
+🐞   📊 ATR median: 0.00029665
 🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ USD_JPY_15m_60d.csv: 5564 rows, Q:100, ATR:0.10001398
+✅ ✅ AUD_USD_1m_7d.csv: 4864 rows, Q:73, ATR:0.00007569
 ℹ️ 📋 Processing: USD_JPY_1h_2y.csv
 🐞   📊 Quality score: 100.0/100
 🐞   🔧 Calculating indicators on 12260 rows
-🐞   📊 ATR median: 0.24416651
+🐞   📊 ATR median: 0.24395985
 🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ USD_JPY_5m_1mo.csv: 5929 rows, Q:100, ATR:0.05842171
+✅ ✅ AUD_USD_5m_1mo.csv: 5958 rows, Q:86, ATR:0.00015325
 ℹ️ 📋 Processing: GBP_USD_15m_60d.csv
 🐞   📊 Quality score: 100.0/100
-🐞   🔧 Calculating indicators on 5585 rows
-🐞   📊 ATR median: 0.00061079
+🐞   🔧 Calculating indicators on 5652 rows
+🐞   📊 ATR median: 0.00061182
 🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ EUR_USD_1m_7d.csv: 8725 rows, Q:54, ATR:0.00006587
+✅ ✅ EUR_USD_1m_7d.csv: 9731 rows, Q:53, ATR:0.00006591
 ℹ️ 📋 Processing: AUD_USD_1d_5y.csv
 🐞   📊 Quality score: 100.0/100
 🐞   🔧 Calculating indicators on 1302 rows
 🐞   📊 ATR median: 0.00719894
 🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ EUR_USD_1h_2y.csv: 12332 rows, Q:100, ATR:0.00112372
+✅ ✅ EUR_USD_1h_2y.csv: 12332 rows, Q:100, ATR:0.00112245
 ℹ️ 📋 Processing: EUR_USD_5m_1mo.csv
-🐞   📊 Quality score: 76.4/100
+🐞   📊 Quality score: 72.4/100
 🐞   🔧 Calculating indicators on 5946 rows
-🐞   📊 ATR median: 0.00022176
+🐞   📊 ATR median: 0.00021987
 🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ USD_JPY_1m_7d.csv: 8668 rows, Q:86, ATR:0.02473522
+✅ ✅ USD_JPY_1m_7d.csv: 9676 rows, Q:87, ATR:0.02421136
 ℹ️ 📋 Processing: USD_JPY_1d_5y.csv
 🐞   📊 Quality score: 100.0/100
 🐞   🔧 Calculating indicators on 1302 rows
@@ -537,27 +537,27 @@ Rate limiter: 20 requests
 ℹ️ 📋 Processing: AUD_USD_1h_2y.csv
 🐞   📊 Quality score: 100.0/100
 🐞   🔧 Calculating indicators on 12399 rows
-🐞   📊 ATR median: 0.00101112
-✅ ✅ AUD_USD_15m_60d.csv: 5602 rows, Q:98, ATR:0.00032539
+🐞   📊 ATR median: 0.00101029
+✅ ✅ AUD_USD_15m_60d.csv: 5669 rows, Q:98, ATR:0.00032554
 ℹ️ 📋 Processing: GBP_USD_1h_2y.csv
 🐞   ✅ Scaled 26 features (ATR protected)
 🐞   📊 Quality score: 100.0/100
 🐞   🔧 Calculating indicators on 12333 rows
-🐞   📊 ATR median: 0.00138825
+🐞   📊 ATR median: 0.00138789
 🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ GBP_USD_5m_1mo.csv: 5946 rows, Q:100, ATR:0.00029795
+✅ ✅ GBP_USD_5m_1mo.csv: 5946 rows, Q:100, ATR:0.00029665
 ℹ️ 📋 Processing: GBP_USD_1m_7d.csv
-🐞   📊 Quality score: 67.3/100
-🐞   🔧 Calculating indicators on 8725 rows
-🐞   📊 ATR median: 0.00008936
+🐞   📊 Quality score: 64.6/100
+🐞   🔧 Calculating indicators on 9733 rows
+🐞   📊 ATR median: 0.00009220
 🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ USD_JPY_1h_2y.csv: 12260 rows, Q:100, ATR:0.24416651
+✅ ✅ USD_JPY_1h_2y.csv: 12260 rows, Q:100, ATR:0.24395985
 ℹ️ 📋 Processing: GBP_USD_daily_av.csv
 🐞   📊 Quality score: 100.0/100
 🐞   🔧 Calculating indicators on 5000 rows
 🐞   📊 ATR median: 0.01135074
 🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ GBP_USD_15m_60d.csv: 5585 rows, Q:100, ATR:0.00061079
+✅ ✅ GBP_USD_15m_60d.csv: 5652 rows, Q:100, ATR:0.00061182
 ℹ️ 📋 Processing: AUD_USD_daily_av.csv
 🐞   📊 Quality score: 100.0/100
 🐞   🔧 Calculating indicators on 5000 rows
@@ -569,16 +569,16 @@ Rate limiter: 20 requests
 🐞   📊 ATR median: 0.00903745
 🐞   ✅ Scaled 26 features (ATR protected)
 🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ EUR_USD_5m_1mo.csv: 5946 rows, Q:76, ATR:0.00022176
+✅ ✅ EUR_USD_5m_1mo.csv: 5946 rows, Q:72, ATR:0.00021987
 ℹ️ 📋 Processing: USD_JPY_daily_av.csv
 🐞   📊 Quality score: 100.0/100
 🐞   🔧 Calculating indicators on 5000 rows
 🐞   📊 ATR median: 0.92353171
 ✅ ✅ USD_JPY_1d_5y.csv: 1302 rows, Q:100, ATR:1.39028134
 🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ AUD_USD_1h_2y.csv: 12399 rows, Q:100, ATR:0.00101112
-✅ ✅ GBP_USD_1h_2y.csv: 12333 rows, Q:100, ATR:0.00138825
-✅ ✅ GBP_USD_1m_7d.csv: 8725 rows, Q:67, ATR:0.00008936
+✅ ✅ AUD_USD_1h_2y.csv: 12399 rows, Q:100, ATR:0.00101029
+✅ ✅ GBP_USD_1h_2y.csv: 12333 rows, Q:100, ATR:0.00138789
+✅ ✅ GBP_USD_1m_7d.csv: 9733 rows, Q:65, ATR:0.00009220
 ✅ ✅ GBP_USD_daily_av.csv: 5000 rows, Q:100, ATR:0.01135074
 ✅ ✅ AUD_USD_daily_av.csv: 5000 rows, Q:100, ATR:0.00785364
 ✅ ✅ EUR_USD_daily_av.csv: 5000 rows, Q:100, ATR:0.00903745
@@ -586,32 +586,32 @@ Rate limiter: 20 requests
 ======================================================================
 📊 QUALITY REPORT - ATR VALUES
 ======================================================================
-Average ATR: 0.11670675
+Average ATR: 0.11661781
 ATR by file:
   ✅ USD_JPY_1d_5y: 1.39028134
   ✅ USD_JPY_daily_av: 0.92353171
-  ✅ USD_JPY_1h_2y: 0.24416651
-  ✅ USD_JPY_15m_60d: 0.10001398
-  ✅ USD_JPY_5m_1mo: 0.05842171
-  ✅ USD_JPY_1m_7d: 0.02473522
+  ✅ USD_JPY_1h_2y: 0.24395985
+  ✅ USD_JPY_15m_60d: 0.09969587
+  ✅ USD_JPY_5m_1mo: 0.05733984
+  ✅ USD_JPY_1m_7d: 0.02421136
   ✅ GBP_USD_daily_av: 0.01135074
   ✅ GBP_USD_1d_5y: 0.01034722
   ✅ EUR_USD_daily_av: 0.00903745
   ✅ EUR_USD_1d_5y: 0.00816901
   ✅ AUD_USD_daily_av: 0.00785364
   ✅ AUD_USD_1d_5y: 0.00719894
-  ✅ GBP_USD_1h_2y: 0.00138825
-  ✅ EUR_USD_1h_2y: 0.00112372
-  ✅ AUD_USD_1h_2y: 0.00101112
-  ✅ GBP_USD_15m_60d: 0.00061079
-  ✅ EUR_USD_15m_60d: 0.00049098
-  ✅ AUD_USD_15m_60d: 0.00032539
-  ✅ GBP_USD_5m_1mo: 0.00029795
-  ✅ EUR_USD_5m_1mo: 0.00022176
-  ✅ AUD_USD_5m_1mo: 0.00015426
-  ✅ GBP_USD_1m_7d: 0.00008936
-  ✅ AUD_USD_1m_7d: 0.00007507
-  ✅ EUR_USD_1m_7d: 0.00006587
+  ✅ GBP_USD_1h_2y: 0.00138789
+  ✅ EUR_USD_1h_2y: 0.00112245
+  ✅ AUD_USD_1h_2y: 0.00101029
+  ✅ GBP_USD_15m_60d: 0.00061182
+  ✅ EUR_USD_15m_60d: 0.00048887
+  ✅ AUD_USD_15m_60d: 0.00032554
+  ✅ GBP_USD_5m_1mo: 0.00029665
+  ✅ EUR_USD_5m_1mo: 0.00021987
+  ✅ AUD_USD_5m_1mo: 0.00015325
+  ✅ GBP_USD_1m_7d: 0.00009220
+  ✅ AUD_USD_1m_7d: 0.00007569
+  ✅ EUR_USD_1m_7d: 0.00006591
 ======================================================================
 🤖 GitHub Actions: Skipping git operations
 ======================================================================
@@ -623,7 +623,7 @@ CSV files found: 24
 Files processed: 24
 Files quarantined: 0
 📈 ATR Statistics:
-   Average: 0.11670675
+   Average: 0.11661781
    Files analyzed: 24
 🔧 KEY FEATURES:
    ✅ Full-dataset indicator calculation
@@ -636,15 +636,15 @@ Files quarantined: 0
    Quarantine: /home/runner/work/forex-ai-models/forex-ai-models/data/quarantine/combiner
 ======================================================================
 ----------------------------------------------------------------------
-✅ Cell 7/9 completed in 8.0s
+✅ Cell 7/9 completed in 8.1s
 ======================================================================
 
 ======================================================================
 🔄 EXECUTING CELL 8/9 (88.9% complete)
-⏱️  Elapsed time: 93.6s
+⏱️  Elapsed time: 93.5s
 ----------------------------------------------------------------------
-[main 26b51c8] 📈 Update signals - Iteration 1
- 1 file changed, 100 insertions(+), 100 deletions(-)
+[main 0fed3a7] 📈 Update signals - Iteration 1
+ 1 file changed, 118 insertions(+), 118 deletions(-)
 ======================================================================
 🚀 Ultra-Persistent FX Pipeline v4.0 - Clean Structure Edition
 ======================================================================
@@ -678,30 +678,30 @@ Files quarantined: 0
 🔄 LOADING PROCESSED PICKLES
 ℹ️ 📂 Looking in: /home/runner/work/forex-ai-models/forex-ai-models/data/processed
 ✅ ✅ Found 24 processed pickle files
-ℹ️ EUR/USD | 15m | Ens:1 (SGD:1 RF:0) | Price:1.16036 | SL:1.15988 | TP:1.16085
-ℹ️ GBP/USD | 15m | Ens:1 (SGD:1 RF:0) | Price:1.31484 | SL:1.31405 | TP:1.31563
-ℹ️ USD/JPY | 1d | Ens:1 (SGD:1 RF:0) | Price:154.54000 | SL:152.32134 | TP:156.75866
-ℹ️ GBP/USD | 1h | Ens:1 (SGD:1 RF:1) | Price:1.31484 | SL:1.31172 | TP:1.31796
-ℹ️ EUR/USD | 1d | Ens:0 (SGD:0 RF:0) | Price:1.16036 | SL:1.14802 | TP:1.17271
-ℹ️ GBP/USD | 5m | Ens:0 (SGD:0 RF:0) | Price:1.31484 | SL:1.31455 | TP:1.31513
-ℹ️ USD/JPY | 1d | Ens:1 (SGD:1 RF:0) | Price:154.62000 | SL:152.28628 | TP:156.95371
-ℹ️ AUD/USD | 1m | Ens:1 (SGD:1 RF:1) | Price:0.65227 | SL:0.65216 | TP:0.65238
-ℹ️ EUR/USD | 1m | Ens:0 (SGD:0 RF:0) | Price:1.16036 | SL:1.16030 | TP:1.16042
-ℹ️ USD/JPY | 1h | Ens:0 (SGD:0 RF:0) | Price:154.62000 | SL:154.22937 | TP:155.01062
-ℹ️ EUR/USD | 1h | Ens:1 (SGD:1 RF:1) | Price:1.16036 | SL:1.15859 | TP:1.16214
-ℹ️ USD/JPY | 5m | Ens:0 (SGD:0 RF:0) | Price:154.61200 | SL:154.52761 | TP:154.69639
-ℹ️ AUD/USD | 15m | Ens:1 (SGD:1 RF:1) | Price:0.65227 | SL:0.65168 | TP:0.65287
-ℹ️ AUD/USD | 1d | Ens:0 (SGD:0 RF:0) | Price:0.65227 | SL:0.64269 | TP:0.66185
-ℹ️ GBP/USD | 1m | Ens:0 (SGD:0 RF:0) | Price:1.31484 | SL:1.31478 | TP:1.31490
-ℹ️ EUR/USD | 5m | Ens:0 (SGD:0 RF:0) | Price:1.16036 | SL:1.16015 | TP:1.16058
+ℹ️ EUR/USD | 15m | Ens:0 (SGD:0 RF:0) | Price:1.15915 | SL:1.15845 | TP:1.15985
+ℹ️ GBP/USD | 15m | Ens:0 (SGD:0 RF:0) | Price:1.31558 | SL:1.31444 | TP:1.31673
+ℹ️ USD/JPY | 1d | Ens:0 (SGD:0 RF:0) | Price:154.54000 | SL:152.32134 | TP:156.75866
+ℹ️ GBP/USD | 1h | Ens:1 (SGD:1 RF:1) | Price:1.31558 | SL:1.31268 | TP:1.31849
+ℹ️ EUR/USD | 1d | Ens:0 (SGD:0 RF:0) | Price:1.15915 | SL:1.14659 | TP:1.17171
+ℹ️ GBP/USD | 5m | Ens:0 (SGD:0 RF:0) | Price:1.31558 | SL:1.31514 | TP:1.31602
+ℹ️ USD/JPY | 1d | Ens:1 (SGD:1 RF:1) | Price:155.23000 | SL:152.82228 | TP:157.63771
+ℹ️ AUD/USD | 1m | Ens:0 (SGD:0 RF:0) | Price:0.64935 | SL:0.64921 | TP:0.64949
+ℹ️ EUR/USD | 1m | Ens:0 (SGD:0 RF:0) | Price:1.15915 | SL:1.15909 | TP:1.15922
+ℹ️ USD/JPY | 1h | Ens:1 (SGD:0 RF:1) | Price:155.23000 | SL:154.92529 | TP:155.53470
+ℹ️ EUR/USD | 1h | Ens:0 (SGD:0 RF:0) | Price:1.15915 | SL:1.15743 | TP:1.16087
+ℹ️ USD/JPY | 5m | Ens:1 (SGD:0 RF:1) | Price:155.23199 | SL:155.16117 | TP:155.30281
+ℹ️ AUD/USD | 15m | Ens:0 (SGD:0 RF:0) | Price:0.64935 | SL:0.64865 | TP:0.65005
+ℹ️ AUD/USD | 1d | Ens:0 (SGD:0 RF:0) | Price:0.64935 | SL:0.63934 | TP:0.65936
+ℹ️ GBP/USD | 1m | Ens:1 (SGD:0 RF:1) | Price:1.31558 | SL:1.31549 | TP:1.31567
+ℹ️ EUR/USD | 5m | Ens:0 (SGD:0 RF:0) | Price:1.15915 | SL:1.15887 | TP:1.15943
 ℹ️ GBP/USD | 1d | Ens:0 (SGD:0 RF:0) | Price:1.31680 | SL:1.29960 | TP:1.33400
-ℹ️ USD/JPY | 1m | Ens:0 (SGD:0 RF:0) | Price:154.61000 | SL:154.57893 | TP:154.64107
-ℹ️ AUD/USD | 5m | Ens:1 (SGD:1 RF:1) | Price:0.65227 | SL:0.65202 | TP:0.65252
-ℹ️ AUD/USD | 1h | Ens:1 (SGD:1 RF:1) | Price:0.65227 | SL:0.65066 | TP:0.65389
-ℹ️ USD/JPY | 15m | Ens:0 (SGD:0 RF:0) | Price:154.62000 | SL:154.46302 | TP:154.77697
+ℹ️ USD/JPY | 1m | Ens:1 (SGD:1 RF:1) | Price:155.23199 | SL:155.20609 | TP:155.25790
+ℹ️ AUD/USD | 5m | Ens:0 (SGD:0 RF:0) | Price:0.64935 | SL:0.64905 | TP:0.64965
+ℹ️ AUD/USD | 1h | Ens:0 (SGD:0 RF:0) | Price:0.64935 | SL:0.64758 | TP:0.65112
+ℹ️ USD/JPY | 15m | Ens:1 (SGD:1 RF:0) | Price:155.23199 | SL:155.09356 | TP:155.37043
 ℹ️ EUR/USD | 1d | Ens:0 (SGD:0 RF:0) | Price:1.16200 | SL:1.15040 | TP:1.17360
 ℹ️ AUD/USD | 1d | Ens:1 (SGD:1 RF:1) | Price:0.65360 | SL:0.64387 | TP:0.66333
-ℹ️ GBP/USD | 1d | Ens:1 (SGD:1 RF:0) | Price:1.31484 | SL:1.29705 | TP:1.33262
+ℹ️ GBP/USD | 1d | Ens:1 (SGD:0 RF:1) | Price:1.31558 | SL:1.29751 | TP:1.33365
 ℹ️ 
 💾 STORING SIGNALS
 ✅ 💾 Stored 20 trades
@@ -712,8 +712,8 @@ Files quarantined: 0
 ℹ️ 
 📝 EXPORTING TO JSON
 ℹ️ 📤 Pushing to GitHub...
-[main 26b51c8] 📈 Update signals - Iteration 1
- 1 file changed, 100 insertions(+), 100 deletions(-)
+[main 0fed3a7] 📈 Update signals - Iteration 1
+ 1 file changed, 118 insertions(+), 118 deletions(-)
 ✅ ✅ Pushed to GitHub
 📊 
 📊 FINAL DATABASE STATS
@@ -729,17 +729,17 @@ Files quarantined: 0
 🎉 Generated signals for 4 pairs!
 ✅   EUR/USD: SHORT
 ✅   GBP/USD: LONG
-✅   USD/JPY: SHORT
+✅   USD/JPY: LONG
 ✅   AUD/USD: LONG
 ✅ 
 ✅ ALL OPERATIONS COMPLETED!
 ----------------------------------------------------------------------
-✅ Cell 8/9 completed in 12.4s
+✅ Cell 8/9 completed in 12.8s
 ======================================================================
 
 ======================================================================
 🔄 EXECUTING CELL 9/9 (100.0% complete)
-⏱️  Elapsed time: 106.0s
+⏱️  Elapsed time: 106.3s
 ----------------------------------------------------------------------
 ======================================================================
 🔴 OMEGA v9.0 - Ultra-Fast + Anti-Overfit (FIXED)
@@ -750,8 +750,8 @@ Files quarantined: 0
 🔴 🔴 OMEGA v9.0 - ULTRA-FAST + ANTI-OVERFIT (FULLY FIXED)
 🔴 ======================================================================
 ℹ️ 
-📊 Iteration #8 | GitHub Actions
-ℹ️ Total: 7 | Days: 1 | Avg/Day: 7.0
+📊 Iteration #9 | GitHub Actions
+ℹ️ Total: 8 | Days: 1 | Avg/Day: 8.0
 ✅ 🎯 Weekday Trading Mode
 ℹ️ 
 📦 Loading data...
@@ -792,27 +792,25 @@ Files quarantined: 0
     Candidates: 21/24 (88%)
     Candidates: 23/24 (96%)
     Candidates: 24/24 (100%)
-✅   ✅ Init ready | Best: 110.11
+✅   ✅ Init ready | Best: 180.94
 ℹ️   🧬 Evolution...
-ℹ️   📈 Gen 1/8: Best=120.02 | Avg=96.65 | Div=0.11 | Mut=0.150 | T=3.8s
-ℹ️   📈 Gen 2/8: Best=140.79 | Avg=103.75 | Div=0.05 | Mut=0.150 | T=3.8s
-✅   🛡️ New best: GenScore=0.32 (base=0.78, consistency=0.42)
-ℹ️   📈 Gen 3/8: Best=144.76 | Avg=125.22 | Div=0.05 | Mut=0.150 | GenScore=0.32 | T=6.5s
-ℹ️   📈 Gen 4/8: Best=164.23 | Avg=139.94 | Div=0.07 | Mut=0.150 | GenScore=0.32 | T=3.8s
-✅   🛡️ New best: GenScore=0.34 (base=0.45, consistency=0.75)
-ℹ️   📈 Gen 5/8: Best=183.67 | Avg=145.19 | Div=0.07 | Mut=0.150 | GenScore=0.34 | T=6.5s
-ℹ️   📈 Gen 6/8: Best=216.17 | Avg=161.51 | Div=0.08 | Mut=0.150 | GenScore=0.34 | T=3.8s
-✅   🛡️ New best: GenScore=0.36 (base=0.46, consistency=0.78)
-ℹ️   📊 Gen 7/8: Best=217.41 | Avg=197.74 | Div=0.04 | Mut=0.150 | GenScore=0.36 | T=6.5s
-ℹ️   📈 Gen 8/8: Best=221.20 | Avg=203.07 | Div=0.04 | Mut=0.150 | GenScore=0.36 | T=3.8s
-✅   🛡️ Using best generalization model (score=0.36)
+ℹ️   📈 Gen 1/8: Best=183.24 | Avg=91.98 | Div=0.17 | Mut=0.150 | T=3.7s
+ℹ️   📈 Gen 2/8: Best=187.38 | Avg=129.25 | Div=0.24 | Mut=0.150 | T=3.9s
+✅   🛡️ New best: GenScore=0.90 (base=0.97, consistency=0.93)
+ℹ️   📊 Gen 3/8: Best=187.38 | Avg=144.03 | Div=0.23 | Mut=0.150 | GenScore=0.90 | T=6.4s
+ℹ️   📈 Gen 4/8: Best=190.25 | Avg=176.50 | Div=0.11 | Mut=0.150 | GenScore=0.90 | T=3.7s
+ℹ️   📊 Gen 5/8: Best=190.48 | Avg=182.49 | Div=0.07 | Mut=0.150 | GenScore=0.90 | T=6.4s
+ℹ️   📊 Gen 6/8: Best=190.77 | Avg=170.84 | Div=0.05 | Mut=0.150 | GenScore=0.90 | T=3.7s
+ℹ️   📊 Gen 7/8: Best=190.81 | Avg=166.28 | Div=0.06 | Mut=0.150 | GenScore=0.90 | T=6.4s
+ℹ️   📊 Gen 8/8: Best=190.81 | Avg=185.88 | Div=0.06 | Mut=0.150 | GenScore=0.90 | T=3.7s
+✅   🛡️ Using best generalization model (score=0.90)
 ℹ️   🔧 Fine-tuning with overfitting prevention...
 ℹ️   📊 Final validation on full data...
-ℹ️   📊 Train: 39.6% | $19.98
-ℹ️   📊 Val: 33.3% | $-0.28
-❌   🛡️ AI: Severe overfitting detected (severity=0.60, ratio=0.84)
-ℹ️   🛡️ AI Report: GenScore=0.38 | 📈 Improving
-✅   ✅ Alpha Momentum: Sharpe=1.99 | Sortino=3.50 | MaxDD=7.1%
+ℹ️   📊 Train: 50.8% | $16.69
+ℹ️   📊 Val: 30.0% | $-0.02
+❌   🛡️ AI: Severe overfitting detected (severity=1.11, ratio=0.59)
+ℹ️   🛡️ AI Report: GenScore=0.62 | 📈 Improving
+✅   ✅ Alpha Momentum: Sharpe=2.63 | Sortino=4.14 | MaxDD=6.0%
 ℹ️ 🔵 Training Beta Conservative...
 ℹ️   📊 Pop: 10 | Gen: 6
 ℹ️   🛡️ Anti-Overfitting AI: Active (target ratio ≥0.80)
@@ -836,23 +834,25 @@ Files quarantined: 0
     Candidates: 18/20 (90%)
     Candidates: 19/20 (95%)
     Candidates: 20/20 (100%)
-✅   ✅ Init ready | Best: 135.11
+✅   ✅ Init ready | Best: 208.41
 ℹ️   🧬 Evolution...
-ℹ️   📈 Gen 1/6: Best=148.04 | Avg=98.60 | Div=0.07 | Mut=0.120 | T=3.3s
-ℹ️   📈 Gen 2/6: Best=235.01 | Avg=118.70 | Div=0.04 | Mut=0.120 | T=3.3s
-✅   🛡️ New best: GenScore=0.72 (base=0.88, consistency=0.82)
-ℹ️   📈 Gen 3/6: Best=279.82 | Avg=188.29 | Div=0.07 | Mut=0.120 | GenScore=0.72 | T=6.1s
-ℹ️   📈 Gen 4/6: Best=310.09 | Avg=256.96 | Div=0.05 | Mut=0.120 | GenScore=0.72 | T=3.3s
-ℹ️   📈 Gen 5/6: Best=318.25 | Avg=299.02 | Div=0.05 | Mut=0.120 | GenScore=0.72 | T=6.1s
-ℹ️   📊 Gen 6/6: Best=318.25 | Avg=300.38 | Div=0.02 | Mut=0.120 | GenScore=0.72 | T=3.3s
-✅   🛡️ Using best generalization model (score=0.72)
+ℹ️   📈 Gen 1/6: Best=224.12 | Avg=158.24 | Div=0.09 | Mut=0.120 | T=3.2s
+ℹ️   📈 Gen 2/6: Best=242.98 | Avg=171.75 | Div=0.09 | Mut=0.120 | T=3.2s
+⚠️   🛡️ Overfitting detected (severity=0.07, consistency=0.20)
+✅   🛡️ New best: GenScore=0.11 (base=0.53, consistency=0.20)
+ℹ️   📊 Gen 3/6: Best=242.98 | Avg=221.21 | Div=0.05 | Mut=0.120 | GenScore=0.11 | T=5.8s
+ℹ️   📊 Gen 4/6: Best=242.98 | Avg=229.91 | Div=0.06 | Mut=0.120 | GenScore=0.11 | T=3.0s
+⚠️   🛡️ Overfitting detected (severity=0.07, consistency=0.20)
+ℹ️   📈 Gen 5/6: Best=246.64 | Avg=236.77 | Div=0.04 | Mut=0.120 | GenScore=0.11 | T=5.8s
+ℹ️   📊 Gen 6/6: Best=246.64 | Avg=242.66 | Div=0.02 | Mut=0.120 | GenScore=0.11 | T=3.2s
+✅   🛡️ Using best generalization model (score=0.11)
 ℹ️   🔧 Fine-tuning with overfitting prevention...
 ℹ️   📊 Final validation on full data...
-ℹ️   📊 Train: 38.5% | $13.75
-ℹ️   📊 Val: 28.0% | $-1.64
-⚠️   🛡️ AI: Moderate overfitting detected (severity=0.47, ratio=0.73)
-ℹ️   🛡️ AI Report: GenScore=0.69 | 📈 Improving
-✅   ✅ Beta Conservative: Sharpe=3.23 | Sortino=10.96 | MaxDD=6.3%
+ℹ️   📊 Train: 41.7% | $15.15
+ℹ️   📊 Val: 0.0% | $-0.00
+❌   🛡️ AI: Severe overfitting detected (severity=1.50, ratio=0.00)
+ℹ️   🛡️ AI Report: GenScore=0.22 | 📈 Improving
+✅   ✅ Beta Conservative: Sharpe=4.43 | Sortino=15.45 | MaxDD=4.2%
 ℹ️ 🟢 Training Gamma Adaptive...
 ℹ️   📊 Pop: 14 | Gen: 10
 ℹ️   🛡️ Anti-Overfitting AI: Active (target ratio ≥0.80)
@@ -872,55 +872,42 @@ Files quarantined: 0
     Candidates: 24/28 (86%)
     Candidates: 26/28 (93%)
     Candidates: 28/28 (100%)
-✅   ✅ Init ready | Best: 124.76
+✅   ✅ Init ready | Best: 125.53
 ℹ️   🧬 Evolution...
-ℹ️   📈 Gen 1/10: Best=138.91 | Avg=84.90 | Div=0.19 | Mut=0.180 | T=4.7s
-ℹ️   📈 Gen 2/10: Best=173.34 | Avg=92.91 | Div=0.16 | Mut=0.180 | T=4.8s
-⚠️   🛡️ Overfitting detected (severity=0.61, consistency=0.25)
-ℹ️     → Increase regularization (mutation rate)
-ℹ️     → Reduce model complexity
-ℹ️     → Use simpler features
-⚠️   🛡️ Severe overfitting: Applied strong regularization
-✅   🛡️ New best: GenScore=-3.24 (base=-12.94, consistency=0.25)
-ℹ️   📊 Gen 3/10: Best=173.34 | Avg=-0.76 | Div=0.09 | Mut=0.252 | GenScore=-3.24 | T=6.8s
-ℹ️   📊 Gen 4/10: Best=173.34 | Avg=14.04 | Div=0.09 | Mut=0.252 | GenScore=-3.24 | T=4.0s
-⚠️   🛡️ Overfitting detected (severity=0.61, consistency=0.25)
-ℹ️     → Increase regularization (mutation rate)
-ℹ️     → Reduce model complexity
-ℹ️     → Use simpler features
-⚠️   🛡️ Severe overfitting: Applied strong regularization
-ℹ️   📊 Gen 5/10: Best=173.34 | Avg=-18.51 | Div=0.10 | Mut=0.353 | GenScore=-3.24 | T=6.1s
-ℹ️   📊 Gen 6/10: Best=173.34 | Avg=-71.55 | Div=0.18 | Mut=0.353 | GenScore=-3.24 | T=3.3s
-⚠️   🛡️ Overfitting detected (severity=0.61, consistency=0.25)
-ℹ️     → Increase regularization (mutation rate)
-ℹ️     → Reduce model complexity
-ℹ️     → Use simpler features
-⚠️   🛡️ Severe overfitting: Applied strong regularization
-ℹ️   📊 Gen 7/10: Best=173.34 | Avg=29.13 | Div=0.10 | Mut=0.375 | GenScore=-3.24 | T=6.0s
-ℹ️   📊 Gen 8/10: Best=173.34 | Avg=-84.01 | Div=0.09 | Mut=0.375 | GenScore=-3.24 | T=3.2s
-✅   🎯 Early stop at gen 8
-✅   🛡️ Using best generalization model (score=-3.24)
+ℹ️   📈 Gen 1/10: Best=166.25 | Avg=69.02 | Div=0.14 | Mut=0.180 | T=4.6s
+ℹ️   📈 Gen 2/10: Best=238.19 | Avg=136.96 | Div=0.09 | Mut=0.180 | T=4.6s
+✅   🛡️ New best: GenScore=0.06 (base=0.47, consistency=0.13)
+ℹ️   📈 Gen 3/10: Best=251.78 | Avg=189.19 | Div=0.09 | Mut=0.180 | GenScore=0.06 | T=7.2s
+ℹ️   📊 Gen 4/10: Best=251.78 | Avg=160.53 | Div=0.07 | Mut=0.180 | GenScore=0.06 | T=4.6s
+ℹ️   📊 Gen 5/10: Best=251.78 | Avg=207.82 | Div=0.06 | Mut=0.180 | GenScore=0.06 | T=7.4s
+ℹ️   📈 Gen 6/10: Best=272.91 | Avg=222.69 | Div=0.07 | Mut=0.180 | GenScore=0.06 | T=4.7s
+✅   🛡️ New best: GenScore=0.13 (base=0.46, consistency=0.29)
+ℹ️   📊 Gen 7/10: Best=272.91 | Avg=226.12 | Div=0.04 | Mut=0.180 | GenScore=0.13 | T=7.3s
+ℹ️   📈 Gen 8/10: Best=285.26 | Avg=243.23 | Div=0.04 | Mut=0.180 | GenScore=0.13 | T=4.7s
+ℹ️   📊 Gen 9/10: Best=285.26 | Avg=216.71 | Div=0.04 | Mut=0.180 | GenScore=0.13 | T=7.4s
+ℹ️   📊 Gen 10/10: Best=285.26 | Avg=243.12 | Div=0.03 | Mut=0.180 | GenScore=0.13 | T=4.7s
+✅   🛡️ Using best generalization model (score=0.13)
 ℹ️   🔧 Fine-tuning with overfitting prevention...
 ℹ️   📊 Final validation on full data...
-ℹ️   📊 Train: 41.2% | $25.92
-ℹ️   📊 Val: 0.0% | $-0.00
-❌   🛡️ AI: Severe overfitting detected (severity=1.50, ratio=0.00)
-ℹ️   🛡️ AI Report: GenScore=-8.63 | 📈 Improving
-✅   ✅ Gamma Adaptive: Sharpe=5.26 | Sortino=13.02 | MaxDD=5.9%
+ℹ️   📊 Train: 7.6% | $-2.66
+ℹ️   📊 Val: 3.8% | $-4.23
+⚠️   🛡️ AI: Moderate overfitting detected (severity=0.49, ratio=0.51)
+ℹ️   🛡️ AI Report: GenScore=0.37 | 📈 Improving
+✅   ✅ Gamma Adaptive: Sharpe=-3.66 | Sortino=-3.66 | MaxDD=2.7%
 🧠 
 🧠 Learning: 📉 Adjusting | Score: 36.5/100
 📊 
 🏆 Model Rankings by Generalization Quality:
-ℹ️   🥇 Beta Conservative: Quality=72.2 | Val/Train=0.73 | Test=0.0% | GenScore=0.69
-ℹ️   🥈 Alpha Momentum: Quality=66.7 | Val/Train=0.84 | Test=0.0% | GenScore=0.38
-ℹ️   🥉 Gamma Adaptive: Quality=-344.1 | Val/Train=0.00 | Test=0.0% | GenScore=-8.63
+ℹ️   🥇 Alpha Momentum: Quality=61.2 | Val/Train=0.59 | Test=0.0% | GenScore=0.62
+ℹ️   🥈 Gamma Adaptive: Quality=46.1 | Val/Train=0.51 | Test=0.0% | GenScore=0.37
+ℹ️   🥉 Beta Conservative: Quality=9.6 | Val/Train=0.00 | Test=0.0% | GenScore=0.22
 ✅ 
-🎯 Recommended for Live Trading: Beta Conservative
-ℹ️    Reason: Best generalization quality (score=72.2)
+🎯 Recommended for Live Trading: Alpha Momentum
+ℹ️    Reason: Best generalization quality (score=61.2)
 ℹ️ 
 💾 Saving signals...
 ✅ ✅ Saved to omega_signals.json
-❌ ❌ Email failed: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials 8926c6da1cb9f-5b7bd330368sm4323573173.48 - gsmtp')
+❌ ❌ Email failed: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials a92af1059eb24-11b06088604sm54214839c88.7 - gsmtp')
 ✅ ✅ Email sent
 ℹ️ 
 🔄 Git operations...
@@ -930,8 +917,8 @@ Files quarantined: 0
 ✅ ✅ OMEGA v9.0 - ULTRA-FAST + ANTI-OVERFIT COMPLETED
 ✅ ======================================================================
 ℹ️ Mode: Live | Env: GitHub Actions
-ℹ️ Iteration: #8 | Models: 3
-ℹ️ Live Signals: 3
+ℹ️ Iteration: #9 | Models: 3
+ℹ️ Live Signals: 6
 ℹ️ Circuit Breaker: ✅ Closed
 🚀 ⚡ Optimizations: 87% faster | Parallel | Smart TF
 🚀 🛡️ Anti-overfit: 50/50 val + penalties + higher confidence
@@ -939,18 +926,18 @@ Files quarantined: 0
 ✅ ✅ All Fixes Applied: MACD + indentation + run_ga
 🔴 🔴 Omega pipeline complete
 ----------------------------------------------------------------------
-✅ Cell 9/9 completed in 195.2s
+✅ Cell 9/9 completed in 208.3s
 ======================================================================
 
 ======================================================================
 ✅ FULL NOTEBOOK EXECUTION COMPLETED!
 ======================================================================
-⏱️  Total time: 301.6s (5.0 min)
+⏱️  Total time: 315.0s (5.2 min)
 📊 Cells executed: 9
-⚡ Avg time/cell: 33.5s
+⚡ Avg time/cell: 35.0s
 ======================================================================
 
 ======================================================================
 ✅ EXECUTION COMPLETED SUCCESSFULLY
-📅 Finished: 2025-11-17 04:35:51 UTC
+📅 Finished: 2025-11-17 21:26:59 UTC
 ======================================================================

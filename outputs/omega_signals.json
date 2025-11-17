@@ -1,13 +1,220 @@
 {
-  "timestamp": "2025-11-16T23:07:14.549689+00:00",
-  "iteration": 6,
+  "timestamp": "2025-11-17T01:58:01.703063+00:00",
+  "iteration": 7,
   "system": "OMEGA",
   "version": "v9.0-ultrafast-antioverfit-fully-fixed",
-  "mode": "weekend_learning",
+  "mode": "live_trading",
   "models": {
-    "Alpha Momentum": {},
-    "Beta Conservative": {},
-    "Gamma Adaptive": {}
+    "Alpha Momentum": {
+      "EUR/USD": {
+        "direction": "HOLD",
+        "last_price": 1.161170482635498,
+        "SL": 1.161170482635498,
+        "TP": 1.161170482635498,
+        "atr": 0.0011491605213710399,
+        "score_1_100": 33,
+        "signal_strength": 0.06259255701203094,
+        "model": "Alpha Momentum",
+        "timestamp": "2025-11-17T01:55:36.686770+00:00",
+        "rr_ratio": 0.0,
+        "regime": {
+          "volatility": "low",
+          "trend": "ranging",
+          "strength": 56.10421524712474
+        }
+      },
+      "GBP/USD": {
+        "direction": "SELL",
+        "last_price": 1.3159279823303225,
+        "SL": 1.339162220308041,
+        "TP": 1.2874843563352314,
+        "atr": 0.009481208665030359,
+        "score_1_100": 33,
+        "signal_strength": -0.061483222915643204,
+        "model": "Alpha Momentum",
+        "timestamp": "2025-11-17T01:55:36.686770+00:00",
+        "rr_ratio": 1.2242117009547815,
+        "regime": {
+          "volatility": "normal",
+          "trend": "trending",
+          "strength": 99.04860418662805
+        }
+      },
+      "USD/JPY": {
+        "direction": "HOLD",
+        "last_price": 154.54100036621094,
+        "SL": 154.54100036621094,
+        "TP": 154.54100036621094,
+        "atr": 0.24843052455357142,
+        "score_1_100": 73,
+        "signal_strength": 0.8229328771892398,
+        "model": "Alpha Momentum",
+        "timestamp": "2025-11-17T01:55:36.686770+00:00",
+        "rr_ratio": 0.0,
+        "regime": {
+          "volatility": "normal",
+          "trend": "ranging",
+          "strength": 26.072968570023463
+        }
+      },
+      "AUD/USD": {
+        "direction": "HOLD",
+        "last_price": 0.6524008512496948,
+        "SL": 0.6524008512496948,
+        "TP": 0.6524008512496948,
+        "atr": 0.0008928137166159493,
+        "score_1_100": 30,
+        "signal_strength": -0.01131347084268938,
+        "model": "Alpha Momentum",
+        "timestamp": "2025-11-17T01:55:36.686770+00:00",
+        "rr_ratio": 0.0,
+        "regime": {
+          "volatility": "low",
+          "trend": "ranging",
+          "strength": 63.355503080422
+        }
+      }
+    },
+    "Beta Conservative": {
+      "EUR/USD": {
+        "direction": "HOLD",
+        "last_price": 1.161170482635498,
+        "SL": 1.161170482635498,
+        "TP": 1.161170482635498,
+        "atr": 0.0011491605213710399,
+        "score_1_100": 30,
+        "signal_strength": 0.015312927418487662,
+        "model": "Beta Conservative",
+        "timestamp": "2025-11-17T01:56:36.891289+00:00",
+        "rr_ratio": 0.0,
+        "regime": {
+          "volatility": "low",
+          "trend": "ranging",
+          "strength": 56.10421524712474
+        }
+      },
+      "GBP/USD": {
+        "direction": "SELL",
+        "last_price": 1.3159279823303225,
+        "SL": 1.3266752734261726,
+        "TP": 1.2922249606677465,
+        "atr": 0.009481208665030359,
+        "score_1_100": 32,
+        "signal_strength": -0.05434503176145748,
+        "model": "Beta Conservative",
+        "timestamp": "2025-11-17T01:56:36.891289+00:00",
+        "rr_ratio": 2.20548801099548,
+        "regime": {
+          "volatility": "normal",
+          "trend": "trending",
+          "strength": 99.04860418662805
+        }
+      },
+      "USD/JPY": {
+        "direction": "HOLD",
+        "last_price": 154.54100036621094,
+        "SL": 154.54100036621094,
+        "TP": 154.54100036621094,
+        "atr": 0.24843052455357142,
+        "score_1_100": 76,
+        "signal_strength": 1.136649170871868,
+        "model": "Beta Conservative",
+        "timestamp": "2025-11-17T01:56:36.891289+00:00",
+        "rr_ratio": 0.0,
+        "regime": {
+          "volatility": "normal",
+          "trend": "ranging",
+          "strength": 26.072968570023463
+        }
+      },
+      "AUD/USD": {
+        "direction": "HOLD",
+        "last_price": 0.6524008512496948,
+        "SL": 0.6524008512496948,
+        "TP": 0.6524008512496948,
+        "atr": 0.0008928137166159493,
+        "score_1_100": 31,
+        "signal_strength": -0.021265552027090538,
+        "model": "Beta Conservative",
+        "timestamp": "2025-11-17T01:56:36.891289+00:00",
+        "rr_ratio": 0.0,
+        "regime": {
+          "volatility": "low",
+          "trend": "ranging",
+          "strength": 63.355503080422
+        }
+      }
+    },
+    "Gamma Adaptive": {
+      "EUR/USD": {
+        "direction": "HOLD",
+        "last_price": 1.161170482635498,
+        "SL": 1.161170482635498,
+        "TP": 1.161170482635498,
+        "atr": 0.0011491605213710399,
+        "score_1_100": 31,
+        "signal_strength": -0.025394075472958525,
+        "model": "Gamma Adaptive",
+        "timestamp": "2025-11-17T01:58:01.376277+00:00",
+        "rr_ratio": 0.0,
+        "regime": {
+          "volatility": "low",
+          "trend": "ranging",
+          "strength": 56.10421524712474
+        }
+      },
+      "GBP/USD": {
+        "direction": "SELL",
+        "last_price": 1.3159279823303225,
+        "SL": 1.327364177481334,
+        "TP": 1.289026692083277,
+        "atr": 0.009481208665030359,
+        "score_1_100": 31,
+        "signal_strength": -0.028094944556688563,
+        "model": "Gamma Adaptive",
+        "timestamp": "2025-11-17T01:58:01.376277+00:00",
+        "rr_ratio": 2.3522937385924245,
+        "regime": {
+          "volatility": "normal",
+          "trend": "trending",
+          "strength": 99.04860418662805
+        }
+      },
+      "USD/JPY": {
+        "direction": "HOLD",
+        "last_price": 154.54100036621094,
+        "SL": 154.54100036621094,
+        "TP": 154.54100036621094,
+        "atr": 0.24843052455357142,
+        "score_1_100": 77,
+        "signal_strength": 0.9473717570864024,
+        "model": "Gamma Adaptive",
+        "timestamp": "2025-11-17T01:58:01.376277+00:00",
+        "rr_ratio": 0.0,
+        "regime": {
+          "volatility": "normal",
+          "trend": "ranging",
+          "strength": 26.072968570023463
+        }
+      },
+      "AUD/USD": {
+        "direction": "HOLD",
+        "last_price": 0.6524008512496948,
+        "SL": 0.6524008512496948,
+        "TP": 0.6524008512496948,
+        "atr": 0.0008928137166159493,
+        "score_1_100": 31,
+        "signal_strength": -0.01858066718711047,
+        "model": "Gamma Adaptive",
+        "timestamp": "2025-11-17T01:58:01.376277+00:00",
+        "rr_ratio": 0.0,
+        "regime": {
+          "volatility": "low",
+          "trend": "ranging",
+          "strength": 63.355503080422
+        }
+      }
+    }
   },
   "environment": "GitHub Actions",
   "learning": {

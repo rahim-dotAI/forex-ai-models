@@ -81,9 +81,9 @@ jobs:
             echo "execution_mode=weekend_tagged_cells" >> $GITHUB_OUTPUT
             echo "schedule_type=hourly" >> $GITHUB_OUTPUT
             echo "🎯 MODE: WEEKEND"
-            echo "   • Execution: Tagged cells only (Omega Pipeline)"
+            echo "   • Execution: Tagged cells only (Omega v12.0 PRODUCTION)"
             echo "   • Schedule: Every 1 hour"
-            echo "   • Focus: Learning & optimization"
+            echo "   • Focus: Learning & optimization with strict validation"
           else
             echo "is_weekend=false" >> $GITHUB_OUTPUT
             echo "execution_mode=weekday_full_notebook" >> $GITHUB_OUTPUT
@@ -159,10 +159,10 @@ jobs:
             echo "has_data=true" >> $GITHUB_OUTPUT
             echo "execution_type=tagged_cells" >> $GITHUB_OUTPUT
             echo "✅ SUFFICIENT DATA FOUND"
-            echo "   • Will run: Tagged cells only (Omega v11.2 ULTIMATE)"
+            echo "   • Will run: Tagged cells only (Omega v12.0 PRODUCTION)"
             echo "   • Pickle files: $PICKLE_COUNT/4 ✓"
             echo "   • Database: Present ✓"
-            echo "   • Mode: Fast learning (2-5 min)"
+            echo "   • Mode: Fast learning with strict validation (2-5 min)"
           else
             echo "has_data=false" >> $GITHUB_OUTPUT
             echo "execution_type=full_notebook" >> $GITHUB_OUTPUT
@@ -176,11 +176,11 @@ jobs:
           fi
           echo "=========================================="
 
-      - name: Run Weekend Tagged Cells (Omega v11.2 ULTIMATE)
+      - name: Run Weekend Tagged Cells (Omega v12.0 PRODUCTION)
         if: steps.detect_mode.outputs.is_weekend == 'true' && steps.check_data.outputs.has_data == 'true'
         run: |
           echo "=========================================="
-          echo "🎯 WEEKEND MODE: OMEGA v11.2 ULTIMATE"
+          echo "🎯 WEEKEND MODE: OMEGA v12.0 PRODUCTION"
           echo "=========================================="
           echo "Executing: Tagged pipeline_main cells only"
           echo "Data available: Yes (proceeding with learning mode)"
@@ -261,12 +261,12 @@ jobs:
                   sys.exit(1)
               
               print("=" * 70)
-              print("🎯 WEEKEND MODE - OMEGA v11.2 ULTIMATE")
+              print("🎯 WEEKEND MODE - OMEGA v12.0 PRODUCTION")
               print("=" * 70)
               print(f"📅 Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
               print(f"📓 Notebook: {notebook}")
               print(f"🎯 Target: Cells with 'TAG: pipeline_main'")
-              print("🔴 Version: Omega v11.2 - ULTIMATE EDITION")
+              print("🔴 Version: Omega v12.0 - PRODUCTION READY")
               print("=" * 70)
               print()
               
@@ -284,24 +284,8 @@ jobs:
               sys.exit(0 if success else 1)
           EOFPYTHON
           
-          # Find the notebook file
-          NOTEBOOK_FILE=""
-          if [ -f "AI_Forex_Brain_2.ipynb" ]; then
-            NOTEBOOK_FILE="AI_Forex_Brain_2.ipynb"
-          elif [ -f "AI_Forex_Brain.ipynb" ]; then
-            NOTEBOOK_FILE="AI_Forex_Brain.ipynb"
-          fi
-          
-          if [ -z "$NOTEBOOK_FILE" ]; then
-            echo "❌ ERROR: No notebook file found!"
-            exit 1
-          fi
-          
-          echo "✅ Found: $NOTEBOOK_FILE"
-          echo ""
-          
           # Execute tagged cells
-          python run_tagged_cells.py "$NOTEBOOK_FILE" 2>&1 | tee weekend_execution.log
+          python run_tagged_cells.py "AI_Forex_Brain_2.ipynb" 2>&1 | tee weekend_execution.log
           
           EXIT_CODE=${PIPESTATUS[0]}
           if [ $EXIT_CODE -ne 0 ]; then
@@ -482,27 +466,8 @@ jobs:
               sys.exit(0 if success else 1)
           EOFPYTHON
           
-          # Find notebook
-          NOTEBOOK_FILE=""
-          if [ -f "AI_Forex_Brain_2.ipynb 11.txt" ]; then
-            mv "AI_Forex_Brain_2.ipynb 11.txt" "AI_Forex_Brain_2.ipynb" 2>/dev/null || true
-          fi
-          
-          if [ -f "AI_Forex_Brain_2.ipynb" ]; then
-            NOTEBOOK_FILE="AI_Forex_Brain_2.ipynb"
-          elif [ -f "AI_Forex_Brain.ipynb" ]; then
-            NOTEBOOK_FILE="AI_Forex_Brain.ipynb"
-          fi
-          
-          if [ -z "$NOTEBOOK_FILE" ]; then
-            echo "❌ No notebook found!"
-            exit 1
-          fi
-          
-          echo "✅ Found: $NOTEBOOK_FILE"
-          echo ""
-          
-          python run_full_notebook_weekend.py "$NOTEBOOK_FILE" 2>&1 | tee weekend_data_generation.log
+          # Execute notebook
+          python run_full_notebook_weekend.py "AI_Forex_Brain_2.ipynb" 2>&1 | tee weekend_data_generation.log
           
           EXIT_CODE=${PIPESTATUS[0]}
           if [ $EXIT_CODE -ne 0 ]; then
@@ -618,24 +583,8 @@ jobs:
               sys.exit(0 if success else 1)
           EOFPYTHON
           
-          # Find notebook
-          NOTEBOOK_FILE=""
-          if [ -f "AI_Forex_Brain_2.ipynb 11.txt" ]; then
-            mv "AI_Forex_Brain_2.ipynb 11.txt" "AI_Forex_Brain_2.ipynb" 2>/dev/null || true
-          fi
-          
-          if [ -f "AI_Forex_Brain_2.ipynb" ]; then
-            NOTEBOOK_FILE="AI_Forex_Brain_2.ipynb"
-          elif [ -f "AI_Forex_Brain.ipynb" ]; then
-            NOTEBOOK_FILE="AI_Forex_Brain.ipynb"
-          fi
-          
-          if [ -z "$NOTEBOOK_FILE" ]; then
-            echo "❌ No notebook found!"
-            exit 1
-          fi
-          
-          python run_full_notebook.py "$NOTEBOOK_FILE" 2>&1 | tee notebook_execution.log
+          # Execute notebook
+          python run_full_notebook.py "AI_Forex_Brain_2.ipynb" 2>&1 | tee notebook_execution.log
           
           if [ ${PIPESTATUS[0]} -ne 0 ]; then
             tail -n 200 notebook_execution.log
@@ -652,7 +601,7 @@ jobs:
           
           if [ "${{ steps.detect_mode.outputs.is_weekend }}" = "true" ]; then
             if [ "${{ steps.check_data.outputs.has_data }}" = "true" ]; then
-              echo "Mode: Weekend Tagged (Omega v11.2)"
+              echo "Mode: Weekend Tagged (Omega v12.0 PRODUCTION)"
             else
               echo "Mode: Weekend Full (Data Gen)"
             fi
@@ -702,7 +651,7 @@ jobs:
             
             if [ "${{ steps.detect_mode.outputs.is_weekend }}" = "true" ]; then
               if [ "${{ steps.check_data.outputs.has_data }}" = "true" ]; then
-                COMMIT_MSG="🔴 Omega v11.2 ULTIMATE [$SCHEDULE] - $DAY: $TIMESTAMP"
+                COMMIT_MSG="🔴 Omega v12.0 PRODUCTION [$SCHEDULE] - $DAY: $TIMESTAMP"
               else
                 COMMIT_MSG="📓 Weekend Data Gen [$SCHEDULE] - $DAY: $TIMESTAMP"
               fi
@@ -772,19 +721,21 @@ jobs:
             echo "🎯 Weekend Mode:"
             
             if [ "${{ steps.check_data.outputs.has_data }}" = "true" ]; then
-              echo "   ✅ Executed: Omega v11.2 ULTIMATE (tagged cells)"
-              echo "   • Version: Best of Both Worlds Edition"
-              echo "   • Features: Dynamic seeds + Live updates + Full logging"
+              echo "
+
+✅ Executed: Omega v12.0 PRODUCTION (tagged cells)"
+              echo "   • Version: Production Ready with Strict Validation"
+              echo "   • Features: Hard stops + 50% min validation + 5-fold CV"
               echo "   • Data: Sufficient (fast mode)"
               echo "   • Time: ~2-5 minutes"
               echo "   • Mode: Learning & optimization"
-              echo "   • Anti-overfit: ✅ Balanced (75% min ratio, 3-fold CV)"
+              echo "   • Anti-overfit: ✅ Strict (min 50% val, 0.75 ratio, max 500 samples)"
             elif [ "${{ steps.check_data.outputs.has_data }}" = "false" ]; then
               echo "   ✅ Executed: Full notebook (data generation)"
               echo "   • Data: Insufficient - generated files"
               echo "   • Time: ~40-50 minutes"
               echo "   • Mode: Foundation building"
-              echo "   • Next run: Will use Omega v11.2!"
+              echo "   • Next run: Will use Omega v12.0!"
             else
               echo "   ⚠️  No execution - check logs"
             fi
@@ -796,7 +747,7 @@ jobs:
             echo "   • Pipeline: API Keys → Environment → GitHub Sync"
             echo "   • Data: Alpha Vantage + YFinance fetch"
             echo "   • Processing: CSV Combiner with indicators"
-            echo "   • ML: Omega v11.2 ULTIMATE"
+            echo "   • ML: Omega v12.0 PRODUCTION"
             echo "   • Next run: In ~4 hours"
           fi
           echo ""
@@ -819,32 +770,37 @@ jobs:
           fi
           
           if [ $PICKLE_COUNT -ge 4 ] && [ -f "database/memory_v85.db" ]; then
-            echo "   • Weekend Mode: ✅ Ready for Omega v11.2"
+            echo "   • Weekend Mode: ✅ Ready for Omega v12.0"
           else
             echo "   • Weekend Mode: ⚠️  Needs data generation (≥4 pickles + DB)"
           fi
           echo ""
           
-          echo "🔴 Omega v11.2 Features Active:"
-          echo "   FROM v11.0:"
-          echo "   • ✅ Full detailed logging"
-          echo "   • ✅ Progress tracking"
-          echo "   • ✅ Model quality rankings"
-          echo "   • ✅ Generation statistics"
+          echo "🔴 Omega v12.0 Features Active:"
+          echo "   CORE IMPROVEMENTS:"
+          echo "   • 🛡️ Strict anti-overfit enforcement (hard stops)"
+          echo "   • 📊 Realistic validation (min 50% accuracy)"
+          echo "   • 🎯 Simplified signal (2 components vs 4)"
+          echo "   • ⚡ Stronger regularization (mutation=0.35)"
           echo ""
-          echo "   FROM v11.1:"
-          echo "   • ✅ Dynamic seeds per iteration"
-          echo "   • ✅ Live data updates with backups"
-          echo "   • ✅ Enhanced NaN handling"
-          echo "   • ✅ Better compression support"
+          echo "   VALIDATION REQUIREMENTS:"
+          echo "   • 🛑 Hard minimum: 50% validation accuracy"
+          echo "   • 🛑 Val/Train ratio: ≥0.75 (75%)"
+          echo "   • 📊 5-fold cross-validation for robustness"
+          echo "   • 📉 Max training samples: 500 (prevent overfitting)"
+          echo "   • 📏 Temporal gap: 10% (vs 5% before)"
           echo ""
-          echo "   ANTI-OVERFIT FIXES:"
-          echo "   • ✅ Walk-Forward: 5% temporal gap"
-          echo "   • ✅ 3-Fold Cross-Validation"
-          echo "   • ✅ Balanced penalties (max 60%)"
-          echo "   • ✅ Min 75% val/train ratio"
-          echo "   • ✅ Larger populations (14-18)"
-          echo "   • ✅ Fixed consistency calculation"
+          echo "   SAFETY FEATURES:"
+          echo "   • ✅ Paper trading mode by default"
+          echo "   • ⚠️ No signals if all models fail validation"
+          echo "   • 🔴 Automatic model rejection on failure"
+          echo "   • 📝 Full audit trail in logs"
+          echo ""
+          echo "   CODE QUALITY:"
+          echo "   • 🧹 Streamlined (-40% lines)"
+          echo "   • 🎯 Production-ready architecture"
+          echo "   • 📊 Enhanced logging & monitoring"
+          echo "   • ⚡ Optimized performance"
           echo ""
           echo "=========================================="
           echo "✅ Pipeline execution completed"

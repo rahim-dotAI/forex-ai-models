@@ -1,311 +1,71 @@
 {
-  "timestamp": "2025-11-19T22:39:43.655265+00:00",
-  "iteration": 1,
-  "system": "OMEGA",
-  "version": "v11.2-ultimate-fixed-seeds",
-  "mode": "live_trading",
-  "models": {
-    "Alpha Momentum": {
-      "EUR/USD": {
-        "direction": "HOLD",
-        "last_price": 1.153,
-        "SL": 1.153,
-        "TP": 1.153,
-        "atr": 0.0012688038689750356,
-        "score_1_100": 33,
-        "signal_strength": -0.061039922705662296,
-        "model": "Alpha Momentum",
-        "timestamp": "2025-11-19T22:33:39.472498+00:00",
-        "rr_ratio": 0.0,
-        "regime": {
-          "volatility": "low",
-          "trend": "ranging",
-          "strength": 55.41421144986792
-        }
-      },
-      "GBP/USD": {
-        "direction": "SELL",
-        "last_price": 1.305,
-        "SL": 1.3088105767612197,
-        "TP": 1.2995883096967424,
-        "atr": 0.0018038967677525314,
-        "score_1_100": 38,
-        "signal_strength": -0.13587896040315814,
-        "model": "Alpha Momentum",
-        "timestamp": "2025-11-19T22:33:39.472498+00:00",
-        "rr_ratio": 1.4201761681675766,
-        "regime": {
-          "volatility": "normal",
-          "trend": "trending",
-          "strength": 81.76610468027461
-        }
-      },
-      "USD/JPY": {
-        "direction": "BUY",
-        "last_price": 157.1,
-        "SL": 156.63783125284047,
-        "TP": 157.75636104038784,
-        "atr": 0.2187870134626126,
-        "score_1_100": 90,
-        "signal_strength": 1.4737541100399716,
-        "model": "Alpha Momentum",
-        "timestamp": "2025-11-19T22:33:39.472498+00:00",
-        "rr_ratio": 1.420176168167637,
-        "regime": {
-          "volatility": "normal",
-          "trend": "trending",
-          "strength": 61.086631464708695
-        }
-      },
-      "AUD/USD": {
-        "direction": "HOLD",
-        "last_price": 0.6478,
-        "SL": 0.6478,
-        "TP": 0.6478,
-        "atr": 0.004783008916037422,
-        "score_1_100": 34,
-        "signal_strength": -0.07746990091045453,
-        "model": "Alpha Momentum",
-        "timestamp": "2025-11-19T22:33:39.472498+00:00",
-        "rr_ratio": 0.0,
-        "regime": {
-          "volatility": "low",
-          "trend": "ranging",
-          "strength": 58.67769542421685
-        }
-      }
+  "timestamp": "2025-11-19T23:00:52.832971+00:00",
+  "iteration": 2,
+  "version": "v12.0-production",
+  "mode": "paper_trading",
+  "signals": {
+    "EUR/USD": {
+      "direction": "HOLD",
+      "last_price": 1.153,
+      "SL": 1.153,
+      "TP": 1.153,
+      "confidence": 59,
+      "model": "Conservative Trend",
+      "timestamp": "2025-11-19T23:00:52.831760+00:00",
+      "rr_ratio": 0.0
     },
-    "Beta Conservative": {
-      "EUR/USD": {
-        "direction": "HOLD",
-        "last_price": 1.153,
-        "SL": 1.153,
-        "TP": 1.153,
-        "atr": 0.0012688038689750356,
-        "score_1_100": 35,
-        "signal_strength": -0.08798596879358628,
-        "model": "Beta Conservative",
-        "timestamp": "2025-11-19T22:35:49.172116+00:00",
-        "rr_ratio": 0.0,
-        "regime": {
-          "volatility": "low",
-          "trend": "ranging",
-          "strength": 55.41421144986792
-        }
-      },
-      "GBP/USD": {
-        "direction": "SELL",
-        "last_price": 1.305,
-        "SL": 1.307164676121303,
-        "TP": 1.3002057442861708,
-        "atr": 0.0018038967677525314,
-        "score_1_100": 39,
-        "signal_strength": -0.1644225346486899,
-        "model": "Beta Conservative",
-        "timestamp": "2025-11-19T22:35:49.172116+00:00",
-        "rr_ratio": 2.214768143209962,
-        "regime": {
-          "volatility": "normal",
-          "trend": "trending",
-          "strength": 81.76610468027461
-        }
-      },
-      "USD/JPY": {
-        "direction": "BUY",
-        "last_price": 157.09,
-        "SL": 156.82745558384488,
-        "TP": 157.67147500907805,
-        "atr": 0.2187870134626126,
-        "score_1_100": 90,
-        "signal_strength": 1.4856023430492526,
-        "model": "Beta Conservative",
-        "timestamp": "2025-11-19T22:35:49.172116+00:00",
-        "rr_ratio": 2.2147681432100486,
-        "regime": {
-          "volatility": "normal",
-          "trend": "trending",
-          "strength": 61.086631464708695
-        }
-      },
-      "AUD/USD": {
-        "direction": "HOLD",
-        "last_price": 0.6478,
-        "SL": 0.6478,
-        "TP": 0.6478,
-        "atr": 0.004783008916037422,
-        "score_1_100": 34,
-        "signal_strength": -0.07664185931653,
-        "model": "Beta Conservative",
-        "timestamp": "2025-11-19T22:35:49.172116+00:00",
-        "rr_ratio": 0.0,
-        "regime": {
-          "volatility": "low",
-          "trend": "ranging",
-          "strength": 58.67769542421685
-        }
-      }
+    "GBP/USD": {
+      "direction": "HOLD",
+      "last_price": 1.305,
+      "SL": 1.305,
+      "TP": 1.305,
+      "confidence": 58,
+      "model": "Conservative Trend",
+      "timestamp": "2025-11-19T23:00:52.831760+00:00",
+      "rr_ratio": 0.0
     },
-    "Gamma Adaptive": {
-      "EUR/USD": {
-        "direction": "HOLD",
-        "last_price": 1.153,
-        "SL": 1.153,
-        "TP": 1.153,
-        "atr": 0.0012688038689750356,
-        "score_1_100": 31,
-        "signal_strength": -0.026517377500275927,
-        "model": "Gamma Adaptive",
-        "timestamp": "2025-11-19T22:39:35.670317+00:00",
-        "rr_ratio": 0.0,
-        "regime": {
-          "volatility": "low",
-          "trend": "ranging",
-          "strength": 55.41421144986792
-        }
-      },
-      "GBP/USD": {
-        "direction": "SELL",
-        "last_price": 1.305,
-        "SL": 1.3077067462048035,
-        "TP": 1.2995883096967424,
-        "atr": 0.0018038967677525314,
-        "score_1_100": 40,
-        "signal_strength": -0.1748962589870815,
-        "model": "Gamma Adaptive",
-        "timestamp": "2025-11-19T22:39:35.670317+00:00",
-        "rr_ratio": 1.999334216726155,
-        "regime": {
-          "volatility": "normal",
-          "trend": "trending",
-          "strength": 81.76610468027461
-        }
-      },
-      "USD/JPY": {
-        "direction": "BUY",
-        "last_price": 157.09,
-        "SL": 156.76171019487546,
-        "TP": 157.74636104038785,
-        "atr": 0.2187870134626126,
-        "score_1_100": 90,
-        "signal_strength": 1.4833187276613498,
-        "model": "Gamma Adaptive",
-        "timestamp": "2025-11-19T22:39:35.670317+00:00",
-        "rr_ratio": 1.9993342167261352,
-        "regime": {
-          "volatility": "normal",
-          "trend": "trending",
-          "strength": 61.086631464708695
-        }
-      },
-      "AUD/USD": {
-        "direction": "HOLD",
-        "last_price": 0.6479,
-        "SL": 0.6479,
-        "TP": 0.6479,
-        "atr": 0.004783008916037422,
-        "score_1_100": 33,
-        "signal_strength": -0.06173180516912373,
-        "model": "Gamma Adaptive",
-        "timestamp": "2025-11-19T22:39:35.670317+00:00",
-        "rr_ratio": 0.0,
-        "regime": {
-          "volatility": "low",
-          "trend": "ranging",
-          "strength": 58.67769542421685
-        }
-      }
+    "USD/JPY": {
+      "direction": "BUY",
+      "last_price": 157.08,
+      "SL": 156.70689206285047,
+      "TP": 157.57816127750732,
+      "confidence": 95,
+      "model": "Conservative Trend",
+      "timestamp": "2025-11-19T23:00:52.831760+00:00",
+      "rr_ratio": 1.3351666579734138
+    },
+    "AUD/USD": {
+      "direction": "HOLD",
+      "last_price": 0.6478,
+      "SL": 0.6478,
+      "TP": 0.6478,
+      "confidence": 59,
+      "model": "Conservative Trend",
+      "timestamp": "2025-11-19T23:00:52.831760+00:00",
+      "rr_ratio": 0.0
     }
   },
-  "environment": "Google Colab",
-  "learning": {
-    "iterations": 1,
-    "adaptation_score": 41.78569154883876,
-    "total_successes": 0,
-    "trend": "\ud83d\udcc9 Adjusting",
-    "learning_curve": [
-      58.92845774419381
-    ]
+  "stats": {
+    "total_iterations": 2,
+    "successful_models": 1,
+    "success_rate": "50.0%"
   },
-  "model_quality": {
-    "Gamma Adaptive": {
-      "quality_score": 63.45238020148811,
-      "val_train_ratio": 0.5178571321301023,
-      "validation_accuracy": 25.0,
-      "test_accuracy": 0,
-      "generalization_score": 0.7817460317460317,
-      "recommended": true,
-      "overfit_warning": true
-    },
-    "Beta Conservative": {
-      "quality_score": 54.149999216000026,
-      "val_train_ratio": 0.5599999888000003,
-      "validation_accuracy": 28.000000000000004,
-      "test_accuracy": 0,
-      "generalization_score": 0.37333333333333335,
-      "recommended": false,
-      "overfit_warning": true
-    },
-    "Alpha Momentum": {
-      "quality_score": 29.262404508013514,
-      "val_train_ratio": 0.23636363226666673,
-      "validation_accuracy": 13.636363636363635,
-      "test_accuracy": 0,
-      "generalization_score": 0.2988983416448947,
-      "recommended": false,
-      "overfit_warning": true
-    }
-  },
-  "circuit_breaker_status": "closed",
-  "dynamic_seed": 662122396,
-  "updated_files": 24,
-  "seed_fix": {
-    "description": "FIXED: Seed now uses (iteration+1, timestamp, process_id) hash for guaranteed uniqueness",
-    "iteration_used": 1,
-    "seed_value": 662122396,
-    "method": "hash((next_iteration, time.time(), os.getpid())) % 2^31"
-  },
-  "features": {
-    "from_v11_0": [
-      "Detailed logging throughout execution",
-      "Progress tracking during initialization",
-      "Generation-by-generation statistics",
-      "Comprehensive model quality reporting",
-      "Detailed anti-overfit analysis",
-      "Complete documentation in output"
-    ],
-    "from_v11_1": [
-      "Dynamic random seeds per iteration",
-      "Live data updates with backups",
-      "Enhanced data cleaning (NaN handling)",
-      "Better compression handling",
-      "Improved file filtering"
-    ],
-    "new_in_fixed": [
-      "FIXED: Truly unique seeds every run",
-      "Uses iteration+1 instead of current",
-      "Hash-based seed generation",
-      "Process ID included for parallel safety",
-      "Guaranteed no repetitive signals"
-    ]
-  },
-  "fixes": {
-    "fixed_random_seed": "Dynamic: 662122396 (TRULY UNIQUE)",
-    "seed_method": "hash((iteration+1, time, pid))",
-    "walk_forward_split": "45% train, 5% gap, 30% val, 20% test",
-    "cross_validation_folds": 3,
-    "consistency_calculation": "Fixed coefficient of variation",
-    "balanced_penalties": "Max 60% severity",
+  "validation": {
+    "min_val_accuracy": 50.0,
     "min_val_train_ratio": 0.75,
-    "larger_populations": "14-18 individuals",
-    "removed_ensemble": "Single run optimization",
-    "live_data_updates": 24,
-    "backup_system": "Automatic .bak creation"
+    "models_trained": 1,
+    "models_passed": 1
   },
-  "anti_overfit": {
-    "val_weight": "60%",
-    "overfit_penalty": "Balanced",
-    "min_ratio": 0.75,
-    "cross_validation": "3-fold walk-forward",
-    "max_severity": 0.6
-  }
+  "improvements": [
+    "\ud83d\uded1 Hard validation stops (min 50% val accuracy)",
+    "\ud83d\udee1\ufe0f Strict val/train ratio enforcement (\u22650.75)",
+    "\ud83d\udcca 5-fold cross-validation for robustness",
+    "\ud83c\udfaf Simplified signal (2 components vs 4)",
+    "\u26a1 Stronger regularization (mutation=0.35)",
+    "\ud83d\udcc9 Smaller training sets (max 500 samples)",
+    "\ud83d\udd04 Larger temporal gap (10% vs 5%)",
+    "\u2705 Paper trading mode by default",
+    "\ud83e\uddf9 Streamlined code (-40% lines)",
+    "\u26a0\ufe0f No signals if all models fail"
+  ]
 }

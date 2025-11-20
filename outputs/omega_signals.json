@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-11-20T23:04:17.934718+00:00",
-  "iteration": 6,
+  "timestamp": "2025-11-20T23:14:54.187602+00:00",
+  "iteration": 7,
   "version": "v13.0-enhanced-production",
   "mode": "paper_trading",
   "signals": {
@@ -11,7 +11,7 @@
       "TP": 1.152,
       "confidence": 30,
       "model": "Conservative Trend",
-      "timestamp": "2025-11-20T23:02:53.890608+00:00",
+      "timestamp": "2025-11-20T23:13:34.477493+00:00",
       "rr_ratio": 0.0,
       "regime": "RANGING",
       "session": "US",
@@ -24,20 +24,20 @@
       "TP": 1.307,
       "confidence": 30,
       "model": "Conservative Trend",
-      "timestamp": "2025-11-20T23:02:53.890608+00:00",
+      "timestamp": "2025-11-20T23:13:34.477493+00:00",
       "rr_ratio": 0.0,
       "regime": "RANGING",
       "session": "US",
-      "momentum_score": -3
+      "momentum_score": -2
     },
     "USD/JPY": {
       "direction": "HOLD",
-      "last_price": 157.46,
-      "SL": 157.46,
-      "TP": 157.46,
+      "last_price": 157.35,
+      "SL": 157.35,
+      "TP": 157.35,
       "confidence": 52,
       "model": "Conservative Trend",
-      "timestamp": "2025-11-20T23:02:53.890608+00:00",
+      "timestamp": "2025-11-20T23:13:34.477493+00:00",
       "rr_ratio": 0.0,
       "regime": "RANGING",
       "session": "US",
@@ -45,37 +45,37 @@
     },
     "AUD/USD": {
       "direction": "HOLD",
-      "last_price": 0.6447,
-      "SL": 0.6447,
-      "TP": 0.6447,
+      "last_price": 0.6437,
+      "SL": 0.6437,
+      "TP": 0.6437,
       "confidence": 65,
       "model": "Conservative Trend",
-      "timestamp": "2025-11-20T23:02:53.890608+00:00",
+      "timestamp": "2025-11-20T23:13:34.477493+00:00",
       "rr_ratio": 0.0,
       "regime": "TRENDING",
       "session": "US",
-      "momentum_score": -2
+      "momentum_score": -1
     }
   },
   "stats": {
-    "total_iterations": 6,
-    "successful_models": 10,
-    "success_rate": "166.7%"
+    "total_iterations": 7,
+    "successful_models": 12,
+    "success_rate": "171.4%"
   },
   "model_results": {
     "Conservative Trend": {
       "passed": true,
-      "train_acc": 62.5,
-      "val_acc": 59.25925925925925,
-      "test_acc": 54.285714285714285,
-      "test_pnl": 0.1966999505035647
+      "train_acc": 68.75,
+      "val_acc": 61.53846153846154,
+      "test_acc": 52.94117647058824,
+      "test_pnl": -1.2960662205085196
     },
     "Aggressive Opportunist": {
       "passed": true,
-      "train_acc": 61.53846153846154,
-      "val_acc": 56.25,
-      "test_acc": 58.333333333333336,
-      "test_pnl": 12.183196218017446
+      "train_acc": 60.0,
+      "val_acc": 52.94117647058824,
+      "test_acc": 57.692307692307686,
+      "test_pnl": 13.642909532752514
     }
   },
   "validation": {

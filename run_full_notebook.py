@@ -1,5 +1,5 @@
 import nbformat
-from nbconvert.preprocessors import ExecutePreprocessor, CellExecutionError
+from nbconvert.preprocessors import ExecutePreprocessor
 import sys
 import os
 import time

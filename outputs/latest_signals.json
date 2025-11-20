@@ -1,17 +1,72 @@
 {
-  "timestamp": "2025-11-20T16:27:43.700127+00:00",
+  "timestamp": "2025-11-20T19:25:25.329366+00:00",
   "iteration": 1,
   "pairs": {
+    "GBP/USD": {
+      "signals": {
+        "1d": {
+          "signal": 0,
+          "sgd_pred": 0,
+          "rf_pred": 0,
+          "live": 1.3056,
+          "SL": 1.28883,
+          "TP": 1.32237,
+          "confidence": 0.0,
+          "timeframe": "1d"
+        },
+        "1m": {
+          "signal": 1,
+          "sgd_pred": 1,
+          "rf_pred": 0,
+          "live": 1.3086607456207275,
+          "SL": 1.30845,
+          "TP": 1.30888,
+          "confidence": 0.5,
+          "timeframe": "1m"
+        },
+        "15m": {
+          "signal": 1,
+          "sgd_pred": 1,
+          "rf_pred": 1,
+          "live": 1.3086607456207275,
+          "SL": 1.30694,
+          "TP": 1.31038,
+          "confidence": 1.0,
+          "timeframe": "15m"
+        },
+        "5m": {
+          "signal": 1,
+          "sgd_pred": 1,
+          "rf_pred": 1,
+          "live": 1.3086607456207275,
+          "SL": 1.3079,
+          "TP": 1.30942,
+          "confidence": 1.0,
+          "timeframe": "5m"
+        },
+        "1h": {
+          "signal": 1,
+          "sgd_pred": 1,
+          "rf_pred": 1,
+          "live": 1.3086607456207275,
+          "SL": 1.30511,
+          "TP": 1.31221,
+          "confidence": 1.0,
+          "timeframe": "1h"
+        }
+      },
+      "aggregated": "SHORT"
+    },
     "EUR/USD": {
       "signals": {
         "15m": {
           "signal": 1,
           "sgd_pred": 1,
-          "rf_pred": 0,
-          "live": 1.154068112373352,
-          "SL": 1.15272,
+          "rf_pred": 1,
+          "live": 1.154334545135498,
+          "SL": 1.15325,
           "TP": 1.15542,
-          "confidence": 0.5,
+          "confidence": 1.0,
           "timeframe": "15m"
         },
         "1d": {
@@ -24,93 +79,38 @@
           "confidence": 0.0,
           "timeframe": "1d"
         },
-        "1m": {
-          "signal": 0,
-          "sgd_pred": 0,
-          "rf_pred": 0,
-          "live": 1.154068112373352,
-          "SL": 1.15381,
-          "TP": 1.15432,
-          "confidence": 0.0,
-          "timeframe": "1m"
+        "5m": {
+          "signal": 1,
+          "sgd_pred": 1,
+          "rf_pred": 1,
+          "live": 1.154334545135498,
+          "SL": 1.15388,
+          "TP": 1.15479,
+          "confidence": 1.0,
+          "timeframe": "5m"
         },
         "1h": {
           "signal": 1,
           "sgd_pred": 1,
           "rf_pred": 1,
-          "live": 1.154068112373352,
-          "SL": 1.15173,
-          "TP": 1.15641,
+          "live": 1.154334545135498,
+          "SL": 1.15213,
+          "TP": 1.15654,
           "confidence": 1.0,
           "timeframe": "1h"
         },
-        "5m": {
-          "signal": 0,
-          "sgd_pred": 0,
-          "rf_pred": 0,
-          "live": 1.154068112373352,
-          "SL": 1.15322,
-          "TP": 1.15492,
-          "confidence": 0.0,
-          "timeframe": "5m"
-        }
-      },
-      "aggregated": "SHORT"
-    },
-    "GBP/USD": {
-      "signals": {
-        "15m": {
-          "signal": 0,
-          "sgd_pred": 0,
-          "rf_pred": 0,
-          "live": 1.3094489574432373,
-          "SL": 1.30738,
-          "TP": 1.31152,
-          "confidence": 0.0,
-          "timeframe": "15m"
-        },
-        "1h": {
+        "1m": {
           "signal": 1,
           "sgd_pred": 1,
           "rf_pred": 1,
-          "live": 1.3094489574432373,
-          "SL": 1.30596,
-          "TP": 1.31294,
+          "live": 1.154334545135498,
+          "SL": 1.15425,
+          "TP": 1.15442,
           "confidence": 1.0,
-          "timeframe": "1h"
-        },
-        "5m": {
-          "signal": 0,
-          "sgd_pred": 0,
-          "rf_pred": 0,
-          "live": 1.3094489574432373,
-          "SL": 1.30836,
-          "TP": 1.31053,
-          "confidence": 0.0,
-          "timeframe": "5m"
-        },
-        "1m": {
-          "signal": 0,
-          "sgd_pred": 0,
-          "rf_pred": 0,
-          "live": 1.3094489574432373,
-          "SL": 1.30918,
-          "TP": 1.30972,
-          "confidence": 0.0,
           "timeframe": "1m"
-        },
-        "1d": {
-          "signal": 0,
-          "sgd_pred": 0,
-          "rf_pred": 0,
-          "live": 1.3094489574432373,
-          "SL": 1.2918,
-          "TP": 1.3271,
-          "confidence": 0.0,
-          "timeframe": "1d"
         }
       },
-      "aggregated": "SHORT"
+      "aggregated": "LONG"
     },
     "USD/JPY": {
       "signals": {
@@ -118,77 +118,57 @@
           "signal": 1,
           "sgd_pred": 1,
           "rf_pred": 1,
-          "live": 157.48199462890625,
-          "SL": 154.92437,
-          "TP": 160.03962,
+          "live": 157.46499633789062,
+          "SL": 154.90737,
+          "TP": 160.02262,
           "confidence": 1.0,
           "timeframe": "1d"
         },
         "1h": {
+          "signal": 1,
+          "sgd_pred": 1,
+          "rf_pred": 1,
+          "live": 157.46099853515625,
+          "SL": 156.92034,
+          "TP": 158.00165,
+          "confidence": 1.0,
+          "timeframe": "1h"
+        },
+        "15m": {
           "signal": 0,
           "sgd_pred": 0,
           "rf_pred": 0,
-          "live": 157.49600219726562,
-          "SL": 156.92844,
-          "TP": 158.06357,
+          "live": 157.46200561523438,
+          "SL": 157.1316,
+          "TP": 157.79241,
           "confidence": 0.0,
-          "timeframe": "1h"
-        },
-        "5m": {
-          "signal": 1,
-          "sgd_pred": 1,
-          "rf_pred": 1,
-          "live": 157.50599670410156,
-          "SL": 157.27393,
-          "TP": 157.73807,
-          "confidence": 1.0,
-          "timeframe": "5m"
+          "timeframe": "15m"
         },
         "1m": {
-          "signal": 1,
-          "sgd_pred": 1,
-          "rf_pred": 1,
-          "live": 157.49400329589844,
-          "SL": 157.37841,
-          "TP": 157.6096,
-          "confidence": 1.0,
+          "signal": 0,
+          "sgd_pred": 0,
+          "rf_pred": 0,
+          "live": 157.46800231933594,
+          "SL": 157.40662,
+          "TP": 157.52939,
+          "confidence": 0.0,
           "timeframe": "1m"
         },
-        "15m": {
-          "signal": 1,
-          "sgd_pred": 1,
-          "rf_pred": 1,
-          "live": 157.5019989013672,
-          "SL": 157.14253,
-          "TP": 157.86147,
-          "confidence": 1.0,
-          "timeframe": "15m"
+        "5m": {
+          "signal": 0,
+          "sgd_pred": 0,
+          "rf_pred": 0,
+          "live": 157.46099853515625,
+          "SL": 157.2973,
+          "TP": 157.62469,
+          "confidence": 0.0,
+          "timeframe": "5m"
         }
       },
       "aggregated": "LONG"
     },
     "AUD/USD": {
       "signals": {
-        "1m": {
-          "signal": 0,
-          "sgd_pred": 0,
-          "rf_pred": 0,
-          "live": 0.6467886567115784,
-          "SL": 0.64647,
-          "TP": 0.64711,
-          "confidence": 0.0,
-          "timeframe": "1m"
-        },
-        "15m": {
-          "signal": 0,
-          "sgd_pred": 0,
-          "rf_pred": 0,
-          "live": 0.6467886567115784,
-          "SL": 0.64564,
-          "TP": 0.64793,
-          "confidence": 0.0,
-          "timeframe": "15m"
-        },
         "1d": {
           "signal": 0,
           "sgd_pred": 0,
@@ -199,24 +179,44 @@
           "confidence": 0.0,
           "timeframe": "1d"
         },
+        "15m": {
+          "signal": 1,
+          "sgd_pred": 1,
+          "rf_pred": 1,
+          "live": 0.6452445387840271,
+          "SL": 0.64388,
+          "TP": 0.64661,
+          "confidence": 1.0,
+          "timeframe": "15m"
+        },
         "5m": {
-          "signal": 0,
-          "sgd_pred": 0,
-          "rf_pred": 0,
-          "live": 0.6467886567115784,
-          "SL": 0.64617,
-          "TP": 0.64741,
-          "confidence": 0.0,
+          "signal": 1,
+          "sgd_pred": 1,
+          "rf_pred": 1,
+          "live": 0.6452445387840271,
+          "SL": 0.64464,
+          "TP": 0.64585,
+          "confidence": 1.0,
           "timeframe": "5m"
         },
-        "1h": {
+        "1m": {
           "signal": 0,
           "sgd_pred": 0,
           "rf_pred": 0,
-          "live": 0.6467886567115784,
-          "SL": 0.64469,
-          "TP": 0.64888,
+          "live": 0.6452445387840271,
+          "SL": 0.64497,
+          "TP": 0.64552,
           "confidence": 0.0,
+          "timeframe": "1m"
+        },
+        "1h": {
+          "signal": 1,
+          "sgd_pred": 1,
+          "rf_pred": 1,
+          "live": 0.6452445387840271,
+          "SL": 0.64281,
+          "TP": 0.64768,
+          "confidence": 1.0,
           "timeframe": "1h"
         }
       },

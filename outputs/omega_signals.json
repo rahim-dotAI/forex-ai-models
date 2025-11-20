@@ -1,71 +1,76 @@
 {
-  "timestamp": "2025-11-20T19:27:10.934660+00:00",
+  "timestamp": "2025-11-20T21:38:30.906273+00:00",
   "iteration": 1,
-  "version": "v12.0-production",
+  "version": "v12.1-production-sync-diversity-fixed",
   "mode": "paper_trading",
   "signals": {
     "EUR/USD": {
       "direction": "HOLD",
-      "last_price": 1.154,
-      "SL": 1.154,
-      "TP": 1.154,
+      "last_price": 1.152,
+      "SL": 1.152,
+      "TP": 1.152,
       "confidence": 50,
       "model": "Conservative Trend",
-      "timestamp": "2025-11-20T19:27:10.933522+00:00",
+      "timestamp": "2025-11-20T21:37:12.135717+00:00",
       "rr_ratio": 0.0
     },
     "GBP/USD": {
       "direction": "HOLD",
-      "last_price": 1.308,
-      "SL": 1.308,
-      "TP": 1.308,
+      "last_price": 1.306,
+      "SL": 1.306,
+      "TP": 1.306,
       "confidence": 50,
       "model": "Conservative Trend",
-      "timestamp": "2025-11-20T19:27:10.933522+00:00",
+      "timestamp": "2025-11-20T21:37:12.135717+00:00",
       "rr_ratio": 0.0
     },
     "USD/JPY": {
       "direction": "BUY",
-      "last_price": 157.47,
-      "SL": 157.03618530627406,
-      "TP": 158.18999119349888,
+      "last_price": 157.54,
+      "SL": 157.1063989705187,
+      "TP": 158.09851485221535,
       "confidence": 95,
       "model": "Conservative Trend",
-      "timestamp": "2025-11-20T19:27:10.933522+00:00",
-      "rr_ratio": 1.6596745198163871
+      "timestamp": "2025-11-20T21:37:12.135717+00:00",
+      "rr_ratio": 1.2880847005448932
     },
     "AUD/USD": {
       "direction": "HOLD",
-      "last_price": 0.645,
-      "SL": 0.645,
-      "TP": 0.645,
+      "last_price": 0.6442,
+      "SL": 0.6442,
+      "TP": 0.6442,
       "confidence": 50,
       "model": "Conservative Trend",
-      "timestamp": "2025-11-20T19:27:10.933522+00:00",
+      "timestamp": "2025-11-20T21:37:12.135717+00:00",
       "rr_ratio": 0.0
     }
   },
   "stats": {
     "total_iterations": 1,
-    "successful_models": 1,
-    "success_rate": "100.0%"
+    "successful_models": 2,
+    "success_rate": "200.0%"
+  },
+  "model_results": {
+    "Conservative Trend": {
+      "passed": true,
+      "train_acc": 68.75,
+      "val_acc": 61.111111111111114,
+      "test_acc": 48.38709677419355,
+      "test_pnl": -3.6894302858762793
+    },
+    "Aggressive Opportunist": {
+      "passed": true,
+      "train_acc": 50.0,
+      "val_acc": 56.25,
+      "test_acc": 50.0,
+      "test_pnl": 17.009461905088706
+    }
   },
   "validation": {
     "min_val_accuracy": 50.0,
     "min_val_train_ratio": 0.75,
-    "models_trained": 1,
-    "models_passed": 1
-  },
-  "improvements": [
-    "\ud83d\uded1 Hard validation stops (min 50% val accuracy)",
-    "\ud83d\udee1\ufe0f Strict val/train ratio enforcement (\u22650.75)",
-    "\ud83d\udcca 5-fold cross-validation for robustness",
-    "\ud83c\udfaf Simplified signal (2 components vs 4)",
-    "\u26a1 Stronger regularization (mutation=0.35)",
-    "\ud83d\udcc9 Smaller training sets (max 500 samples)",
-    "\ud83d\udd04 Larger temporal gap (10% vs 5%)",
-    "\u2705 Paper trading mode by default",
-    "\ud83e\uddf9 Streamlined code (-40% lines)",
-    "\u26a0\ufe0f No signals if all models fail"
-  ]
+    "models_trained": 2,
+    "models_passed": 2,
+    "active_signals": 1
+  }
 }

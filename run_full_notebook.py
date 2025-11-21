@@ -35,6 +35,12 @@ class ProgressTrackingExecutor(ExecutePreprocessor):
         
         print(f"\n🔄 Cell {self.current_cell}/{self.total_cells} ({progress:.1f}%) | ⏱️ {elapsed:.1f}s")
         
+        # Show first line preview if it's meaningful
+        if cell.source:
+            first_line = cell.source.split('\n')[0][:60]
+            if first_line.strip() and not first_line.strip().startswith('#'):
+                print(f"📝 {first_line}...")
+        
         cell_start = time.time()
         cell, resources = super().preprocess_cell(cell, resources, cell_index)
         cell_time = time.time() - cell_start
@@ -42,7 +48,9 @@ class ProgressTrackingExecutor(ExecutePreprocessor):
         if cell.outputs:
             for output in cell.outputs:
                 if output.output_type == 'stream':
-                    print(self._clean_output(output.text))
+                    cleaned = self._clean_output(output.text)
+                    if cleaned.strip():
+                        print(cleaned)
                 elif output.output_type == 'error':
                     print(f"❌ {output.ename}: {output.evalue}")
         
@@ -51,26 +59,59 @@ class ProgressTrackingExecutor(ExecutePreprocessor):
         return cell, resources
     
     def _clean_output(self, text):
-        lines = [re.sub(r'\x1b\[[0-9;]*m', '', line) 
-                for line in text.split('\n')
-                if line.strip() and not any(x in line for x in ['[DEBUG]', 'WARNING:'])]
+        if not text:
+            return ""
+        lines = []
+        for line in text.split('\n'):
+            # Skip debug/warning lines
+            if any(skip in line for skip in ['[DEBUG]', 'WARNING:', 'DeprecationWarning']):
+                continue
+            if not line.strip():
+                continue
+            # Remove ANSI color codes
+            line = re.sub(r'\x1b\[[0-9;]*m', '', line)
+            lines.append(line)
         return '\n'.join(lines)
 
 def run_notebook(notebook_path):
+    print(f"📖 Reading: {notebook_path}")
+    
     with open(notebook_path, 'r', encoding='utf-8') as f:
         nb = nbformat.read(f, as_version=4)
     
-    ep = ProgressTrackingExecutor(timeout=2400, kernel_name='python3', allow_errors=False)
+    code_cells = sum(1 for c in nb.cells if c.cell_type == 'code')
+    print(f"✅ Loaded: {len(nb.cells)} cells ({code_cells} code)")
+    print()
+    
+    ep = ProgressTrackingExecutor(
+        timeout=2400,
+        kernel_name='python3',
+        allow_errors=False
+    )
+    
+    print("🚀 Starting full notebook execution...")
+    print()
     
     try:
         start = time.time()
         ep.preprocess(nb, {'metadata': {'path': '.'}})
         duration = time.time() - start
         
-        print(f"\n✅ Completed in {duration/60:.1f} min")
+        print()
+        print("=" * 70)
+        print("✅ FULL NOTEBOOK COMPLETED!")
+        print("=" * 70)
+        print(f"⏱️  Time: {duration:.1f}s ({duration/60:.1f} min)")
+        print(f"📊 Cells: {code_cells}")
+        print("=" * 70)
         return True
     except Exception as e:
-        print(f"\n❌ Failed: {e}")
+        print()
+        print("=" * 70)
+        print("❌ EXECUTION FAILED!")
+        print("=" * 70)
+        print(f"Error: {type(e).__name__}: {str(e)}")
+        print("=" * 70)
         return False
 
 if __name__ == "__main__":
@@ -81,9 +122,27 @@ if __name__ == "__main__":
         sys.exit(1)
     
     print("=" * 70)
-    print("🧠 WEEKDAY FULL NOTEBOOK")
+    print("🧠 WEEKDAY FULL NOTEBOOK - TRADE BEACON v13.0")
+    print("=" * 70)
+    print(f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
+    print(f"📓 {notebook}")
+    print("🔴 Trade Beacon: Enhanced Production Edition")
+    print("   • Market Regime Detection")
+    print("   • Session-Based Trading")
+    print("   • Momentum Confirmation")
+    print("   • Strict Anti-Overfitting")
+    print("=" * 70)
+    print()
+    
+    success = run_notebook(notebook)
+    
+    print()
+    print("=" * 70)
+    if success:
+        print("✅ WEEKDAY EXECUTION COMPLETED")
+    else:
+        print("❌ WEEKDAY EXECUTION FAILED")
     print(f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
     print("=" * 70)
     
-    success = run_notebook(notebook)
     sys.exit(0 if success else 1)

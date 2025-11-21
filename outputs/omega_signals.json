@@ -1,46 +1,46 @@
 {
-  "timestamp": "2025-11-21T12:37:30.533252+00:00",
-  "iteration": 11,
+  "timestamp": "2025-11-21T16:25:06.036876+00:00",
+  "iteration": 12,
   "version": "v13.0-enhanced-production",
   "mode": "paper_trading",
   "signals": {
     "EUR/USD": {
       "direction": "HOLD",
-      "last_price": 1.151,
-      "SL": 1.151,
-      "TP": 1.151,
-      "confidence": 39,
-      "model": "Conservative Trend",
-      "timestamp": "2025-11-21T12:36:44.977771+00:00",
+      "last_price": 1.149,
+      "SL": 1.149,
+      "TP": 1.149,
+      "confidence": 30,
+      "model": "Aggressive Opportunist",
+      "timestamp": "2025-11-21T16:25:06.026776+00:00",
       "rr_ratio": 0.0,
       "regime": "RANGING",
-      "session": "EUROPEAN",
-      "momentum_score": -4
+      "session": "US",
+      "momentum_score": -1
     },
     "GBP/USD": {
       "direction": "HOLD",
-      "last_price": 1.306,
-      "SL": 1.306,
-      "TP": 1.306,
-      "confidence": 42,
-      "model": "Conservative Trend",
-      "timestamp": "2025-11-21T12:36:44.977771+00:00",
+      "last_price": 1.307,
+      "SL": 1.307,
+      "TP": 1.307,
+      "confidence": 36,
+      "model": "Aggressive Opportunist",
+      "timestamp": "2025-11-21T16:25:06.026776+00:00",
       "rr_ratio": 0.0,
       "regime": "RANGING",
-      "session": "EUROPEAN",
+      "session": "US",
       "momentum_score": -4
     },
     "USD/JPY": {
       "direction": "HOLD",
-      "last_price": 156.71,
-      "SL": 156.71,
-      "TP": 156.71,
-      "confidence": 47,
+      "last_price": 156.7,
+      "SL": 156.7,
+      "TP": 156.7,
+      "confidence": 37,
       "model": "Aggressive Opportunist",
-      "timestamp": "2025-11-21T12:37:30.523635+00:00",
+      "timestamp": "2025-11-21T16:25:06.026776+00:00",
       "rr_ratio": 0.0,
       "regime": "RANGING",
-      "session": "EUROPEAN",
+      "session": "US",
       "momentum_score": 1
     },
     "AUD/USD": {
@@ -48,41 +48,41 @@
       "last_price": 0.6435,
       "SL": 0.6435,
       "TP": 0.6435,
-      "confidence": 58,
-      "model": "Conservative Trend",
-      "timestamp": "2025-11-21T12:36:44.977771+00:00",
+      "confidence": 30,
+      "model": "Aggressive Opportunist",
+      "timestamp": "2025-11-21T16:25:06.026776+00:00",
       "rr_ratio": 0.0,
-      "regime": "TRENDING",
-      "session": "EUROPEAN",
-      "momentum_score": -3
+      "regime": "RANGING",
+      "session": "US",
+      "momentum_score": -4
     }
   },
   "stats": {
-    "total_iterations": 11,
-    "successful_models": 20,
-    "success_rate": "181.8%"
+    "total_iterations": 12,
+    "successful_models": 21,
+    "success_rate": "175.0%"
   },
   "model_results": {
     "Conservative Trend": {
-      "passed": true,
-      "train_acc": 50.0,
-      "val_acc": 66.66666666666666,
-      "test_acc": 80.0,
-      "test_pnl": 2.7440453239940927
+      "passed": false,
+      "train_acc": 0,
+      "val_acc": 0,
+      "test_acc": 0,
+      "test_pnl": 0
     },
     "Aggressive Opportunist": {
       "passed": true,
-      "train_acc": 64.28571428571429,
-      "val_acc": 55.55555555555556,
-      "test_acc": 57.14285714285714,
-      "test_pnl": 18.00660012760478
+      "train_acc": 50.0,
+      "val_acc": 66.66666666666666,
+      "test_acc": 50.0,
+      "test_pnl": -1.5945767333810157
     }
   },
   "validation": {
     "min_val_accuracy": 50.0,
     "min_val_train_ratio": 0.75,
     "models_trained": 2,
-    "models_passed": 2,
+    "models_passed": 1,
     "active_signals": 0
   }
 }

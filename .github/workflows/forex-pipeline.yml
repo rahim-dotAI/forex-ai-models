@@ -74,21 +74,87 @@ jobs:
         id: data
         run: |
           mkdir -p data/processed database .github/run_history
+          
+          # Count after potential cleanup
           PICKLE_COUNT=$(find data/processed -name "*.pkl" -type f ! -name "*_model.pkl" 2>/dev/null | wc -l)
+          
           [ -f ".github/run_history/run_counter.txt" ] && RUN_NUM=$(cat .github/run_history/run_counter.txt) || RUN_NUM=0
           RUN_NUM=$((RUN_NUM + 1))
           echo $RUN_NUM > .github/run_history/run_counter.txt
           echo "run_number=$RUN_NUM" >> $GITHUB_OUTPUT
           
-          if [ $PICKLE_COUNT -ge 4 ]; then
+          # If we cleaned corrupted files, force full notebook
+          if [ "${keep_data}" = "false" ]; then
+            echo "has_data=false" >> $GITHUB_OUTPUT
+            echo "⚠️ Data was corrupted and cleaned - will regenerate"
+          elif [ $PICKLE_COUNT -ge 4 ]; then
             echo "has_data=true" >> $GITHUB_OUTPUT
-            echo "✅ Found $PICKLE_COUNT data files"
+            echo "✅ Found $PICKLE_COUNT valid data files"
           else
             echo "has_data=false" >> $GITHUB_OUTPUT
             echo "⚠️ Only $PICKLE_COUNT files - will run full notebook"
           fi
           
           [ $((RUN_NUM % 10)) -eq 0 ] && echo "send_report=true" >> $GITHUB_OUTPUT || echo "send_report=false" >> $GITHUB_OUTPUT
+
+      - name: Repair Corrupted Pickle Files
+        run: |
+          echo "🔧 Checking pickle files for corruption..."
+          
+          cat > check_pickles.py << 'EOF'
+          import os
+          import pickle
+          import pandas as pd
+          from pathlib import Path
+          
+          def is_pickle_corrupted(filepath):
+              """Quick check if pickle is readable"""
+              try:
+                  pd.read_pickle(filepath, compression='gzip')
+                  return False
+              except:
+                  try:
+                      pd.read_pickle(filepath, compression=None)
+                      return False
+                  except:
+                      return True
+          
+          corrupted_count = 0
+          total_count = 0
+          
+          # Check data/processed
+          processed_dir = Path("data/processed")
+          if processed_dir.exists():
+              for pkl_file in processed_dir.glob("*.pkl"):
+                  if any(x in pkl_file.name for x in ['_model', '_sgd_', '_rf_']):
+                      continue
+                  
+                  total_count += 1
+                  if is_pickle_corrupted(pkl_file):
+                      corrupted_count += 1
+          
+          print(f"📊 Data files: {total_count}")
+          print(f"❌ Corrupted: {corrupted_count}")
+          
+          if corrupted_count > 0:
+              print(f"\n⚠️ {corrupted_count}/{total_count} files are corrupted")
+              print("🧹 Will delete and regenerate all data")
+              exit(1)
+          else:
+              print("✅ All pickle files are valid")
+              exit(0)
+          EOF
+          
+          if python check_pickles.py; then
+            echo "keep_data=true" >> $GITHUB_ENV
+          else
+            echo "keep_data=false" >> $GITHUB_ENV
+            echo "🧹 Removing all pickle files for fresh start..."
+            find data/processed -name "*.pkl" -type f ! -name "*_model.pkl" -delete 2>/dev/null || true
+            find rl_memory -name "*.pkl" -type f -delete 2>/dev/null || true
+            rm -f database/memory_v85.db 2>/dev/null || true
+            echo "✅ Cleanup complete - will regenerate from scratch"
+          fi
 
       - name: Verify Notebook
         run: |

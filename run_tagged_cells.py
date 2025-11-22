@@ -1,6 +1,6 @@
 import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor
-import sys, os, time, re
+import sys, os, time, re, traceback
 from datetime import datetime
 
 class TaggedCellExecutor(ExecutePreprocessor):
@@ -47,7 +47,10 @@ class TaggedCellExecutor(ExecutePreprocessor):
                             if any(marker in line for marker in ['✅', '⚠️', '❌', '💰', '🧠', '💾', '📊', 'Iteration', 'Mode:', 'COMPLETE', 'Win Rate', 'Total P&L']):
                                 output_lines.append(line)
                     elif output.output_type == 'error':
-                        output_lines.append(f"❌ ERROR: {output.ename}: {output.evalue}")
+                        # Extract only the error name and message, NOT the traceback
+                        error_name = output.get('ename', 'Error')
+                        error_value = output.get('evalue', 'Unknown error')
+                        output_lines.append(f"❌ {error_name}: {error_value}")
             
             # Print condensed output
             if output_lines:
@@ -68,15 +71,41 @@ class TaggedCellExecutor(ExecutePreprocessor):
             
         except Exception as e:
             cell_time = time.time() - cell_start
+            
+            # Extract ONLY the error type and message, no code
+            error_name = type(e).__name__
+            error_msg = str(e)
+            
+            # If it's a CellExecutionError, extract the real error
+            if 'CellExecutionError' in error_name:
+                # Try to extract just the error name and value
+                if hasattr(e, 'ename') and hasattr(e, 'evalue'):
+                    error_name = e.ename
+                    error_msg = e.evalue
+                else:
+                    # Parse from string if needed
+                    error_lines = str(e).split('\n')
+                    for line in error_lines:
+                        if ': ' in line and not line.strip().startswith('#'):
+                            parts = line.split(': ', 1)
+                            if len(parts) == 2:
+                                error_name = parts[0].strip()
+                                error_msg = parts[1].strip()
+                                break
+            
             print(f"\n❌ Cell {self.current_cell} FAILED after {cell_time:.1f}s")
-            print(f"   Error: {str(e)}")
+            print(f"   Error Type: {error_name}")
+            print(f"   Error Message: {error_msg[:200]}")  # Limit error message length
+            
             self.cell_summaries.append({
                 'cell': self.current_cell,
                 'duration': cell_time,
                 'status': 'failed',
-                'error': str(e)
+                'error': f"{error_name}: {error_msg[:100]}"
             })
-            raise
+            
+            # Re-raise but we've already printed the clean version
+            raise RuntimeError(f"Cell {self.current_cell} execution failed: {error_name}")
         
         return cell, resources
 
@@ -91,20 +120,39 @@ def run_tagged_cells(notebook_path):
     print("="*70)
     
     start = time.time()
-    ep.preprocess(nb, {'metadata': {'path': '.'}})
+    
+    try:
+        ep.preprocess(nb, {'metadata': {'path': '.'}})
+    except Exception as e:
+        # Error already printed in preprocess_cell, just pass through
+        pass
+    
     duration = time.time() - start
     
     # Print summary
     print("\n" + "="*70)
     print("📊 EXECUTION SUMMARY")
     print("="*70)
+    
+    failed_cells = []
     for summary in ep.cell_summaries:
         status_icon = "✅" if summary['status'] == 'success' else "❌"
-        print(f"{status_icon} Cell {summary['cell']}: {summary['duration']:.1f}s - {summary.get('key_outputs', 0)} key outputs")
+        if summary['status'] == 'failed':
+            failed_cells.append(summary['cell'])
+            print(f"{status_icon} Cell {summary['cell']}: {summary['duration']:.1f}s - FAILED")
+            print(f"   └─ {summary.get('error', 'Unknown error')}")
+        else:
+            print(f"{status_icon} Cell {summary['cell']}: {summary['duration']:.1f}s - {summary.get('key_outputs', 0)} key outputs")
+    
     print(f"\n⏱️  Total Duration: {duration:.1f}s")
     print("="*70)
     
-    return True
+    if failed_cells:
+        print(f"\n❌ Execution completed with errors in cells: {', '.join(map(str, failed_cells))}")
+        return False
+    else:
+        print(f"\n✅ All cells executed successfully")
+        return True
 
 if __name__ == "__main__":
     notebook = "AI_Forex_Brain_2.ipynb"
@@ -116,5 +164,6 @@ if __name__ == "__main__":
         success = run_tagged_cells(notebook)
         sys.exit(0 if success else 1)
     except Exception as e:
-        print(f"\n❌ FATAL ERROR: {str(e)}")
+        # Clean error message only
+        print(f"\n❌ FATAL ERROR: {type(e).__name__}")
         sys.exit(1)

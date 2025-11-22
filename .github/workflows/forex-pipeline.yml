@@ -1,4 +1,4 @@
-name: Smart Forex Brain Pipeline (Trade Beacon v17.4 - DEBUG)
+name: Smart Forex Brain Pipeline (Trade Beacon v17.4 - FIXED)
 
 on:
   workflow_dispatch:
@@ -225,10 +225,11 @@ jobs:
           echo "🔍 CHECKING FOR REQUIRED DATA FILES"
           echo "=========================================="
           
-          # Count ALL pickle files in data/processed (no filtering!)
+          # Count ALL pickle files in data/processed (excluding model files)
           PICKLE_COUNT=0
           if [ -d "data/processed" ]; then
-            PICKLE_COUNT=$(find data/processed -name "*.pkl" -type f 2>/dev/null | wc -l)
+            # Exclude model files and backup files
+            PICKLE_COUNT=$(find data/processed -name "*.pkl" -type f ! -name "*_model.pkl" ! -name "*_sgd_model.pkl" ! -name "*_rf_model.pkl" ! -name "*.bak" 2>/dev/null | wc -l)
           fi
           
           PIPELINE_DB_EXISTS=false
@@ -242,27 +243,33 @@ jobs:
           fi
           
           echo "📊 Data Status:"
-          echo "   Processed pickles: $PICKLE_COUNT"
+          echo "   Processed pickles (data files): $PICKLE_COUNT"
           echo "   Pipeline DB: $PIPELINE_DB_EXISTS"
           echo "   RL State: $RL_STATE_EXISTS"
           
           # List some pickle files for debugging
           if [ $PICKLE_COUNT -gt 0 ]; then
             echo ""
-            echo "📄 Sample pickle files found:"
-            find data/processed -name "*.pkl" -type f 2>/dev/null | head -5 | while read file; do
-              echo "   - $(basename "$file")"
+            echo "📄 Sample data pickle files found:"
+            find data/processed -name "*.pkl" -type f ! -name "*_model.pkl" ! -name "*_sgd_model.pkl" ! -name "*_rf_model.pkl" ! -name "*.bak" 2>/dev/null | head -5 | while read file; do
+              SIZE=$(ls -lh "$file" | awk '{print $5}')
+              echo "   - $(basename "$file") ($SIZE)"
             done
           fi
           
+          # Require at least 4 data pickle files to consider we have sufficient data
           if [ $PICKLE_COUNT -ge 4 ]; then
             echo ""
             echo "has_data=true" >> $GITHUB_OUTPUT
-            echo "✅ SUFFICIENT DATA FOUND ($PICKLE_COUNT files)"
+            echo "✅ SUFFICIENT DATA FOUND ($PICKLE_COUNT data files)"
+            echo "   → Will run TAGGED CELLS on weekends"
+            echo "   → Will run FULL NOTEBOOK on weekdays"
           else
             echo ""
             echo "has_data=false" >> $GITHUB_OUTPUT
-            echo "⚠️  INSUFFICIENT DATA - Will run full notebook ($PICKLE_COUNT files)"
+            echo "⚠️  INSUFFICIENT DATA - Will run FULL NOTEBOOK"
+            echo "   Found: $PICKLE_COUNT data files (need at least 4)"
+            echo "   → This will generate initial dataset"
           fi
           
           echo "=========================================="
@@ -592,7 +599,8 @@ jobs:
           if [ -d "data/processed" ]; then
             ls -lah data/processed/ | head -30
             echo ""
-            echo "📊 Pickle count: $(find data/processed -name "*.pkl" -type f 2>/dev/null | wc -l)"
+            echo "📊 Data pickle count: $(find data/processed -name "*.pkl" -type f ! -name "*_model.pkl" ! -name "*_sgd_model.pkl" ! -name "*_rf_model.pkl" 2>/dev/null | wc -l)"
+            echo "📊 Model pickle count: $(find data/processed -name "*_model.pkl" -o -name "*_sgd_model.pkl" -o -name "*_rf_model.pkl" 2>/dev/null | wc -l)"
           else
             echo "❌ data/processed/ directory doesn't exist!"
           fi
@@ -920,14 +928,19 @@ jobs:
             fi
           done
           
-          PICKLE_COUNT=$(find data/processed -name "*.pkl" -type f 2>/dev/null | wc -l)
-          echo ""
-          echo "📊 Post-execution data files: $PICKLE_COUNT pickles"
+          # Separate count for data vs model pickles
+          DATA_PICKLE_COUNT=$(find data/processed -name "*.pkl" -type f ! -name "*_model.pkl" ! -name "*_sgd_model.pkl" ! -name "*_rf_model.pkl" 2>/dev/null | wc -l)
+          MODEL_PICKLE_COUNT=$(find data/processed -name "*_model.pkl" -o -name "*_sgd_model.pkl" -o -name "*_rf_model.pkl" 2>/dev/null | wc -l)
           
-          if [ $PICKLE_COUNT -gt 0 ]; then
+          echo ""
+          echo "📊 Post-execution files:"
+          echo "   Data pickles: $DATA_PICKLE_COUNT"
+          echo "   Model pickles: $MODEL_PICKLE_COUNT"
+          
+          if [ $DATA_PICKLE_COUNT -gt 0 ]; then
             echo ""
-            echo "📄 Sample pickle files:"
-            find data/processed -name "*.pkl" -type f 2>/dev/null | head -10 | while read file; do
+            echo "📄 Sample data pickle files:"
+            find data/processed -name "*.pkl" -type f ! -name "*_model.pkl" ! -name "*_sgd_model.pkl" ! -name "*_rf_model.pkl" 2>/dev/null | head -10 | while read file; do
               SIZE=$(du -h "$file" | cut -f1)
               echo "   - $(basename "$file") ($SIZE)"
             done
@@ -953,20 +966,29 @@ jobs:
           git status --short
           
           echo ""
-          echo "📦 Staging data files..."
+          echo "📦 Staging data files (with -f to override .gitignore)..."
           
-          # Stage all generated data files with explicit paths
-          git add -f data/processed/*.pkl 2>/dev/null || echo "No pickle files to add"
-          git add -f database/*.db 2>/dev/null || echo "No database files to add"
-          git add -f rl_memory/*.pkl 2>/dev/null || echo "No RL memory files to add"
-          git add -f rl_models/*.npz 2>/dev/null || echo "No RL model files to add"
-          git add -f omega_state/*.pkl 2>/dev/null || echo "No omega state files to add"
+          # Stage ALL generated data files with explicit paths and force flag
+          # This overrides .gitignore exclusions
+          git add -f data/processed/*.pkl 2>/dev/null || echo "⚠️  No pickle files to add"
+          git add -f database/*.db 2>/dev/null || echo "⚠️  No database files to add"
+          git add -f rl_memory/*.pkl 2>/dev/null || echo "⚠️  No RL memory files to add"
+          git add -f rl_memory/*.json 2>/dev/null || true
+          git add -f rl_models/*.npz 2>/dev/null || echo "⚠️  No RL model files to add"
+          git add -f omega_state/*.pkl 2>/dev/null || echo "⚠️  No omega state files to add"
+          git add -f omega_state/*.json 2>/dev/null || true
+          git add -f outputs/*.json 2>/dev/null || true
           git add -f .github/run_history/*.json 2>/dev/null || true
           git add -f .github/run_history/*.txt 2>/dev/null || true
           
           echo ""
           echo "📋 Staged files:"
-          git diff --cached --name-only | head -20
+          STAGED_COUNT=$(git diff --cached --name-only | wc -l)
+          echo "   Total: $STAGED_COUNT files"
+          git diff --cached --name-only | head -30
+          if [ $STAGED_COUNT -gt 30 ]; then
+            echo "   ... and $((STAGED_COUNT - 30)) more files"
+          fi
           
           # Check if there are changes to commit
           if git diff --cached --quiet; then
@@ -976,11 +998,19 @@ jobs:
             TIMESTAMP=$(date +'%Y-%m-%d %H:%M UTC')
             RUN_NUM="${{ steps.load_history.outputs.run_number }}"
             
-            FILE_COUNT=$(git diff --cached --name-only | wc -l)
             echo ""
-            echo "📦 Committing $FILE_COUNT files..."
+            echo "📦 Committing $STAGED_COUNT files..."
             
-            git commit -m "💾 Persist ML state - Run #${RUN_NUM} - $TIMESTAMP" || true
+            git commit -m "💾 Persist ML state - Run #${RUN_NUM} - $TIMESTAMP
+
+📊 Committed Files:
+- Data pickles: $(find data/processed -name '*.pkl' -type f ! -name '*_model.pkl' 2>/dev/null | wc -l)
+- Model pickles: $(find data/processed -name '*_model.pkl' -o -name '*_sgd_model.pkl' -o -name '*_rf_model.pkl' 2>/dev/null | wc -l)
+- Database files: $(find database -name '*.db' -type f 2>/dev/null | wc -l)
+- RL state files: $(find rl_memory rl_models -type f 2>/dev/null | wc -l)
+
+🚀 This ensures continuity across runs!" || true
+            
             echo "✅ Data files committed"
           fi
           

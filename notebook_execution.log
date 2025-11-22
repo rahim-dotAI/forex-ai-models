@@ -1,616 +1,9 @@
-======================================================================
-🧠 WEEKDAY FULL NOTEBOOK - TRADE BEACON v13.0
-======================================================================
-📅 2025-11-21 20:20:06 UTC
-📓 AI_Forex_Brain_2.ipynb
-🔴 Trade Beacon: Enhanced Production Edition
-   • Market Regime Detection
-   • Session-Based Trading
-   • Momentum Confirmation
-   • Strict Anti-Overfitting
-======================================================================
+🚀 Starting tagged cells execution...
+📊 Found 2 tagged cells
 
-📖 Reading: AI_Forex_Brain_2.ipynb
-✅ Loaded: 9 cells (9 code)
-
-🚀 Starting full notebook execution...
-
-📊 Total code cells: 9
+🔄 Tagged Cell 1/2
 ======================================================================
-
-🔄 Cell 1/9 (11.1%) | ⏱️ 1.2s
-✅ Alpha Vantage Key: BCJ6...KPXK
-✅ Browserless Token: 2St0...9c3d
-✅ Completed in 0.0s
-
-🔄 Cell 2/9 (22.2%) | ⏱️ 1.3s
-============================================================
-🌍 Environment: GitHub Actions
-📂 Base Folder: /home/runner/work/forex-ai-models/forex-ai-models
-💾 Save Folder: /home/runner/work/forex-ai-models/forex-ai-models
-🔧 Python: 3.11.14
-📍 Working Dir: /home/runner/work/forex-ai-models/forex-ai-models
-============================================================
-✅ All required environment variables present
-📁 Key Paths:
-   CSV: /home/runner/work/forex-ai-models/forex-ai-models/data/raw/yfinance
-   Pickles: /home/runner/work/forex-ai-models/forex-ai-models/data/processed
-   Database: /home/runner/work/forex-ai-models/forex-ai-models/database/memory_v85.db
-   Logs: /home/runner/work/forex-ai-models/forex-ai-models/logs/pipeline.log
-   Signals: /home/runner/work/forex-ai-models/forex-ai-models/outputs/signals.json
-============================================================
-✅ Completed in 0.0s
-
-🔄 Cell 3/9 (33.3%) | ⏱️ 1.3s
-🤖 GitHub Actions Mode: Using current directory
-======================================================================
-🔧 Running in: GitHub Actions
-📂 Working directory: /home/runner/work/forex-ai-models/forex-ai-models
-💾 Save folder: /home/runner/work/forex-ai-models/forex-ai-models
-📦 Repo folder: /home/runner/work/forex-ai-models/forex-ai-models
-🐍 Python: 3.11.14
-======================================================================
-✅ GitHub token configured
-🤖 GitHub Actions Mode
-✅ Repository already checked out by actions/checkout
-📂 Current directory: /home/runner/work/forex-ai-models/forex-ai-models
-✅ Git repository confirmed
-📁 Creating organized directory structure...
-   ✅ data_raw: /home/runner/work/forex-ai-models/forex-ai-models/data/raw/yfinance
-   ✅ data_processed: /home/runner/work/forex-ai-models/forex-ai-models/data/processed
-   ✅ database: /home/runner/work/forex-ai-models/forex-ai-models/database
-   ✅ logs: /home/runner/work/forex-ai-models/forex-ai-models/logs
-   ✅ outputs: /home/runner/work/forex-ai-models/forex-ai-models/outputs
-🔧 Configuring Git...
-✅ Git configured: Forex AI Bot <nakatonabira3@gmail.com>
-======================================================================
-🧾 ENVIRONMENT SUMMARY
-======================================================================
-Environment:      GitHub Actions
-Working Dir:      /home/runner/work/forex-ai-models/forex-ai-models
-Save Folder:      /home/runner/work/forex-ai-models/forex-ai-models
-Repo Folder:      /home/runner/work/forex-ai-models/forex-ai-models
-Repository:       https://github.com/rahim-dotAI/forex-ai-models
-Branch:           main
-Git Repo Exists:  True
-FOREX_PAT Set:    ✅ Yes
-📋 Critical Paths:
-   CSV Folder:    /home/runner/work/forex-ai-models/forex-ai-models/data/raw/yfinance
-   Pickle Folder: /home/runner/work/forex-ai-models/forex-ai-models/data/processed
-   Database:      /home/runner/work/forex-ai-models/forex-ai-models/database/memory_v85.db
-   Logs:          /home/runner/work/forex-ai-models/forex-ai-models/logs/pipeline.log
-   Signals:       /home/runner/work/forex-ai-models/forex-ai-models/outputs/signals.json
-📂 Directory Status:
-  ✅ Repo .git: /home/runner/work/forex-ai-models/forex-ai-models/.git
-  ✅ Data Raw: /home/runner/work/forex-ai-models/forex-ai-models/data/raw/yfinance
-  ✅ Data Processed: /home/runner/work/forex-ai-models/forex-ai-models/data/processed
-  ✅ Database: /home/runner/work/forex-ai-models/forex-ai-models/database
-  ✅ Logs: /home/runner/work/forex-ai-models/forex-ai-models/logs
-  ✅ Outputs: /home/runner/work/forex-ai-models/forex-ai-models/outputs
-======================================================================
-✅ Setup completed successfully!
-======================================================================
-✅ All environment variables exported for downstream cells
-✅ Completed in 0.0s
-
-🔄 Cell 4/9 (44.4%) | ⏱️ 1.3s
-📝 !pip install mplfinance firebase-admin dropbox requests beau...
-Requirement already satisfied: mplfinance in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (0.12.10b0)
-Requirement already satisfied: firebase-admin in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (7.1.0)
-Requirement already satisfied: dropbox in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (12.0.2)
-Requirement already satisfied: requests in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (2.32.5)
-Requirement already satisfied: beautifulsoup4 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (4.14.2)
-Requirement already satisfied: pandas in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (2.3.3)
-Requirement already satisfied: numpy in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (2.3.5)
-Requirement already satisfied: ta in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (0.11.0)
-Requirement already satisfied: yfinance in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (0.2.66)
-Requirement already satisfied: pyppeteer in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (0.0.25)
-Requirement already satisfied: nest_asyncio in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (1.6.0)
-Requirement already satisfied: lightgbm in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (4.6.0)
-Requirement already satisfied: joblib in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (1.5.2)
-Requirement already satisfied: matplotlib in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (3.10.7)
-Requirement already satisfied: alpha_vantage in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (3.0.0)
-Requirement already satisfied: tqdm in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (4.67.1)
-Requirement already satisfied: scikit-learn in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (1.7.2)
-Requirement already satisfied: river in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (0.23.0)
-Requirement already satisfied: cachecontrol>=0.14.3 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from firebase-admin) (0.14.4)
-Requirement already satisfied: google-api-core<3.0.0dev,>=2.25.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin) (2.28.1)
-Requirement already satisfied: google-cloud-firestore>=2.21.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from firebase-admin) (2.21.0)
-Requirement already satisfied: google-cloud-storage>=3.1.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from firebase-admin) (3.6.0)
-Requirement already satisfied: pyjwt>=2.10.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from pyjwt[crypto]>=2.10.1->firebase-admin) (2.10.1)
-Requirement already satisfied: httpx==0.28.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from httpx[http2]==0.28.1->firebase-admin) (0.28.1)
-Requirement already satisfied: anyio in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from httpx==0.28.1->httpx[http2]==0.28.1->firebase-admin) (4.11.0)
-Requirement already satisfied: certifi in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from httpx==0.28.1->httpx[http2]==0.28.1->firebase-admin) (2025.11.12)
-Requirement already satisfied: httpcore==1.* in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from httpx==0.28.1->httpx[http2]==0.28.1->firebase-admin) (1.0.9)
-Requirement already satisfied: idna in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from httpx==0.28.1->httpx[http2]==0.28.1->firebase-admin) (3.11)
-Requirement already satisfied: h2<5,>=3 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from httpx[http2]==0.28.1->firebase-admin) (4.3.0)
-Requirement already satisfied: googleapis-common-protos<2.0.0,>=1.56.2 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin) (1.72.0)
-Requirement already satisfied: protobuf!=3.20.0,!=3.20.1,!=4.21.0,!=4.21.1,!=4.21.2,!=4.21.3,!=4.21.4,!=4.21.5,<7.0.0,>=3.19.5 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin) (6.33.1)
-Requirement already satisfied: proto-plus<2.0.0,>=1.22.3 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin) (1.26.1)
-Requirement already satisfied: google-auth<3.0.0,>=2.14.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin) (2.43.0)
-Requirement already satisfied: charset_normalizer<4,>=2 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from requests) (3.4.4)
-Requirement already satisfied: urllib3<3,>=1.21.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from requests) (2.5.0)
-Requirement already satisfied: grpcio<2.0.0,>=1.33.2 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin) (1.76.0)
-Requirement already satisfied: grpcio-status<2.0.0,>=1.33.2 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin) (1.76.0)
-Requirement already satisfied: cachetools<7.0,>=2.0.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from google-auth<3.0.0,>=2.14.1->google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin) (6.2.2)
-Requirement already satisfied: pyasn1-modules>=0.2.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from google-auth<3.0.0,>=2.14.1->google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin) (0.4.2)
-Requirement already satisfied: rsa<5,>=3.1.4 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from google-auth<3.0.0,>=2.14.1->google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin) (4.9.1)
-Requirement already satisfied: typing-extensions~=4.12 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from grpcio<2.0.0,>=1.33.2->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin) (4.15.0)
-Requirement already satisfied: hyperframe<7,>=6.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from h2<5,>=3->httpx[http2]==0.28.1->firebase-admin) (6.1.0)
-Requirement already satisfied: hpack<5,>=4.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from h2<5,>=3->httpx[http2]==0.28.1->firebase-admin) (4.1.0)
-Requirement already satisfied: h11>=0.16 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from httpcore==1.*->httpx==0.28.1->httpx[http2]==0.28.1->firebase-admin) (0.16.0)
-Requirement already satisfied: pyasn1>=0.1.3 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from rsa<5,>=3.1.4->google-auth<3.0.0,>=2.14.1->google-api-core<3.0.0dev,>=2.25.1->google-api-core[grpc]<3.0.0dev,>=2.25.1; platform_python_implementation != "PyPy"->firebase-admin) (0.6.1)
-Requirement already satisfied: six>=1.12.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from dropbox) (1.17.0)
-Requirement already satisfied: stone<3.3.3,>=2 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from dropbox) (3.3.1)
-Requirement already satisfied: ply>=3.4 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from stone<3.3.3,>=2->dropbox) (3.11)
-Requirement already satisfied: soupsieve>1.2 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from beautifulsoup4) (2.8)
-Requirement already satisfied: python-dateutil>=2.8.2 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from pandas) (2.9.0.post0)
-Requirement already satisfied: pytz>=2020.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from pandas) (2025.2)
-Requirement already satisfied: tzdata>=2022.7 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from pandas) (2025.2)
-Requirement already satisfied: multitasking>=0.0.7 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from yfinance) (0.0.12)
-Requirement already satisfied: platformdirs>=2.0.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from yfinance) (4.5.0)
-Requirement already satisfied: frozendict>=2.3.4 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from yfinance) (2.4.7)
-Requirement already satisfied: peewee>=3.16.2 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from yfinance) (3.18.3)
-Requirement already satisfied: curl_cffi>=0.7 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from yfinance) (0.13.0)
-Requirement already satisfied: websockets>=13.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from yfinance) (15.0.1)
-Requirement already satisfied: pyee in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from pyppeteer) (13.0.0)
-Requirement already satisfied: appdirs in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from pyppeteer) (1.4.4)
-Requirement already satisfied: scipy in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from lightgbm) (1.16.3)
-Requirement already satisfied: contourpy>=1.0.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from matplotlib) (1.3.3)
-Requirement already satisfied: cycler>=0.10 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from matplotlib) (0.12.1)
-Requirement already satisfied: fonttools>=4.22.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from matplotlib) (4.60.1)
-Requirement already satisfied: kiwisolver>=1.3.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from matplotlib) (1.4.9)
-Requirement already satisfied: packaging>=20.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from matplotlib) (25.0)
-Requirement already satisfied: pillow>=8 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from matplotlib) (12.0.0)
-Requirement already satisfied: pyparsing>=3 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from matplotlib) (3.2.5)
-Requirement already satisfied: aiohttp in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from alpha_vantage) (3.13.2)
-Requirement already satisfied: threadpoolctl>=3.1.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from scikit-learn) (3.6.0)
-Requirement already satisfied: msgpack<2.0.0,>=0.5.2 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from cachecontrol>=0.14.3->firebase-admin) (1.1.2)
-Requirement already satisfied: cffi>=1.12.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from curl_cffi>=0.7->yfinance) (2.0.0)
-Requirement already satisfied: pycparser in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from cffi>=1.12.0->curl_cffi>=0.7->yfinance) (2.23)
-Requirement already satisfied: google-cloud-core<3.0.0,>=1.4.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from google-cloud-firestore>=2.21.0->firebase-admin) (2.5.0)
-Requirement already satisfied: google-resumable-media<3.0.0,>=2.7.2 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from google-cloud-storage>=3.1.1->firebase-admin) (2.8.0)
-Requirement already satisfied: google-crc32c<2.0.0,>=1.1.3 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from google-cloud-storage>=3.1.1->firebase-admin) (1.7.1)
-Requirement already satisfied: cryptography>=3.4.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from pyjwt[crypto]>=2.10.1->firebase-admin) (46.0.3)
-Requirement already satisfied: aiohappyeyeballs>=2.5.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from aiohttp->alpha_vantage) (2.6.1)
-Requirement already satisfied: aiosignal>=1.4.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from aiohttp->alpha_vantage) (1.4.0)
-Requirement already satisfied: attrs>=17.3.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from aiohttp->alpha_vantage) (25.4.0)
-Requirement already satisfied: frozenlist>=1.1.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from aiohttp->alpha_vantage) (1.8.0)
-Requirement already satisfied: multidict<7.0,>=4.5 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from aiohttp->alpha_vantage) (6.7.0)
-Requirement already satisfied: propcache>=0.2.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from aiohttp->alpha_vantage) (0.4.1)
-Requirement already satisfied: yarl<2.0,>=1.17.0 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from aiohttp->alpha_vantage) (1.22.0)
-Requirement already satisfied: sniffio>=1.1 in /opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages (from anyio->httpx==0.28.1->httpx[http2]==0.28.1->firebase-admin) (1.3.1)
-✅ Completed in 0.9s
-
-🔄 Cell 5/9 (55.6%) | ⏱️ 2.2s
-======================================================================
-🚀 Alpha Vantage FX Data Fetcher - Clean Structure Edition
-======================================================================
-📍 Environment: GitHub Actions
-🤖 GitHub Actions detected - using repository root
-📂 Base Folder: /home/runner/work/forex-ai-models/forex-ai-models
-💾 Save Folder: /home/runner/work/forex-ai-models/forex-ai-models
-📦 Repo Folder: /home/runner/work/forex-ai-models/forex-ai-models
-📊 Alpha Vantage CSV: /home/runner/work/forex-ai-models/forex-ai-models/data/raw/alpha_vantage
-🗑️ Quarantine: /home/runner/work/forex-ai-models/forex-ai-models/data/quarantine/alpha_vantage
-======================================================================
-✅ GitHub credentials configured
-🤖 GitHub Actions: Repository already available
-✅ Git repository verified
-✅ Git configured: Forex AI Bot <nakatonabira3@gmail.com>
-✅ Alpha Vantage API key: BCJ6...KPXK
-======================================================================
-🚀 Fetching FX data with quality validation...
-======================================================================
-🔄 Processing EUR/USD...
-🔄 Processing GBP/USD...
-🔄 Processing USD/JPY...
-  🔽 Fetching EUR/USD (attempt 1/3)...
-🔄 Processing AUD/USD...
-  🔽 Fetching AUD/USD (attempt 1/3)...
-  🔽 Fetching GBP/USD (attempt 1/3)...
-  🔽 Fetching USD/JPY (attempt 1/3)...
-  ✅ Fetched 5000 rows for AUD/USD
-  📊 Quality score: 96.1/100
-  ✅ Updated - 5000 rows, quality: 96.1/100
-  ✅ Fetched 5000 rows for GBP/USD
-  📊 Quality score: 97.0/100
-  ✅ Updated - 5000 rows, quality: 97.0/100
-  ✅ Fetched 5000 rows for USD/JPY
-  📊 Quality score: 96.9/100
-  ✅ Updated - 5000 rows, quality: 96.9/100
-  ✅ Fetched 5000 rows for EUR/USD
-  📊 Quality score: 96.0/100
-  ✅ Updated - 5000 rows, quality: 96.0/100
-======================================================================
-📊 PROCESSING SUMMARY
-======================================================================
-✅ Updated AUD/USD (5000 rows, Q:96)
-✅ Updated GBP/USD (5000 rows, Q:97)
-✅ Updated USD/JPY (5000 rows, Q:97)
-✅ Updated EUR/USD (5000 rows, Q:96)
-Total pairs processed: 4
-Files updated: 4
-======================================================================
-📊 QUALITY REPORT
-======================================================================
-Average quality score: 96.5/100
-Files by quality:
-  ✅ GBP_USD_daily_av.csv: 97.0/100
-  ✅ USD_JPY_daily_av.csv: 96.9/100
-  ✅ AUD_USD_daily_av.csv: 96.1/100
-  ✅ EUR_USD_daily_av.csv: 96.0/100
-======================================================================
-🤖 GitHub Actions: Skipping git operations
-======================================================================
-======================================================================
-✅ ALPHA VANTAGE WORKFLOW COMPLETED
-======================================================================
-Environment: GitHub Actions
-Files updated: 4
-Quality validated: ✅
-Average quality: 96.5/100
-Status: ✅ Success
-======================================================================
-📁 Clean File Structure:
-   Alpha Vantage: /home/runner/work/forex-ai-models/forex-ai-models/data/raw/alpha_vantage
-   └── EUR_USD_daily_av.csv
-   YFinance: /home/runner/work/forex-ai-models/forex-ai-models/data/raw/yfinance
-   └── EUR_USD_1d_5y.csv
-🎯 Both sources in organized folders!
-======================================================================
-✅ Completed in 2.2s
-
-🔄 Cell 6/9 (66.7%) | ⏱️ 4.4s
-======================================================================
-🚀 YFinance FX Data Fetcher - Clean Structure Edition
-======================================================================
-🌍 Environment: GitHub Actions
-🤖 GitHub Actions detected - using repository root
-📂 Base Folder: /home/runner/work/forex-ai-models/forex-ai-models
-💾 Save Folder: /home/runner/work/forex-ai-models/forex-ai-models
-📦 Repo Folder: /home/runner/work/forex-ai-models/forex-ai-models
-📊 YFinance CSV: /home/runner/work/forex-ai-models/forex-ai-models/data/raw/yfinance
-🗑️ Quarantine: /home/runner/work/forex-ai-models/forex-ai-models/data/quarantine/yfinance
-======================================================================
-✅ Git configured: Forex AI Bot <nakatonabira3@gmail.com>
-🤖 GitHub Actions: Repository already available
-✅ Git repository verified
-📊 Configuration:
-   Pairs: 4
-   Timeframes: 5
-   Total tasks: 20
-   Quality threshold: 20.0/100 (RELAXED)
-======================================================================
-======================================================================
-🚀 Starting YFinance data download...
-======================================================================
-  ✅ EUR/USD 1h_2y - 12381 rows, Q:100
-  ✅ EUR/USD 1d_5y - 1302 rows, Q:100
-  ✅ EUR/USD 15m_60d - 5659 rows, Q:86
-  ✅ EUR/USD 5m_1mo - 6539 rows, Q:70
-  ✅ EUR/USD 1m_7d - 9750 rows, Q:62
-  ✅ GBP/USD 1d_5y - 1302 rows, Q:100
-  ✅ GBP/USD 1h_2y - 12382 rows, Q:100
-  ✅ GBP/USD 15m_60d - 5654 rows, Q:100
-  ✅ GBP/USD 5m_1mo - 6539 rows, Q:100
-  ✅ GBP/USD 1m_7d - 9752 rows, Q:85
-  ✅ USD/JPY 1d_5y - 1302 rows, Q:100
-  ✅ USD/JPY 1h_2y - 12310 rows, Q:100
-  ✅ USD/JPY 15m_60d - 5634 rows, Q:100
-  ✅ USD/JPY 5m_1mo - 6529 rows, Q:100
-  ✅ USD/JPY 1m_7d - 9735 rows, Q:100
-  ✅ AUD/USD 1d_5y - 1302 rows, Q:100
-  ✅ AUD/USD 1h_2y - 12448 rows, Q:100
-  ✅ AUD/USD 15m_60d - 5671 rows, Q:100
-  ✅ AUD/USD 5m_1mo - 6552 rows, Q:90
-  ✅ AUD/USD 1m_7d - 4879 rows, Q:93
-======================================================================
-📊 PROCESSING SUMMARY
-======================================================================
-✅ EUR/USD 1h_2y - 12381 rows, Q:100
-✅ EUR/USD 1d_5y - 1302 rows, Q:100
-✅ EUR/USD 15m_60d - 5659 rows, Q:86
-✅ EUR/USD 5m_1mo - 6539 rows, Q:70
-✅ EUR/USD 1m_7d - 9750 rows, Q:62
-✅ GBP/USD 1d_5y - 1302 rows, Q:100
-✅ GBP/USD 1h_2y - 12382 rows, Q:100
-✅ GBP/USD 15m_60d - 5654 rows, Q:100
-✅ GBP/USD 5m_1mo - 6539 rows, Q:100
-✅ GBP/USD 1m_7d - 9752 rows, Q:85
-✅ USD/JPY 1d_5y - 1302 rows, Q:100
-✅ USD/JPY 1h_2y - 12310 rows, Q:100
-✅ USD/JPY 15m_60d - 5634 rows, Q:100
-✅ USD/JPY 5m_1mo - 6529 rows, Q:100
-✅ USD/JPY 1m_7d - 9735 rows, Q:100
-✅ AUD/USD 1d_5y - 1302 rows, Q:100
-✅ AUD/USD 1h_2y - 12448 rows, Q:100
-✅ AUD/USD 15m_60d - 5671 rows, Q:100
-✅ AUD/USD 5m_1mo - 6552 rows, Q:90
-✅ AUD/USD 1m_7d - 4879 rows, Q:93
-Total tasks: 20
-Successful: 20/20
-Files updated: 20
-Time: 1.4 min
-Average quality: 94.3/100
-======================================================================
-📊 QUALITY REPORT
-======================================================================
-  ✅ EUR_USD_1h_2y.csv: 100.0/100
-  ✅ EUR_USD_1d_5y.csv: 100.0/100
-  ✅ GBP_USD_1d_5y.csv: 100.0/100
-  ✅ GBP_USD_1h_2y.csv: 100.0/100
-  ✅ GBP_USD_15m_60d.csv: 100.0/100
-  ✅ GBP_USD_5m_1mo.csv: 100.0/100
-  ✅ USD_JPY_1d_5y.csv: 100.0/100
-  ✅ USD_JPY_1h_2y.csv: 100.0/100
-  ✅ USD_JPY_15m_60d.csv: 100.0/100
-  ✅ USD_JPY_5m_1mo.csv: 100.0/100
-  ✅ USD_JPY_1m_7d.csv: 100.0/100
-  ✅ AUD_USD_1d_5y.csv: 100.0/100
-  ✅ AUD_USD_1h_2y.csv: 100.0/100
-  ✅ AUD_USD_15m_60d.csv: 99.8/100
-  ✅ AUD_USD_1m_7d.csv: 92.8/100
-  ✅ AUD_USD_5m_1mo.csv: 90.2/100
-  ✅ EUR_USD_15m_60d.csv: 85.6/100
-  ✅ GBP_USD_1m_7d.csv: 85.1/100
-  ✅ EUR_USD_5m_1mo.csv: 69.7/100
-  ✅ EUR_USD_1m_7d.csv: 61.8/100
-======================================================================
-🤖 GitHub Actions: Skipping git operations
-======================================================================
-======================================================================
-✅ YFINANCE WORKFLOW COMPLETED
-======================================================================
-Environment: GitHub Actions
-Files updated: 20
-Quality validated: ✅
-Average quality: 94.3/100
-Status: ✅ Success
-Rate limiter: 20 requests
-======================================================================
-📁 Clean File Structure:
-   YFinance: /home/runner/work/forex-ai-models/forex-ai-models/data/raw/yfinance
-   └── EUR_USD_1d_5y.csv, EUR_USD_1h_2y.csv, etc.
-   Alpha Vantage: /home/runner/work/forex-ai-models/forex-ai-models/data/raw/alpha_vantage
-   └── EUR_USD_daily_av.csv
-🎯 All data sources in organized folders!
-======================================================================
-✅ Completed in 83.4s
-
-🔄 Cell 7/9 (77.8%) | ⏱️ 87.8s
-======================================================================
-🔧 CSV Combiner & Multi-Type Handler - Clean Structure Edition
-======================================================================
-🌍 Environment: GitHub Actions
-🤖 GitHub Actions detected - using repository root
-📂 Base Folder: /home/runner/work/forex-ai-models/forex-ai-models
-💾 Save Folder: /home/runner/work/forex-ai-models/forex-ai-models
-📦 Repo Folder: /home/runner/work/forex-ai-models/forex-ai-models
-📊 YFinance CSV: /home/runner/work/forex-ai-models/forex-ai-models/data/raw/yfinance
-📊 Alpha CSV: /home/runner/work/forex-ai-models/forex-ai-models/data/raw/alpha_vantage
-🔧 Processed: /home/runner/work/forex-ai-models/forex-ai-models/data/processed
-🗑️ Quarantine: /home/runner/work/forex-ai-models/forex-ai-models/data/quarantine/combiner
-======================================================================
-✅ Git configured: Forex AI Bot <nakatonabira3@gmail.com>
-======================================================================
-🚀 Discovering CSV files...
-======================================================================
-🐞 📂 Found 20 YFinance CSV(s)
-🐞 📂 Found 4 Alpha Vantage CSV(s)
-✅ 📊 Total CSV files found: 24
-🐞   • EUR_USD_15m_60d.csv (535.6 KB)
-🐞   • AUD_USD_5m_1mo.csv (624.2 KB)
-🐞   • EUR_USD_1m_7d.csv (921.8 KB)
-🐞   • EUR_USD_1d_5y.csv (123.4 KB)
-🐞   • USD_JPY_5m_1mo.csv (612.0 KB)
-🐞   ... and 19 more
-======================================================================
-⚙️ Processing 24 CSV file(s)...
-======================================================================
-ℹ️ 📋 Processing: EUR_USD_15m_60d.csv
-ℹ️ 📋 Processing: AUD_USD_5m_1mo.csv
-ℹ️ 📋 Processing: EUR_USD_1m_7d.csv
-ℹ️ 📋 Processing: EUR_USD_1d_5y.csv
-ℹ️ 📋 Processing: USD_JPY_5m_1mo.csv
-ℹ️ 📋 Processing: EUR_USD_1h_2y.csv
-ℹ️ 📋 Processing: USD_JPY_15m_60d.csv
-ℹ️ 📋 Processing: AUD_USD_1m_7d.csv
-🐞   📊 Quality score: 100.0/100
-🐞   🔧 Calculating indicators on 1302 rows
-🐞   📊 Quality score: 85.6/100
-🐞   📊 Quality score: 61.8/100
-🐞   🔧 Calculating indicators on 5659 rows
-🐞   📊 Quality score: 100.0/100
-🐞   📊 Quality score: 90.2/100
-🐞   🔧 Calculating indicators on 6552 rows
-🐞   🔧 Calculating indicators on 5634 rows
-🐞   📊 Quality score: 100.0/100
-🐞   🔧 Calculating indicators on 9750 rows
-🐞   🔧 Calculating indicators on 6529 rows
-🐞   📊 Quality score: 100.0/100
-🐞   🔧 Calculating indicators on 12381 rows
-🐞   📊 Quality score: 92.8/100
-🐞   🔧 Calculating indicators on 4879 rows
-🐞   📊 ATR median: 0.00820900
-🐞   📊 ATR median: 0.00048338
-🐞   📊 ATR median: 0.00015681
-🐞   📊 ATR median: 0.10072866
-🐞   📊 ATR median: 0.00007051
-🐞   📊 ATR median: 0.00008526
-🐞   📊 ATR median: 0.05787419
-🐞   📊 ATR median: 0.00112069
-🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ EUR_USD_1d_5y.csv: 1302 rows, Q:100, ATR:0.00820900
-ℹ️ 📋 Processing: USD_JPY_1m_7d.csv
-🐞   📊 Quality score: 100.0/100
-🐞   🔧 Calculating indicators on 9735 rows
-🐞   ✅ Scaled 26 features (ATR protected)
-🐞   ✅ Scaled 26 features (ATR protected)
-🐞   ✅ Scaled 26 features (ATR protected)
-🐞   ✅ Scaled 26 features (ATR protected)
-🐞   ✅ Scaled 26 features (ATR protected)
-🐞   📊 ATR median: 0.02920980
-🐞   ✅ Scaled 26 features (ATR protected)
-🐞   ✅ Scaled 26 features (ATR protected)
-🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ USD_JPY_15m_60d.csv: 5634 rows, Q:100, ATR:0.10072866
-ℹ️ 📋 Processing: GBP_USD_1d_5y.csv
-🐞   📊 Quality score: 100.0/100
-🐞   🔧 Calculating indicators on 1302 rows
-🐞   📊 ATR median: 0.01034018
-🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ AUD_USD_1m_7d.csv: 4879 rows, Q:93, ATR:0.00008526
-ℹ️ 📋 Processing: AUD_USD_15m_60d.csv
-🐞   📊 Quality score: 99.8/100
-🐞   🔧 Calculating indicators on 5671 rows
-🐞   📊 ATR median: 0.00033229
-🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ EUR_USD_15m_60d.csv: 5659 rows, Q:86, ATR:0.00048338
-ℹ️ 📋 Processing: GBP_USD_5m_1mo.csv
-🐞   📊 Quality score: 100.0/100
-🐞   🔧 Calculating indicators on 6539 rows
-🐞   📊 ATR median: 0.00029822
-🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ AUD_USD_5m_1mo.csv: 6552 rows, Q:90, ATR:0.00015681
-ℹ️ 📋 Processing: USD_JPY_1h_2y.csv
-🐞   📊 Quality score: 100.0/100
-🐞   🔧 Calculating indicators on 12310 rows
-🐞   📊 ATR median: 0.24332455
-🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ USD_JPY_5m_1mo.csv: 6529 rows, Q:100, ATR:0.05787419
-ℹ️ 📋 Processing: GBP_USD_15m_60d.csv
-🐞   📊 Quality score: 100.0/100
-🐞   🔧 Calculating indicators on 5654 rows
-🐞   📊 ATR median: 0.00061497
-🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ EUR_USD_1m_7d.csv: 9750 rows, Q:62, ATR:0.00007051
-ℹ️ 📋 Processing: AUD_USD_1d_5y.csv
-🐞   📊 Quality score: 100.0/100
-🐞   🔧 Calculating indicators on 1302 rows
-🐞   📊 ATR median: 0.00719902
-🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ EUR_USD_1h_2y.csv: 12381 rows, Q:100, ATR:0.00112069
-ℹ️ 📋 Processing: EUR_USD_5m_1mo.csv
-🐞   📊 Quality score: 69.7/100
-🐞   🔧 Calculating indicators on 6539 rows
-🐞   📊 ATR median: 0.00021764
-🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ USD_JPY_1m_7d.csv: 9735 rows, Q:100, ATR:0.02920980
-ℹ️ 📋 Processing: USD_JPY_1d_5y.csv
-🐞   📊 Quality score: 100.0/100
-🐞   🔧 Calculating indicators on 1302 rows
-🐞   📊 ATR median: 1.39028134
-🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ GBP_USD_1d_5y.csv: 1302 rows, Q:100, ATR:0.01034018
-ℹ️ 📋 Processing: AUD_USD_1h_2y.csv
-🐞   📊 Quality score: 100.0/100
-🐞   🔧 Calculating indicators on 12448 rows
-🐞   📊 ATR median: 0.00100773
-✅ ✅ AUD_USD_15m_60d.csv: 5671 rows, Q:100, ATR:0.00033229
-ℹ️ 📋 Processing: GBP_USD_1h_2y.csv
-🐞   ✅ Scaled 26 features (ATR protected)
-🐞   📊 Quality score: 100.0/100
-🐞   🔧 Calculating indicators on 12382 rows
-🐞   📊 ATR median: 0.00138755
-🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ GBP_USD_5m_1mo.csv: 6539 rows, Q:100, ATR:0.00029822
-ℹ️ 📋 Processing: GBP_USD_1m_7d.csv
-🐞   📊 Quality score: 85.1/100
-🐞   🔧 Calculating indicators on 9752 rows
-🐞   📊 ATR median: 0.00010077
-🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ USD_JPY_1h_2y.csv: 12310 rows, Q:100, ATR:0.24332455
-ℹ️ 📋 Processing: GBP_USD_daily_av.csv
-🐞   📊 Quality score: 100.0/100
-🐞   🔧 Calculating indicators on 5000 rows
-🐞   📊 ATR median: 0.01133854
-🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ GBP_USD_15m_60d.csv: 5654 rows, Q:100, ATR:0.00061497
-ℹ️ 📋 Processing: AUD_USD_daily_av.csv
-🐞   📊 Quality score: 100.0/100
-🐞   🔧 Calculating indicators on 5000 rows
-🐞   📊 ATR median: 0.00785364
-✅ ✅ AUD_USD_1d_5y.csv: 1302 rows, Q:100, ATR:0.00719902
-ℹ️ 📋 Processing: EUR_USD_daily_av.csv
-🐞   📊 Quality score: 100.0/100
-🐞   🔧 Calculating indicators on 5000 rows
-🐞   📊 ATR median: 0.00903720
-🐞   ✅ Scaled 26 features (ATR protected)
-🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ EUR_USD_5m_1mo.csv: 6539 rows, Q:70, ATR:0.00021764
-ℹ️ 📋 Processing: USD_JPY_daily_av.csv
-🐞   📊 Quality score: 100.0/100
-🐞   🔧 Calculating indicators on 5000 rows
-🐞   📊 ATR median: 0.92429538
-✅ ✅ USD_JPY_1d_5y.csv: 1302 rows, Q:100, ATR:1.39028134
-🐞   ✅ Scaled 26 features (ATR protected)
-✅ ✅ AUD_USD_1h_2y.csv: 12448 rows, Q:100, ATR:0.00100773
-✅ ✅ GBP_USD_1h_2y.csv: 12382 rows, Q:100, ATR:0.00138755
-✅ ✅ GBP_USD_1m_7d.csv: 9752 rows, Q:85, ATR:0.00010077
-✅ ✅ GBP_USD_daily_av.csv: 5000 rows, Q:100, ATR:0.01133854
-✅ ✅ AUD_USD_daily_av.csv: 5000 rows, Q:100, ATR:0.00785364
-✅ ✅ EUR_USD_daily_av.csv: 5000 rows, Q:100, ATR:0.00903720
-✅ ✅ USD_JPY_daily_av.csv: 5000 rows, Q:100, ATR:0.92429538
-======================================================================
-📊 QUALITY REPORT - ATR VALUES
-======================================================================
-Average ATR: 0.11689864
-ATR by file:
-  ✅ USD_JPY_1d_5y: 1.39028134
-  ✅ USD_JPY_daily_av: 0.92429538
-  ✅ USD_JPY_1h_2y: 0.24332455
-  ✅ USD_JPY_15m_60d: 0.10072866
-  ✅ USD_JPY_5m_1mo: 0.05787419
-  ✅ USD_JPY_1m_7d: 0.02920980
-  ✅ GBP_USD_daily_av: 0.01133854
-  ✅ GBP_USD_1d_5y: 0.01034018
-  ✅ EUR_USD_daily_av: 0.00903720
-  ✅ EUR_USD_1d_5y: 0.00820900
-  ✅ AUD_USD_daily_av: 0.00785364
-  ✅ AUD_USD_1d_5y: 0.00719902
-  ✅ GBP_USD_1h_2y: 0.00138755
-  ✅ EUR_USD_1h_2y: 0.00112069
-  ✅ AUD_USD_1h_2y: 0.00100773
-  ✅ GBP_USD_15m_60d: 0.00061497
-  ✅ EUR_USD_15m_60d: 0.00048338
-  ✅ AUD_USD_15m_60d: 0.00033229
-  ✅ GBP_USD_5m_1mo: 0.00029822
-  ✅ EUR_USD_5m_1mo: 0.00021764
-  ✅ AUD_USD_5m_1mo: 0.00015681
-  ✅ GBP_USD_1m_7d: 0.00010077
-  ✅ AUD_USD_1m_7d: 0.00008526
-  ✅ EUR_USD_1m_7d: 0.00007051
-======================================================================
-🤖 GitHub Actions: Skipping git operations
-======================================================================
-======================================================================
-✅ CSV COMBINER COMPLETED
-======================================================================
-Environment: GitHub Actions
-CSV files found: 24
-Files processed: 24
-Files quarantined: 0
-📈 ATR Statistics:
-   Average: 0.11689864
-   Files analyzed: 24
-🔧 KEY FEATURES:
-   ✅ Full-dataset indicator calculation
-   ✅ ATR preserved (no clipping/scaling)
-   ✅ Quality validation with quarantine
-   ✅ Clean organized structure
-   ✅ Thread-safe processing
-📁 Output Locations:
-   Processed pickles: /home/runner/work/forex-ai-models/forex-ai-models/data/processed
-   Quarantine: /home/runner/work/forex-ai-models/forex-ai-models/data/quarantine/combiner
-======================================================================
-✅ Completed in 8.2s
-
-🔄 Cell 8/9 (88.9%) | ⏱️ 96.0s
-[main 3230c09] 📈 Update signals - Iteration 1
- 1 file changed, 90 insertions(+), 90 deletions(-)
-======================================================================
-🚀 Ultra-Persistent FX Pipeline v4.0 - Clean Structure Edition
+🚀 Ultra-Persistent FX Pipeline v4.1 - Weekend-Aware Edition
 ======================================================================
 🌍 Environment: GitHub Actions
 📂 Base Folder: /home/runner/work/forex-ai-models/forex-ai-models
@@ -618,15 +11,20 @@ Files quarantined: 0
 📦 Repo Folder: /home/runner/work/forex-ai-models/forex-ai-models
 🔧 Processed: /home/runner/work/forex-ai-models/forex-ai-models/data/processed
 💿 Database: /home/runner/work/forex-ai-models/forex-ai-models/database/memory_v85.db
+📅 Current Time: 2025-11-22 08:20:36 UTC (Saturday)
+⏱️  Trade Age: 0.5h (Weekend)
+🏦 Market Status: CLOSED (Learning Only)
 ======================================================================
 ✅ ✅ Git configured: Forex AI Bot
+
 ✅ ✅ ML libraries loaded
 ℹ️ 🚀 Initializing Ultra-Persistent Pipeline...
 ℹ️ ======================================================================
-✅ 🚀 STARTING ULTRA-PERSISTENT PIPELINE v4.0
+✅ 🚀 STARTING ULTRA-PERSISTENT PIPELINE v4.1
 ℹ️ ======================================================================
+🏖️ 🏖️ WEEKEND MODE: Learning continues, no new live signals
+ℹ️ ⏱️  Trade evaluation age: 0.5h
 ℹ️ 📁 Database: /home/runner/work/forex-ai-models/forex-ai-models/database/memory_v85.db
-ℹ️ ⏱️  Min trade age: 1h
 ✅ ✅ Created: memory_v85.db
 📊 📊 Database Tables:
 📊   ✓ pending_trades: 0 rows
@@ -641,172 +39,1639 @@ Files quarantined: 0
 ℹ️ 
 🔄 LOADING PROCESSED PICKLES
 ℹ️ 📂 Looking in: /home/runner/work/forex-ai-models/forex-ai-models/data/processed
-✅ ✅ Found 24 processed pickle files
-ℹ️ EUR/USD | 15m | Ens:1 (SGD:1 RF:1) | Price:1.15168 | SL:1.15062 | TP:1.15273
-ℹ️ GBP/USD | 15m | Ens:1 (SGD:1 RF:1) | Price:1.31041 | SL:1.30905 | TP:1.31177
-ℹ️ USD/JPY | 1d | Ens:1 (SGD:1 RF:1) | Price:157.46000 | SL:155.18065 | TP:159.73935
-ℹ️ GBP/USD | 1h | Ens:1 (SGD:1 RF:1) | Price:1.31041 | SL:1.30708 | TP:1.31374
-ℹ️ EUR/USD | 1d | Ens:0 (SGD:0 RF:0) | Price:1.15168 | SL:1.13922 | TP:1.16413
-ℹ️ GBP/USD | 5m | Ens:1 (SGD:1 RF:1) | Price:1.31041 | SL:1.30988 | TP:1.31094
-ℹ️ USD/JPY | 1d | Ens:0 (SGD:0 RF:0) | Price:156.41499 | SL:153.84801 | TP:158.98198
-ℹ️ AUD/USD | 1m | Ens:0 (SGD:0 RF:0) | Price:0.64591 | SL:0.64576 | TP:0.64606
-ℹ️ EUR/USD | 1m | Ens:1 (SGD:1 RF:1) | Price:1.15168 | SL:1.15154 | TP:1.15181
-ℹ️ USD/JPY | 1h | Ens:1 (SGD:1 RF:1) | Price:156.41100 | SL:155.87623 | TP:156.94576
-ℹ️ EUR/USD | 1h | Ens:0 (SGD:0 RF:0) | Price:1.15168 | SL:1.14939 | TP:1.15396
-ℹ️ USD/JPY | 5m | Ens:1 (SGD:1 RF:1) | Price:156.41100 | SL:156.29056 | TP:156.53143
-ℹ️ AUD/USD | 15m | Ens:0 (SGD:0 RF:0) | Price:0.64591 | SL:0.64498 | TP:0.64684
-ℹ️ AUD/USD | 1d | Ens:0 (SGD:0 RF:0) | Price:0.64591 | SL:0.63547 | TP:0.65635
-ℹ️ GBP/USD | 1m | Ens:1 (SGD:1 RF:1) | Price:1.31041 | SL:1.31027 | TP:1.31055
-ℹ️ EUR/USD | 5m | Ens:1 (SGD:0 RF:1) | Price:1.15168 | SL:1.15128 | TP:1.15207
-ℹ️ GBP/USD | 1d | Ens:1 (SGD:1 RF:1) | Price:1.30700 | SL:1.29016 | TP:1.32384
-ℹ️ USD/JPY | 1m | Ens:1 (SGD:1 RF:1) | Price:156.41400 | SL:156.36279 | TP:156.46522
-ℹ️ AUD/USD | 5m | Ens:1 (SGD:1 RF:0) | Price:0.64591 | SL:0.64557 | TP:0.64625
-ℹ️ AUD/USD | 1h | Ens:1 (SGD:1 RF:1) | Price:0.64591 | SL:0.64354 | TP:0.64828
-ℹ️ USD/JPY | 15m | Ens:1 (SGD:1 RF:1) | Price:156.41100 | SL:156.13721 | TP:156.68478
-ℹ️ EUR/USD | 1d | Ens:0 (SGD:0 RF:0) | Price:1.15270 | SL:1.14145 | TP:1.16395
-ℹ️ AUD/USD | 1d | Ens:0 (SGD:0 RF:0) | Price:0.64370 | SL:0.63334 | TP:0.65406
-ℹ️ GBP/USD | 1d | Ens:1 (SGD:1 RF:1) | Price:1.31041 | SL:1.29302 | TP:1.32780
-ℹ️ 
-💾 STORING SIGNALS
-✅ 💾 Stored 20 trades
-✅ ✅ Stored 20 signals
-ℹ️ 
-🔍 EVALUATING PENDING TRADES
-ℹ️ ℹ️ No trades old enough (need 1h+)
-ℹ️ 
-📝 EXPORTING TO JSON
-ℹ️ 📤 Pushing to GitHub...
-[main 3230c09] 📈 Update signals - Iteration 1
- 1 file changed, 90 insertions(+), 90 deletions(-)
-✅ ✅ Pushed to GitHub
-📊 
-📊 FINAL DATABASE STATS
-📊   Pending: 20
-📊   Completed: 0
-📊   Total P&L: $0.00000
-📊   Accuracy: 0.0%
-✅ ✅ Database closed
-✅ 
-✅ PIPELINE COMPLETED!
-ℹ️ ======================================================================
-✅ 
-🎉 Generated signals for 4 pairs!
-✅   EUR/USD: SHORT
-✅   GBP/USD: LONG
-✅   USD/JPY: LONG
-✅   AUD/USD: SHORT
+⚠️ ⚠️ No processed pickles found!
+ℹ️ ℹ️  Run CSV combiner first to generate processed pickles
+⚠️ 
+⚠️ No signals generated
 ✅ 
 ✅ ALL OPERATIONS COMPLETED!
-✅ Completed in 12.5s
 
-🔄 Cell 9/9 (100.0%) | ⏱️ 108.5s
-======================================================================
-🔴 TRADE BEACON v13.0 - ENHANCED PRODUCTION
-======================================================================
-⚠️  DISCLAIMER: Experimental system. Trade at your own risk.
-======================================================================
-🚀 ======================================================================
-🚀 🔴 TRADE BEACON v13.0 - ENHANCED PRODUCTION
-🚀 ======================================================================
-⚠️ ⚠️  DISCLAIMER: Experimental system. Trade at your own risk.
-🚀 ======================================================================
-ℹ️ 📂 Loaded iteration state: #12
-ℹ️ 🎲 Seed: 852235322 (for iteration #13)
-✅ 💾 Saved iteration state: #13
-ℹ️ 
-📊 Iteration #13 | GitHub Actions
-⚠️ Mode: 📝 PAPER TRADING
-ℹ️ 
-🔄 Updating data...
-ℹ️ 🔄 Updating pickle data with live prices...
-✅ ✅ Updated 24 files
-ℹ️ 
-📦 Loading data...
-ℹ️ 📂 Loading from: /home/runner/work/forex-ai-models/forex-ai-models/data/processed
-✅ ✅ EUR/USD [1d]: 1303 rows
-✅ ✅ EUR/USD [1h]: 5000 rows
-✅ ✅ EUR/USD [1d]: 5000 rows
-✅ ✅ GBP/USD [1h]: 5000 rows
-✅ ✅ GBP/USD [1d]: 5000 rows
-✅ ✅ GBP/USD [1d]: 1303 rows
-✅ ✅ USD/JPY [1d]: 5000 rows
-✅ ✅ USD/JPY [1d]: 1303 rows
-✅ ✅ USD/JPY [1h]: 5000 rows
-✅ ✅ AUD/USD [1d]: 1303 rows
-✅ ✅ AUD/USD [1h]: 5000 rows
-✅ ✅ AUD/USD [1d]: 5000 rows
-✅ ✅ Loaded 4 pairs
-ℹ️ 
-📊 Splitting data...
-ℹ️ 📊 Split: Train=40% | Gap=10% | Val=30% | Test=20%
-ℹ️ 
-🏆 Training models...
-ℹ️ 🔵 Training Conservative Trend (STRICT MODE)...
-ℹ️   🌱 Initializing 20 candidates...
-✅   ✅ Init: Best=92.39
-ℹ️   Gen 1/5: Best=92.39 | Avg=63.95
-ℹ️   Gen 2/5: Best=92.39 | Avg=66.18
-ℹ️   Gen 3/5: Best=92.39 | Avg=73.88
-ℹ️   Gen 4/5: Best=99.20 | Avg=82.00
-ℹ️   Gen 5/5: Best=99.20 | Avg=88.14
-ℹ️   📊 Final - Train: 71.4% | Val: 57.1%
-✅   ✅ PASSED (Val=57.1%, Ratio=0.80)
-ℹ️   📊 Test: 54.8% | $7.10
-ℹ️ 🔴 Training Aggressive Opportunist (STRICT MODE)...
-ℹ️   🌱 Initializing 24 candidates...
-✅   ✅ Init: Best=97.71
-ℹ️   Gen 1/6: Best=97.71 | Avg=53.29
-ℹ️   Gen 2/6: Best=97.71 | Avg=59.94
-ℹ️   Gen 3/6: Best=97.71 | Avg=60.98
-ℹ️   Gen 4/6: Best=97.71 | Avg=64.21
-ℹ️   Gen 5/6: Best=97.71 | Avg=68.48
-ℹ️   Gen 6/6: Best=116.58 | Avg=77.75
-ℹ️   📊 Final - Train: 80.0% | Val: 61.9%
-✅   ✅ PASSED (Val=61.9%, Ratio=0.77)
-ℹ️   📊 Test: 54.5% | $5.26
-✅ 
-✅ 2 model(s) passed validation
-ℹ️ 
-💾 Saving...
-✅ ✅ Saved: omega_signals.json
-✅ ✅ Email sent to nakatonabira3@gmail.com
-⚠️ ⚠️ Git push skipped
-✅ 
-======================================================================
-✅ ✅ TRADE BEACON v13.0 COMPLETED
-✅ ======================================================================
-ℹ️ Iteration: #13 (Synced)
-ℹ️ Models Passed: 2/2
-ℹ️ Active Signals: 0 (from 4 pairs)
-ℹ️ Success Rate: 176.9%
-⚠️ 
-⚠️ PAPER TRADING MODE - No real trades
-⚠️ Set PAPER_TRADING_MODE=False after validation
-🚀 
-🎉 KEY FEATURES v13.0:
-✅   🎯 Market Regime Detection - TRENDING/RANGING/VOLATILE
-✅   ⏰ Session-Based Trading - Optimal pair/session matching
-✅   📊 Momentum Confirmation - Multi-timeframe RSI analysis
-✅   🛡️ Strict Validation - Anti-overfitting protection
-✅   🌈 Signal Diversity - Best of 2 models per pair
-ℹ️ 
-📊 Market Regime Analysis:
-ℹ️   EUR/USD: RANGING (Momentum: -3)
-ℹ️   GBP/USD: RANGING (Momentum: -1)
-ℹ️   USD/JPY: RANGING (Momentum: +0)
-ℹ️   AUD/USD: RANGING (Momentum: -1)
-ℹ️ 
-🔴 Pipeline complete (Iteration #13)
-✅ Completed in 98.7s
+✅ Completed in 1.1s
 
-======================================================================
-✅ FULL NOTEBOOK COMPLETED!
-======================================================================
-⏱️  Time: 207.6s (3.5 min)
-📊 Cells: 9
-======================================================================
+🔄 Tagged Cell 2/2
+Traceback (most recent call last):
+  File "/home/runner/work/forex-ai-models/forex-ai-models/run_tagged_cells.py", line 63, in <module>
+    success = run_tagged_cells(notebook)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/forex-ai-models/forex-ai-models/run_tagged_cells.py", line 51, in run_tagged_cells
+    ep.preprocess(nb, {'metadata': {'path': '.'}})
+  File "/home/runner/work/forex-ai-models/forex-ai-models/run_tagged_cells.py", line 20, in preprocess
+    return super().preprocess(nb, resources, km)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/nbconvert/preprocessors/execute.py", line 103, in preprocess
+    self.preprocess_cell(cell, resources, index)
+  File "/home/runner/work/forex-ai-models/forex-ai-models/run_tagged_cells.py", line 30, in preprocess_cell
+    cell, resources = super().preprocess_cell(cell, resources, cell_index)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/nbconvert/preprocessors/execute.py", line 124, in preprocess_cell
+    cell = self.execute_cell(cell, index, store_history=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/jupyter_core/utils/__init__.py", line 165, in wrapped
+    return loop.run_until_complete(inner)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/nbclient/client.py", line 1062, in async_execute_cell
+    await self._check_raise_for_error(cell, cell_index, exec_reply)
+  File "/opt/hostedtoolcache/Python/3.11.14/x64/lib/python3.11/site-packages/nbclient/client.py", line 918, in _check_raise_for_error
+    raise CellExecutionError.from_cell_and_msg(cell, exec_reply_content)
+nbclient.exceptions.CellExecutionError: An error occurred while executing the following cell:
+------------------
+#TAG: pipeline_main
 
+#!/usr/bin/env python3
+"""
+TRADE BEACON v17.0 - INTEGRATED LEARNING EDITION
+=================================================
+🧠 Deep Q-Learning with Experience Replay
+📊 Learns from Ultra-Persistent Pipeline Database
+📈 6 Chart Pattern Detection
+💾 Cloud-Synced Iteration Counter
+🎯 Weekend Learning Mode (Backtesting + Database)
+⚠️ LIVE TRADING - Real money at risk on weekdays!
+"""
+
+import os, sys, json, pickle, random, re, smtplib, subprocess, logging, warnings, shutil, sqlite3
+from pathlib import Path
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from datetime import datetime, timezone, timedelta
+from collections import defaultdict, deque
+from dataclasses import dataclass, field
+from typing import Dict, List, Tuple, Any
+from contextlib import contextmanager
+import numpy as np
+import pandas as pd
+import requests
+
+warnings.filterwarnings('ignore')
+
+print("="*70)
+print("🧠 TRADE BEACON v17.0 - INTEGRATED LEARNING")
+print("="*70)
+
+# Environment Setup
+try:
+    import google.colab
+    IN_COLAB, IN_GHA, ENV_NAME = True, False, "Google Colab"
+except ImportError:
+    IN_COLAB, IN_GHA = False, "GITHUB_ACTIONS" in os.environ
+    ENV_NAME = "GitHub Actions" if IN_GHA else "Local"
+
+BASE_FOLDER = Path("/content" if IN_COLAB else Path.cwd())
+SAVE_FOLDER = BASE_FOLDER if IN_GHA else (BASE_FOLDER / "forex-ai-models" if IN_COLAB else BASE_FOLDER)
+
+DIRECTORIES = {k: SAVE_FOLDER / v for k, v in {
+    "data_processed": "data/processed", "database": "database", "logs": "logs",
+    "outputs": "outputs", "omega_state": "omega_state", "rl_memory": "rl_memory",
+    "rl_models": "rl_models", "backups": "backups"
+}.items()}
+
+for d in DIRECTORIES.values():
+    d.mkdir(parents=True, exist_ok=True)
+
+PICKLE_FOLDER = DIRECTORIES["data_processed"]
+DATABASE_FOLDER = DIRECTORIES["database"]
+OUTPUTS_FOLDER = DIRECTORIES["outputs"]
+OMEGA_STATE_FOLDER = DIRECTORIES["omega_state"]
+RL_MEMORY_FOLDER = DIRECTORIES["rl_memory"]
+RL_MODELS_FOLDER = DIRECTORIES["rl_models"]
+BACKUP_FOLDER = DIRECTORIES["backups"]
+
+# Ultra-Persistent Pipeline Database
+PIPELINE_DB = DATABASE_FOLDER / "memory_v85.db"
+
+logging.basicConfig(
+    filename=str(DIRECTORIES["logs"] / f"trade_beacon_{datetime.now():%Y%m%d_%H%M%S}.log"),
+    level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s'
+)
+
+def log(msg, lvl="info"):
+    icons = {"info":"ℹ️","success":"✅","warn":"⚠️","error":"❌","rocket":"🚀","brain":"🧠","money":"💰","database":"💾"}
+    getattr(logging, "warning" if lvl=="warn" else lvl, logging.info)(msg)
+    print(f"{icons.get(lvl,'ℹ️')} {msg}")
+
+# Config
+GITHUB_USERNAME, GITHUB_REPO = "rahim-dotAI", "forex-ai-models"
+FOREX_PAT = os.getenv("FOREX_PAT", "").strip()
+if not FOREX_PAT and IN_COLAB:
+    try:
+        from google.colab import userdata
+        FOREX_PAT = userdata.get("FOREX_PAT")
+        if FOREX_PAT: os.environ["FOREX_PAT"] = FOREX_PAT
+    except: pass
+
+GMAIL_USER = os.getenv("GMAIL_USER", "nakatonabira3@gmail.com")
+GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD", "").strip() or "gmwohahtltmcewug"
+BROWSERLESS_TOKEN = os.getenv("BROWSERLESS_TOKEN", "")
+
+PAIRS = ["EUR/USD", "GBP/USD", "USD/JPY", "AUD/USD"]
+ATR_PERIOD, MIN_ATR, EPS = 14, 1e-5, 1e-8
+BASE_CAPITAL, MAX_RISK_PER_TRADE, MAX_POSITIONS, MAX_TRADE_CAP = 100, 0.02, 2, 10.0
+
+# RL Hyperparameters
+STATE_SIZE, ACTION_SPACE = 30, 3
+LEARNING_RATE, GAMMA = 0.001, 0.95
+EPSILON_START, EPSILON_MIN, EPSILON_DECAY = 1.0, 0.05, 0.995
+BATCH_SIZE, MEMORY_SIZE, MIN_REPLAY_SIZE = 32, 10000, 100
+TARGET_UPDATE_FREQUENCY = 10
+
+# SL/TP and Reward Parameters
+ATR_SL_MULTIPLIER, ATR_TP_MULTIPLIER = 2.0, 3.0
+PROFIT_REWARD_SCALE, LOSS_PENALTY_SCALE = 100.0, 100.0
+SHARPE_REWARD_SCALE, WIN_STREAK_BONUS, LOSS_STREAK_PENALTY = 10.0, 5.0, 3.0
+
+# Weekend Backtest Parameters
+WEEKEND_BACKTEST_STEPS = 50
+
+# Files
+OMEGA_SIGNALS_FILE = OUTPUTS_FOLDER / "omega_signals.json"
+OMEGA_ITERATION_FILE = OMEGA_STATE_FOLDER / "omega_iteration.json"
+RL_MEMORY_FILE = RL_MEMORY_FOLDER / "experience_replay.pkl"
+RL_Q_NETWORK_FILE = RL_MODELS_FOLDER / "q_network.npz"
+RL_TARGET_NETWORK_FILE = RL_MODELS_FOLDER / "target_network.npz"
+RL_LEARNING_STATS_FILE = RL_MEMORY_FOLDER / "learning_stats.json"
+TRADE_HISTORY_FILE = RL_MEMORY_FOLDER / "trade_history.json"
+PIPELINE_SYNC_FILE = RL_MEMORY_FOLDER / "pipeline_sync.json"
+
+log("💰 LIVE TRADING MODE ACTIVE", "money")
+
+# ========================================================================
+# WEEKEND MODE
+# ========================================================================
+
+def is_weekend():
+    """Check if current day is weekend"""
+    return datetime.now().weekday() in [5, 6]
+
+def get_weekend_mode():
+    """Determine trading mode based on day of week"""
+    if is_weekend():
+        return "WEEKEND_LEARNING"
+    return "LIVE_TRADING"
+
+# ========================================================================
+# DATABASE CONNECTION FOR ULTRA-PERSISTENT PIPELINE
+# ========================================================================
+
+class PipelineDatabase:
+    """Interface to Ultra-Persistent Pipeline Database"""
+
+    def __init__(self, db_path=PIPELINE_DB):
+        self.db_path = db_path
+        self.conn = None
+
+        if not self.db_path.exists():
+            log(f"⚠️ Pipeline database not found: {self.db_path}", "warn")
+            return
+
+        try:
+            self.conn = sqlite3.connect(str(self.db_path), timeout=30, check_same_thread=False)
+            log(f"✅ Connected to pipeline database", "database")
+        except Exception as e:
+            log(f"❌ Failed to connect to pipeline DB: {e}", "error")
+
+    @contextmanager
+    def get_cursor(self):
+        """Context manager for database cursor"""
+        if not self.conn:
+            yield None
+            return
+
+        cursor = self.conn.cursor()
+        try:
+            yield cursor
+        finally:
+            cursor.close()
+
+    def get_completed_trades(self, since_timestamp=None, limit=1000):
+        """Fetch completed trades from pipeline database"""
+        if not self.conn:
+            return []
+
+        try:
+            with self.get_cursor() as cursor:
+                if since_timestamp:
+                    cursor.execute('''
+                        SELECT pair, timeframe, model_used, entry_price, exit_price,
+                               sl_price, tp_price, prediction, hit_tp, pnl,
+                               pnl_percent, duration_hours, created_at, evaluated_at
+                        FROM completed_trades
+                        WHERE evaluated_at > ?
+                        ORDER BY evaluated_at DESC
+                        LIMIT ?
+                    ''', (since_timestamp, limit))
+                else:
+                    cursor.execute('''
+                        SELECT pair, timeframe, model_used, entry_price, exit_price,
+                               sl_price, tp_price, prediction, hit_tp, pnl,
+                               pnl_percent, duration_hours, created_at, evaluated_at
+                        FROM completed_trades
+                        ORDER BY evaluated_at DESC
+                        LIMIT ?
+                    ''', (limit,))
+
+                return cursor.fetchall()
+        except Exception as e:
+            log(f"⚠️ Failed to fetch trades: {e}", "warn")
+            return []
+
+    def get_pipeline_stats(self):
+        """Get statistics from pipeline database"""
+        if not self.conn:
+            return {}
+
+        try:
+            with self.get_cursor() as cursor:
+                cursor.execute('''
+                    SELECT
+                        COUNT(*) as total_trades,
+                        SUM(CASE WHEN hit_tp THEN 1 ELSE 0 END) as wins,
+                        SUM(pnl) as total_pnl,
+                        AVG(pnl) as avg_pnl,
+                        MAX(evaluated_at) as last_trade
+                    FROM completed_trades
+                ''')
+
+                result = cursor.fetchone()
+                if result:
+                    return {
+                        'total_trades': result[0] or 0,
+                        'wins': result[1] or 0,
+                        'total_pnl': result[2] or 0.0,
+                        'avg_pnl': result[3] or 0.0,
+                        'win_rate': (result[1] / result[0] * 100) if result[0] else 0.0,
+                        'last_trade': result[4]
+                    }
+        except Exception as e:
+            log(f"⚠️ Failed to get stats: {e}", "warn")
+
+        return {}
+
+    def close(self):
+        """Close database connection"""
+        if self.conn:
+            self.conn.close()
+
+# ========================================================================
+# ITERATION COUNTER
+# ========================================================================
+
+def safe_json_load(filepath: Path, default=None):
+    """Safely load JSON file"""
+    if not filepath.exists():
+        return default
+    try:
+        with open(filepath, 'r') as f:
+            return json.load(f)
+    except:
+        return default
+
+def safe_json_save(filepath: Path, data):
+    """Safely save JSON file"""
+    try:
+        with open(filepath, 'w') as f:
+            json.dump(data, f, indent=2, default=str)
+        return True
+    except:
+        return False
+
+def load_iteration_counter():
+    """Load iteration counter from file"""
+    if OMEGA_ITERATION_FILE.exists():
+        try:
+            data = safe_json_load(OMEGA_ITERATION_FILE)
+            if data and isinstance(data, dict):
+                return data
+        except:
+            pass
+    return {'total': 0, 'start_date': datetime.now(timezone.utc).isoformat(), 'history': []}
+
+def save_iteration_counter(data):
+    """Save iteration counter to file"""
+    safe_json_save(OMEGA_ITERATION_FILE, data)
+
+def increment_iteration():
+    """Increment iteration counter and save"""
+    data = load_iteration_counter()
+    data['total'] += 1
+    data['last_update'] = datetime.now(timezone.utc).isoformat()
+    data['history'].append({
+        'iteration': data['total'],
+        'timestamp': datetime.now(timezone.utc).isoformat(),
+        'environment': ENV_NAME,
+        'mode': get_weekend_mode()
+    })
+    if len(data['history']) > 1000:
+        data['history'] = data['history'][-1000:]
+    save_iteration_counter(data)
+    return data['total']
+
+# ========================================================================
+# SAFE I/O
+# ========================================================================
+
+def safe_pickle_load(filepath: Path, default=None, backup=True):
+    """Safely load pickle file with backup recovery"""
+    if not filepath.exists():
+        return default
+    try:
+        with open(filepath, 'rb') as f:
+            return pickle.load(f)
+    except Exception as e:
+        log(f"⚠️ Corrupted: {filepath.name} ({e})", "warn")
+        if backup:
+            backup_path = BACKUP_FOLDER / f"{filepath.stem}_backup.pkl"
+            if backup_path.exists():
+                try:
+                    with open(backup_path, 'rb') as f:
+                        return pickle.load(f)
+                except:
+                    pass
+        return default
+
+def safe_pickle_save(filepath: Path, data, backup=True):
+    """Safely save pickle file with backup"""
+    try:
+        if backup and filepath.exists():
+            backup_path = BACKUP_FOLDER / f"{filepath.stem}_backup.pkl"
+            try:
+                shutil.copy2(filepath, backup_path)
+            except:
+                pass
+        with open(filepath, 'wb') as f:
+            pickle.dump(data, f, protocol=4)
+        return True
+    except Exception as e:
+        log(f"❌ Failed to save {filepath.name}: {e}", "error")
+        return False
+
+# ========================================================================
+# CONFIDENCE SYSTEM
+# ========================================================================
+
+class ImprovedRLConfidence:
+    """Adaptive confidence estimation for trade execution"""
+    def __init__(self, min_q_spread=0.1, softmax_temp=1.0,
+                 early_thresh=0.35, mature_thresh=0.65, epsilon_trans=0.3):
+        self.min_q_spread = min_q_spread
+        self.temperature = softmax_temp
+        self.early_threshold = early_thresh
+        self.mature_threshold = mature_thresh
+        self.epsilon_transition = epsilon_trans
+
+    def softmax(self, q_values: np.ndarray) -> np.ndarray:
+        """Calculate softmax probabilities"""
+        q_shifted = q_values - np.max(q_values)
+        exp_q = np.exp(q_shifted / self.temperature)
+        return exp_q / np.sum(exp_q)
+
+    def calculate_entropy(self, probs: np.ndarray) -> float:
+        """Calculate Shannon entropy"""
+        probs = np.clip(probs, 1e-10, 1.0)
+        return -np.sum(probs * np.log(probs))
+
+    def get_confidence_metrics(self, q_values: np.ndarray, epsilon: float) -> Dict:
+        """Calculate comprehensive confidence metrics"""
+        sorted_q = np.sort(q_values)[::-1]
+        q_spread = sorted_q[0] - sorted_q[1] if len(sorted_q) > 1 else 0.0
+        probabilities = self.softmax(q_values)
+        best_action_prob = np.max(probabilities)
+        entropy = self.calculate_entropy(probabilities)
+        max_entropy = np.log(len(q_values))
+        normalized_entropy = entropy / max_entropy
+
+        if epsilon > self.epsilon_transition:
+            confidence = (0.5 * np.tanh(q_spread) + 0.3 * best_action_prob +
+                         0.2 * (1 - normalized_entropy)) * 100
+        else:
+            confidence = (0.3 * np.tanh(q_spread) + 0.5 * best_action_prob +
+                         0.2 * (1 - normalized_entropy)) * 100
+
+        progress = 1 - (epsilon - 0.05) / (1.0 - 0.05)
+        adaptive_threshold = (self.early_threshold +
+                            progress * (self.mature_threshold - self.early_threshold)) * 100
+
+        return {
+            'q_spread': float(q_spread),
+            'best_action_prob': float(best_action_prob),
+            'entropy': float(entropy),
+            'normalized_entropy': float(normalized_entropy),
+            'confidence': float(np.clip(confidence, 0, 100)),
+            'adaptive_threshold': float(adaptive_threshold),
+            'training_progress': float(progress)
+        }
+
+    def should_trade(self, q_values: np.ndarray, epsilon: float) -> Tuple[bool, float, Dict]:
+        """Determine if trade should be executed based on confidence"""
+        metrics = self.get_confidence_metrics(q_values, epsilon)
+        confidence = metrics['confidence']
+        threshold = metrics['adaptive_threshold']
+
+        if metrics['q_spread'] < self.min_q_spread:
+            return False, confidence, {**metrics, 'reason': 'q_spread_too_small'}
+
+        should_execute = confidence >= threshold
+        metrics['threshold_used'] = threshold
+        metrics['decision'] = 'TRADE' if should_execute else 'HOLD'
+        return should_execute, confidence, metrics
+
+    def calculate_position_size(self, base_size: float, confidence: float, metrics: Dict) -> float:
+        """Calculate position size based on confidence"""
+        confidence_multiplier = 0.5 + (confidence / 100) * 1.0
+        entropy_penalty = 1.0 - (metrics['normalized_entropy'] * 0.3)
+        exploration_penalty = 1.0 if metrics['training_progress'] > 0.5 else 0.7
+        return base_size * confidence_multiplier * entropy_penalty * exploration_penalty
+
+# ========================================================================
+# DATA STRUCTURES
+# ========================================================================
+
+@dataclass
+class Experience:
+    """Single experience for replay memory"""
+    state: np.ndarray
+    action: int
+    reward: float
+    next_state: np.ndarray
+    done: bool
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+@dataclass
+class TradeOutcome:
+    """Trade outcome for learning"""
+    pair: str
+    action: str
+    entry_price: float
+    exit_price: float
+    sl: float
+    tp: float
+    position_size: float
+    pnl: float
+    duration: float
+    hit_tp: bool
+    timestamp_entry: str
+    timestamp_exit: str
+    state_at_entry: np.ndarray
+    confidence: float
+    regime: str
+    session: str
+
+# ========================================================================
+# INDICATORS
+# ========================================================================
+
+def calculate_rsi(prices: pd.Series, period: int = 14) -> pd.Series:
+    """Calculate RSI indicator"""
+    delta = prices.diff()
+    gain = (delta.where(delta > 0, 0)).rolling(window=period, min_periods=1).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=period, min_periods=1).mean()
+    rs = gain / (loss + EPS)
+    return 100 - (100 / (1 + rs))
+
+def calculate_macd(prices: pd.Series, fast=12, slow=26, signal=9):
+    """Calculate MACD indicator"""
+    ema_fast = prices.ewm(span=fast, adjust=False).mean()
+    ema_slow = prices.ewm(span=slow, adjust=False).mean()
+    macd = ema_fast - ema_slow
+    signal_line = macd.ewm(span=signal, adjust=False).mean()
+    return macd, signal_line, macd - signal_line
+
+def calculate_bollinger_bands(prices: pd.Series, period=20, std_dev=2):
+    """Calculate Bollinger Bands"""
+    sma = prices.rolling(window=period, min_periods=1).mean()
+    std = prices.rolling(window=period, min_periods=1).std()
+    return sma + (std * std_dev), sma, sma - (std * std_dev)
+
+def detect_chart_patterns(df: pd.DataFrame) -> Dict[str, float]:
+    """Detect 6 key chart patterns and return strength scores"""
+    patterns = {}
+    try:
+        closes = df['close'].values
+        highs = df['high'].values
+        lows = df['low'].values
+
+        if len(closes) < 20:
+            return {p: 0.0 for p in ['double_top', 'double_bottom', 'head_shoulders',
+                                     'triangle', 'channel', 'breakout']}
+
+        recent_highs = highs[-20:]
+        recent_lows = lows[-20:]
+
+        peak_indices = [i for i in range(1, len(recent_highs)-1)
+                       if recent_highs[i] > recent_highs[i-1] and recent_highs[i] > recent_highs[i+1]]
+        trough_indices = [i for i in range(1, len(recent_lows)-1)
+                         if recent_lows[i] < recent_lows[i-1] and recent_lows[i] < recent_lows[i+1]]
+
+        patterns['double_top'] = 0.0
+        if len(peak_indices) >= 2:
+            last_peaks = [recent_highs[i] for i in peak_indices[-2:]]
+            if abs(last_peaks[0] - last_peaks[1]) / last_peaks[0] < 0.01:
+                patterns['double_top'] = -0.8
+
+        patterns['double_bottom'] = 0.0
+        if len(trough_indices) >= 2:
+            last_troughs = [recent_lows[i] for i in trough_indices[-2:]]
+            if abs(last_troughs[0] - last_troughs[1]) / last_troughs[0] < 0.01:
+                patterns['double_bottom'] = 0.8
+
+        patterns['head_shoulders'] = 0.0
+        if len(peak_indices) >= 3:
+            last_3_peaks = [recent_highs[i] for i in peak_indices[-3:]]
+            if (last_3_peaks[1] > last_3_peaks[0] and last_3_peaks[1] > last_3_peaks[2] and
+                abs(last_3_peaks[0] - last_3_peaks[2]) / last_3_peaks[0] < 0.015):
+                patterns['head_shoulders'] = -0.9
+
+        patterns['triangle'] = 0.0
+        if len(closes) >= 15:
+            upper_slope = (highs[-1] - highs[-15]) / 15
+            lower_slope = (lows[-1] - lows[-15]) / 15
+            if abs(upper_slope) < 0.0001 and lower_slope > 0:
+                patterns['triangle'] = 0.6
+            elif upper_slope < 0 and abs(lower_slope) < 0.0001:
+                patterns['triangle'] = -0.6
+            elif abs(upper_slope + lower_slope) < 0.0001:
+                patterns['triangle'] = 0.3
+
+        patterns['channel'] = 0.0
+        if len(closes) >= 20:
+            high_slope = (highs[-1] - highs[-20]) / 20
+            low_slope = (lows[-1] - lows[-20]) / 20
+            if abs(high_slope - low_slope) < 0.0002:
+                patterns['channel'] = 0.5 if high_slope > 0 else -0.5
+
+        patterns['breakout'] = 0.0
+        if len(closes) >= 30:
+            volatility = np.std(closes[-30:-5])
+            recent_move = abs(closes[-1] - closes[-5])
+            if recent_move > volatility * 2:
+                patterns['breakout'] = 0.7 if closes[-1] > closes[-5] else -0.7
+
+    except Exception as e:
+        log(f"⚠️ Pattern detection error: {e}", "warn")
+        patterns = {p: 0.0 for p in ['double_top', 'double_bottom', 'head_shoulders',
+                                     'triangle', 'channel', 'breakout']}
+    return patterns
+
+def create_state_vector(df_1h: pd.DataFrame, df_1d: pd.DataFrame, pair: str) -> np.ndarray:
+    """Create 30-feature state vector from market data"""
+    if len(df_1h) < 50 or len(df_1d) < 30:
+        return np.zeros(STATE_SIZE)
+
+    features = []
+    try:
+        close_1h = df_1h['close'].iloc[-1]
+        high_20, low_20 = df_1h['high'].iloc[-20:].max(), df_1h['low'].iloc[-20:].min()
+        features.append((close_1h - low_20) / (high_20 - low_20 + EPS))
+
+        features.extend(df_1h['close'].pct_change().iloc[-5:].values)
+
+        rsi_1h = calculate_rsi(df_1h['close'], 14).iloc[-1] / 100.0
+        rsi_1d = calculate_rsi(df_1d['close'], 14).iloc[-1] / 100.0
+        features.extend([rsi_1h, rsi_1d])
+
+        macd, signal, _ = calculate_macd(df_1h['close'])
+        features.extend([np.tanh(macd.iloc[-1] * 100), np.tanh(signal.iloc[-1] * 100)])
+
+        upper, middle, lower = calculate_bollinger_bands(df_1h['close'])
+        bb_pos = (close_1h - lower.iloc[-1]) / (upper.iloc[-1] - lower.iloc[-1] + EPS)
+        bb_width = (upper.iloc[-1] - lower.iloc[-1]) / middle.iloc[-1]
+        features.extend([bb_pos, bb_width])
+
+        atr = df_1h['atr'].iloc[-1]
+        atr_ma = df_1h['atr'].rolling(20).mean().iloc[-1]
+        features.extend([atr / (atr_ma + EPS), df_1h['close'].pct_change().std() * 100])
+
+        ema_fast = df_1h['close'].ewm(span=12).mean().iloc[-1]
+        ema_slow = df_1h['close'].ewm(span=26).mean().iloc[-1]
+        trend_1h = (ema_fast - ema_slow) / ema_slow
+
+        ema_fast_1d = df_1d['close'].ewm(span=12).mean().iloc[-1]
+        ema_slow_1d = df_1d['close'].ewm(span=26).mean().iloc[-1]
+        trend_1d = (ema_fast_1d - ema_slow_1d) / ema_slow_1d
+
+        slope = (df_1h['close'].iloc[-1] - df_1h['close'].iloc[-20]) / df_1h['close'].iloc[-20]
+        features.extend([trend_1h * 10, trend_1d * 10, slope * 10])
+
+        vol_ratio = 1.0
+        if 'volume' in df_1h.columns and df_1h['volume'].sum() > 0:
+            vol_ratio = df_1h['volume'].iloc[-5:].mean() / (df_1h['volume'].iloc[-50:].mean() + EPS)
+        features.append(vol_ratio)
+
+        hour = datetime.now().hour
+        features.extend([
+            1.0 if 0 <= hour < 8 else 0.0,
+            1.0 if 8 <= hour < 16 else 0.0,
+            1.0 if 16 <= hour < 24 else 0.0
+        ])
+
+        features.extend([datetime.now().weekday() / 6.0, hour / 23.0])
+
+        patterns = detect_chart_patterns(df_1h)
+        features.extend([
+            patterns.get('double_top', 0.0),
+            patterns.get('double_bottom', 0.0),
+            patterns.get('head_shoulders', 0.0),
+            patterns.get('triangle', 0.0),
+            patterns.get('channel', 0.0),
+            patterns.get('breakout', 0.0)
+        ])
+
+        features = features[:STATE_SIZE]
+        while len(features) < STATE_SIZE:
+            features.append(0.0)
+
+        return np.array(features, dtype=np.float32)
+    except Exception as e:
+        log(f"⚠️ State vector error: {e}", "warn")
+        return np.zeros(STATE_SIZE)
+
+# ========================================================================
+# Q-NETWORK
+# ========================================================================
+
+class SimpleQNetwork:
+    """Deep Q-Network with 2 hidden layers"""
+    def __init__(self, state_size=STATE_SIZE, action_size=ACTION_SPACE, hidden_size=64):
+        self.state_size, self.action_size = state_size, action_size
+        self.w1 = np.random.randn(state_size, hidden_size) * np.sqrt(2 / state_size)
+        self.b1 = np.zeros(hidden_size)
+        self.w2 = np.random.randn(hidden_size, hidden_size) * np.sqrt(2 / hidden_size)
+        self.b2 = np.zeros(hidden_size)
+        self.w3 = np.random.randn(hidden_size, action_size) * np.sqrt(2 / hidden_size)
+        self.b3 = np.zeros(action_size)
+
+    def relu(self, x):
+        return np.maximum(0, x)
+
+    def forward(self, state):
+        h1 = self.relu(np.dot(state, self.w1) + self.b1)
+        h2 = self.relu(np.dot(h1, self.w2) + self.b2)
+        return np.dot(h2, self.w3) + self.b3
+
+    def predict(self, state):
+        if state.ndim == 1:
+            state = state.reshape(1, -1)
+        return self.forward(state[0])
+
+    def update(self, states, targets, learning_rate=LEARNING_RATE):
+        for i in range(len(states)):
+            state, target = states[i], targets[i]
+            h1 = self.relu(np.dot(state, self.w1) + self.b1)
+            h2 = self.relu(np.dot(h1, self.w2) + self.b2)
+            q_values = np.dot(h2, self.w3) + self.b3
+            error = q_values - target
+
+            dw3 = np.outer(h2, error)
+            db3 = error
+            dh2 = np.dot(error, self.w3.T)
+            dh2[h2 <= 0] = 0
+            dw2 = np.outer(h1, dh2)
+            db2 = dh2
+            dh1 = np.dot(dh2, self.w2.T)
+            dh1[h1 <= 0] = 0
+            dw1 = np.outer(state, dh1)
+            db1 = dh1
+
+            self.w3 -= learning_rate * dw3
+            self.b3 -= learning_rate * db3
+            self.w2 -= learning_rate * dw2
+            self.b2 -= learning_rate * db2
+            self.w1 -= learning_rate * dw1
+            self.b1 -= learning_rate * db1
+
+    def clone(self):
+        new_net = SimpleQNetwork(self.state_size, self.action_size)
+        new_net.w1, new_net.b1 = self.w1.copy(), self.b1.copy()
+        new_net.w2, new_net.b2 = self.w2.copy(), self.b2.copy()
+        new_net.w3, new_net.b3 = self.w3.copy(), self.b3.copy()
+        return new_net
+
+    def save(self, filepath):
+        try:
+            np.savez(filepath, w1=self.w1, b1=self.b1, w2=self.w2, b2=self.b2, w3=self.w3, b3=self.b3)
+            return True
+        except:
+            return False
+
+    def load(self, filepath):
+        if not filepath.exists():
+            return False
+        try:
+            data = np.load(filepath)
+            if data['w1'].shape != (self.state_size, 64):
+                log(f"⚠️ Network shape mismatch. Resetting.", "warn")
+                return False
+            self.w1, self.b1 = data['w1'], data['b1']
+            self.w2, self.b2 = data['w2'], data['b2']
+            self.w3, self.b3 = data['w3'], data['b3']
+            return True
+        except Exception as e:
+            log(f"⚠️ Network load error: {e}", "warn")
+            return False
+
+# ========================================================================
+# RL AGENT WITH PIPELINE INTEGRATION
+# ========================================================================
+
+class DeepRLAgent:
+    """Deep Q-Learning Agent with Experience Replay and Pipeline Integration"""
+    def __init__(self):
+        self.q_network = SimpleQNetwork()
+        self.target_network = SimpleQNetwork()
+        self.memory = deque(maxlen=MEMORY_SIZE)
+        self.epsilon = EPSILON_START
+        self.learning_count = 0
+        self.trade_count = 0
+        self.stats = {
+            'total_updates': 0, 'total_trades': 0, 'profitable_trades': 0,
+            'total_pnl': 0.0, 'win_rate': 0.0, 'avg_reward': 0.0,
+            'epsilon_history': [], 'q_value_history': [],
+            'pipeline_trades_learned': 0, 'last_pipeline_sync': None
+        }
+        self.load_state()
+        log(f"🧠 RL Agent initialized: {len(self.memory)} experiences", "brain")
+
+    def select_action(self, state, force_greedy=False):
+        if not force_greedy and random.random() < self.epsilon:
+            return random.randint(0, ACTION_SPACE - 1)
+        else:
+            return int(np.argmax(self.q_network.predict(state)))
+
+    def remember(self, experience: Experience):
+        self.memory.append(experience)
+
+    def learn(self):
+        if len(self.memory) < MIN_REPLAY_SIZE:
+            return
+
+        batch = random.sample(self.memory, min(BATCH_SIZE, len(self.memory)))
+        states = np.array([exp.state for exp in batch])
+        actions = np.array([exp.action for exp in batch])
+        rewards = np.array([exp.reward for exp in batch])
+        next_states = np.array([exp.next_state for exp in batch])
+        dones = np.array([exp.done for exp in batch])
+
+        current_q_batch = np.array([self.q_network.forward(s) for s in states])
+        next_q_batch = np.array([self.target_network.forward(s) for s in next_states])
+
+        targets = current_q_batch.copy()
+        for i in range(len(batch)):
+            if dones[i]:
+                targets[i][actions[i]] = rewards[i]
+            else:
+                targets[i][actions[i]] = rewards[i] + GAMMA * np.max(next_q_batch[i])
+
+        self.q_network.update(states, targets, LEARNING_RATE)
+        self.learning_count += 1
+        self.stats['total_updates'] += 1
+
+        avg_q = np.mean([np.max(q) for q in current_q_batch])
+        self.stats['q_value_history'].append(float(avg_q))
+
+        self.epsilon = max(EPSILON_MIN, self.epsilon * EPSILON_DECAY)
+        self.stats['epsilon_history'].append(self.epsilon)
+
+        if self.learning_count % TARGET_UPDATE_FREQUENCY == 0:
+            self.target_network = self.q_network.clone()
+            log(f"🎯 Target network updated (#{self.learning_count})", "brain")
+
+    def record_trade(self, trade_outcome: TradeOutcome):
+        self.trade_count += 1
+        self.stats['total_trades'] += 1
+        self.stats['total_pnl'] += trade_outcome.pnl
+
+        if trade_outcome.pnl > 0:
+            self.stats['profitable_trades'] += 1
+
+        self.stats['win_rate'] = self.stats['profitable_trades'] / self.stats['total_trades']
+
+        reward = self.calculate_reward(trade_outcome)
+        self.stats['avg_reward'] = (
+            (self.stats['avg_reward'] * (self.stats['total_trades'] - 1) + reward) /
+            self.stats['total_trades']
+        )
+
+        action = 0 if trade_outcome.action == 'BUY' else 1
+        experience = Experience(
+            state=trade_outcome.state_at_entry, action=action, reward=reward,
+            next_state=trade_outcome.state_at_entry, done=True,
+            metadata={'pair': trade_outcome.pair, 'pnl': trade_outcome.pnl,
+                     'hit_tp': trade_outcome.hit_tp, 'duration': trade_outcome.duration}
+        )
+
+        self.remember(experience)
+
+        if len(self.memory) >= MIN_REPLAY_SIZE:
+            self.learn()
+
+    def learn_from_pipeline_trades(self, pipeline_db: PipelineDatabase, data: Dict):
+        """🆕 Learn from completed trades in Ultra-Persistent Pipeline database"""
+
+        # Load last sync timestamp
+        sync_data = safe_json_load(PIPELINE_SYNC_FILE, default={'last_sync': None, 'trades_learned': 0})
+        last_sync = sync_data.get('last_sync')
+
+        log(f"\n💾 Syncing with Pipeline Database...", "database")
+
+        # Fetch new completed trades
+        completed_trades = pipeline_db.get_completed_trades(since_timestamp=last_sync)
+
+        if not completed_trades:
+            log("ℹ️ No new pipeline trades to learn from", "info")
+            return 0
+
+        log(f"📊 Found {len(completed_trades)} new pipeline trades", "database")
+
+        trades_learned = 0
+
+        for trade_data in completed_trades:
+            try:
+                # Unpack trade data
+                (pair, timeframe, model_used, entry_price, exit_price, sl_price, tp_price,
+                 prediction, hit_tp, pnl, pnl_percent, duration_hours, created_at, evaluated_at) = trade_data
+
+                # Convert pair format (EUR_USD -> EUR/USD)
+                if '/' not in pair:
+                    pair = f"{pair[:3]}/{pair[4:]}"
+
+                if pair not in data or '1h' not in data[pair] or '1d' not in data[pair]:
+                    continue
+
+                # Create approximate state vector (using current data as proxy)
+                state = create_state_vector(data[pair]['1h'], data[pair]['1d'], pair)
+
+                # Determine action (1=long/buy, 0=short/sell from prediction)
+                action = 1 if prediction == 1 else 0
+                action_str = 'BUY' if prediction == 1 else 'SELL'
+
+                # Create trade outcome
+                outcome = TradeOutcome(
+                    pair=pair,
+                    action=action_str,
+                    entry_price=float(entry_price),
+                    exit_price=float(exit_price),
+                    sl=float(sl_price),
+                    tp=float(tp_price),
+                    position_size=1.0,  # Normalized
+                    pnl=float(pnl),
+                    duration=float(duration_hours),
+                    hit_tp=bool(hit_tp),
+                    timestamp_entry=created_at,
+                    timestamp_exit=evaluated_at,
+                    state_at_entry=state,
+                    confidence=70.0,  # Default confidence for pipeline trades
+                    regime=f'PIPELINE_{model_used}',
+                    session=timeframe
+                )
+
+                # Learn from this trade
+                self.record_trade(outcome)
+                trades_learned += 1
+
+            except Exception as e:
+                log(f"⚠️ Failed to process pipeline trade: {e}", "warn")
+                continue
+
+        # Update sync timestamp
+        if completed_trades:
+            latest_timestamp = max(trade[13] for trade in completed_trades)  # evaluated_at
+            sync_data['last_sync'] = latest_timestamp
+            sync_data['trades_learned'] = sync_data.get('trades_learned', 0) + trades_learned
+            safe_json_save(PIPELINE_SYNC_FILE, sync_data)
+
+        self.stats['pipeline_trades_learned'] = sync_data.get('trades_learned', 0)
+        self.stats['last_pipeline_sync'] = datetime.now(timezone.utc).isoformat()
+
+        log(f"✅ Learned from {trades_learned} pipeline trades (Total: {self.stats['pipeline_trades_learned']})", "success")
+        return trades_learned
+
+    def calculate_reward(self, trade: TradeOutcome) -> float:
+        reward = 0.0
+
+        if trade.pnl > 0:
+            reward += trade.pnl * PROFIT_REWARD_SCALE
+        else:
+            reward += trade.pnl * LOSS_PENALTY_SCALE
+
+        if trade.hit_tp:
+            reward += WIN_STREAK_BONUS
+        else:
+            reward -= LOSS_STREAK_PENALTY
+
+        if trade.pnl > 0 and trade.duration < 24:
+            reward *= 1.2
+        elif trade.pnl < 0 and trade.duration > 48:
+            reward *= 1.5
+
+        risk_adjusted = trade.pnl / (abs(trade.entry_price - trade.sl) + EPS)
+        reward += risk_adjusted * SHARPE_REWARD_SCALE
+
+        return float(reward)
+
+    def save_state(self):
+        try:
+            self.q_network.save(RL_Q_NETWORK_FILE)
+            self.target_network.save(RL_TARGET_NETWORK_FILE)
+            safe_pickle_save(RL_MEMORY_FILE, list(self.memory))
+            safe_json_save(RL_LEARNING_STATS_FILE, self.stats)
+            log(f"💾 RL state saved: {len(self.memory)} exp, {self.stats['total_trades']} trades", "success")
+        except Exception as e:
+            log(f"⚠️ Failed to save RL state: {e}", "warn")
+
+    def load_state(self):
+        try:
+            q_loaded = self.q_network.load(RL_Q_NETWORK_FILE)
+            t_loaded = self.target_network.load(RL_TARGET_NETWORK_FILE)
+            if q_loaded and t_loaded:
+                log("✅ Loaded Q-networks", "success")
+            else:
+                log("🔄 New Q-networks initialized", "info")
+
+            loaded_mem = safe_pickle_load(RL_MEMORY_FILE, default=[])
+            if loaded_mem:
+                self.memory.extend(loaded_mem)
+                log(f"✅ Loaded {len(loaded_mem)} experiences", "success")
+
+            loaded_stats = safe_json_load(RL_LEARNING_STATS_FILE)
+            if loaded_stats:
+                self.stats = loaded_stats
+                if self.stats.get('epsilon_history'):
+                    self.epsilon = self.stats['epsilon_history'][-1]
+                log(f"✅ Loaded stats: {self.stats['total_trades']} trades", "success")
+        except Exception as e:
+            log(f"⚠️ Could not load RL state: {e}", "warn")
+
+# ========================================================================
+# TRADING ENVIRONMENT
+# ========================================================================
+
+class TradingEnvironment:
+    """Environment for executing and tracking trades"""
+    def __init__(self):
+        self.active_trades = {}
+        self.trade_history = safe_json_load(TRADE_HISTORY_FILE, default=[])
+        if self.trade_history:
+            log(f"✅ Loaded {len(self.trade_history)} historical trades", "success")
+
+    def save_trade_history(self):
+        safe_json_save(TRADE_HISTORY_FILE, self.trade_history)
+
+    def execute_trade(self, pair: str, action: str, price: float, sl: float,
+                     tp: float, size: float, state: np.ndarray, metadata: Dict) -> str:
+        trade_id = f"{pair}_{datetime.now():%Y%m%d_%H%M%S}"
+        self.active_trades[trade_id] = {
+            'pair': pair, 'action': action, 'entry_price': price, 'sl': sl, 'tp': tp,
+            'size': size, 'entry_time': datetime.now(timezone.utc).isoformat(),
+            'state_at_entry': state.tolist(), 'metadata': metadata
+        }
+        log(f"💰 Trade: {trade_id} - {action} {pair} @ {price:.5f}", "money")
+        return trade_id
+
+    def check_exits(self, current_prices: Dict[str, float]) -> List[TradeOutcome]:
+        completed_trades = []
+
+        for trade_id, trade in list(self.active_trades.items()):
+            pair = trade['pair']
+            if pair not in current_prices:
+                continue
+
+            current_price = current_prices[pair]
+            hit_tp = hit_sl = False
+
+            if trade['action'] == 'BUY':
+                hit_tp = current_price >= trade['tp']
+                hit_sl = current_price <= trade['sl']
+            else:
+                hit_tp = current_price <= trade['tp']
+                hit_sl = current_price >= trade['sl']
+
+            if hit_tp or hit_sl:
+                exit_price = trade['tp'] if hit_tp else trade['sl']
+
+                if trade['action'] == 'BUY':
+                    pnl = (exit_price - trade['entry_price']) * trade['size']
+                else:
+                    pnl = (trade['entry_price'] - exit_price) * trade['size']
+
+                pnl -= exit_price * 0.0003 + exit_price * trade['size'] * 0.0005
+
+                entry_time = datetime.fromisoformat(trade['entry_time'])
+                exit_time = datetime.now(timezone.utc)
+                duration = (exit_time - entry_time).total_seconds() / 3600.0
+
+                outcome = TradeOutcome(
+                    pair=pair, action=trade['action'], entry_price=trade['entry_price'],
+                    exit_price=exit_price, sl=trade['sl'], tp=trade['tp'],
+                    position_size=trade['size'], pnl=pnl, duration=duration,
+                    hit_tp=hit_tp, timestamp_entry=trade['entry_time'],
+                    timestamp_exit=exit_time.isoformat(),
+                    state_at_entry=np.array(trade['state_at_entry']),
+                    confidence=trade['metadata'].get('confidence', 0),
+                    regime=trade['metadata'].get('regime', 'UNKNOWN'),
+                    session=trade['metadata'].get('session', 'UNKNOWN')
+                )
+
+                completed_trades.append(outcome)
+
+                self.trade_history.append({
+                    'trade_id': trade_id, 'pair': pair, 'action': trade['action'],
+                    'entry': trade['entry_price'], 'exit': exit_price, 'pnl': pnl,
+                    'result': 'WIN' if hit_tp else 'LOSS', 'duration_hours': duration,
+                    'timestamp': exit_time.isoformat()
+                })
+
+                del self.active_trades[trade_id]
+                log(f"✅ Closed: {trade_id} - {'WIN' if hit_tp else 'LOSS'} | ${pnl:.2f}",
+                    "success" if pnl > 0 else "warn")
+
+        if completed_trades:
+            self.save_trade_history()
+
+        return completed_trades
+
+# ========================================================================
+# WEEKEND BACKTEST ENGINE
+# ========================================================================
+
+def run_weekend_backtest(data: Dict, agent: DeepRLAgent, confidence_system: ImprovedRLConfidence):
+    """Run backtest on historical data for weekend learning"""
+    log("\n🎓 WEEKEND LEARNING MODE: Running backtest...", "brain")
+
+    trades_learned = 0
+
+    for pair in PAIRS:
+        if pair not in data or '1h' not in data[pair] or '1d' not in data[pair]:
+            continue
+
+        df_1h = data[pair]['1h']
+        df_1d = data[pair]['1d']
+
+        for i in range(max(60, len(df_1h) - WEEKEND_BACKTEST_STEPS), len(df_1h) - 5):
+            try:
+                state = create_state_vector(df_1h.iloc[:i], df_1d.iloc[:max(0, i-24)], pair)
+                q_values = agent.q_network.predict(state)
+
+                should_trade, confidence, conf_metrics = confidence_system.should_trade(q_values, agent.epsilon)
+
+                if not should_trade:
+                    continue
+
+                best_action = np.argmax(q_values)
+                action_map = {0: 'BUY', 1: 'SELL', 2: 'HOLD'}
+                direction = action_map[best_action]
+
+                if direction == 'HOLD':
+                    continue
+
+                entry_price = df_1h['close'].iloc[i]
+                atr = df_1h['atr'].iloc[i]
+
+                if direction == 'BUY':
+                    sl = entry_price - (atr * ATR_SL_MULTIPLIER)
+                    tp = entry_price + (atr * ATR_TP_MULTIPLIER)
+                else:
+                    sl = entry_price + (atr * ATR_SL_MULTIPLIER)
+                    tp = entry_price - (atr * ATR_TP_MULTIPLIER)
+
+                hit_tp = False
+                hit_sl = False
+                exit_idx = i + 1
+
+                for j in range(i + 1, min(i + 50, len(df_1h))):
+                    current_price = df_1h['close'].iloc[j]
+
+                    if direction == 'BUY':
+                        if current_price >= tp:
+                            hit_tp = True
+                            exit_idx = j
+                            break
+                        elif current_price <= sl:
+                            hit_sl = True
+                            exit_idx = j
+                            break
+                    else:
+                        if current_price <= tp:
+                            hit_tp = True
+                            exit_idx = j
+                            break
+                        elif current_price >= sl:
+                            hit_sl = True
+                            exit_idx = j
+                            break
+
+                if not hit_tp and not hit_sl:
+                    exit_idx = min(i + 50, len(df_1h) - 1)
+                    exit_price = df_1h['close'].iloc[exit_idx]
+                else:
+                    exit_price = tp if hit_tp else sl
+
+                base_size = (BASE_CAPITAL * MAX_RISK_PER_TRADE) / (abs(entry_price - sl) + EPS)
+                position_size = confidence_system.calculate_position_size(base_size, confidence, conf_metrics)
+                position_size = min(position_size, MAX_TRADE_CAP / entry_price)
+
+                if direction == 'BUY':
+                    pnl = (exit_price - entry_price) * position_size
+                else:
+                    pnl = (entry_price - exit_price) * position_size
+
+                pnl -= exit_price * 0.0003 + exit_price * position_size * 0.0005
+
+                duration = (exit_idx - i) * 1.0
+
+                outcome = TradeOutcome(
+                    pair=pair, action=direction, entry_price=entry_price,
+                    exit_price=exit_price, sl=sl, tp=tp, position_size=position_size,
+                    pnl=pnl, duration=duration, hit_tp=hit_tp,
+                    timestamp_entry=str(df_1h.index[i]),
+                    timestamp_exit=str(df_1h.index[exit_idx]),
+                    state_at_entry=state, confidence=confidence,
+                    regime='BACKTEST', session='WEEKEND'
+                )
+
+                agent.record_trade(outcome)
+                trades_learned += 1
+
+            except Exception as e:
+                continue
+
+    log(f"✅ Weekend backtest complete: {trades_learned} trades learned", "success")
+    return trades_learned
+
+# ========================================================================
+# CORE FUNCTIONS
+# ========================================================================
+
+def fetch_price(pair, timeout=10):
+    if not BROWSERLESS_TOKEN:
+        return None
+    try:
+        fc, tc = pair.split("/")
+        url = f"https://production-sfo.browserless.io/content?token={BROWSERLESS_TOKEN}"
+        r = requests.post(
+            url,
+            json={"url": f"https://www.x-rates.com/calculator/?from={fc}&to={tc}&amount=1"},
+            timeout=timeout
+        )
+        m = re.search(r'ccOutputRslt[^>]*>([\d,.]+)', r.text)
+        return float(m.group(1).replace(",", "")) if m else None
+    except:
+        return None
+
+def ensure_atr(df):
+    if "atr" in df.columns and df["atr"].median() > MIN_ATR:
+        return df.assign(atr=df["atr"].fillna(MIN_ATR).clip(lower=MIN_ATR))
+
+    high, low, close = df["high"].values, df["low"].values, df["close"].values
+    tr = np.maximum.reduce([
+        high - low, np.abs(high - np.roll(close, 1)), np.abs(low - np.roll(close, 1))
+    ])
+    tr[0] = high[0] - low[0] if len(tr) > 0 else MIN_ATR
+
+    df["atr"] = pd.Series(tr, index=df.index).rolling(
+        ATR_PERIOD, min_periods=1
+    ).mean().fillna(MIN_ATR).clip(lower=MIN_ATR)
+    return df
+
+def update_pickle_data():
+    log("🔄 Updating pickle data...", "info")
+    updated_count = 0
+
+    for pair in PAIRS:
+        latest_price = fetch_price(pair)
+        if not latest_price or latest_price <= 0:
+            continue
+
+        pair_key = pair.replace("/", "_")
+        for pkl_file in PICKLE_FOLDER.glob(f"{pair_key}*.pkl"):
+            if any(x in pkl_file.name for x in ['_model', '_sgd', '_rf', 'indicator_cache', '.bak']):
+                continue
+
+            try:
+                try:
+                    df = pd.read_pickle(pkl_file, compression='gzip')
+                except:
+                    df = pd.read_pickle(pkl_file, compression=None)
+
+                if not isinstance(df, pd.DataFrame) or len(df) < 10:
+                    continue
+                if not all(c in df.columns for c in ['open', 'high', 'low', 'close']):
+                    continue
+
+                last_time = df.index[-1]
+                new_time = datetime.now().replace(second=0, microsecond=0)
+
+                if new_time > last_time:
+                    new_row = pd.DataFrame({
+                        'open': [float(latest_price)], 'high': [float(latest_price)],
+                        'low': [float(latest_price)], 'close': [float(latest_price)],
+                        'volume': [0]
+                    }, index=[new_time])
+
+                    df = pd.concat([df, new_row]).tail(5000).ffill().bfill()
+                    df = ensure_atr(df)
+                    df.to_pickle(pkl_file, compression='gzip')
+                    updated_count += 1
+            except:
+                pass
+
+    log(f"✅ Updated {updated_count} files", "success")
+    return updated_count
+
+def load_data(folder):
+    log(f"📂 Loading data from: {folder}", "info")
+    if not folder.exists():
+        return {}
+
+    all_pkl = [p for p in folder.glob("*.pkl") if not any(s in p.name for s in
+               ['_sgd_model','_rf_model','indicator_cache','ultra_','alpha_','_model.pkl','.bak'])]
+
+    pair_files = defaultdict(list)
+    currencies = ["EUR","GBP","USD","AUD","NZD","CAD","CHF","JPY"]
+
+    for pkl in all_pkl:
+        parts = pkl.stem.split('_')
+        if len(parts) >= 2 and parts[0] in currencies and parts[1] in currencies:
+            pair_files[f"{parts[0]}_{parts[1]}"].append(pkl)
+
+    combined = {}
+    for pk, files in pair_files.items():
+        pair = f"{pk[:3]}/{pk[4:]}"
+        if pair not in PAIRS:
+            continue
+
+        pair_data = {}
+        for pkl in files:
+            try:
+                try:
+                    df = pd.read_pickle(pkl, compression='gzip')
+                except:
+                    df = pd.read_pickle(pkl, compression=None)
+
+                if not isinstance(df, pd.DataFrame) or len(df) < 50:
+                    continue
+                if not all(c in df.columns for c in ['open','high','low','close']):
+                    continue
+
+                df = df.ffill().bfill().dropna(subset=['open', 'high', 'low', 'close'])
+                df.index = pd.to_datetime(df.index, errors="coerce")
+                if df.index.tz:
+                    df.index = df.index.tz_localize(None)
+                df = df[df.index.notna()]
+
+                tf = "1d" if "1d" in pkl.stem or "daily" in pkl.stem else "1h"
+                if tf not in ["1d", "1h"]:
+                    continue
+
+                df = ensure_atr(df)
+                pair_data[tf] = df
+                log(f"✅ {pair} [{tf}]: {len(df)} rows", "success")
+            except:
+                pass
+
+        if pair_data:
+            combined[pair] = pair_data
+
+    log(f"✅ Loaded {len(combined)} pairs", "success")
+    return combined
+
+def send_rl_email(signals, iteration, rl_stats, trade_history, mode, pipeline_stats):
+    if not GMAIL_APP_PASSWORD:
+        log("⚠️ Email skipped: No password", "warn")
+        return
+
+    try:
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = f"🧠 BEACON v17 [{mode}] - Iter #{iteration}"
+        msg['From'] = GMAIL_USER
+        msg['To'] = GMAIL_USER
+
+        active_signals = sum(1 for s in signals.values() if s.get('direction') != 'HOLD')
+        recent_trades = trade_history[-10:]
+
+        epsilon = rl_stats.get('epsilon_history', [EPSILON_START])[-1] if rl_stats.get('epsilon_history') else EPSILON_START
+
+        mode_badge = "WEEKEND LEARNING" if mode == "WEEKEND_LEARNING" else "LIVE TRADING"
+        mode_color = "#f59e0b" if mode == "WEEKEND_LEARNING" else "#10b981"
+
+        pipeline_trades_learned = rl_stats.get('pipeline_trades_learned', 0)
+        pipeline_pnl = pipeline_stats.get('total_pnl', 0.0)
+        pipeline_wr = pipeline_stats.get('win_rate', 0.0)
+
+        html = f"""<!DOCTYPE html><html><head><style>
+body{{font-family:-apple-system,sans-serif;background:#0f172a;margin:0;padding:20px}}
+.container{{max-width:1000px;margin:0 auto;background:white;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.4)}}
+.header{{background:linear-gradient(135deg,#7c3aed,#4c1d95);color:white;padding:50px;text-align:center}}
+.header h1{{margin:0;font-size:38px;font-weight:900}}
+.mode-badge{{background:{mode_color};padding:12px 24px;border-radius:30px;margin-top:18px;font-weight:800}}
+.stats{{background:#fef3c7;padding:25px;margin:25px;border-radius:10px}}
+.pipeline-stats{{background:#dbeafe;padding:25px;margin:25px;border-radius:10px}}
+.stat-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px}}
+.stat-item{{background:white;padding:15px;border-radius:8px;text-align:center}}
+.stat-value{{font-size:28px;font-weight:900;color:#7c3aed}}
+.stat-label{{font-size:12px;color:#6b7280;margin-top:5px}}
+.section-title{{font-size:20px;font-weight:800;color:#1f2937;margin-bottom:15px}}
+</style></head><body><div class="container">
+<div class="header">
+<h1>🧠 TRADE BEACON v17.0</h1>
+<div class="mode-badge">{mode_badge}</div>
+<p style="margin:20px 0 0">Iteration #{iteration} | {datetime.now():%Y-%m-%d %H:%M UTC}</p>
+</div>
+<div class="stats">
+<div class="section-title">🧠 RL Agent Stats</div>
+<div class="stat-grid">
+<div class="stat-item"><div class="stat-value">{rl_stats.get('total_trades',0)}</div><div class="stat-label">TRADES</div></div>
+<div class="stat-item"><div class="stat-value">{rl_stats.get('win_rate',0)*100:.1f}%</div><div class="stat-label">WIN RATE</div></div>
+<div class="stat-item"><div class="stat-value">${rl_stats.get('total_pnl',0):.2f}</div><div class="stat-label">TOTAL P&L</div></div>
+<div class="stat-item"><div class="stat-value">{epsilon:.3f}</div><div class="stat-label">EPSILON</div></div>
+<div class="stat-item"><div class="stat-value">{active_signals}</div><div class="stat-label">SIGNALS</div></div>
+<div class="stat-item"><div class="stat-value">{len(recent_trades)}</div><div class="stat-label">RECENT</div></div>
+</div></div>
+<div class="pipeline-stats">
+<div class="section-title">💾 Pipeline Integration Stats</div>
+<div class="stat-grid">
+<div class="stat-item"><div class="stat-value">{pipeline_trades_learned}</div><div class="stat-label">PIPELINE TRADES</div></div>
+<div class="stat-item"><div class="stat-value">{pipeline_stats.get('total_trades',0)}</div><div class="stat-label">TOTAL PIPELINE</div></div>
+<div class="stat-item"><div class="stat-value">{pipeline_wr:.1f}%</div><div class="stat-label">PIPELINE WR</div></div>
+<div class="stat-item"><div class="stat-value">${pipeline_pnl:.2f}</div><div class="stat-label">PIPELINE P&L</div></div>
+</div></div></div></body></html>"""
+
+        msg.attach(MIMEText(html, 'html'))
+
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=30) as srv:
+            srv.login(GMAIL_USER, GMAIL_APP_PASSWORD)
+            srv.send_message(msg)
+
+        log(f"✅ Email sent", "success")
+    except Exception as e:
+        log(f"❌ Email failed: {e}", "error")
+
+def push_git(files, msg):
+    if IN_GHA or not FOREX_PAT:
+        return False
+
+    try:
+        REPO_URL = f"https://{GITHUB_USERNAME}:{FOREX_PAT}@github.com/{GITHUB_USERNAME}/{GITHUB_REPO}.git"
+        repo_path = SAVE_FOLDER if (SAVE_FOLDER / ".git").exists() else BASE_FOLDER
+
+        if not (repo_path / ".git").exists():
+            subprocess.run(["git", "clone", REPO_URL, str(repo_path)], capture_output=True, timeout=60, check=True)
+
+        os.chdir(repo_path)
+
+        for f in files:
+            if (repo_path / f).exists():
+                subprocess.run(["git", "add", str(f)], check=False)
+
+        subprocess.run(["git", "commit", "-m", msg], capture_output=True, check=False)
+        subprocess.run(["git", "pull", "--rebase", "origin", "main"], capture_output=True, check=False)
+        result = subprocess.run(["git", "push", "origin", "main"], capture_output=True, timeout=30)
+
+        return result.returncode == 0
+    except:
+        return False
+    finally:
+        try:
+            os.chdir(SAVE_FOLDER)
+        except:
+            pass
+
+# ========================================================================
+# MAIN
+# ========================================================================
+
+def main():
+    log("=" * 70, "rocket")
+    log("🧠 TRADE BEACON v17.0 - INTEGRATED LEARNING", "brain")
+    log("=" * 70, "rocket")
+
+    mode = get_weekend_mode()
+    log(f"📅 Mode: {mode}", "info")
+
+    iteration = increment_iteration()
+
+    agent = DeepRLAgent()
+    env = TradingEnvironment()
+    confidence_system = ImprovedRLConfidence()
+
+    # 🆕 Connect to Pipeline Database
+    pipeline_db = PipelineDatabase()
+
+    try:
+        log(f"\n📊 Iteration #{iteration} | {ENV_NAME} | {mode}", "info")
+
+        # Only update prices on weekdays
+        if mode == "LIVE_TRADING":
+            update_pickle_data()
+
+        data = load_data(PICKLE_FOLDER)
+        if not data:
+            raise ValueError("❌ No data loaded")
+
+        # 🆕 LEARN FROM PIPELINE DATABASE (always, regardless of weekend)
+        if pipeline_db.conn:
+            pipeline_trades_learned = agent.learn_from_pipeline_trades(pipeline_db, data)
+            pipeline_stats = pipeline_db.get_pipeline_stats()
+
+            log(f"\n💾 Pipeline Stats:", "database")
+            log(f"  Total Trades: {pipeline_stats.get('total_trades', 0)}", "database")
+            log(f"  Win Rate: {pipeline_stats.get('win_rate', 0):.1f}%", "database")
+            log(f"  Total P&L: ${pipeline_stats.get('total_pnl', 0.0):.5f}", "database")
+            log(f"  Trades Learned by RL: {agent.stats.get('pipeline_trades_learned', 0)}", "database")
+        else:
+            pipeline_trades_learned = 0
+            pipeline_stats = {}
+            log("⚠️ Pipeline database not available", "warn")
+
+        # WEEKEND LEARNING MODE
+        if mode == "WEEKEND_LEARNING":
+            backtest_trades_learned = run_weekend_backtest(data, agent, confidence_system)
+            log(f"🎓 Weekend learning: {backtest_trades_learned} backtest + {pipeline_trades_learned} pipeline = {backtest_trades_learned + pipeline_trades_learned} total trades", "brain")
+
+        # Get current prices
+        log("\n💹 Fetching prices...", "info")
+        current_prices = {}
+        for pair in PAIRS:
+            if mode == "WEEKEND_LEARNING":
+                if pair in data and '1h' in data[pair]:
+                    price = data[pair]['1h'].iloc[-1]['close']
+                    current_prices[pair] = price
+            else:
+                price = fetch_price(pair)
+                if not price and pair in data and '1h' in data[pair]:
+                    price = data[pair]['1h'].iloc[-1]['close']
+                if price:
+                    current_prices[pair] = price
+
+        # Check for trade exits
+        log("\n🔍 Checking trades...", "info")
+        completed_trades = env.check_exits(current_prices)
+
+        if completed_trades:
+            log(f"\n🎓 Learning from {len(completed_trades)} completed trades...", "brain")
+            for trade_outcome in completed_trades:
+                agent.record_trade(trade_outcome)
+
+        # Generate signals
+        log("\n🧠 Generating signals...", "brain")
+        signals = {}
+
+        for pair in PAIRS:
+            if pair not in data or '1h' not in data[pair] or '1d' not in data[pair]:
+                signals[pair] = {'direction': 'HOLD', 'last_price': current_prices.get(pair, 0)}
+                continue
+
+            state = create_state_vector(data[pair]['1h'], data[pair]['1d'], pair)
+            q_values = agent.q_network.predict(state)
+
+            should_trade, confidence, conf_metrics = confidence_system.should_trade(q_values, agent.epsilon)
+
+            best_action = np.argmax(q_values)
+            action_map = {0: 'BUY', 1: 'SELL', 2: 'HOLD'}
+            direction = action_map[best_action]
+
+            if not should_trade:
+                direction = 'HOLD'
+
+            price = current_prices.get(pair, 0)
+            atr = data[pair]['1h']['atr'].iloc[-1]
+
+            if direction == 'BUY':
+                sl = price - (atr * ATR_SL_MULTIPLIER)
+                tp = price + (atr * ATR_TP_MULTIPLIER)
+            elif direction == 'SELL':
+                sl = price + (atr * ATR_SL_MULTIPLIER)
+                tp = price - (atr * ATR_TP_MULTIPLIER)
+            else:
+                sl = tp = price
+
+            signals[pair] = {
+                'direction': direction, 'last_price': price, 'SL': float(sl), 'TP': float(tp),
+                'confidence': confidence, 'threshold': conf_metrics['adaptive_threshold'],
+                'timestamp': datetime.now(timezone.utc).isoformat()
+            }
+
+            log(f"  {pair}: Q={q_values[best_action]:.3f}, Conf={confidence:.1f}%, "
+                f"Thresh={conf_metrics['adaptive_threshold']:.1f}%, {direction}", "brain")
+
+            # Execute trades only on weekdays (LIVE_TRADING mode)
+            if direction != 'HOLD' and len(env.active_trades) < MAX_POSITIONS and mode == "LIVE_TRADING":
+                base_size = (BASE_CAPITAL * MAX_RISK_PER_TRADE) / (abs(price - sl) + EPS)
+                position_size = confidence_system.calculate_position_size(base_size, confidence, conf_metrics)
+                position_size = min(position_size, MAX_TRADE_CAP / price)
+
+                env.execute_trade(pair, direction, price, sl, tp, position_size, state,
+                                {'confidence': confidence, 'regime': 'RL', 'session': 'RL'})
+
+        # Save results
+        log("\n💾 Saving...", "info")
+
+        output = {
+            'timestamp': datetime.now(timezone.utc).isoformat(),
+            'iteration': iteration,
+            'version': 'v17.0-integrated',
+            'mode': mode,
+            'signals': signals,
+            'rl_stats': agent.stats,
+            'active_trades': len(env.active_trades),
+            'pipeline_stats': pipeline_stats,
+            'pipeline_trades_learned': pipeline_trades_learned
+        }
+
+        safe_json_save(OMEGA_SIGNALS_FILE, output)
+        agent.save_state()
+
+        # Only send emails on weekdays
+        if mode == "LIVE_TRADING":
+            send_rl_email(signals, iteration, agent.stats, env.trade_history, mode, pipeline_stats)
+        else:
+            log("📧 Email skipped (weekend mode)", "info")
+
+        # Push to Git
+        files = [
+            f"outputs/{OMEGA_SIGNALS_FILE.name}",
+            f"omega_state/{OMEGA_ITERATION_FILE.name}",
+            f"rl_memory/{RL_MEMORY_FILE.name}",
+            f"rl_memory/{RL_LEARNING_STATS_FILE.name}",
+            f"rl_memory/{TRADE_HISTORY_FILE.name}",
+            f"rl_memory/{PIPELINE_SYNC_FILE.name}",
+            f"rl_models/q_network.npz",
+            f"rl_models/target_network.npz"
+        ]
+
+        commit_msg = f"🧠 v17 #{iteration} [{mode}] WR={agent.stats['win_rate']*100:.1f}% | Pipeline: {pipeline_trades_learned} trades"
+        push_git(files, commit_msg)
+
+        # Summary
+        log("\n" + "=" * 70, "success")
+        log("✅ CYCLE COMPLETE", "success")
+        log("=" * 70, "success")
+        log(f"Iteration: #{iteration} ({ENV_NAME})", "info")
+        log(f"Mode: {mode}", "info")
+        log(f"RL Trades Learned: {agent.stats['total_trades']}", "brain")
+        log(f"Pipeline Trades Learned: {agent.stats.get('pipeline_trades_learned', 0)}", "database")
+        log(f"Win Rate: {agent.stats['win_rate']*100:.1f}%", "info")
+        log(f"Total P&L: ${agent.stats['total_pnl']:.2f}", "money")
+        log(f"Active Trades: {len(env.active_trades)}", "info")
+        log(f"Epsilon: {agent.epsilon:.3f}", "info")
+
+        if pipeline_stats:
+            log(f"Pipeline DB Trades: {pipeline_stats.get('total_trades', 0)}", "database")
+            log(f"Pipeline Win Rate: {pipeline_stats.get('win_rate', 0):.1f}%", "database")
+
+    except Exception as e:
+        log(f"\n❌ Error: {e}", "error")
+        logging.exception("Fatal error")
+        raise
+
+    finally:
+        if pipeline_db.conn:
+            pipeline_db.close()
+        log(f"\n🧠 Cycle complete (Iteration #{iteration})", "brain")
+
+if __name__ == "__main__":
+    main()
+------------------
+
+----- stdout -----
 ======================================================================
-✅ WEEKDAY EXECUTION COMPLETED
-📅 2025-11-21 20:23:34 UTC
+🧠 TRADE BEACON v17.0 - INTEGRATED LEARNING
 ======================================================================
+💰 💰 LIVE TRADING MODE ACTIVE
+🚀 ======================================================================
+🧠 🧠 TRADE BEACON v17.0 - INTEGRATED LEARNING
+🚀 ======================================================================
+ℹ️ 📅 Mode: WEEKEND_LEARNING
+✅ ✅ Loaded Q-networks
+✅ ✅ Loaded 189 experiences
+✅ ✅ Loaded stats: 189 trades
+🧠 🧠 RL Agent initialized: 189 experiences
+💾 ✅ Connected to pipeline database
+ℹ️ 
+📊 Iteration #5 | GitHub Actions | WEEKEND_LEARNING
+ℹ️ 📂 Loading data from: /home/runner/work/forex-ai-models/forex-ai-models/data/processed
+✅ ✅ Loaded 0 pairs
+❌ 
+❌ Error: ❌ No data loaded
+🧠 
+🧠 Cycle complete (Iteration #5)
+------------------
+
+[31m---------------------------------------------------------------------------[39m
+[31mValueError[39m                                Traceback (most recent call last)
+[36mCell[39m[36m [39m[32mIn[2][39m[32m, line 1555[39m
+[32m   1552[39m         log([33mf[39m[33m"[39m[38;5;130;01m\n[39;00m[33m🧠 Cycle complete (Iteration #[39m[38;5;132;01m{[39;00miteration[38;5;132;01m}[39;00m[33m)[39m[33m"[39m, [33m"[39m[33mbrain[39m[33m"[39m)
+[32m   1554[39m [38;5;28;01mif[39;00m [34m__name__[39m == [33m"[39m[33m__main__[39m[33m"[39m:
+[32m-> [39m[32m1555[39m     [43mmain[49m[43m([49m[43m)[49m
+
+[36mCell[39m[36m [39m[32mIn[2][39m[32m, line 1391[39m, in [36mmain[39m[34m()[39m
+[32m   1389[39m data = load_data(PICKLE_FOLDER)
+[32m   1390[39m [38;5;28;01mif[39;00m [38;5;129;01mnot[39;00m data:
+[32m-> [39m[32m1391[39m     [38;5;28;01mraise[39;00m [38;5;167;01mValueError[39;00m([33m"[39m[33m❌ No data loaded[39m[33m"[39m)
+[32m   1393[39m [38;5;66;03m# 🆕 LEARN FROM PIPELINE DATABASE (always, regardless of weekend)[39;00m
+[32m   1394[39m [38;5;28;01mif[39;00m pipeline_db.conn:
+
+[31mValueError[39m: ❌ No data loaded
+

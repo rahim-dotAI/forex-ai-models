@@ -1,89 +1,64 @@
 import nbformat
-import sys
-import os
+from nbconvert.preprocessors import ExecutePreprocessor
+import sys, os, time, re
 from datetime import datetime
 
-def extract_and_run_tagged_cells(notebook_path):
-    """Extract and execute cells with TAG: pipeline_main"""
-    print(f"📖 Reading notebook: {notebook_path}")
+class TaggedCellExecutor(ExecutePreprocessor):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.tagged_cells = []
+        self.current_cell = 0
+        self.start_time = None
+        
+    def preprocess(self, nb, resources=None, km=None):
+        for idx, cell in enumerate(nb.cells):
+            if cell.cell_type == 'code' and '#TAG: pipeline_main' in cell.source:
+                self.tagged_cells.append(idx)
+        
+        print(f"📊 Found {len(self.tagged_cells)} tagged cells")
+        self.start_time = time.time()
+        return super().preprocess(nb, resources, km)
     
+    def preprocess_cell(self, cell, resources, cell_index):
+        if cell.cell_type != 'code' or cell_index not in self.tagged_cells:
+            return cell, resources
+        
+        self.current_cell += 1
+        print(f"\n🔄 Tagged Cell {self.current_cell}/{len(self.tagged_cells)}")
+        
+        cell_start = time.time()
+        cell, resources = super().preprocess_cell(cell, resources, cell_index)
+        cell_time = time.time() - cell_start
+        
+        if cell.outputs:
+            for output in cell.outputs:
+                if output.output_type == 'stream':
+                    print(re.sub(r'\x1b\[[0-9;]*m', '', output.text))
+                elif output.output_type == 'error':
+                    print(f"❌ {output.ename}: {output.evalue}")
+        
+        print(f"✅ Completed in {cell_time:.1f}s")
+        return cell, resources
+
+def run_tagged_cells(notebook_path):
     with open(notebook_path, 'r', encoding='utf-8') as f:
         nb = nbformat.read(f, as_version=4)
     
-    tagged_cells = []
-    cell_numbers = []
+    ep = TaggedCellExecutor(timeout=2400, kernel_name='python3', allow_errors=False)
     
-    # Find cells with TAG: pipeline_main
-    for i, cell in enumerate(nb.cells):
-        if cell.cell_type == 'code':
-            source = cell.source
-            if '# TAG: pipeline_main' in source or '#TAG: pipeline_main' in source:
-                tagged_cells.append(source)
-                cell_numbers.append(i + 1)
+    print("🚀 Starting tagged cells execution...")
+    start = time.time()
+    ep.preprocess(nb, {'metadata': {'path': '.'}})
+    duration = time.time() - start
     
-    if not tagged_cells:
-        print("❌ No tagged cells found with 'TAG: pipeline_main'")
-        return False
-    
-    print(f"✅ Found {len(tagged_cells)} tagged cell(s): {cell_numbers}")
-    print("=" * 70)
-    print()
-    
-    # Execute each tagged cell
-    for idx, (cell_num, code) in enumerate(zip(cell_numbers, tagged_cells), 1):
-        print(f"🔄 Executing tagged cell {idx}/{len(tagged_cells)} (cell #{cell_num})")
-        print("-" * 70)
-        
-        # Remove the TAG comment before execution
-        code_lines = [line for line in code.split('\n') 
-                     if not line.strip().startswith('# TAG:')]
-        clean_code = '\n'.join(code_lines)
-        
-        try:
-            # Execute the code
-            exec(clean_code, globals())
-            print("-" * 70)
-            print(f"✅ Cell {idx} completed successfully")
-            print("=" * 70)
-            print()
-        except Exception as e:
-            print("-" * 70)
-            print(f"❌ Cell {idx} failed with error:")
-            print(f"   {type(e).__name__}: {str(e)}")
-            print("=" * 70)
-            return False
-    
-    print()
-    print("=" * 70)
-    print("✅ ALL TAGGED CELLS EXECUTED SUCCESSFULLY")
-    print("=" * 70)
+    print(f"\n✅ COMPLETED in {duration:.1f}s")
     return True
 
 if __name__ == "__main__":
-    notebook = sys.argv[1] if len(sys.argv) > 1 else "AI_Forex_Brain_2.ipynb"
-    
+    notebook = "AI_Forex_Brain_2.ipynb"
     if not os.path.exists(notebook):
-        print(f"❌ ERROR: Notebook not found: {notebook}")
+        print(f"❌ Not found: {notebook}")
         sys.exit(1)
     
-    print("=" * 70)
-    print("🎯 WEEKEND MODE - TAGGED CELLS EXECUTION")
-    print("=" * 70)
-    print(f"📅 Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
-    print(f"📓 Notebook: {notebook}")
-    print(f"🎯 Target: Cells with 'TAG: pipeline_main'")
-    print("=" * 70)
-    print()
-    
-    success = extract_and_run_tagged_cells(notebook)
-    
-    print()
-    print("=" * 70)
-    if success:
-        print("✅ WEEKEND EXECUTION COMPLETED")
-    else:
-        print("❌ WEEKEND EXECUTION FAILED")
-    print(f"📅 Finished: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
-    print("=" * 70)
-    
+    success = run_tagged_cells(notebook)
     sys.exit(0 if success else 1)

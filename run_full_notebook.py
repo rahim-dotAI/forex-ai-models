@@ -1,6 +1,6 @@
 import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor
-import sys, os, time, re
+import sys, os, time, re, json
 from datetime import datetime
 
 class SummaryExecutor(ExecutePreprocessor):
@@ -8,6 +8,7 @@ class SummaryExecutor(ExecutePreprocessor):
         super().__init__(*args, **kwargs)
         self.cell_count = 0
         self.start_time = None
+        self.key_outputs = []
         
     def preprocess(self, nb, resources=None, km=None):
         print(f"📊 Processing {len(nb.cells)} cells...")
@@ -20,23 +21,22 @@ class SummaryExecutor(ExecutePreprocessor):
         
         self.cell_count += 1
         
-        # Only show progress every 5 cells
         if self.cell_count % 5 == 0:
             elapsed = time.time() - self.start_time
             print(f"⏳ Progress: {self.cell_count} cells ({elapsed:.0f}s elapsed)")
         
         cell, resources = super().preprocess_cell(cell, resources, cell_index)
         
-        # Only print key outputs from last few cells
-        if cell_index >= len(resources.get('metadata', {}).get('path', [])) - 3:
-            if cell.outputs:
-                for output in cell.outputs:
-                    if output.output_type == 'stream':
-                        text = re.sub(r'\x1b\[[0-9;]*m', '', output.text)
-                        lines = text.strip().split('\n')
-                        for line in lines:
-                            if any(marker in line for marker in ['✅', '⚠️', '❌', '💰', '🧠', 'COMPLETE', 'Iteration']):
-                                print(f"   {line}")
+        # Collect key outputs
+        if cell.outputs:
+            for output in cell.outputs:
+                if output.output_type == 'stream':
+                    text = re.sub(r'\x1b\[[0-9;]*m', '', output.text)
+                    lines = text.strip().split('\n')
+                    for line in lines:
+                        if any(marker in line for marker in ['✅', '⚠️', '❌', '💰', '🧠', 'COMPLETE', 'Iteration', 'Win Rate', 'Total P&L']):
+                            print(f"   {line}")
+                            self.key_outputs.append(line)
         
         return cell, resources
 
@@ -57,6 +57,19 @@ def run_notebook(notebook_path):
     print("\n" + "="*70)
     print(f"✅ COMPLETED: {ep.cell_count} cells in {duration:.1f}s")
     print("="*70)
+    
+    # Save run report
+    report = {
+        'timestamp': datetime.now().isoformat(),
+        'mode': 'full_notebook',
+        'total_cells': ep.cell_count,
+        'duration': duration,
+        'key_outputs': ep.key_outputs[-20:]
+    }
+    
+    os.makedirs('.github/run_history', exist_ok=True)
+    with open('.github/run_history/latest_run.json', 'w') as f:
+        json.dump(report, f, indent=2)
     
     return True
 

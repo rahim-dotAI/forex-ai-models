@@ -723,45 +723,97 @@ jobs:
               conn = sqlite3.connect('database/memory_v85.db')
               cursor = conn.cursor()
               
-              cursor.execute("SELECT COUNT(*), SUM(profit_loss), AVG(profit_loss) FROM completed_trades")
-              total_trades, total_pnl, avg_pnl = cursor.fetchone()
+              # First, inspect the database schema
+              cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+              tables = [row[0] for row in cursor.fetchall()]
+              print(f"📋 Found tables: {', '.join(tables)}")
               
-              cursor.execute("SELECT COUNT(*) FROM completed_trades WHERE profit_loss > 0")
-              winning_trades = cursor.fetchone()[0]
+              metrics = {}
               
-              win_rate = (winning_trades / total_trades * 100) if total_trades > 0 else 0
+              # Check completed_trades table
+              if 'completed_trades' in tables:
+                  cursor.execute("PRAGMA table_info(completed_trades)")
+                  columns = [row[1] for row in cursor.fetchall()]
+                  print(f"   Columns in completed_trades: {', '.join(columns)}")
+                  
+                  # Try different possible column names for profit/loss
+                  profit_col = None
+                  for possible_col in ['profit_loss', 'profit', 'pnl', 'pl', 'return', 'outcome']:
+                      if possible_col in columns:
+                          profit_col = possible_col
+                          break
+                  
+                  if profit_col:
+                      cursor.execute(f"SELECT COUNT(*), SUM({profit_col}), AVG({profit_col}) FROM completed_trades")
+                      total_trades, total_pnl, avg_pnl = cursor.fetchone()
+                      
+                      cursor.execute(f"SELECT COUNT(*) FROM completed_trades WHERE {profit_col} > 0")
+                      winning_trades = cursor.fetchone()[0]
+                      
+                      win_rate = (winning_trades / total_trades * 100) if total_trades and total_trades > 0 else 0
+                      
+                      metrics.update({
+                          'total_trades': total_trades or 0,
+                          'total_pnl': float(total_pnl or 0),
+                          'avg_pnl': float(avg_pnl or 0),
+                          'win_rate': round(win_rate, 2),
+                          'winning_trades': winning_trades or 0
+                      })
+                  else:
+                      # Just count trades if no profit column found
+                      cursor.execute("SELECT COUNT(*) FROM completed_trades")
+                      total_trades = cursor.fetchone()[0]
+                      metrics['total_trades'] = total_trades or 0
+                      metrics['note'] = 'No profit column found'
               
-              cursor.execute("SELECT COUNT(*) FROM pending_trades")
-              pending = cursor.fetchone()[0]
+              # Check pending_trades table
+              if 'pending_trades' in tables:
+                  cursor.execute("SELECT COUNT(*) FROM pending_trades")
+                  pending = cursor.fetchone()[0]
+                  metrics['pending_trades'] = pending or 0
               
-              metrics = {
-                  'total_trades': total_trades or 0,
-                  'total_pnl': float(total_pnl or 0),
-                  'avg_pnl': float(avg_pnl or 0),
-                  'win_rate': round(win_rate, 2),
-                  'winning_trades': winning_trades or 0,
-                  'pending_trades': pending or 0
-              }
+              # Check model_stats_cache table
+              if 'model_stats_cache' in tables:
+                  cursor.execute("SELECT COUNT(*) FROM model_stats_cache")
+                  cache_entries = cursor.fetchone()[0]
+                  metrics['cache_entries'] = cache_entries or 0
               
               conn.close()
               
+              # Save metrics
               os.makedirs('.github/run_history', exist_ok=True)
               with open('.github/run_history/latest_metrics.json', 'w') as f:
                   json.dump(metrics, f, indent=2)
               
-              print(f"✅ Extracted metrics:")
-              print(f"   Total Trades: {metrics['total_trades']}")
-              print(f"   Win Rate: {metrics['win_rate']}%")
-              print(f"   Total P&L: ${metrics['total_pnl']:.2f}")
-              print(f"   Pending: {metrics['pending_trades']}")
+              # Print summary
+              print(f"\n✅ Extracted metrics:")
+              if 'total_trades' in metrics:
+                  print(f"   Total Trades: {metrics['total_trades']}")
+              if 'win_rate' in metrics:
+                  print(f"   Win Rate: {metrics['win_rate']}%")
+              if 'total_pnl' in metrics:
+                  print(f"   Total P&L: ${metrics['total_pnl']:.2f}")
+              if 'pending_trades' in metrics:
+                  print(f"   Pending: {metrics['pending_trades']}")
+              if 'cache_entries' in metrics:
+                  print(f"   Cache Entries: {metrics['cache_entries']}")
+              if 'note' in metrics:
+                  print(f"   ⚠️  {metrics['note']}")
               
           except Exception as e:
               print(f"⚠️  Could not extract metrics: {str(e)}")
+              import traceback
+              print(f"   Full error: {traceback.format_exc()}")
+              
+              # Create minimal metrics file
               with open('.github/run_history/latest_metrics.json', 'w') as f:
-                  json.dump({'error': 'No data available'}, f)
+                  json.dump({'error': str(e), 'status': 'extraction_failed'}, f)
           EOFPYTHON
           else
             echo "⚠️  No database found, skipping metrics extraction"
+            # Create empty metrics file
+            mkdir -p .github/run_history
+            echo '{"status": "no_database"}' > .github/run_history/latest_metrics.json
           fi
           
           echo "=========================================="

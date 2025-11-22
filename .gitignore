@@ -29,3 +29,45 @@ notebooks/*.ipynb
 !**/.gitkeep
 !README.md
 !requirements.txt
+
+# ========================================================================
+# RL Memory Cache Files (Auto-generated, should not be committed)
+# ========================================================================
+rl_memory/experience_replay*.pkl
+backups/experience_replay_*.pkl
+
+# Temporary files
+*.tmp
+*.bak
+**/*.tmp
+**/*.bak
+
+# Keep folder structure
+!rl_memory/.gitkeep
+!backups/.gitkeep
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment
+.env
+.venv
+env/
+venv/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

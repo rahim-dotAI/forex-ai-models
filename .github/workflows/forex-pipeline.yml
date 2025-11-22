@@ -1,4 +1,4 @@
-name: Smart Forex Brain Pipeline v17.4
+name: Smart Forex Brain Pipeline v17.5
 
 on:
   workflow_dispatch:
@@ -70,42 +70,8 @@ jobs:
           echo "https://${{ github.actor }}:${{ secrets.FOREX_PAT }}@github.com" > ~/.git-credentials
           git config --global credential.helper store
 
-      - name: Check Data
-        id: data
-        run: |
-          mkdir -p data/processed database .github/run_history
-          
-          # Count after potential cleanup
-          PICKLE_COUNT=$(find data/processed -name "*.pkl" -type f ! -name "*_model.pkl" 2>/dev/null | wc -l)
-          
-          [ -f ".github/run_history/run_counter.txt" ] && RUN_NUM=$(cat .github/run_history/run_counter.txt) || RUN_NUM=0
-          RUN_NUM=$((RUN_NUM + 1))
-          echo $RUN_NUM > .github/run_history/run_counter.txt
-          echo "run_number=$RUN_NUM" >> $GITHUB_OUTPUT
-          
-          echo "📊 Status Check:"
-          echo "   Pickle files: $PICKLE_COUNT"
-          echo "   Keep data: ${keep_data:-unknown}"
-          
-          # If we cleaned corrupted files OR no files exist, force full notebook
-          if [ "${keep_data}" = "false" ] || [ $PICKLE_COUNT -eq 0 ]; then
-            echo "has_data=false" >> $GITHUB_OUTPUT
-            if [ "${keep_data}" = "false" ]; then
-              echo "⚠️ Data was corrupted - regenerating from scratch"
-            else
-              echo "⚠️ No data files - initial data generation"
-            fi
-          elif [ $PICKLE_COUNT -ge 4 ]; then
-            echo "has_data=true" >> $GITHUB_OUTPUT
-            echo "✅ Found $PICKLE_COUNT valid data files"
-          else
-            echo "has_data=false" >> $GITHUB_OUTPUT
-            echo "⚠️ Only $PICKLE_COUNT files - need more data"
-          fi
-          
-          [ $((RUN_NUM % 10)) -eq 0 ] && echo "send_report=true" >> $GITHUB_OUTPUT || echo "send_report=false" >> $GITHUB_OUTPUT
-
       - name: Repair Corrupted Pickle Files
+        id: corruption_check
         run: |
           echo "🔧 Checking pickle files for corruption..."
           
@@ -153,29 +119,62 @@ jobs:
           print(f"   Data files: {total_count}")
           print(f"   Corrupted: {corrupted_count}")
           
-          if corrupted_count > 0:
+          if total_count == 0:
+              print("\n⚠️ No pickle files found - need to generate data")
+              exit(2)  # Exit code 2 = no files
+          elif corrupted_count == total_count:
+              print(f"\n⚠️ ALL {total_count} files are corrupted")
+              print("🧹 Will delete and regenerate all data")
+              exit(1)  # Exit code 1 = all corrupted
+          elif corrupted_count > 0:
               print(f"\n⚠️ {corrupted_count}/{total_count} files are corrupted")
               print("🧹 Will delete and regenerate all data")
-              exit(1)
-          elif total_count == 0:
-              print("\n⚠️ No pickle files found - need to generate data")
-              exit(1)
+              exit(1)  # Exit code 1 = some corrupted
           else:
               print("\n✅ All pickle files are valid")
-              exit(0)
+              exit(0)  # Exit code 0 = all good
           EOF
           
-          if python check_pickles.py; then
-            echo "keep_data=true" >> $GITHUB_ENV
+          mkdir -p data/processed database .github/run_history
+          
+          python check_pickles.py
+          CHECK_EXIT=$?
+          
+          if [ $CHECK_EXIT -eq 0 ]; then
+            echo "all_files_valid=true" >> $GITHUB_OUTPUT
+            echo "need_full_run=false" >> $GITHUB_OUTPUT
+            echo "✅ All files are valid - can use weekend mode"
+          elif [ $CHECK_EXIT -eq 2 ]; then
+            echo "all_files_valid=false" >> $GITHUB_OUTPUT
+            echo "need_full_run=true" >> $GITHUB_OUTPUT
+            echo "⚠️ No files found - forcing full notebook run"
           else
-            echo "keep_data=false" >> $GITHUB_ENV
+            echo "all_files_valid=false" >> $GITHUB_OUTPUT
+            echo "need_full_run=true" >> $GITHUB_OUTPUT
             echo ""
-            echo "🧹 Cleaning up for fresh start..."
+            echo "🧹 Cleaning up corrupted files for fresh start..."
             find data/processed -name "*.pkl" -type f ! -name "*_model.pkl" -delete 2>/dev/null || true
             find rl_memory -name "*.pkl" -type f -delete 2>/dev/null || true
             rm -f database/memory_v85.db 2>/dev/null || true
-            echo "✅ Cleanup complete - will regenerate from scratch"
+            echo "✅ Cleanup complete - will run full notebook"
           fi
+
+      - name: Check Data
+        id: data
+        run: |
+          PICKLE_COUNT=$(find data/processed -name "*.pkl" -type f ! -name "*_model.pkl" 2>/dev/null | wc -l)
+          
+          [ -f ".github/run_history/run_counter.txt" ] && RUN_NUM=$(cat .github/run_history/run_counter.txt) || RUN_NUM=0
+          RUN_NUM=$((RUN_NUM + 1))
+          echo $RUN_NUM > .github/run_history/run_counter.txt
+          echo "run_number=$RUN_NUM" >> $GITHUB_OUTPUT
+          
+          echo "📊 Status Check:"
+          echo "   Pickle files: $PICKLE_COUNT"
+          echo "   Files valid: ${{ steps.corruption_check.outputs.all_files_valid }}"
+          echo "   Need full run: ${{ steps.corruption_check.outputs.need_full_run }}"
+          
+          [ $((RUN_NUM % 10)) -eq 0 ] && echo "send_report=true" >> $GITHUB_OUTPUT || echo "send_report=false" >> $GITHUB_OUTPUT
 
       - name: Verify Notebook
         run: |
@@ -522,8 +521,8 @@ jobs:
           print("✅ Full notebook execution completed")
           EOF
 
-      - name: Run Weekend Mode
-        if: steps.mode.outputs.mode == 'weekend' && steps.data.outputs.has_data == 'true'
+      - name: Run Weekend Mode (if data is valid)
+        if: steps.mode.outputs.mode == 'weekend' && steps.corruption_check.outputs.need_full_run == 'false'
         run: |
           echo "🏖️ Running weekend mode (tagged cells)..."
           python run_tagged.py
@@ -553,9 +552,15 @@ jobs:
           fi
         timeout-minutes: 50
 
-      - name: Run Weekday/Initial Mode
-        if: steps.mode.outputs.mode == 'weekday' || steps.data.outputs.has_data == 'false'
-        run: python run_full.py
+      - name: Run Full Notebook (weekday or corrupted data)
+        if: steps.mode.outputs.mode == 'weekday' || steps.corruption_check.outputs.need_full_run == 'true'
+        run: |
+          if [ "${{ steps.corruption_check.outputs.need_full_run }}" = "true" ]; then
+            echo "🔄 Running full notebook due to corrupted/missing data..."
+          else
+            echo "💼 Running full notebook (weekday mode)..."
+          fi
+          python run_full.py
         timeout-minutes: 50
 
       - name: Generate Email Report
@@ -661,8 +666,15 @@ jobs:
             RUN="${{ steps.data.outputs.run_number }}"
             MODE="${{ steps.mode.outputs.mode }}"
             TIME="$(date +'%Y-%m-%d %H:%M UTC')"
+            CORRUPTED="${{ steps.corruption_check.outputs.need_full_run }}"
             
-            [ "$MODE" = "weekend" ] && MSG="🏖️ Weekend Learning" || MSG="🔴 Live Trading"
+            if [ "$CORRUPTED" = "true" ]; then
+              MSG="🔄 Data Regenerated"
+            elif [ "$MODE" = "weekend" ]; then
+              MSG="🏖️ Weekend Learning"
+            else
+              MSG="🔴 Live Trading"
+            fi
             
             git commit -m "${MSG} - Run #${RUN} - ${TIME}" || true
             
@@ -690,6 +702,7 @@ jobs:
           echo "=========================================="
           echo "📊 Run #${{ steps.data.outputs.run_number }}"
           echo "Mode: ${{ steps.mode.outputs.mode }}"
+          echo "Data Status: ${{ steps.corruption_check.outputs.need_full_run == 'true' && 'Regenerated' || 'Valid' }}"
           echo "Time: $(date +'%Y-%m-%d %H:%M UTC')"
           [ "${{ steps.data.outputs.send_report }}" = "true" ] && echo "📧 Report: SENT" || echo "📧 Report: Pending"
           echo "✅ Execution complete"

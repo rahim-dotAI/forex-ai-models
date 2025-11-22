@@ -1,76 +1,44 @@
 {
-  "timestamp": "2025-11-22T04:13:38.221514+00:00",
+  "timestamp": "2025-11-22T04:29:26.316235+00:00",
   "iteration": 1,
-  "version": "v15.1-improved-confidence",
-  "mode": "REINFORCEMENT_LEARNING",
+  "version": "v16.0-final",
+  "mode": "WEEKEND_REPLAY",
   "signals": {
     "EUR/USD": {
-      "direction": "SELL",
+      "direction": "HOLD",
       "last_price": 1.151,
-      "SL": 1.1534833030700684,
-      "TP": 1.1472750453948974,
-      "confidence": 45.96049190323709,
+      "SL": 1.151,
+      "TP": 1.151,
+      "confidence": 29.757797950496155,
       "threshold": 35.0,
-      "q_spread": 0.6020745237239558,
-      "training_progress": 0.0,
-      "timestamp": "2025-11-22T04:13:38.194812+00:00",
-      "q_values": [
-        -0.8475418176280357,
-        0.5126026873363961,
-        -0.08947183638755957
-      ],
-      "epsilon": 1.0
+      "timestamp": "2025-11-22T04:29:26.272647+00:00"
     },
     "GBP/USD": {
-      "direction": "SELL",
+      "direction": "HOLD",
       "last_price": 1.308,
-      "SL": 1.3089281590325492,
-      "TP": 1.3066077614511762,
-      "confidence": 54.8161558868338,
+      "SL": 1.308,
+      "TP": 1.308,
+      "confidence": 14.74637727085389,
       "threshold": 35.0,
-      "q_spread": 0.8434237848206743,
-      "training_progress": 0.0,
-      "timestamp": "2025-11-22T04:13:38.203529+00:00",
-      "q_values": [
-        -0.6426599310984176,
-        0.6897669305957259,
-        -0.15365685422494832
-      ],
-      "epsilon": 1.0
+      "timestamp": "2025-11-22T04:29:26.287153+00:00"
     },
     "USD/JPY": {
       "direction": "SELL",
       "last_price": 156.39,
       "SL": 156.52928449358257,
       "TP": 156.18107325962612,
-      "confidence": 72.247874555743,
+      "confidence": 49.29963313136072,
       "threshold": 35.0,
-      "q_spread": 1.404695626548132,
-      "training_progress": 0.0,
-      "timestamp": "2025-11-22T04:13:38.212426+00:00",
-      "q_values": [
-        -1.2361228692836848,
-        0.8031655151746248,
-        -0.6015301113735073
-      ],
-      "epsilon": 1.0
+      "timestamp": "2025-11-22T04:29:26.302185+00:00"
     },
     "AUD/USD": {
-      "direction": "SELL",
+      "direction": "HOLD",
       "last_price": 0.6453,
-      "SL": 0.6453754212924412,
-      "TP": 0.6451868680613382,
-      "confidence": 53.32771238576175,
+      "SL": 0.6453,
+      "TP": 0.6453,
+      "confidence": 28.183833282195774,
       "threshold": 35.0,
-      "q_spread": 0.8036590882702672,
-      "training_progress": 0.0,
-      "timestamp": "2025-11-22T04:13:38.221425+00:00",
-      "q_values": [
-        -0.5834802224789624,
-        0.7196082238368313,
-        -0.08405086443343585
-      ],
-      "epsilon": 1.0
+      "timestamp": "2025-11-22T04:29:26.316101+00:00"
     }
   },
   "rl_stats": {
@@ -84,6 +52,5 @@
     "loss_history": [],
     "q_value_history": []
   },
-  "active_trades": 2,
-  "total_learned_trades": 0
+  "active_trades": 0
 }

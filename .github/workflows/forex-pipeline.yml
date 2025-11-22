@@ -1,4 +1,4 @@
-name: Smart Forex Brain Pipeline v17.5
+name: Smart Forex Brain Pipeline v18.0
 
 on:
   workflow_dispatch:
@@ -38,17 +38,20 @@ jobs:
           [ -f ".gitmodules" ] && rm -f .gitmodules && git rm --cached -r forex-alpha-models 2>/dev/null || true
           find . -mindepth 2 -name ".git" -type d -exec rm -rf {} + 2>/dev/null || true
 
-      - name: Detect Mode
-        id: mode
+      - name: Detect Day Type
+        id: day_info
         run: |
           DAY=$(date +%u)
-          echo "Day: $DAY ($(date +'%A'))"
+          DAY_NAME=$(date +'%A')
+          echo "day=$DAY" >> $GITHUB_OUTPUT
+          echo "day_name=$DAY_NAME" >> $GITHUB_OUTPUT
+          
           if [ $DAY -eq 6 ] || [ $DAY -eq 7 ]; then
-            echo "mode=weekend" >> $GITHUB_OUTPUT
-            echo "🏖️ WEEKEND MODE: Tagged cells only"
+            echo "is_weekend=true" >> $GITHUB_OUTPUT
+            echo "📅 $DAY_NAME (Weekend)"
           else
-            echo "mode=weekday" >> $GITHUB_OUTPUT
-            echo "💼 WEEKDAY MODE: Full notebook"
+            echo "is_weekend=false" >> $GITHUB_OUTPUT
+            echo "📅 $DAY_NAME (Weekday)"
           fi
 
       - name: Setup Python
@@ -70,113 +73,29 @@ jobs:
           echo "https://${{ github.actor }}:${{ secrets.FOREX_PAT }}@github.com" > ~/.git-credentials
           git config --global credential.helper store
 
-      - name: Repair Corrupted Pickle Files
-        id: corruption_check
-        run: |
-          echo "🔧 Checking pickle files for corruption..."
-          
-          cat > check_pickles.py << 'EOF'
-          import os
-          import pickle
-          import pandas as pd
-          from pathlib import Path
-          
-          def is_pickle_corrupted(filepath):
-              """Quick check if pickle is readable"""
-              try:
-                  pd.read_pickle(filepath, compression='gzip')
-                  return False
-              except:
-                  try:
-                      pd.read_pickle(filepath, compression=None)
-                      return False
-                  except:
-                      return True
-          
-          corrupted_count = 0
-          total_count = 0
-          
-          # Check data/processed
-          processed_dir = Path("data/processed")
-          if processed_dir.exists():
-              print(f"📂 Checking: {processed_dir.absolute()}")
-              print(f"\n📄 All files in data/processed:")
-              for pkl_file in processed_dir.glob("*.pkl"):
-                  print(f"   - {pkl_file.name} ({pkl_file.stat().st_size} bytes)")
-                  
-                  if any(x in pkl_file.name for x in ['_model', '_sgd_', '_rf_']):
-                      print(f"     └─ Skipped (model file)")
-                      continue
-                  
-                  total_count += 1
-                  if is_pickle_corrupted(pkl_file):
-                      corrupted_count += 1
-                      print(f"     └─ ❌ CORRUPTED")
-                  else:
-                      print(f"     └─ ✅ Valid")
-          
-          print(f"\n📊 Summary:")
-          print(f"   Data files: {total_count}")
-          print(f"   Corrupted: {corrupted_count}")
-          
-          if total_count == 0:
-              print("\n⚠️ No pickle files found - need to generate data")
-              exit(2)  # Exit code 2 = no files
-          elif corrupted_count == total_count:
-              print(f"\n⚠️ ALL {total_count} files are corrupted")
-              print("🧹 Will delete and regenerate all data")
-              exit(1)  # Exit code 1 = all corrupted
-          elif corrupted_count > 0:
-              print(f"\n⚠️ {corrupted_count}/{total_count} files are corrupted")
-              print("🧹 Will delete and regenerate all data")
-              exit(1)  # Exit code 1 = some corrupted
-          else:
-              print("\n✅ All pickle files are valid")
-              exit(0)  # Exit code 0 = all good
-          EOF
-          
-          mkdir -p data/processed database .github/run_history
-          
-          python check_pickles.py || CHECK_EXIT=$?
-          CHECK_EXIT=${CHECK_EXIT:-0}
-          
-          if [ $CHECK_EXIT -eq 0 ]; then
-            echo "all_files_valid=true" >> $GITHUB_OUTPUT
-            echo "need_full_run=false" >> $GITHUB_OUTPUT
-            echo "✅ All files are valid - can use weekend mode"
-          elif [ $CHECK_EXIT -eq 2 ]; then
-            echo "all_files_valid=false" >> $GITHUB_OUTPUT
-            echo "need_full_run=true" >> $GITHUB_OUTPUT
-            echo "⚠️ No files found - forcing full notebook run"
-          else
-            echo "all_files_valid=false" >> $GITHUB_OUTPUT
-            echo "need_full_run=true" >> $GITHUB_OUTPUT
-            echo ""
-            echo "🧹 Cleaning up corrupted files for fresh start..."
-            find data/processed -name "*.pkl" -type f ! -name "*_model.pkl" -delete 2>/dev/null || true
-            find rl_memory -name "*.pkl" -type f -delete 2>/dev/null || true
-            rm -f database/memory_v85.db 2>/dev/null || true
-            echo "✅ Cleanup complete - will run full notebook"
-          fi
-          
-          exit 0
-
-      - name: Check Data
+      - name: Check Data Status
         id: data
         run: |
-          PICKLE_COUNT=$(find data/processed -name "*.pkl" -type f ! -name "*_model.pkl" 2>/dev/null | wc -l)
+          echo "📊 Checking existing data files..."
           
+          # Count pickle files
+          PICKLE_COUNT=$(find data/processed -name "*.pkl" -type f ! -name "*_model.pkl" 2>/dev/null | wc -l)
+          echo "pickle_count=$PICKLE_COUNT" >> $GITHUB_OUTPUT
+          
+          # Run counter
           [ -f ".github/run_history/run_counter.txt" ] && RUN_NUM=$(cat .github/run_history/run_counter.txt) || RUN_NUM=0
           RUN_NUM=$((RUN_NUM + 1))
           echo $RUN_NUM > .github/run_history/run_counter.txt
           echo "run_number=$RUN_NUM" >> $GITHUB_OUTPUT
           
-          echo "📊 Status Check:"
-          echo "   Pickle files: $PICKLE_COUNT"
-          echo "   Files valid: ${{ steps.corruption_check.outputs.all_files_valid }}"
-          echo "   Need full run: ${{ steps.corruption_check.outputs.need_full_run }}"
-          
+          # Email report check (every 10 runs)
           [ $((RUN_NUM % 10)) -eq 0 ] && echo "send_report=true" >> $GITHUB_OUTPUT || echo "send_report=false" >> $GITHUB_OUTPUT
+          
+          echo "📊 Status:"
+          echo "   Pickle files: $PICKLE_COUNT"
+          echo "   Run number: $RUN_NUM"
+          
+          mkdir -p data/processed database .github/run_history
 
       - name: Verify Notebook
         run: |
@@ -188,232 +107,21 @@ jobs:
           
           echo "✅ Found AI_Forex_Brain_2.ipynb"
           
-          # Check for tagged cells
-          TAGGED_COUNT=$(python -c "
+          # Check notebook size and structure
+          CELLS=$(python -c "
           import nbformat
           with open('AI_Forex_Brain_2.ipynb', 'r') as f:
               nb = nbformat.read(f, 4)
-          tagged = sum(1 for c in nb.cells if c.cell_type=='code' and '#TAG: pipeline_main' in c.source)
-          print(tagged)
+          code_cells = sum(1 for c in nb.cells if c.cell_type=='code')
+          print(code_cells)
           " 2>/dev/null || echo "0")
           
-          echo "📊 Tagged cells found: $TAGGED_COUNT"
-          
-          if [ "$TAGGED_COUNT" = "0" ]; then
-            echo "⚠️ WARNING: No tagged cells found!"
-            echo "   Weekend mode will fail. Consider adding '#TAG: pipeline_main' to key cells."
-          fi
+          echo "📊 Code cells found: $CELLS"
 
-      - name: Create Executors
+      - name: Create Full Notebook Executor
         run: |
-          cat > run_tagged.py << 'EOF'
-          import nbformat, sys, time, re, json, os, traceback
-          from nbconvert.preprocessors import ExecutePreprocessor
-          from datetime import datetime
-          
-          class TaggedExecutor(ExecutePreprocessor):
-              def __init__(self, *args, **kwargs):
-                  super().__init__(*args, **kwargs)
-                  self.tagged = []
-                  self.summaries = []
-              
-              def preprocess(self, nb, resources=None, km=None):
-                  self.tagged = [i for i, c in enumerate(nb.cells) if c.cell_type=='code' and '#TAG: pipeline_main' in c.source]
-                  print(f"📊 Found {len(self.tagged)} tagged cells")
-                  if len(self.tagged) == 0:
-                      print("⚠️ WARNING: No tagged cells found! Looking for '#TAG: pipeline_main'")
-                      print("Available code cells:", sum(1 for c in nb.cells if c.cell_type=='code'))
-                  return super().preprocess(nb, resources, km)
-              
-              def preprocess_cell(self, cell, resources, idx):
-                  if idx not in self.tagged: return cell, resources
-                  n = self.tagged.index(idx) + 1
-                  print(f"\n{'='*70}\n🔄 CELL {n}/{len(self.tagged)} - Starting Execution\n{'='*70}")
-                  
-                  # Show full cell source (first 500 chars)
-                  preview = cell.source[:500]
-                  print(f"📝 Cell Source Preview:\n{preview}")
-                  if len(cell.source) > 500:
-                      print(f"... ({len(cell.source) - 500} more characters)")
-                  print(f"\n{'─'*70}")
-                  
-                  t = time.time()
-                  try:
-                      cell, resources = super().preprocess_cell(cell, resources, idx)
-                      duration = time.time()-t
-                      
-                      # Show ALL cell outputs
-                      print(f"\n{'─'*70}")
-                      print(f"📤 CELL {n} OUTPUT:")
-                      print(f"{'─'*70}")
-                      
-                      if cell.outputs:
-                          for out_idx, output in enumerate(cell.outputs, 1):
-                              if output.output_type == 'stream':
-                                  # Show full stream output (remove ANSI codes)
-                                  text = re.sub(r'\x1b\[[0-9;]*m', '', output.text)
-                                  lines = text.strip().split('\n')
-                                  
-                                  print(f"\n[Output Block {out_idx} - Stream - {len(lines)} lines]")
-                                  # Show all lines (not truncated)
-                                  for line in lines:
-                                      print(line)
-                                  
-                              elif output.output_type == 'execute_result':
-                                  print(f"\n[Output Block {out_idx} - Execute Result]")
-                                  if 'text/plain' in output.data:
-                                      print(output.data['text/plain'])
-                                  
-                              elif output.output_type == 'display_data':
-                                  print(f"\n[Output Block {out_idx} - Display Data]")
-                                  if 'text/plain' in output.data:
-                                      print(output.data['text/plain'])
-                                  if 'text/html' in output.data:
-                                      print("[HTML output present]")
-                                  
-                              elif output.output_type == 'error':
-                                  print(f"\n[Output Block {out_idx} - Error]")
-                                  print(f"❌ {output.ename}: {output.evalue}")
-                                  if hasattr(output, 'traceback') and output.traceback:
-                                      print("\nFull Traceback:")
-                                      for tb_line in output.traceback:
-                                          # Remove ANSI codes from traceback
-                                          clean_line = re.sub(r'\x1b\[[0-9;]*m', '', tb_line)
-                                          print(clean_line)
-                      else:
-                          print("(No outputs generated)")
-                      
-                      print(f"\n{'─'*70}")
-                      print(f"✅ Cell {n} completed in {duration:.1f}s")
-                      print(f"{'='*70}\n")
-                      
-                      self.summaries.append({
-                          'cell': n, 
-                          'duration': duration, 
-                          'status': 'success',
-                          'output_blocks': len(cell.outputs) if cell.outputs else 0
-                      })
-                      
-                  except Exception as e:
-                      duration = time.time()-t
-                      error_type = type(e).__name__
-                      error_msg = str(e)[:500]
-                      
-                      print(f"\n{'─'*70}")
-                      print(f"❌ CELL {n} FAILED after {duration:.1f}s")
-                      print(f"{'─'*70}")
-                      print(f"Error Type: {error_type}")
-                      print(f"Error Message: {error_msg}")
-                      
-                      # Try to extract actual error from CellExecutionError
-                      if hasattr(e, 'ename'):
-                          print(f"\nActual Error: {e.ename}: {e.evalue}")
-                      
-                      # Print ALL outputs before error
-                      if cell.outputs:
-                          print(f"\n{'─'*70}")
-                          print(f"📤 OUTPUTS BEFORE ERROR:")
-                          print(f"{'─'*70}")
-                          
-                          for out_idx, output in enumerate(cell.outputs, 1):
-                              if output.output_type == 'stream':
-                                  text = re.sub(r'\x1b\[[0-9;]*m', '', output.text)
-                                  lines = text.strip().split('\n')
-                                  print(f"\n[Output Block {out_idx} - {len(lines)} lines]")
-                                  for line in lines:
-                                      print(line)
-                                      
-                              elif output.output_type == 'error':
-                                  print(f"\n[Output Block {out_idx} - Error]")
-                                  print(f"❌ {output.ename}: {output.evalue}")
-                                  if hasattr(output, 'traceback') and output.traceback:
-                                      print("\nFull Traceback:")
-                                      for tb_line in output.traceback:
-                                          clean_line = re.sub(r'\x1b\[[0-9;]*m', '', tb_line)
-                                          print(clean_line)
-                      
-                      print(f"\n{'='*70}\n")
-                      
-                      self.summaries.append({
-                          'cell': n, 
-                          'duration': duration, 
-                          'status': 'failed',
-                          'error': f"{error_type}: {error_msg[:200]}"
-                      })
-                      
-                      # Don't raise - continue to next cell
-                      print(f"⚠️ Continuing to next cell despite error...\n")
-                      
-                  return cell, resources
-          
-          if not os.path.exists('AI_Forex_Brain_2.ipynb'):
-              print("❌ ERROR: AI_Forex_Brain_2.ipynb not found!")
-              sys.exit(1)
-          
-          with open('AI_Forex_Brain_2.ipynb', 'r') as f:
-              nb = nbformat.read(f, as_version=4)
-          
-          ep = TaggedExecutor(timeout=2400, kernel_name='python3', allow_errors=True)
-          start = time.time()
-          
-          print("="*70)
-          print("🚀 STARTING TAGGED CELLS EXECUTION")
-          print("="*70)
-          
-          try:
-              ep.preprocess(nb, {'metadata': {'path': '.'}})
-          except Exception as e:
-              print(f"\n⚠️ Preprocess exception: {type(e).__name__}: {str(e)[:200]}")
-          
-          duration = time.time()-start
-          success_count = sum(1 for s in ep.summaries if s['status']=='success')
-          failed_count = sum(1 for s in ep.summaries if s['status']=='failed')
-          
-          print(f"\n{'='*70}")
-          print(f"📊 FINAL EXECUTION SUMMARY")
-          print(f"{'='*70}")
-          print(f"Total cells executed: {len(ep.summaries)}")
-          print(f"✅ Successful: {success_count}")
-          print(f"❌ Failed: {failed_count}")
-          print(f"⏱️ Total time: {duration:.1f}s")
-          
-          if ep.summaries:
-              print(f"\nDetailed Results:")
-              for s in ep.summaries:
-                  status_icon = "✅" if s['status'] == 'success' else "❌"
-                  print(f"  {status_icon} Cell {s['cell']}: {s['duration']:.1f}s - {s['status']}")
-                  if 'output_blocks' in s:
-                      print(f"     └─ {s['output_blocks']} output blocks")
-                  if 'error' in s:
-                      print(f"     └─ {s['error']}")
-          
-          print(f"{'='*70}\n")
-          
-          report = {
-              'timestamp': datetime.now().isoformat(), 
-              'mode': 'tagged', 
-              'duration': duration, 
-              'cells': ep.summaries,
-              'total': len(ep.summaries),
-              'successful': success_count,
-              'failed': failed_count
-          }
-          
-          os.makedirs('.github/run_history', exist_ok=True)
-          with open('.github/run_history/latest_run.json', 'w') as f: 
-              json.dump(report, f, indent=2)
-          
-          # Exit with success if at least 1 cell succeeded, or if no cells were found
-          if success_count > 0 or len(ep.summaries) == 0:
-              print("✅ Tagged cells execution completed successfully")
-              sys.exit(0)
-          else:
-              print("❌ All tagged cells failed")
-              sys.exit(1)
-          EOF
-          
           cat > run_full.py << 'EOF'
-          import nbformat, sys, time, json, os, traceback, re
+          import nbformat, sys, time, json, os, re
           from nbconvert.preprocessors import ExecutePreprocessor
           from datetime import datetime
           
@@ -422,6 +130,8 @@ jobs:
                   super().__init__(*args, **kwargs)
                   self.cell_count = 0
                   self.start_time = None
+                  self.successful_cells = 0
+                  self.failed_cells = 0
               
               def preprocess(self, nb, resources=None, km=None):
                   code_cells = sum(1 for c in nb.cells if c.cell_type=='code')
@@ -441,26 +151,33 @@ jobs:
                   print(f"⏳ Cell {self.cell_count} ({elapsed:.0f}s elapsed)")
                   print(f"{'─'*70}")
                   
-                  cell, resources = super().preprocess_cell(cell, resources, idx)
+                  try:
+                      cell, resources = super().preprocess_cell(cell, resources, idx)
+                      self.successful_cells += 1
+                      
+                      # Show key outputs from each cell
+                      if cell.outputs:
+                          for output in cell.outputs:
+                              if output.output_type == 'stream':
+                                  text = re.sub(r'\x1b\[[0-9;]*m', '', output.text)
+                                  lines = text.strip().split('\n')
+                                  
+                                  # Show lines with important markers
+                                  important_lines = [l for l in lines if any(marker in l for marker in 
+                                      ['✅', '⚠️', '❌', '💰', '🧠', '💾', '📊', 'COMPLETE', 'ERROR', 
+                                       'Win Rate', 'P&L', 'Iteration', 'Mode:', 'Total', 'Average'])]
+                                  
+                                  if important_lines:
+                                      for line in important_lines[:10]:
+                                          print(f"  {line}")
+                              
+                              elif output.output_type == 'error':
+                                  print(f"  ❌ Error: {output.ename}: {output.evalue}")
                   
-                  # Show key outputs from each cell
-                  if cell.outputs:
-                      for output in cell.outputs:
-                          if output.output_type == 'stream':
-                              text = re.sub(r'\x1b\[[0-9;]*m', '', output.text)
-                              lines = text.strip().split('\n')
-                              
-                              # Show lines with important markers
-                              important_lines = [l for l in lines if any(marker in l for marker in 
-                                  ['✅', '⚠️', '❌', '💰', '🧠', '💾', '📊', 'COMPLETE', 'ERROR', 
-                                   'Win Rate', 'P&L', 'Iteration', 'Mode:', 'Total', 'Average'])]
-                              
-                              if important_lines:
-                                  for line in important_lines[:10]:
-                                      print(f"  {line}")
-                              
-                          elif output.output_type == 'error':
-                              print(f"  ❌ Error: {output.ename}: {output.evalue}")
+                  except Exception as e:
+                      self.failed_cells += 1
+                      print(f"  ⚠️ Cell {self.cell_count} had errors: {str(e)[:200]}")
+                      print(f"  🔄 Continuing to next cell...")
                   
                   return cell, resources
           
@@ -486,6 +203,8 @@ jobs:
               print(f"✅ EXECUTION COMPLETED")
               print(f"{'='*70}")
               print(f"Total code cells: {ep.cell_count}")
+              print(f"Successful: {ep.successful_cells}")
+              print(f"Failed: {ep.failed_cells}")
               print(f"Duration: {duration:.1f}s")
               print(f"{'='*70}\n")
               
@@ -494,6 +213,8 @@ jobs:
                   'mode': 'full', 
                   'duration': duration,
                   'cells_executed': ep.cell_count,
+                  'successful': ep.successful_cells,
+                  'failed': ep.failed_cells,
                   'status': 'success'
               }
               
@@ -505,6 +226,8 @@ jobs:
               print(f"{'='*70}")
               print(f"Error: {type(e).__name__}: {str(e)[:200]}")
               print(f"Duration: {duration:.1f}s")
+              print(f"Successful cells: {ep.successful_cells}")
+              print(f"Failed cells: {ep.failed_cells}")
               print(f"{'='*70}\n")
               
               report = {
@@ -512,6 +235,8 @@ jobs:
                   'mode': 'full', 
                   'duration': duration,
                   'cells_executed': ep.cell_count,
+                  'successful': ep.successful_cells,
+                  'failed': ep.failed_cells,
                   'status': 'completed_with_errors',
                   'error': f"{type(e).__name__}: {str(e)[:200]}"
               }
@@ -523,45 +248,16 @@ jobs:
           print("✅ Full notebook execution completed")
           EOF
 
-      - name: Run Weekend Mode (if data is valid)
-        if: steps.mode.outputs.mode == 'weekend' && steps.corruption_check.outputs.need_full_run == 'false'
+      - name: Run Full Notebook
         run: |
-          echo "🏖️ Running weekend mode (tagged cells)..."
-          python run_tagged.py
-          EXIT_CODE=$?
-          
-          if [ $EXIT_CODE -eq 0 ]; then
-            echo "✅ Tagged cells execution successful"
-            
-            # Check if notebook actually processed data
-            if grep -q "No processed pickles found" .github/run_history/latest_run.json 2>/dev/null || \
-               grep -q "No data loaded" .github/run_history/latest_run.json 2>/dev/null; then
-              echo ""
-              echo "⚠️ WARNING: Notebook couldn't find pickle files!"
-              echo "📋 This means the files exist but notebook can't read them"
-              echo "🔄 Falling back to full notebook to regenerate data..."
-              python run_full.py || exit 1
-            fi
-          else
-            echo "⚠️ Tagged cells had errors (exit code: $EXIT_CODE)"
-            echo "📋 Checking run report..."
-            if [ -f ".github/run_history/latest_run.json" ]; then
-              python -c "import json; r=json.load(open('.github/run_history/latest_run.json')); print(f\"Successful: {r.get('successful',0)}/{r.get('total',0)}\")" || true
-            fi
-            echo ""
-            echo "🔄 Falling back to full notebook execution..."
-            python run_full.py || exit 1
-          fi
-        timeout-minutes: 50
-
-      - name: Run Full Notebook (weekday or corrupted data)
-        if: steps.mode.outputs.mode == 'weekday' || steps.corruption_check.outputs.need_full_run == 'true'
-        run: |
-          if [ "${{ steps.corruption_check.outputs.need_full_run }}" = "true" ]; then
-            echo "🔄 Running full notebook due to corrupted/missing data..."
-          else
-            echo "💼 Running full notebook (weekday mode)..."
-          fi
+          echo "🚀 Running full notebook execution..."
+          echo "📅 Day: ${{ steps.day_info.outputs.day_name }}"
+          echo "🔢 Run: #${{ steps.data.outputs.run_number }}"
+          echo "📓 Notebook: AI_Forex_Brain_2.ipynb"
+          echo ""
+          echo "ℹ️  This will execute ALL cells in the notebook sequentially"
+          echo "ℹ️  Estimated time: 30-50 minutes"
+          echo ""
           python run_full.py
         timeout-minutes: 50
 
@@ -579,7 +275,7 @@ jobs:
               exit(0)
           
           data = [json.load(open(f)) for f in runs]
-          success = sum(1 for r in data if r.get('failed', 0) == 0)
+          success = sum(1 for r in data if r.get('status') == 'success')
           avg = sum(r.get('duration', 0) for r in data) / len(data)
           
           html = f"""<!DOCTYPE html>
@@ -666,19 +362,16 @@ jobs:
             echo "ℹ️ No changes"
           else
             RUN="${{ steps.data.outputs.run_number }}"
-            MODE="${{ steps.mode.outputs.mode }}"
+            IS_WEEKEND="${{ steps.day_info.outputs.is_weekend }}"
             TIME="$(date +'%Y-%m-%d %H:%M UTC')"
-            CORRUPTED="${{ steps.corruption_check.outputs.need_full_run }}"
             
-            if [ "$CORRUPTED" = "true" ]; then
-              MSG="🔄 Data Regenerated"
-            elif [ "$MODE" = "weekend" ]; then
-              MSG="🏖️ Weekend Learning"
+            if [ "$IS_WEEKEND" = "true" ]; then
+              MSG="🏖️ Weekend Run"
             else
-              MSG="🔴 Live Trading"
+              MSG="🔴 Trading Day"
             fi
             
-            git commit -m "${MSG} - Run #${RUN} - ${TIME}" || true
+            git commit -m "${MSG} #${RUN} - ${TIME}" || true
             
             for i in {1..3}; do
               git push origin main && break || { 
@@ -702,10 +395,10 @@ jobs:
         if: always()
         run: |
           echo "=========================================="
-          echo "📊 Run #${{ steps.data.outputs.run_number }}"
-          echo "Mode: ${{ steps.mode.outputs.mode }}"
-          echo "Data Status: ${{ steps.corruption_check.outputs.need_full_run == 'true' && 'Regenerated' || 'Valid' }}"
-          echo "Time: $(date +'%Y-%m-%d %H:%M UTC')"
+          echo "📊 Forex Brain Pipeline - Run #${{ steps.data.outputs.run_number }}"
+          echo "📅 Day: ${{ steps.day_info.outputs.day_name }}"
+          echo "⏰ Time: $(date +'%Y-%m-%d %H:%M UTC')"
+          echo "📂 Pickle files: ${{ steps.data.outputs.pickle_count }}"
           [ "${{ steps.data.outputs.send_report }}" = "true" ] && echo "📧 Report: SENT" || echo "📧 Report: Pending"
           echo "✅ Execution complete"
           echo "=========================================="

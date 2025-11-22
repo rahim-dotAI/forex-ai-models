@@ -857,3 +857,30 @@ jobs:
           echo "   • Processed pickles: $PICKLE_COUNT"
           
           if [ -f "database/memory_v85.db" ]; then
+            DB_SIZE=$(wc -c < "database/memory_v85.db")
+            echo "   • Pipeline database: ✅ ($DB_SIZE bytes)"
+          else
+            echo "   • Pipeline database: ⚠️  Not found"
+          fi
+          
+          if [ -d "rl_memory" ]; then
+            RL_EXPERIENCE=$([ -f "rl_memory/experience_replay.pkl" ] && echo "✅" || echo "⚠️")
+            RL_QNET=$([ -f "rl_models/q_network.npz" ] && echo "✅" || echo "⚠️")
+            echo "   • RL experience replay: $RL_EXPERIENCE"
+            echo "   • RL Q-network: $RL_QNET"
+          else
+            echo "   • RL state: ⚠️  Not found"
+          fi
+          
+          if [ $PICKLE_COUNT -ge 4 ]; then
+            echo "   • Data Status: ✅ Ready for Trade Beacon v17.0"
+          else
+            echo "   • Data Status: ⚠️  Needs more data (≥4 pickles)"
+          fi
+          
+          echo ""
+          echo "=========================================="
+          echo "✅ Execution summary completed"
+          echo "=========================================="
+          
+          if [ -f "database/memory_v85.db" ]; then

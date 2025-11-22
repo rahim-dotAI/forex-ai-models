@@ -1,4 +1,4 @@
-name: Smart Forex Brain Pipeline (Trade Beacon v13.0)
+name: Smart Forex Brain Pipeline (Trade Beacon v17.0)
 
 on:
   workflow_dispatch:
@@ -8,8 +8,10 @@ on:
     branches:
       - main
   schedule:
-    # Weekdays only (Mon-Fri): Every 4 hours
-    - cron: '0 */4 * * 1-5'
+    # Weekdays (Mon-Fri): Every 2 hours - Full notebook execution
+    - cron: '0 */2 * * 1-5'
+    # Weekends (Sat-Sun): Every 30 minutes - Tagged cells only
+    - cron: '*/30 * * * 0,6'
 
 jobs:
   run-forex-brain:
@@ -69,18 +71,29 @@ jobs:
           echo "=========================================="
           echo "🗓️  EXECUTION MODE DETECTION"
           echo "=========================================="
-          echo "Current day: $DAY_OF_WEEK (1=Mon, 7=Sun)"
+          echo "Current day: $DAY_OF_WEEK (1=Mon, 5=Fri, 6=Sat, 7=Sun)"
           echo "Current hour: $HOUR UTC"
           echo "Date: $(date +'%A, %B %d, %Y %H:%M UTC')"
           echo ""
           
-          echo "execution_mode=weekday_full_notebook" >> $GITHUB_OUTPUT
-          echo "schedule_type=4hourly" >> $GITHUB_OUTPUT
-          echo "🎯 MODE: WEEKDAY (Monday-Friday)"
-          echo "   • Execution: Full notebook (all cells)"
-          echo "   • Schedule: Every 4 hours"
-          echo "   • Features: Data collection + Trade Beacon v13.0"
-          echo "   • Trade Beacon: Enhanced with Regime Detection + Session Analysis + Momentum"
+          # Weekend = Saturday (6) or Sunday (7)
+          if [ $DAY_OF_WEEK -eq 6 ] || [ $DAY_OF_WEEK -eq 7 ]; then
+            echo "execution_mode=weekend_tagged_cells" >> $GITHUB_OUTPUT
+            echo "schedule_type=30min_tagged" >> $GITHUB_OUTPUT
+            echo "�️ MODE: WEEKEND (Saturday/Sunday)"
+            echo "   • Execution: Tagged cells only (#TAG: pipeline_main)"
+            echo "   • Schedule: Every 30 minutes"
+            echo "   • Features: Ultra-Persistent Pipeline + Trade Beacon v17.0"
+            echo "   • Trading: LEARNING MODE (no live signals stored)"
+          else
+            echo "execution_mode=weekday_full_notebook" >> $GITHUB_OUTPUT
+            echo "schedule_type=2hourly" >> $GITHUB_OUTPUT
+            echo "💼 MODE: WEEKDAY (Monday-Friday)"
+            echo "   • Execution: Full notebook (all cells)"
+            echo "   • Schedule: Every 2 hours"
+            echo "   • Features: Complete pipeline + Trade Beacon v17.0"
+            echo "   • Trading: LIVE MODE (full trading active)"
+          fi
           echo "=========================================="
 
       - name: Set up Python 3.11
@@ -120,24 +133,163 @@ jobs:
           PICKLE_COUNT=$(find data/processed -name "*.pkl" -type f 2>/dev/null | \
             grep -v "_sgd_model\|_rf_model\|indicator_cache\|ultra_\|alpha_\|_model.pkl\|\.bak" | wc -l)
           
-          # Check for Omega state files
-          OMEGA_STATE_EXISTS=false
-          if [ -d "omega_state" ]; then
-            if [ -f "omega_state/omega_learning.pkl" ] || [ -f "omega_state/omega_iteration.pkl" ]; then
-              OMEGA_STATE_EXISTS=true
+          # Check for Pipeline database
+          PIPELINE_DB_EXISTS=false
+          if [ -f "database/memory_v85.db" ]; then
+            DB_SIZE=$(wc -c < "database/memory_v85.db")
+            echo "   • Pipeline database: ✅ ($DB_SIZE bytes)"
+          else
+            echo "   • Pipeline database: ⚠️  Not found"
+          fi
+          
+          if [ -d "rl_memory" ]; then
+            RL_EXPERIENCE=$([ -f "rl_memory/experience_replay.pkl" ] && echo "✅" || echo "⚠️")
+            RL_QNET=$([ -f "rl_models/q_network.npz" ] && echo "✅" || echo "⚠️")
+            echo "   • RL experience replay: $RL_EXPERIENCE"
+            echo "   • RL Q-network: $RL_QNET"
+          else
+            echo "   • RL state: ⚠️  Not found"
+          fi
+          
+          if [ $PICKLE_COUNT -ge 4 ]; then
+            echo "   • Data Status: ✅ Ready for Trade Beacon v17.0"
+          else
+            echo "   • Data Status: ⚠️  Needs more data (≥4 pickles)"
+          fi
+          echo ""
+          
+          echo "🔴 TRADE BEACON v17.0 - INTEGRATED LEARNING EDITION"
+          echo "=========================================="
+          echo ""
+          echo "🎯 NEW FEATURES:"
+          echo "   • Deep Q-Learning with Experience Replay"
+          echo "   • Pipeline Database Integration (learns from completed trades)"
+          echo "   • Weekend Learning Mode (backtest + database sync)"
+          echo "   • Weekday Live Trading Mode (full trading active)"
+          echo "   • 6 Chart Pattern Detection (double top/bottom, H&S, etc.)"
+          echo "   • Adaptive Confidence System"
+          echo "   • Dynamic Position Sizing"
+          echo ""
+          echo "🛡️  VALIDATION SYSTEM:"
+          echo "   • Confidence-based trade execution"
+          echo "   • Adaptive thresholds (early: 35%, mature: 65%)"
+          echo "   • Q-value spread validation"
+          echo "   • Entropy-based certainty checks"
+          echo "   • Position sizing based on confidence"
+          echo ""
+          echo "🧠 DEEP Q-LEARNING:"
+          echo "   • State size: 30 features"
+          echo "   • Action space: BUY, SELL, HOLD"
+          echo "   • Experience replay: 10,000 memory"
+          echo "   • Target network updates every 10 iterations"
+          echo "   • Epsilon decay: 1.0 → 0.05"
+          echo ""
+          echo "💾 PIPELINE INTEGRATION:"
+          echo "   • Learns from Ultra-Persistent Pipeline database"
+          echo "   • Syncs completed trades automatically"
+          echo "   • Converts pipeline trades to RL experiences"
+          echo "   • Tracks learning statistics"
+          echo ""
+          echo "📊 STATE VECTOR (30 FEATURES):"
+          echo "   • Price position (1)"
+          echo "   • Recent returns (5)"
+          echo "   • RSI 1h + 1d (2)"
+          echo "   • MACD + Signal (2)"
+          echo "   • Bollinger Bands (2)"
+          echo "   • ATR + Volatility (2)"
+          echo "   • Trend indicators (3)"
+          echo "   • Volume ratio (1)"
+          echo "   • Session indicators (3)"
+          echo "   • Time features (2)"
+          echo "   • Chart patterns (6)"
+          echo ""
+          echo "🎲 REWARD SYSTEM:"
+          echo "   • Profit reward scale: 100x"
+          echo "   • Loss penalty scale: 100x"
+          echo "   • Win streak bonus: +5.0"
+          echo "   • Loss streak penalty: -3.0"
+          echo "   • Sharpe ratio component: 10x"
+          echo "   • Time efficiency rewards"
+          echo ""
+          echo "⚙️  WEEKEND vs WEEKDAY MODES:"
+          echo ""
+          echo "   🖏️ WEEKEND (Every 30min):"
+          echo "      • Runs tagged cells only"
+          echo "      • Ultra-Persistent Pipeline learns"
+          echo "      • Trade Beacon runs backtest"
+          echo "      • Syncs with pipeline database"
+          echo "      • NO live signals stored"
+          echo "      • Evaluation age: 30 minutes"
+          echo "      • 50+ backtest trades per run"
+          echo ""
+          echo "   💼 WEEKDAY (Every 2hrs):"
+          echo "      • Full notebook execution"
+          echo "      • Complete data pipeline"
+          echo "      • Live trading signals"
+          echo "      • Real trade execution"
+          echo "      • Pipeline stores live trades"
+          echo "      • Evaluation age: 2 hours"
+          echo "      • Email notifications"
+          echo ""
+          echo "📧 EMAIL NOTIFICATIONS:"
+          echo "   • Beautiful HTML design"
+          echo "   • RL agent statistics"
+          echo "   • Pipeline integration stats"
+          echo "   • Recent trade history"
+          echo "   • Confidence metrics"
+          echo "   • Mode-specific badges"
+          echo ""
+          echo "💾 STATE PERSISTENCE:"
+          echo "   • Q-network weights saved"
+          echo "   • Target network saved"
+          echo "   • Experience replay memory"
+          echo "   • Learning statistics"
+          echo "   • Trade history"
+          echo "   • Pipeline sync timestamp"
+          echo "   • Iteration counter"
+          echo ""
+          echo "🔒 SAFETY FEATURES:"
+          echo "   • Max 2 concurrent positions"
+          echo "   • 2% max risk per trade"
+          echo "   • $10 max trade cap"
+          echo "   • ATR-based SL/TP (2x/3x)"
+          echo "   • Confidence-based position sizing"
+          echo "   • Exploration/exploitation balance"
+          echo "   • Comprehensive error handling"
+          echo ""
+          echo "🗄️  DATABASE STRUCTURE:"
+          echo "   • pending_trades: Live positions"
+          echo "   • completed_trades: Historical results"
+          echo "   • model_stats_cache: Performance metrics"
+          echo "   • RL learns from all completed trades"
+          echo ""
+          echo "=========================================="
+          echo "✅ Pipeline execution completed"
+          echo "=========================================="
+            PIPELINE_DB_EXISTS=true
+          fi
+          
+          # Check for RL state files
+          RL_STATE_EXISTS=false
+          if [ -d "rl_memory" ]; then
+            if [ -f "rl_memory/experience_replay.pkl" ] || [ -f "rl_models/q_network.npz" ]; then
+              RL_STATE_EXISTS=true
             fi
           fi
           
           echo "📊 Data Status:"
           echo "   Processed pickle files: $PICKLE_COUNT"
-          echo "   Omega state exists: $OMEGA_STATE_EXISTS"
+          echo "   Pipeline database exists: $PIPELINE_DB_EXISTS"
+          echo "   RL state exists: $RL_STATE_EXISTS"
           echo ""
           
           if [ $PICKLE_COUNT -ge 4 ]; then
             echo "has_data=true" >> $GITHUB_OUTPUT
             echo "✅ SUFFICIENT DATA FOUND"
             echo "   • Pickle files: $PICKLE_COUNT/4 ✓"
-            echo "   • Ready for Trade Beacon v13.0"
+            echo "   • Pipeline DB: $PIPELINE_DB_EXISTS"
+            echo "   • RL State: $RL_STATE_EXISTS"
+            echo "   • Ready for execution"
           else
             echo "has_data=false" >> $GITHUB_OUTPUT
             echo "⚠️  INSUFFICIENT DATA"
@@ -146,14 +298,208 @@ jobs:
           fi
           echo "=========================================="
 
-      - name: Run Full Notebook (Weekday Mode)
+      - name: Run Weekend Tagged Cells (Weekend Mode)
+        if: steps.detect_mode.outputs.execution_mode == 'weekend_tagged_cells'
         run: |
           echo "=========================================="
-          echo "📓 WEEKDAY MODE: FULL NOTEBOOK EXECUTION"
+          echo "🖏️ WEEKEND MODE: TAGGED CELLS EXECUTION"
           echo "=========================================="
           echo "Day: $(date +'%A')"
+          echo "Schedule: Every 30 minutes"
+          echo "Executing: Tagged cells only (#TAG: pipeline_main)"
+          echo "  1. Ultra-Persistent Pipeline (Learning Mode)"
+          echo "  2. Trade Beacon v17.0 (Learning Mode)"
+          echo ""
+          
+          # Create Python script for tagged cell execution
+          cat > run_tagged_cells.py << 'EOFPYTHON'
+          import nbformat
+          from nbconvert.preprocessors import ExecutePreprocessor
+          import sys
+          import os
+          import time
+          import re
+          from datetime import datetime
+          
+          class TaggedCellExecutor(ExecutePreprocessor):
+              """Execute only cells with #TAG: pipeline_main"""
+              
+              def __init__(self, *args, **kwargs):
+                  super().__init__(*args, **kwargs)
+                  self.tagged_cells = []
+                  self.current_cell = 0
+                  self.start_time = None
+                  
+              def preprocess(self, nb, resources=None, km=None):
+                  # Find all tagged cells
+                  for idx, cell in enumerate(nb.cells):
+                      if cell.cell_type == 'code':
+                          if '#TAG: pipeline_main' in cell.source or 'TAG: pipeline_main' in cell.source:
+                              self.tagged_cells.append(idx)
+                  
+                  print(f"📊 Found {len(self.tagged_cells)} tagged cells")
+                  print("=" * 70)
+                  
+                  self.start_time = time.time()
+                  return super().preprocess(nb, resources, km)
+              
+              def preprocess_cell(self, cell, resources, cell_index):
+                  if cell.cell_type != 'code':
+                      return cell, resources
+                  
+                  # Only execute tagged cells
+                  if cell_index not in self.tagged_cells:
+                      return cell, resources
+                  
+                  self.current_cell += 1
+                  elapsed = time.time() - self.start_time
+                  
+                  print(f"\n🔄 Tagged Cell {self.current_cell}/{len(self.tagged_cells)} (Cell #{cell_index}) | ⏱️ {elapsed:.1f}s")
+                  
+                  # Show cell preview
+                  first_lines = cell.source.split('\n')[:3]
+                  preview = '\n'.join(first_lines)
+                  print(f"📝 Preview:\n{preview[:200]}...")
+                  
+                  cell_start = time.time()
+                  cell, resources = super().preprocess_cell(cell, resources, cell_index)
+                  cell_time = time.time() - cell_start
+                  
+                  if cell.outputs:
+                      for output in cell.outputs:
+                          if output.output_type == 'stream':
+                              cleaned = self._clean_output(output.text)
+                              if cleaned.strip():
+                                  print(cleaned)
+                          elif output.output_type == 'error':
+                              print(f"❌ {output.ename}: {output.evalue}")
+                  
+                  print(f"✅ Completed in {cell_time:.1f}s")
+                  
+                  return cell, resources
+              
+              def _clean_output(self, text):
+                  if not text:
+                      return ""
+                  lines = []
+                  for line in text.split('\n'):
+                      if any(skip in line for skip in ['[DEBUG]', 'WARNING:', 'DeprecationWarning']):
+                          continue
+                      if not line.strip():
+                          continue
+                      line = re.sub(r'\x1b\[[0-9;]*m', '', line)
+                      lines.append(line)
+                  return '\n'.join(lines)
+          
+          def run_tagged_cells(notebook_path):
+              print(f"📖 Reading: {notebook_path}")
+              
+              with open(notebook_path, 'r', encoding='utf-8') as f:
+                  nb = nbformat.read(f, as_version=4)
+              
+              print(f"✅ Loaded: {len(nb.cells)} total cells")
+              print()
+              
+              ep = TaggedCellExecutor(
+                  timeout=2400,
+                  kernel_name='python3',
+                  allow_errors=False
+              )
+              
+              print("🚀 Starting tagged cells execution...")
+              print()
+              
+              try:
+                  start = time.time()
+                  ep.preprocess(nb, {'metadata': {'path': '.'}})
+                  duration = time.time() - start
+                  
+                  print()
+                  print("=" * 70)
+                  print("✅ TAGGED CELLS EXECUTION COMPLETED!")
+                  print("=" * 70)
+                  print(f"⏱️  Time: {duration:.1f}s ({duration/60:.1f} min)")
+                  print(f"📊 Tagged Cells: {len(ep.tagged_cells)}")
+                  print("=" * 70)
+                  return True
+              except Exception as e:
+                  print()
+                  print("=" * 70)
+                  print("❌ EXECUTION FAILED!")
+                  print("=" * 70)
+                  print(f"Error: {type(e).__name__}: {str(e)}")
+                  print("=" * 70)
+                  return False
+          
+          if __name__ == "__main__":
+              notebook = sys.argv[1] if len(sys.argv) > 1 else "AI_Forex_Brain_2.ipynb"
+              
+              if not os.path.exists(notebook):
+                  print(f"❌ Not found: {notebook}")
+                  sys.exit(1)
+              
+              print("=" * 70)
+              print("🖏️ WEEKEND MODE - TAGGED CELLS ONLY")
+              print("=" * 70)
+              print(f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
+              print(f"📓 {notebook}")
+              print("🔴 Trade Beacon v17.0 - Learning Mode")
+              print("   • Ultra-Persistent Pipeline (Learning)")
+              print("   • Trade Beacon (Backtest + Database Sync)")
+              print("   • No live trading signals stored")
+              print("   • Database learning continues")
+              print("=" * 70)
+              print()
+              
+              success = run_tagged_cells(notebook)
+              
+              print()
+              print("=" * 70)
+              if success:
+                  print("✅ WEEKEND EXECUTION COMPLETED")
+              else:
+                  print("❌ WEEKEND EXECUTION FAILED")
+              print(f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
+              print("=" * 70)
+              
+              sys.exit(0 if success else 1)
+          EOFPYTHON
+          
+          # Find notebook file
+          NOTEBOOK_FILE="AI_Forex_Brain_2.ipynb"
+          
+          if [ ! -f "$NOTEBOOK_FILE" ]; then
+            echo "❌ Notebook not found: $NOTEBOOK_FILE"
+            exit 1
+          fi
+          
+          echo "✅ Found: $NOTEBOOK_FILE"
+          echo ""
+          
+          python run_tagged_cells.py "$NOTEBOOK_FILE" 2>&1 | tee notebook_execution.log
+          
+          EXIT_CODE=${PIPESTATUS[0]}
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo ""
+            echo "❌ Tagged cell execution failed with exit code $EXIT_CODE"
+            tail -n 200 notebook_execution.log
+            exit $EXIT_CODE
+          fi
+          
+          echo ""
+          echo "✅ Tagged cell execution completed successfully"
+        timeout-minutes: 50
+
+      - name: Run Full Notebook (Weekday Mode)
+        if: steps.detect_mode.outputs.execution_mode == 'weekday_full_notebook'
+        run: |
+          echo "=========================================="
+          echo "💼 WEEKDAY MODE: FULL NOTEBOOK EXECUTION"
+          echo "=========================================="
+          echo "Day: $(date +'%A')"
+          echo "Schedule: Every 2 hours"
           echo "Executing: All cells in sequence"
-          echo "Trade Beacon: v13.0 Enhanced Production"
+          echo "Trade Beacon: v17.0 Enhanced Production"
           echo ""
           
           # Create Python script with progress tracking
@@ -223,12 +569,10 @@ jobs:
                       return ""
                   lines = []
                   for line in text.split('\n'):
-                      # Skip debug/warning lines
                       if any(skip in line for skip in ['[DEBUG]', 'WARNING:', 'DeprecationWarning']):
                           continue
                       if not line.strip():
                           continue
-                      # Remove ANSI color codes
                       line = re.sub(r'\x1b\[[0-9;]*m', '', line)
                       lines.append(line)
                   return '\n'.join(lines)
@@ -282,15 +626,16 @@ jobs:
                   sys.exit(1)
               
               print("=" * 70)
-              print("🧠 WEEKDAY FULL NOTEBOOK - TRADE BEACON v13.0")
+              print("💼 WEEKDAY FULL NOTEBOOK - TRADE BEACON v17.0")
               print("=" * 70)
               print(f"📅 {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
               print(f"📓 {notebook}")
-              print("🔴 Trade Beacon: Enhanced Production Edition")
-              print("   • Market Regime Detection")
-              print("   • Session-Based Trading")
-              print("   • Momentum Confirmation")
-              print("   • Strict Anti-Overfitting")
+              print("🔴 Trade Beacon v17.0: Enhanced Production Edition")
+              print("   • Full Data Pipeline")
+              print("   • Ultra-Persistent Learning")
+              print("   • Deep Q-Learning with Experience Replay")
+              print("   • Pipeline Database Integration")
+              print("   • Live Trading Mode Active")
               print("=" * 70)
               print()
               
@@ -339,10 +684,10 @@ jobs:
           echo "=========================================="
           echo "📋 CHECKING OUTPUT FILES"
           echo "=========================================="
-          echo "Mode: Weekday Full (Trade Beacon v13.0)"
+          echo "Mode: ${{ steps.detect_mode.outputs.execution_mode }}"
           echo ""
           
-          for dir in outputs data/processed logs omega_state; do
+          for dir in outputs data/processed logs database rl_memory rl_models omega_state; do
             if [ -d "$dir" ]; then
               FILE_COUNT=$(find "$dir" -type f 2>/dev/null | wc -l)
               echo "  ✅ $dir/ ($FILE_COUNT files)"
@@ -353,7 +698,7 @@ jobs:
           
           echo ""
           echo "Key Files:"
-          for file in outputs/omega_signals.json outputs/latest_signals.json; do
+          for file in outputs/omega_signals.json outputs/latest_signals.json database/memory_v85.db; do
             if [ -f "$file" ]; then
               SIZE=$(wc -c < "$file")
               echo "  ✅ $file ($SIZE bytes)"
@@ -368,24 +713,24 @@ jobs:
           echo "📦 Data Files:"
           echo "   • Processed pickles: $PICKLE_COUNT"
           
-          # Check omega state
-          if [ -d "omega_state" ]; then
-            OMEGA_FILES=$(find omega_state -name "*.pkl" -type f 2>/dev/null | wc -l)
-            echo "   • Omega state files: $OMEGA_FILES"
+          # Check RL state
+          if [ -d "rl_memory" ]; then
+            RL_FILES=$(find rl_memory -name "*.pkl" -o -name "*.json" -type f 2>/dev/null | wc -l)
+            echo "   • RL memory files: $RL_FILES"
             
-            if [ -f "omega_state/omega_learning.pkl" ]; then
-              echo "   • Learning state: ✅"
+            if [ -f "rl_memory/experience_replay.pkl" ]; then
+              echo "   • Experience replay: ✅"
             fi
-            if [ -f "omega_state/omega_iteration.pkl" ]; then
-              echo "   • Iteration state: ✅"
+            if [ -f "rl_models/q_network.npz" ]; then
+              echo "   • Q-network: ✅"
             fi
           else
-            echo "   • Omega state: ⚠️  Not found"
+            echo "   • RL state: ⚠️  Not found"
           fi
           
           if [ $PICKLE_COUNT -ge 4 ]; then
             echo ""
-            echo "✅ Data ready for Trade Beacon v13.0"
+            echo "✅ Data ready for Trade Beacon v17.0"
           else
             echo ""
             echo "⚠️  Insufficient data (need ≥4 pickles)"
@@ -409,8 +754,13 @@ jobs:
           else
             TIMESTAMP=$(date +'%Y-%m-%d %H:%M UTC')
             DAY=$(date +'%A')
+            MODE="${{ steps.detect_mode.outputs.execution_mode }}"
             
-            COMMIT_MSG="🔴 Trade Beacon v13.0 [4hourly] - $DAY: $TIMESTAMP"
+            if [ "$MODE" = "weekend_tagged_cells" ]; then
+              COMMIT_MSG="🖏️ Trade Beacon v17.0 [Weekend Learning] - $DAY: $TIMESTAMP"
+            else
+              COMMIT_MSG="🔴 Trade Beacon v17.0 [Live Trading] - $DAY: $TIMESTAMP"
+            fi
             
             git commit -m "$COMMIT_MSG" || true
             
@@ -449,6 +799,7 @@ jobs:
           path: |
             notebook_execution.log
             run_full_notebook.py
+            run_tagged_cells.py
             logs/*.log
           retention-days: 7
           if-no-files-found: ignore
@@ -465,13 +816,34 @@ jobs:
           echo "Time: $(date +'%B %d, %Y %H:%M UTC')"
           echo ""
           
-          echo "🤖 Weekday Mode (Mon-Fri):"
-          echo "   • Executed: Full notebook (all cells)"
-          echo "   • Pipeline: API Keys → Environment → GitHub Sync"
-          echo "   • Data: Alpha Vantage + YFinance fetch"
-          echo "   • Processing: CSV Combiner with indicators"
-          echo "   • ML: Trade Beacon v13.0 Enhanced"
-          echo "   • Next run: In ~4 hours"
+          if [ "${{ steps.detect_mode.outputs.execution_mode }}" = "weekend_tagged_cells" ]; then
+            echo "🖏️ Weekend Mode (Sat-Sun):"
+            echo "   • Executed: Tagged cells only (#TAG: pipeline_main)"
+            echo "   • Schedule: Every 30 minutes"
+            echo "   • Components:"
+            echo "     1. Ultra-Persistent Pipeline (Learning Mode)"
+            echo "     2. Trade Beacon v17.0 (Learning Mode)"
+            echo "   • Trading: Learning only, no live signals"
+            echo "   • Database: Learning continues from completed trades"
+            echo "   • Backtest: Running on historical data"
+            echo "   • Next run: In ~30 minutes"
+          else
+            echo "💼 Weekday Mode (Mon-Fri):"
+            echo "   • Executed: Full notebook (all cells)"
+            echo "   • Schedule: Every 2 hours"
+            echo "   • Pipeline: Complete data fetch + processing"
+            echo "   • Components:"
+            echo "     1. API Keys → Environment Setup"
+            echo "     2. GitHub Sync"
+            echo "     3. Alpha Vantage Data Fetch"
+            echo "     4. YFinance Data Fetch"
+            echo "     5. CSV Combiner with Indicators"
+            echo "     6. Ultra-Persistent Pipeline (Live Mode)"
+            echo "     7. Trade Beacon v17.0 (Live Trading)"
+            echo "   • Trading: LIVE MODE - Real money at risk"
+            echo "   • Database: Full learning + live signal storage"
+            echo "   • Next run: In ~2 hours"
+          fi
           echo ""
           
           echo "Generated Files:"
@@ -484,76 +856,4 @@ jobs:
           echo "📦 Data Files:"
           echo "   • Processed pickles: $PICKLE_COUNT"
           
-          if [ -d "omega_state" ]; then
-            OMEGA_LEARNING=$([ -f "omega_state/omega_learning.pkl" ] && echo "✅" || echo "⚠️")
-            OMEGA_ITER=$([ -f "omega_state/omega_iteration.pkl" ] && echo "✅" || echo "⚠️")
-            echo "   • Omega learning state: $OMEGA_LEARNING"
-            echo "   • Omega iteration state: $OMEGA_ITER"
-          else
-            echo "   • Omega state: ⚠️  Not found"
-          fi
-          
-          if [ $PICKLE_COUNT -ge 4 ]; then
-            echo "   • Data Status: ✅ Ready for Trade Beacon v13.0"
-          else
-            echo "   • Data Status: ⚠️  Needs more data (≥4 pickles)"
-          fi
-          echo ""
-          
-          echo "🔴 TRADE BEACON v13.0 - ENHANCED PRODUCTION"
-          echo "=========================================="
-          echo ""
-          echo "🎯 NEW FEATURES:"
-          echo "   • Market Regime Detection - TRENDING/RANGING/VOLATILE"
-          echo "   • Session-Based Trading - Optimal pair/session matching"
-          echo "   • Momentum Confirmation - Multi-timeframe RSI analysis"
-          echo "   • Enhanced Confidence - Regime + Session + Momentum weighted"
-          echo ""
-          echo "🛡️  VALIDATION SYSTEM:"
-          echo "   • Strict validation (50% min val accuracy)"
-          echo "   • Hard stops on overfitting"
-          echo "   • Val/Train ratio ≥0.75 enforced"
-          echo "   • Paper trading mode default"
-          echo "   • No signals if all models rejected"
-          echo ""
-          echo "📊 MULTI-STRATEGY MODELS:"
-          echo "   🔵 Conservative Trend:"
-          echo "      • ATR SL: 1.5-2.0x | TP: 2.0-2.5x"
-          echo "      • Risk: 0.8-1.2% per trade"
-          echo "      • Confidence: 70-80% threshold"
-          echo ""
-          echo "   🔴 Aggressive Opportunist:"
-          echo "      • ATR SL: 1.3-2.2x | TP: 1.8-3.0x"
-          echo "      • Risk: 1.0-1.8% per trade"
-          echo "      • Confidence: 55-70% threshold"
-          echo ""
-          echo "⚙️  SESSION MATRIX:"
-          echo "   • USD/JPY: Asian 1.2x | European 1.0x | US 1.1x"
-          echo "   • EUR/USD: Asian 0.8x | European 1.3x | US 1.2x"
-          echo "   • GBP/USD: Asian 0.7x | European 1.4x | US 1.2x"
-          echo "   • AUD/USD: Asian 1.3x | European 0.9x | US 1.0x"
-          echo ""
-          echo "🎯 SIGNAL SELECTION:"
-          echo "   • Best model per pair (weighted by confidence)"
-          echo "   • Regime appropriateness bonus"
-          echo "   • Session optimality bonus"
-          echo "   • Momentum confirmation filter"
-          echo ""
-          echo "📧 ENHANCED EMAIL NOTIFICATIONS:"
-          echo "   • Beautiful HTML design"
-          echo "   • Regime & session indicators"
-          echo "   • Momentum scores displayed"
-          echo "   • Model diversity visualization"
-          echo "   • Trade Beacon branding"
-          echo ""
-          echo "🔒 SAFETY FEATURES:"
-          echo "   • Dynamic seed per iteration"
-          echo "   • State persistence (learning + iteration)"
-          echo "   • Comprehensive logging"
-          echo "   • Live price updates"
-          echo "   • Browserless price fetching"
-          echo "   • GitHub auto-sync"
-          echo ""
-          echo "=========================================="
-          echo "✅ Pipeline execution completed"
-          echo "=========================================="
+          if [ -f "database/memory_v85.db" ]; then

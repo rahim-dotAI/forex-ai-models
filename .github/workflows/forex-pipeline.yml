@@ -1,17 +1,13 @@
-name: Smart Forex Brain Pipeline (Trade Beacon v17.4 - FIXED)
+name: Smart Forex Brain Pipeline v17.4
 
 on:
   workflow_dispatch:
   push:
-    paths:
-      - 'colab_trigger.txt'
-    branches:
-      - main
+    paths: ['colab_trigger.txt']
+    branches: [main]
   schedule:
-    # Weekdays (Mon-Fri): Every 2 hours - Full notebook execution
-    - cron: '0 */2 * * 1-5'
-    # Weekends (Sat-Sun): Every 30 minutes - Tagged cells only
-    - cron: '*/30 * * * 0,6'
+    - cron: '0 */2 * * 1-5'    # Weekdays: Every 2 hours
+    - cron: '*/30 * * * 0,6'   # Weekends: Every 30 minutes
 
 jobs:
   run-forex-brain:
@@ -24,1084 +20,285 @@ jobs:
       ALPHA_VANTAGE_KEY: ${{ secrets.ALPHA_VANTAGE_KEY }}
       GMAIL_USER: ${{ secrets.GMAIL_USER }}
       GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-      GIT_USER_NAME: "Forex AI Bot"
-      GIT_USER_EMAIL: "nakatonabira3@gmail.com"
-      GITHUB_USERNAME: "rahim-dotAI"
-      GITHUB_REPO: "forex-ai-models"
       PYTHONIOENCODING: utf-8
       PYTHONUNBUFFERED: 1
       GITHUB_ACTIONS: "true"
       SINGLE_RUN_MODE: "true"
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           persist-credentials: false
           fetch-depth: 0
-          lfs: true
           token: ${{ secrets.FOREX_PAT }}
 
-      - name: Fix submodule issue
+      - name: Fix Submodules
         run: |
-          echo "=========================================="
-          echo "🔧 FIXING SUBMODULE CONFIGURATION"
-          echo "=========================================="
-          
-          if [ -f ".gitmodules" ]; then
-            echo "⚠️ Found .gitmodules file - removing it"
-            rm -f .gitmodules
-            git rm --cached -r forex-alpha-models 2>/dev/null || true
-            rm -rf forex-alpha-models
-            git add .gitmodules 2>/dev/null || true
-            echo "✅ Submodule configuration removed"
-          else
-            echo "✅ No .gitmodules file found"
-          fi
-          
+          [ -f ".gitmodules" ] && rm -f .gitmodules && git rm --cached -r forex-alpha-models 2>/dev/null || true
           find . -mindepth 2 -name ".git" -type d -exec rm -rf {} + 2>/dev/null || true
-          echo "=========================================="
 
-      - name: Detect Execution Mode
-        id: detect_mode
+      - name: Detect Mode
+        id: mode
         run: |
-          DAY_OF_WEEK=$(date +%u)
-          HOUR=$(date +%H)
-          
-          echo "=========================================="
-          echo "🗓️  EXECUTION MODE DETECTION"
-          echo "=========================================="
-          echo "Current day: $DAY_OF_WEEK (1=Mon, 5=Fri, 6=Sat, 7=Sun)"
-          echo "Current hour: $HOUR UTC"
-          echo "Date: $(date +'%A, %B %d, %Y %H:%M UTC')"
-          echo ""
-          
-          # Weekend = Saturday (6) or Sunday (7)
-          if [ $DAY_OF_WEEK -eq 6 ] || [ $DAY_OF_WEEK -eq 7 ]; then
-            echo "execution_mode=weekend_tagged_cells" >> $GITHUB_OUTPUT
-            echo "schedule_type=30min_tagged" >> $GITHUB_OUTPUT
-            echo "🏖️ MODE: WEEKEND (Saturday/Sunday)"
-            echo "   • Execution: Tagged cells only"
-            echo "   • Schedule: Every 30 minutes"
-            echo "   • Trading: LEARNING MODE"
+          DAY=$(date +%u)
+          echo "Day: $DAY ($(date +'%A'))"
+          if [ $DAY -eq 6 ] || [ $DAY -eq 7 ]; then
+            echo "mode=weekend" >> $GITHUB_OUTPUT
+            echo "🏖️ WEEKEND MODE: Tagged cells only"
           else
-            echo "execution_mode=weekday_full_notebook" >> $GITHUB_OUTPUT
-            echo "schedule_type=2hourly" >> $GITHUB_OUTPUT
-            echo "💼 MODE: WEEKDAY (Monday-Friday)"
-            echo "   • Execution: Full notebook"
-            echo "   • Schedule: Every 2 hours"
-            echo "   • Trading: LIVE MODE"
+            echo "mode=weekday" >> $GITHUB_OUTPUT
+            echo "💼 WEEKDAY MODE: Full notebook"
           fi
-          echo "=========================================="
 
-      - name: Set up Python 3.11
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: pip
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
-          echo "📦 Installing Python dependencies..."
-          python -m pip install --upgrade pip wheel setuptools
-          pip install --no-cache-dir \
-            pandas numpy requests beautifulsoup4 scikit-learn \
-            jupyter nbconvert nbformat ta yfinance \
-            mplfinance firebase-admin dropbox \
-            pyppeteer nest_asyncio lightgbm joblib matplotlib \
-            alpha_vantage tqdm river scipy
-          echo "✅ Dependencies installed"
+          pip install -q --no-cache-dir pandas numpy requests beautifulsoup4 scikit-learn \
+            jupyter nbconvert nbformat ta yfinance mplfinance firebase-admin dropbox \
+            pyppeteer nest_asyncio lightgbm joblib matplotlib alpha_vantage tqdm river scipy
 
       - name: Configure Git
         run: |
-          git config --global user.name "${GIT_USER_NAME}"
-          git config --global user.email "${GIT_USER_EMAIL}"
+          git config --global user.name "Forex AI Bot"
+          git config --global user.email "nakatonabira3@gmail.com"
+          echo "https://${{ github.actor }}:${{ secrets.FOREX_PAT }}@github.com" > ~/.git-credentials
           git config --global credential.helper store
-          echo "https://${GITHUB_USERNAME}:${FOREX_PAT}@github.com" > ~/.git-credentials
-          echo "✅ Git configured"
 
-      - name: Load Run History
-        id: load_history
+      - name: Check Data
+        id: data
         run: |
-          echo "=========================================="
-          echo "📊 LOADING RUN HISTORY"
-          echo "=========================================="
+          mkdir -p data/processed database .github/run_history
+          PICKLE_COUNT=$(find data/processed -name "*.pkl" -type f ! -name "*_model.pkl" 2>/dev/null | wc -l)
+          [ -f ".github/run_history/run_counter.txt" ] && RUN_NUM=$(cat .github/run_history/run_counter.txt) || RUN_NUM=0
+          RUN_NUM=$((RUN_NUM + 1))
+          echo $RUN_NUM > .github/run_history/run_counter.txt
+          echo "run_number=$RUN_NUM" >> $GITHUB_OUTPUT
           
-          # Create run history directory if it doesn't exist
-          mkdir -p .github/run_history
-          
-          # Initialize or load run counter
-          if [ -f ".github/run_history/run_counter.txt" ]; then
-            CURRENT_RUN=$(cat .github/run_history/run_counter.txt)
-          else
-            CURRENT_RUN=0
-          fi
-          
-          CURRENT_RUN=$((CURRENT_RUN + 1))
-          echo $CURRENT_RUN > .github/run_history/run_counter.txt
-          
-          echo "run_number=$CURRENT_RUN" >> $GITHUB_OUTPUT
-          
-          # Check if we need to send email report (every 10 runs)
-          if [ $((CURRENT_RUN % 10)) -eq 0 ]; then
-            echo "send_report=true" >> $GITHUB_OUTPUT
-            echo "✅ Run #$CURRENT_RUN - EMAIL REPORT SCHEDULED"
-          else
-            echo "send_report=false" >> $GITHUB_OUTPUT
-            echo "✅ Run #$CURRENT_RUN - Normal execution"
-          fi
-          
-          echo "=========================================="
-
-      - name: Debug File System BEFORE Checking
-        run: |
-          echo "=========================================="
-          echo "🔍 DEBUG: FILE SYSTEM STATE AT CHECKOUT"
-          echo "=========================================="
-          
-          echo "📁 Repository root contents:"
-          ls -lah
-          
-          echo ""
-          echo "📂 data/ directory structure:"
-          if [ -d "data" ]; then
-            find data -type d | head -20
-          else
-            echo "❌ data/ directory doesn't exist!"
-          fi
-          
-          echo ""
-          echo "📂 data/processed/ contents:"
-          if [ -d "data/processed" ]; then
-            ls -lah data/processed/ | head -30
-          else
-            echo "❌ data/processed/ directory doesn't exist!"
-          fi
-          
-          echo ""
-          echo "📦 ALL pickle files in repository:"
-          find . -name "*.pkl" -type f 2>/dev/null | head -50
-          
-          echo ""
-          echo "📊 Pickle count in data/processed:"
-          if [ -d "data/processed" ]; then
-            PICKLE_COUNT=$(find data/processed -name "*.pkl" -type f 2>/dev/null | wc -l)
-            echo "   Count: $PICKLE_COUNT"
-            
-            if [ $PICKLE_COUNT -gt 0 ]; then
-              echo ""
-              echo "📄 Sample pickle files:"
-              find data/processed -name "*.pkl" -type f 2>/dev/null | head -10 | while read file; do
-                SIZE=$(ls -lh "$file" | awk '{print $5}')
-                echo "   - $(basename "$file") ($SIZE)"
-              done
-            fi
-          else
-            echo "   ❌ Directory doesn't exist"
-          fi
-          
-          echo ""
-          echo "🗄️ Database files:"
-          find . -name "*.db" -type f 2>/dev/null
-          
-          echo ""
-          echo "🧠 RL state files:"
-          find . -path "*/rl_memory/*" -o -path "*/rl_models/*" 2>/dev/null | head -20
-          
-          echo ""
-          echo "📋 .gitignore contents (if exists):"
-          if [ -f ".gitignore" ]; then
-            cat .gitignore
-          else
-            echo "   No .gitignore file"
-          fi
-          
-          echo "=========================================="
-
-      - name: Check for Required Data Files
-        id: check_data
-        run: |
-          echo "=========================================="
-          echo "🔍 CHECKING FOR REQUIRED DATA FILES"
-          echo "=========================================="
-          
-          # Count ALL pickle files in data/processed (excluding model files)
-          PICKLE_COUNT=0
-          if [ -d "data/processed" ]; then
-            # Exclude model files and backup files
-            PICKLE_COUNT=$(find data/processed -name "*.pkl" -type f ! -name "*_model.pkl" ! -name "*_sgd_model.pkl" ! -name "*_rf_model.pkl" ! -name "*.bak" 2>/dev/null | wc -l)
-          fi
-          
-          PIPELINE_DB_EXISTS=false
-          if [ -f "database/memory_v85.db" ]; then
-            PIPELINE_DB_EXISTS=true
-          fi
-          
-          RL_STATE_EXISTS=false
-          if [ -d "rl_memory" ] && [ -f "rl_memory/experience_replay.pkl" ]; then
-            RL_STATE_EXISTS=true
-          fi
-          
-          echo "📊 Data Status:"
-          echo "   Processed pickles (data files): $PICKLE_COUNT"
-          echo "   Pipeline DB: $PIPELINE_DB_EXISTS"
-          echo "   RL State: $RL_STATE_EXISTS"
-          
-          # List some pickle files for debugging
-          if [ $PICKLE_COUNT -gt 0 ]; then
-            echo ""
-            echo "📄 Sample data pickle files found:"
-            find data/processed -name "*.pkl" -type f ! -name "*_model.pkl" ! -name "*_sgd_model.pkl" ! -name "*_rf_model.pkl" ! -name "*.bak" 2>/dev/null | head -5 | while read file; do
-              SIZE=$(ls -lh "$file" | awk '{print $5}')
-              echo "   - $(basename "$file") ($SIZE)"
-            done
-          fi
-          
-          # Require at least 4 data pickle files to consider we have sufficient data
           if [ $PICKLE_COUNT -ge 4 ]; then
-            echo ""
             echo "has_data=true" >> $GITHUB_OUTPUT
-            echo "✅ SUFFICIENT DATA FOUND ($PICKLE_COUNT data files)"
-            echo "   → Will run TAGGED CELLS on weekends"
-            echo "   → Will run FULL NOTEBOOK on weekdays"
+            echo "✅ Found $PICKLE_COUNT data files"
           else
-            echo ""
             echo "has_data=false" >> $GITHUB_OUTPUT
-            echo "⚠️  INSUFFICIENT DATA - Will run FULL NOTEBOOK"
-            echo "   Found: $PICKLE_COUNT data files (need at least 4)"
-            echo "   → This will generate initial dataset"
+            echo "⚠️ Only $PICKLE_COUNT files - will run full notebook"
           fi
           
-          echo "=========================================="
+          [ $((RUN_NUM % 10)) -eq 0 ] && echo "send_report=true" >> $GITHUB_OUTPUT || echo "send_report=false" >> $GITHUB_OUTPUT
 
-      - name: Create Python Executors
+      - name: Create Executors
         run: |
-          # Create the tagged cells executor with error handling
-          cat > run_tagged_cells.py << 'EOFPYTHON'
-          import nbformat
+          cat > run_tagged.py << 'EOF'
+          import nbformat, sys, time, re, json, os
           from nbconvert.preprocessors import ExecutePreprocessor
-          import sys, os, time, re, traceback, json
           from datetime import datetime
           
-          class TaggedCellExecutor(ExecutePreprocessor):
+          class TaggedExecutor(ExecutePreprocessor):
               def __init__(self, *args, **kwargs):
                   super().__init__(*args, **kwargs)
-                  self.tagged_cells = []
-                  self.current_cell = 0
-                  self.start_time = None
-                  self.cell_summaries = []
-                  
+                  self.tagged = []
+                  self.summaries = []
+              
               def preprocess(self, nb, resources=None, km=None):
-                  for idx, cell in enumerate(nb.cells):
-                      if cell.cell_type == 'code' and '#TAG: pipeline_main' in cell.source:
-                          self.tagged_cells.append(idx)
-                  
-                  print(f"📊 Found {len(self.tagged_cells)} tagged cells")
-                  self.start_time = time.time()
+                  self.tagged = [i for i, c in enumerate(nb.cells) if c.cell_type=='code' and '#TAG: pipeline_main' in c.source]
+                  print(f"📊 Found {len(self.tagged)} tagged cells")
                   return super().preprocess(nb, resources, km)
               
-              def preprocess_cell(self, cell, resources, cell_index):
-                  if cell.cell_type != 'code' or cell_index not in self.tagged_cells:
-                      return cell, resources
-                  
-                  self.current_cell += 1
-                  print(f"\n{'='*70}")
-                  print(f"🔄 TAGGED CELL {self.current_cell}/{len(self.tagged_cells)}")
-                  print(f"{'='*70}")
-                  
-                  cell_start = time.time()
-                  
+              def preprocess_cell(self, cell, resources, idx):
+                  if idx not in self.tagged: return cell, resources
+                  n = self.tagged.index(idx) + 1
+                  print(f"\n{'='*60}\n🔄 CELL {n}/{len(self.tagged)}\n{'='*60}")
+                  t = time.time()
                   try:
-                      cell, resources = super().preprocess_cell(cell, resources, cell_index)
-                      cell_time = time.time() - cell_start
-                      
-                      # Extract key output lines
-                      output_lines = []
-                      if cell.outputs:
-                          for output in cell.outputs:
-                              if output.output_type == 'stream':
-                                  text = re.sub(r'\x1b\[[0-9;]*m', '', output.text)
-                                  lines = text.strip().split('\n')
-                                  for line in lines:
-                                      if any(marker in line for marker in ['✅', '⚠️', '❌', '💰', '🧠', '💾', '📊', 'Iteration', 'Mode:', 'COMPLETE', 'Win Rate', 'Total P&L']):
-                                          output_lines.append(line)
-                              elif output.output_type == 'error':
-                                  error_name = output.get('ename', 'Error')
-                                  error_value = output.get('evalue', 'Unknown error')
-                                  output_lines.append(f"❌ {error_name}: {error_value}")
-                      
-                      if output_lines:
-                          print("\n📋 Key Output:")
-                          for line in output_lines[:30]:
-                              print(f"   {line}")
-                          if len(output_lines) > 30:
-                              print(f"   ... ({len(output_lines) - 30} more lines)")
-                      
-                      print(f"\n✅ Cell {self.current_cell} completed in {cell_time:.1f}s")
-                      
-                      self.cell_summaries.append({
-                          'cell': self.current_cell,
-                          'duration': cell_time,
-                          'status': 'success',
-                          'key_outputs': len(output_lines),
-                          'outputs': output_lines[:10]
-                      })
-                      
+                      cell, resources = super().preprocess_cell(cell, resources, idx)
+                      print(f"✅ Completed in {time.time()-t:.1f}s")
+                      self.summaries.append({'cell': n, 'duration': time.time()-t, 'status': 'success'})
                   except Exception as e:
-                      cell_time = time.time() - cell_start
-                      error_name = type(e).__name__
-                      error_msg = str(e)
-                      
-                      if 'CellExecutionError' in error_name:
-                          if hasattr(e, 'ename') and hasattr(e, 'evalue'):
-                              error_name = e.ename
-                              error_msg = e.evalue
-                      
-                      print(f"\n❌ Cell {self.current_cell} FAILED after {cell_time:.1f}s")
-                      print(f"   Error Type: {error_name}")
-                      print(f"   Error Message: {error_msg[:200]}")
-                      
-                      self.cell_summaries.append({
-                          'cell': self.current_cell,
-                          'duration': cell_time,
-                          'status': 'failed',
-                          'error': f"{error_name}: {error_msg[:100]}"
-                      })
-                      
-                      raise RuntimeError(f"Cell {self.current_cell} execution failed: {error_name}")
-                  
+                      print(f"❌ Failed: {type(e).__name__}")
+                      self.summaries.append({'cell': n, 'duration': time.time()-t, 'status': 'failed'})
+                      raise
                   return cell, resources
           
-          def run_tagged_cells(notebook_path):
-              with open(notebook_path, 'r', encoding='utf-8') as f:
-                  nb = nbformat.read(f, as_version=4)
-              
-              ep = TaggedCellExecutor(timeout=2400, kernel_name='python3', allow_errors=False)
-              
-              print("="*70)
-              print("🚀 STARTING TAGGED CELLS EXECUTION")
-              print("="*70)
-              
-              start = time.time()
-              
-              try:
-                  ep.preprocess(nb, {'metadata': {'path': '.'}})
-              except Exception as e:
-                  pass
-              
-              duration = time.time() - start
-              
-              print("\n" + "="*70)
-              print("📊 EXECUTION SUMMARY")
-              print("="*70)
-              
-              failed_cells = []
-              success_count = 0
-              for summary in ep.cell_summaries:
-                  status_icon = "✅" if summary['status'] == 'success' else "❌"
-                  if summary['status'] == 'failed':
-                      failed_cells.append(summary['cell'])
-                      print(f"{status_icon} Cell {summary['cell']}: {summary['duration']:.1f}s - FAILED")
-                      print(f"   └─ {summary.get('error', 'Unknown error')}")
-                  else:
-                      success_count += 1
-                      print(f"{status_icon} Cell {summary['cell']}: {summary['duration']:.1f}s - {summary.get('key_outputs', 0)} key outputs")
-              
-              print(f"\n⏱️  Total Duration: {duration:.1f}s")
-              print("="*70)
-              
-              # Save run report
-              report = {
-                  'timestamp': datetime.now().isoformat(),
-                  'mode': 'tagged_cells',
-                  'total_cells': len(ep.tagged_cells),
-                  'successful': success_count,
-                  'failed': len(failed_cells),
-                  'duration': duration,
-                  'cell_summaries': ep.cell_summaries
-              }
-              
-              os.makedirs('.github/run_history', exist_ok=True)
-              with open('.github/run_history/latest_run.json', 'w') as f:
-                  json.dump(report, f, indent=2)
-              
-              if failed_cells:
-                  print(f"\n❌ Execution completed with errors in cells: {', '.join(map(str, failed_cells))}")
-                  return False
-              else:
-                  print(f"\n✅ All cells executed successfully")
-                  return True
+          with open('AI_Forex_Brain_2.ipynb', 'r') as f:
+              nb = nbformat.read(f, as_version=4)
+          ep = TaggedExecutor(timeout=2400, kernel_name='python3')
+          start = time.time()
+          try:
+              ep.preprocess(nb, {'metadata': {'path': '.'}})
+          except: pass
           
-          if __name__ == "__main__":
-              notebook = "AI_Forex_Brain_2.ipynb"
-              if not os.path.exists(notebook):
-                  print(f"❌ Notebook not found: {notebook}")
-                  sys.exit(1)
-              
-              try:
-                  success = run_tagged_cells(notebook)
-                  sys.exit(0 if success else 1)
-              except Exception as e:
-                  print(f"\n❌ FATAL ERROR: {type(e).__name__}")
-                  sys.exit(1)
-          EOFPYTHON
+          report = {'timestamp': datetime.now().isoformat(), 'mode': 'tagged', 'duration': time.time()-start, 'cells': ep.summaries}
+          os.makedirs('.github/run_history', exist_ok=True)
+          with open('.github/run_history/latest_run.json', 'w') as f: json.dump(report, f)
+          sys.exit(0 if all(s['status']=='success' for s in ep.summaries) else 1)
+          EOF
           
-          # Create the full notebook executor
-          cat > run_full_notebook.py << 'EOFPYTHON'
-          import nbformat
+          cat > run_full.py << 'EOF'
+          import nbformat, sys, time, json, os
           from nbconvert.preprocessors import ExecutePreprocessor
-          import sys, os, time, re, json
           from datetime import datetime
           
-          class SummaryExecutor(ExecutePreprocessor):
-              def __init__(self, *args, **kwargs):
-                  super().__init__(*args, **kwargs)
-                  self.cell_count = 0
-                  self.start_time = None
-                  self.key_outputs = []
-                  
-              def preprocess(self, nb, resources=None, km=None):
-                  print(f"📊 Processing {len(nb.cells)} cells...")
-                  self.start_time = time.time()
-                  return super().preprocess(nb, resources, km)
-              
-              def preprocess_cell(self, cell, resources, cell_index):
-                  if cell.cell_type != 'code':
-                      return cell, resources
-                  
-                  self.cell_count += 1
-                  
-                  if self.cell_count % 5 == 0:
-                      elapsed = time.time() - self.start_time
-                      print(f"⏳ Progress: {self.cell_count} cells ({elapsed:.0f}s elapsed)")
-                  
-                  cell, resources = super().preprocess_cell(cell, resources, cell_index)
-                  
-                  # Collect key outputs
-                  if cell.outputs:
-                      for output in cell.outputs:
-                          if output.output_type == 'stream':
-                              text = re.sub(r'\x1b\[[0-9;]*m', '', output.text)
-                              lines = text.strip().split('\n')
-                              for line in lines:
-                                  if any(marker in line for marker in ['✅', '⚠️', '❌', '💰', '🧠', 'COMPLETE', 'Iteration', 'Win Rate', 'Total P&L']):
-                                      print(f"   {line}")
-                                      self.key_outputs.append(line)
-                  
-                  return cell, resources
+          with open('AI_Forex_Brain_2.ipynb', 'r') as f:
+              nb = nbformat.read(f, as_version=4)
+          ep = ExecutePreprocessor(timeout=2400, kernel_name='python3')
+          print("🚀 Starting full notebook execution...")
+          start = time.time()
+          ep.preprocess(nb, {'metadata': {'path': '.'}})
+          duration = time.time() - start
+          print(f"✅ Completed in {duration:.1f}s")
           
-          def run_notebook(notebook_path):
-              with open(notebook_path, 'r', encoding='utf-8') as f:
-                  nb = nbformat.read(f, as_version=4)
-              
-              ep = SummaryExecutor(timeout=2400, kernel_name='python3', allow_errors=False)
-              
-              print("="*70)
-              print("🚀 STARTING FULL NOTEBOOK EXECUTION")
-              print("="*70)
-              
-              start = time.time()
-              ep.preprocess(nb, {'metadata': {'path': '.'}})
-              duration = time.time() - start
-              
-              print("\n" + "="*70)
-              print(f"✅ COMPLETED: {ep.cell_count} cells in {duration:.1f}s")
-              print("="*70)
-              
-              # Save run report
-              report = {
-                  'timestamp': datetime.now().isoformat(),
-                  'mode': 'full_notebook',
-                  'total_cells': ep.cell_count,
-                  'duration': duration,
-                  'key_outputs': ep.key_outputs[-20:]
-              }
-              
-              os.makedirs('.github/run_history', exist_ok=True)
-              with open('.github/run_history/latest_run.json', 'w') as f:
-                  json.dump(report, f, indent=2)
-              
-              return True
-          
-          if __name__ == "__main__":
-              notebook = "AI_Forex_Brain_2.ipynb"
-              if not os.path.exists(notebook):
-                  print(f"❌ Notebook not found: {notebook}")
-                  sys.exit(1)
-              
-              try:
-                  success = run_notebook(notebook)
-                  sys.exit(0 if success else 1)
-              except Exception as e:
-                  print(f"\n❌ FATAL ERROR: {str(e)}")
-                  sys.exit(1)
-          EOFPYTHON
-          
-          echo "✅ Python executors created"
+          report = {'timestamp': datetime.now().isoformat(), 'mode': 'full', 'duration': duration}
+          os.makedirs('.github/run_history', exist_ok=True)
+          with open('.github/run_history/latest_run.json', 'w') as f: json.dump(report, f)
+          EOF
 
-      - name: Run Weekend Tagged Cells (Weekend Mode)
-        if: steps.detect_mode.outputs.execution_mode == 'weekend_tagged_cells' && steps.check_data.outputs.has_data == 'true'
-        run: |
-          echo "=========================================="
-          echo "🏖️ WEEKEND MODE: TAGGED CELLS EXECUTION"
-          echo "=========================================="
-          echo "Day: $(date +'%A')"
-          echo "Executing: Tagged cells only (#TAG: pipeline_main)"
-          echo ""
-          
-          python run_tagged_cells.py "AI_Forex_Brain_2.ipynb"
-          
-          EXIT_CODE=$?
-          if [ $EXIT_CODE -ne 0 ]; then
-            echo "❌ Tagged cell execution failed with code $EXIT_CODE"
-            exit $EXIT_CODE
-          fi
-          
-          echo ""
-          echo "✅ Tagged cell execution completed successfully"
+      - name: Run Weekend Mode
+        if: steps.mode.outputs.mode == 'weekend' && steps.data.outputs.has_data == 'true'
+        run: python run_tagged.py
         timeout-minutes: 50
 
-      - name: Run Full Notebook (No Data or Weekday Mode)
-        if: steps.detect_mode.outputs.execution_mode == 'weekday_full_notebook' || steps.check_data.outputs.has_data == 'false'
-        run: |
-          echo "=========================================="
-          if [ "${{ steps.check_data.outputs.has_data }}" = "false" ]; then
-            echo "🔄 FULL NOTEBOOK: INITIAL DATA COLLECTION"
-            echo "=========================================="
-            echo "Reason: No historical data found"
-            echo "Mode: Weekend override -> Full notebook"
-          else
-            echo "💼 WEEKDAY MODE: FULL NOTEBOOK EXECUTION"
-            echo "=========================================="
-          fi
-          echo ""
-          
-          python run_full_notebook.py "AI_Forex_Brain_2.ipynb"
-          
-          EXIT_CODE=$?
-          if [ $EXIT_CODE -ne 0 ]; then
-            echo "❌ Notebook execution failed with code $EXIT_CODE"
-            exit $EXIT_CODE
-          fi
-          
-          echo ""
-          echo "✅ Notebook execution completed successfully"
+      - name: Run Weekday/Initial Mode
+        if: steps.mode.outputs.mode == 'weekday' || steps.data.outputs.has_data == 'false'
+        run: python run_full.py
         timeout-minutes: 50
-
-      - name: Debug File System AFTER Execution
-        if: always()
-        run: |
-          echo "=========================================="
-          echo "🔍 DEBUG: FILE SYSTEM STATE AFTER EXECUTION"
-          echo "=========================================="
-          
-          echo "📂 data/processed/ contents:"
-          if [ -d "data/processed" ]; then
-            ls -lah data/processed/ | head -30
-            echo ""
-            echo "📊 Data pickle count: $(find data/processed -name "*.pkl" -type f ! -name "*_model.pkl" ! -name "*_sgd_model.pkl" ! -name "*_rf_model.pkl" 2>/dev/null | wc -l)"
-            echo "📊 Model pickle count: $(find data/processed -name "*_model.pkl" -o -name "*_sgd_model.pkl" -o -name "*_rf_model.pkl" 2>/dev/null | wc -l)"
-          else
-            echo "❌ data/processed/ directory doesn't exist!"
-          fi
-          
-          echo ""
-          echo "🗄️ Database files:"
-          if [ -d "database" ]; then
-            ls -lah database/
-          else
-            echo "❌ database/ directory doesn't exist!"
-          fi
-          
-          echo ""
-          echo "🧠 RL files:"
-          if [ -d "rl_memory" ]; then
-            ls -lah rl_memory/
-          fi
-          if [ -d "rl_models" ]; then
-            ls -lah rl_models/
-          fi
-          
-          echo "=========================================="
-
-      - name: Save Run History
-        if: always()
-        run: |
-          # Archive this run's report
-          RUN_NUM="${{ steps.load_history.outputs.run_number }}"
-          mkdir -p .github/run_history/archive
-          
-          if [ -f ".github/run_history/latest_run.json" ]; then
-            cp .github/run_history/latest_run.json ".github/run_history/archive/run_${RUN_NUM}.json"
-            echo "✅ Archived run #${RUN_NUM} report"
-          fi
-          
-          # Keep only last 20 runs
-          cd .github/run_history/archive
-          ls -t run_*.json | tail -n +21 | xargs rm -f 2>/dev/null || true
-          echo "✅ Cleaned old archives"
 
       - name: Generate Email Report
-        if: steps.load_history.outputs.send_report == 'true'
+        if: steps.data.outputs.send_report == 'true'
         run: |
-          echo "=========================================="
-          echo "📧 GENERATING 10-RUN EMAIL REPORT"
-          echo "=========================================="
-          
-          cat > generate_report.py << 'EOFPYTHON'
-          import json
-          import os
-          from datetime import datetime
+          cat > report.py << 'EOF'
+          import json, os
           from glob import glob
+          from datetime import datetime
           
-          def generate_html_report():
-              run_files = sorted(glob('.github/run_history/archive/run_*.json'))[-10:]
-              
-              if not run_files:
-                  return "<h2>No run history available</h2>"
-              
-              runs_data = []
-              for file in run_files:
-                  with open(file, 'r') as f:
-                      runs_data.append(json.load(f))
-              
-              total_runs = len(runs_data)
-              successful_runs = sum(1 for r in runs_data if r.get('failed', 0) == 0)
-              failed_runs = total_runs - successful_runs
-              avg_duration = sum(r.get('duration', 0) for r in runs_data) / total_runs
-              total_cells = sum(r.get('total_cells', 0) for r in runs_data)
-              
-              html = f"""
-              <!DOCTYPE html>
-              <html>
-              <head>
-                  <style>
-                      body {{ font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5; }}
-                      .container {{ max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
-                      h1 {{ color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }}
-                      h2 {{ color: #34495e; margin-top: 30px; }}
-                      .stats {{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0; }}
-                      .stat-box {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 8px; color: white; }}
-                      .stat-box.success {{ background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }}
-                      .stat-box.warning {{ background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }}
-                      .stat-box h3 {{ margin: 0 0 10px 0; font-size: 14px; opacity: 0.9; }}
-                      .stat-box .value {{ font-size: 32px; font-weight: bold; margin: 0; }}
-                      .run-item {{ padding: 15px; margin: 10px 0; background: #f8f9fa; border-left: 4px solid #3498db; border-radius: 4px; }}
-                      .run-item.failed {{ border-left-color: #e74c3c; }}
-                      .run-item.success {{ border-left-color: #2ecc71; }}
-                      .timestamp {{ color: #7f8c8d; font-size: 12px; }}
-                      .mode-badge {{ display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-left: 10px; }}
-                      .mode-weekend {{ background: #3498db; color: white; }}
-                      .mode-weekday {{ background: #e74c3c; color: white; }}
-                      .footer {{ margin-top: 30px; padding-top: 20px; border-top: 1px solid #ecf0f1; color: #7f8c8d; font-size: 12px; text-align: center; }}
-                      .outputs {{ background: #2c3e50; color: #ecf0f1; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 11px; max-height: 200px; overflow-y: auto; margin-top: 10px; }}
-                  </style>
-              </head>
-              <body>
-                  <div class="container">
-                      <h1>🤖 Forex AI Pipeline - 10 Run Report</h1>
-                      <p><strong>Report Period:</strong> {runs_data[0]['timestamp'][:10]} to {runs_data[-1]['timestamp'][:10]}</p>
-                      
-                      <div class="stats">
-                          <div class="stat-box success">
-                              <h3>✅ Successful Runs</h3>
-                              <p class="value">{successful_runs}/{total_runs}</p>
-                          </div>
-                          <div class="stat-box warning">
-                              <h3>❌ Failed Runs</h3>
-                              <p class="value">{failed_runs}</p>
-                          </div>
-                          <div class="stat-box">
-                              <h3>⏱️ Avg Duration</h3>
-                              <p class="value">{avg_duration:.1f}s</p>
-                          </div>
-                          <div class="stat-box">
-                              <h3>📊 Total Cells</h3>
-                              <p class="value">{total_cells}</p>
-                          </div>
-                      </div>
-                      
-                      <h2>📋 Recent Runs</h2>
-              """
-              
-              for i, run in enumerate(reversed(runs_data[-5:]), 1):
-                  status = "success" if run.get('failed', 0) == 0 else "failed"
-                  status_icon = "✅" if status == "success" else "❌"
-                  mode = run.get('mode', 'unknown')
-                  mode_badge = f'<span class="mode-badge mode-weekend">🏖️ Weekend</span>' if mode == 'tagged_cells' else f'<span class="mode-badge mode-weekday">💼 Weekday</span>'
-                  
-                  timestamp = datetime.fromisoformat(run['timestamp']).strftime('%Y-%m-%d %H:%M UTC')
-                  
-                  html += f"""
-                      <div class="run-item {status}">
-                          <strong>{status_icon} Run #{len(runs_data) - i + 1}</strong> {mode_badge}
-                          <div class="timestamp">{timestamp}</div>
-                          <p>Duration: {run.get('duration', 0):.1f}s | Cells: {run.get('total_cells', 0)}</p>
-                  """
-                  
-                  if 'key_outputs' in run and run['key_outputs']:
-                      html += '<div class="outputs">'
-                      for output in run['key_outputs'][-5:]:
-                          html += f"{output}<br>"
-                      html += '</div>'
-                  
-                  html += "</div>"
-              
-              html += f"""
-                      <div class="footer">
-                          <p>🤖 Generated by Trade Beacon v17.4 | Run #{len(runs_data)}</p>
-                          <p>GitHub Repository: {os.getenv('GITHUB_USERNAME')}/{os.getenv('GITHUB_REPO')}</p>
-                      </div>
-                  </div>
-              </body>
-              </html>
-              """
-              
-              return html
+          runs = sorted(glob('.github/run_history/archive/run_*.json'))[-10:]
+          if not runs:
+              print("No runs to report")
+              exit(0)
           
-          if __name__ == "__main__":
-              html_content = generate_html_report()
-              with open('email_report.html', 'w') as f:
-                  f.write(html_content)
-              print("✅ Email report generated")
-          EOFPYTHON
+          data = [json.load(open(f)) for f in runs]
+          success = sum(1 for r in data if r.get('failed', 0) == 0)
+          avg = sum(r.get('duration', 0) for r in data) / len(data)
           
-          python generate_report.py
-          echo "✅ Report generated successfully"
+          html = f"""<!DOCTYPE html>
+          <html><head><style>
+          body{{font-family:Arial;padding:20px;background:#f5f5f5}}
+          .container{{max-width:800px;margin:0 auto;background:#fff;padding:30px;border-radius:10px}}
+          h1{{color:#2c3e50;border-bottom:3px solid #3498db}}
+          .stats{{display:grid;grid-template-columns:repeat(2,1fr);gap:15px;margin:20px 0}}
+          .stat{{background:linear-gradient(135deg,#667eea,#764ba2);padding:20px;border-radius:8px;color:#fff}}
+          .stat h3{{margin:0;font-size:14px}}
+          .stat .val{{font-size:32px;font-weight:bold}}
+          </style></head><body><div class="container">
+          <h1>🤖 Forex AI - 10 Run Report</h1>
+          <div class="stats">
+          <div class="stat"><h3>✅ Success</h3><p class="val">{success}/{len(data)}</p></div>
+          <div class="stat"><h3>⏱️ Avg Time</h3><p class="val">{avg:.0f}s</p></div>
+          </div></div></body></html>"""
+          
+          with open('report.html', 'w') as f: f.write(html)
+          EOF
+          python report.py
 
-      - name: Send Email Report
-        if: steps.load_history.outputs.send_report == 'true'
+      - name: Send Email
+        if: steps.data.outputs.send_report == 'true'
         run: |
-          echo "📧 Sending email report..."
-          
-          cat > send_email.py << 'EOFPYTHON'
-          import smtplib
+          cat > email.py << 'EOF'
+          import smtplib, os
           from email.mime.multipart import MIMEMultipart
           from email.mime.text import MIMEText
-          import os
           from datetime import datetime
           
-          def send_email():
-              sender = os.getenv('GMAIL_USER')
-              password = os.getenv('GMAIL_APP_PASSWORD')
-              recipient = os.getenv('GMAIL_USER')
-              
-              if not sender or not password:
-                  print("❌ Gmail credentials not found")
-                  return False
-              
-              with open('email_report.html', 'r') as f:
-                  html_content = f.read()
-              
-              msg = MIMEMultipart('alternative')
-              msg['Subject'] = f'🤖 Forex AI Pipeline - 10 Run Progress Report ({datetime.now().strftime("%Y-%m-%d")})'
-              msg['From'] = sender
-              msg['To'] = recipient
-              
-              html_part = MIMEText(html_content, 'html')
-              msg.attach(html_part)
-              
-              try:
-                  server = smtplib.SMTP('smtp.gmail.com', 587)
-                  server.starttls()
-                  server.login(sender, password)
-                  server.send_message(msg)
-                  server.quit()
-                  
-                  print(f"✅ Email sent successfully to {recipient}")
-                  return True
-                  
-              except Exception as e:
-                  print(f"❌ Failed to send email: {str(e)}")
-                  return False
+          sender = os.getenv('GMAIL_USER')
+          password = os.getenv('GMAIL_APP_PASSWORD')
+          if not sender or not password: exit(0)
           
-          if __name__ == "__main__":
-              success = send_email()
-              exit(0 if success else 1)
-          EOFPYTHON
-          
-          python send_email.py
-          
-          if [ $? -eq 0 ]; then
-            echo "✅ Email report sent successfully"
-          else
-            echo "⚠️  Email sending failed, but continuing workflow"
-          fi
-
-      - name: Extract Performance Metrics
-        if: always()
-        run: |
-          echo "=========================================="
-          echo "📊 EXTRACTING PERFORMANCE METRICS"
-          echo "=========================================="
-          
-          if [ -f "database/memory_v85.db" ]; then
-            python << 'EOFPYTHON'
-          import sqlite3
-          import json
-          import os
+          with open('report.html') as f: html = f.read()
+          msg = MIMEMultipart('alternative')
+          msg['Subject'] = f'🤖 Forex AI Report - {datetime.now().strftime("%Y-%m-%d")}'
+          msg['From'] = msg['To'] = sender
+          msg.attach(MIMEText(html, 'html'))
           
           try:
+              s = smtplib.SMTP('smtp.gmail.com', 587)
+              s.starttls()
+              s.login(sender, password)
+              s.send_message(msg)
+              s.quit()
+              print("✅ Email sent")
+          except Exception as e:
+              print(f"⚠️ Email failed: {e}")
+          EOF
+          python email.py || true
+
+      - name: Extract Metrics
+        if: always()
+        run: |
+          [ ! -f "database/memory_v85.db" ] && echo '{"status":"no_db"}' > .github/run_history/metrics.json && exit 0
+          python << 'EOF'
+          import sqlite3, json, os
+          try:
               conn = sqlite3.connect('database/memory_v85.db')
-              cursor = conn.cursor()
-              
-              cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
-              tables = [row[0] for row in cursor.fetchall()]
-              print(f"📋 Found tables: {', '.join(tables)}")
+              c = conn.cursor()
+              c.execute("SELECT name FROM sqlite_master WHERE type='table'")
+              tables = [r[0] for r in c.fetchall()]
               
               metrics = {}
-              
               if 'completed_trades' in tables:
-                  cursor.execute("PRAGMA table_info(completed_trades)")
-                  columns = [row[1] for row in cursor.fetchall()]
-                  
-                  profit_col = None
-                  for possible_col in ['profit_loss', 'profit', 'pnl', 'pl', 'return', 'outcome']:
-                      if possible_col in columns:
-                          profit_col = possible_col
-                          break
-                  
-                  if profit_col:
-                      cursor.execute(f"SELECT COUNT(*), SUM({profit_col}), AVG({profit_col}) FROM completed_trades")
-                      total_trades, total_pnl, avg_pnl = cursor.fetchone()
-                      
-                      cursor.execute(f"SELECT COUNT(*) FROM completed_trades WHERE {profit_col} > 0")
-                      winning_trades = cursor.fetchone()[0]
-                      
-                      win_rate = (winning_trades / total_trades * 100) if total_trades and total_trades > 0 else 0
-                      
-                      metrics.update({
-                          'total_trades': total_trades or 0,
-                          'total_pnl': float(total_pnl or 0),
-                          'avg_pnl': float(avg_pnl or 0),
-                          'win_rate': round(win_rate, 2),
-                          'winning_trades': winning_trades or 0
-                      })
-                  else:
-                      cursor.execute("SELECT COUNT(*) FROM completed_trades")
-                      total_trades = cursor.fetchone()[0]
-                      metrics['total_trades'] = total_trades or 0
+                  c.execute("SELECT COUNT(*) FROM completed_trades")
+                  metrics['trades'] = c.fetchone()[0]
               
-              if 'pending_trades' in tables:
-                  cursor.execute("SELECT COUNT(*) FROM pending_trades")
-                  pending = cursor.fetchone()[0]
-                  metrics['pending_trades'] = pending or 0
-              
-              conn.close()
-              
-              os.makedirs('.github/run_history', exist_ok=True)
-              with open('.github/run_history/latest_metrics.json', 'w') as f:
-                  json.dump(metrics, f, indent=2)
-              
-              print(f"\n✅ Extracted metrics:")
-              if 'total_trades' in metrics:
-                  print(f"   Total Trades: {metrics['total_trades']}")
-              if 'win_rate' in metrics:
-                  print(f"   Win Rate: {metrics['win_rate']}%")
-              if 'total_pnl' in metrics:
-                  print(f"   Total P&L: ${metrics['total_pnl']:.2f}")
-              
+              with open('.github/run_history/metrics.json', 'w') as f:
+                  json.dump(metrics, f)
           except Exception as e:
-              print(f"⚠️  Could not extract metrics: {str(e)}")
-              with open('.github/run_history/latest_metrics.json', 'w') as f:
-                  json.dump({'error': str(e), 'status': 'extraction_failed'}, f)
-          EOFPYTHON
-          else
-            echo "⚠️  No database found"
-            mkdir -p .github/run_history
-            echo '{"status": "no_database"}' > .github/run_history/latest_metrics.json
-          fi
-          
-          echo "=========================================="
+              with open('.github/run_history/metrics.json', 'w') as f:
+                  json.dump({'error': str(e)}, f)
+          EOF
 
-      - name: Verify output files
-        if: always()
-        run: |
-          echo "=========================================="
-          echo "📋 CHECKING OUTPUT FILES"
-          echo "=========================================="
-          
-          for dir in outputs data/processed logs database rl_memory rl_models omega_state; do
-            if [ -d "$dir" ]; then
-              FILE_COUNT=$(find "$dir" -type f 2>/dev/null | wc -l)
-              echo "  ✅ $dir/ ($FILE_COUNT files)"
-            fi
-          done
-          
-          # Separate count for data vs model pickles
-          DATA_PICKLE_COUNT=$(find data/processed -name "*.pkl" -type f ! -name "*_model.pkl" ! -name "*_sgd_model.pkl" ! -name "*_rf_model.pkl" 2>/dev/null | wc -l)
-          MODEL_PICKLE_COUNT=$(find data/processed -name "*_model.pkl" -o -name "*_sgd_model.pkl" -o -name "*_rf_model.pkl" 2>/dev/null | wc -l)
-          
-          echo ""
-          echo "📊 Post-execution files:"
-          echo "   Data pickles: $DATA_PICKLE_COUNT"
-          echo "   Model pickles: $MODEL_PICKLE_COUNT"
-          
-          if [ $DATA_PICKLE_COUNT -gt 0 ]; then
-            echo ""
-            echo "📄 Sample data pickle files:"
-            find data/processed -name "*.pkl" -type f ! -name "*_model.pkl" ! -name "*_sgd_model.pkl" ! -name "*_rf_model.pkl" 2>/dev/null | head -10 | while read file; do
-              SIZE=$(du -h "$file" | cut -f1)
-              echo "   - $(basename "$file") ($SIZE)"
-            done
-          fi
-          
-          echo "=========================================="
-
-      - name: Clean up nested repositories
-        if: always()
-        run: |
-          find . -mindepth 2 -type d -name ".git" -exec rm -rf {} + 2>/dev/null || true
-          echo "✅ Cleanup complete"
-
-      - name: Commit Generated Data Files
+      - name: Commit Data Files
         if: success()
         run: |
-          echo "=========================================="
-          echo "💾 COMMITTING GENERATED DATA FILES"
-          echo "=========================================="
-          
-          # Show what we're about to commit
-          echo "📂 Files that will be committed:"
-          git status --short
-          
-          echo ""
-          echo "📦 Staging data files (with -f to override .gitignore)..."
-          
-          # Stage ALL generated data files with explicit paths and force flag
-          # This overrides .gitignore exclusions
-          git add -f data/processed/*.pkl 2>/dev/null || echo "⚠️  No pickle files to add"
-          git add -f database/*.db 2>/dev/null || echo "⚠️  No database files to add"
-          git add -f rl_memory/*.pkl 2>/dev/null || echo "⚠️  No RL memory files to add"
-          git add -f rl_memory/*.json 2>/dev/null || true
-          git add -f rl_models/*.npz 2>/dev/null || echo "⚠️  No RL model files to add"
-          git add -f omega_state/*.pkl 2>/dev/null || echo "⚠️  No omega state files to add"
-          git add -f omega_state/*.json 2>/dev/null || true
-          git add -f outputs/*.json 2>/dev/null || true
-          git add -f .github/run_history/*.json 2>/dev/null || true
-          git add -f .github/run_history/*.txt 2>/dev/null || true
-          
-          echo ""
-          echo "📋 Staged files:"
-          STAGED_COUNT=$(git diff --cached --name-only | wc -l)
-          echo "   Total: $STAGED_COUNT files"
-          git diff --cached --name-only | head -30
-          if [ $STAGED_COUNT -gt 30 ]; then
-            echo "   ... and $((STAGED_COUNT - 30)) more files"
-          fi
-          
-          # Check if there are changes to commit
-          if git diff --cached --quiet; then
-            echo ""
-            echo "ℹ️  No data files to commit"
-          else
-            TIMESTAMP=$(date +'%Y-%m-%d %H:%M UTC')
-            RUN_NUM="${{ steps.load_history.outputs.run_number }}"
-            
-            echo ""
-            echo "📦 Committing $STAGED_COUNT files..."
-            
-            git commit -m "💾 Persist ML state - Run #${RUN_NUM} - $TIMESTAMP
-
-📊 Committed Files:
-- Data pickles: $(find data/processed -name '*.pkl' -type f ! -name '*_model.pkl' 2>/dev/null | wc -l)
-- Model pickles: $(find data/processed -name '*_model.pkl' -o -name '*_sgd_model.pkl' -o -name '*_rf_model.pkl' 2>/dev/null | wc -l)
-- Database files: $(find database -name '*.db' -type f 2>/dev/null | wc -l)
-- RL state files: $(find rl_memory rl_models -type f 2>/dev/null | wc -l)
-
-🚀 This ensures continuity across runs!" || true
-            
-            echo "✅ Data files committed"
-          fi
-          
-          echo "=========================================="
-
-      - name: Commit and push all changes
-        if: always()
-        run: |
-          git add -A
+          git add -f data/processed/*.pkl database/*.db rl_memory/* rl_models/* omega_state/* .github/run_history/* 2>/dev/null || true
           
           if git diff --cached --quiet; then
-            echo "ℹ️  No changes to commit"
+            echo "ℹ️ No changes"
           else
-            TIMESTAMP=$(date +'%Y-%m-%d %H:%M UTC')
-            DAY=$(date +'%A')
-            MODE="${{ steps.detect_mode.outputs.execution_mode }}"
-            HAS_DATA="${{ steps.check_data.outputs.has_data }}"
-            RUN_NUM="${{ steps.load_history.outputs.run_number }}"
+            RUN="${{ steps.data.outputs.run_number }}"
+            MODE="${{ steps.mode.outputs.mode }}"
+            TIME="$(date +'%Y-%m-%d %H:%M UTC')"
             
-            if [ "$HAS_DATA" = "false" ]; then
-              COMMIT_MSG="🔄 Trade Beacon v17.4 [Run #${RUN_NUM}] Initial Data Collection - $DAY: $TIMESTAMP"
-            elif [ "$MODE" = "weekend_tagged_cells" ]; then
-              COMMIT_MSG="🏖️ Trade Beacon v17.4 [Run #${RUN_NUM}] Weekend Learning - $DAY: $TIMESTAMP"
-            else
-              COMMIT_MSG="🔴 Trade Beacon v17.4 [Run #${RUN_NUM}] Live Trading - $DAY: $TIMESTAMP"
-            fi
+            [ "$MODE" = "weekend" ] && MSG="🏖️ Weekend Learning" || MSG="🔴 Live Trading"
             
-            if [ "${{ steps.load_history.outputs.send_report }}" = "true" ]; then
-              COMMIT_MSG="${COMMIT_MSG} 📧"
-            fi
+            git commit -m "${MSG} - Run #${RUN} - ${TIME}" || true
             
-            git commit -m "$COMMIT_MSG" || true
-            
-            echo "🔄 Pushing to GitHub..."
             for i in {1..3}; do
-              if git push origin main 2>&1; then
-                echo "✅ Pushed successfully on attempt $i"
-                break
-              else
-                if [ $i -lt 3 ]; then
-                  echo "⚠️  Push failed, retrying in 3 seconds..."
-                  sleep 3
-                  git pull --rebase origin main
-                else
-                  echo "❌ Push failed after 3 attempts"
-                fi
-              fi
+              git push origin main && break || { 
+                [ $i -lt 3 ] && sleep 3 && git pull --rebase origin main || exit 1
+              }
             done
           fi
 
-      - name: Upload logs and artifacts
+      - name: Upload Artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: execution-logs-${{ github.run_number }}
+          name: logs-${{ github.run_number }}
           path: |
-            run_full_notebook.py
-            run_tagged_cells.py
-            email_report.html
-            logs/*.log
             .github/run_history/*.json
+            report.html
           retention-days: 7
           if-no-files-found: ignore
 
-      - name: Execution Summary
+      - name: Summary
         if: always()
         run: |
           echo "=========================================="
-          echo "📊 EXECUTION SUMMARY"
+          echo "📊 Run #${{ steps.data.outputs.run_number }}"
+          echo "Mode: ${{ steps.mode.outputs.mode }}"
+          echo "Time: $(date +'%Y-%m-%d %H:%M UTC')"
+          [ "${{ steps.data.outputs.send_report }}" = "true" ] && echo "📧 Report: SENT" || echo "📧 Report: Pending"
+          echo "✅ Execution complete"
           echo "=========================================="
-          echo "Run Number: #${{ steps.load_history.outputs.run_number }}"
-          echo "Mode: ${{ steps.detect_mode.outputs.execution_mode }}"
-          echo "Had Data: ${{ steps.check_data.outputs.has_data }}"
-          echo "Day: $(date +'%A')"
-          echo "Time: $(date +'%B %d, %Y %H:%M UTC')"
-          
-          if [ "${{ steps.load_history.outputs.send_report }}" = "true" ]; then
-            echo "📧 Email Report: SENT (10-run milestone)"
-          else
-            NEXT_REPORT=$((10 - (${{ steps.load_history.outputs.run_number }} % 10)))
-            echo "📧 Email Report: Next in ${NEXT_REPORT} run(s)"
-          fi
-          
-          echo "=========================================="
-          
-          if [ "${{ steps.check_data.outputs.has_data }}" = "false" ]; then
-            echo "✅ Initial data collection completed"
-          elif [ "${{ steps.detect_mode.outputs.execution_mode }}" = "weekend_tagged_cells" ]; then
-            echo "✅ Weekend tagged cells execution completed"
-          else
-            echo "✅ Weekday full notebook execution completed"
-          fi
-          
-          echo "========================================"

@@ -1,0 +1,115 @@
+import json
+import os
+from datetime import datetime
+from glob import glob
+
+def generate_html_report():
+    run_files = sorted(glob('.github/run_history/archive/run_*.json'))[-10:]
+    
+    if not run_files:
+        return "<h2>No run history available</h2>"
+    
+    runs_data = []
+    for file in run_files:
+        with open(file, 'r') as f:
+            runs_data.append(json.load(f))
+    
+    total_runs = len(runs_data)
+    successful_runs = sum(1 for r in runs_data if r.get('failed', 0) == 0)
+    failed_runs = total_runs - successful_runs
+    avg_duration = sum(r.get('duration', 0) for r in runs_data) / total_runs
+    total_cells = sum(r.get('total_cells', 0) for r in runs_data)
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5; }}
+            .container {{ max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+            h1 {{ color: #2c3e50; border-bottom: 3px solid #3498db; padding-bottom: 10px; }}
+            h2 {{ color: #34495e; margin-top: 30px; }}
+            .stats {{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0; }}
+            .stat-box {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 8px; color: white; }}
+            .stat-box.success {{ background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }}
+            .stat-box.warning {{ background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }}
+            .stat-box h3 {{ margin: 0 0 10px 0; font-size: 14px; opacity: 0.9; }}
+            .stat-box .value {{ font-size: 32px; font-weight: bold; margin: 0; }}
+            .run-item {{ padding: 15px; margin: 10px 0; background: #f8f9fa; border-left: 4px solid #3498db; border-radius: 4px; }}
+            .run-item.failed {{ border-left-color: #e74c3c; }}
+            .run-item.success {{ border-left-color: #2ecc71; }}
+            .timestamp {{ color: #7f8c8d; font-size: 12px; }}
+            .mode-badge {{ display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-left: 10px; }}
+            .mode-weekend {{ background: #3498db; color: white; }}
+            .mode-weekday {{ background: #e74c3c; color: white; }}
+            .footer {{ margin-top: 30px; padding-top: 20px; border-top: 1px solid #ecf0f1; color: #7f8c8d; font-size: 12px; text-align: center; }}
+            .outputs {{ background: #2c3e50; color: #ecf0f1; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 11px; max-height: 200px; overflow-y: auto; margin-top: 10px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>🤖 Forex AI Pipeline - 10 Run Report</h1>
+            <p><strong>Report Period:</strong> {runs_data[0]['timestamp'][:10]} to {runs_data[-1]['timestamp'][:10]}</p>
+            
+            <div class="stats">
+                <div class="stat-box success">
+                    <h3>✅ Successful Runs</h3>
+                    <p class="value">{successful_runs}/{total_runs}</p>
+                </div>
+                <div class="stat-box warning">
+                    <h3>❌ Failed Runs</h3>
+                    <p class="value">{failed_runs}</p>
+                </div>
+                <div class="stat-box">
+                    <h3>⏱️ Avg Duration</h3>
+                    <p class="value">{avg_duration:.1f}s</p>
+                </div>
+                <div class="stat-box">
+                    <h3>📊 Total Cells</h3>
+                    <p class="value">{total_cells}</p>
+                </div>
+            </div>
+            
+            <h2>📋 Recent Runs</h2>
+    """
+    
+    for i, run in enumerate(reversed(runs_data[-5:]), 1):
+        status = "success" if run.get('failed', 0) == 0 else "failed"
+        status_icon = "✅" if status == "success" else "❌"
+        mode = run.get('mode', 'unknown')
+        mode_badge = f'<span class="mode-badge mode-weekend">🏖️ Weekend</span>' if mode == 'tagged_cells' else f'<span class="mode-badge mode-weekday">💼 Weekday</span>'
+        
+        timestamp = datetime.fromisoformat(run['timestamp']).strftime('%Y-%m-%d %H:%M UTC')
+        
+        html += f"""
+            <div class="run-item {status}">
+                <strong>{status_icon} Run #{len(runs_data) - i + 1}</strong> {mode_badge}
+                <div class="timestamp">{timestamp}</div>
+                <p>Duration: {run.get('duration', 0):.1f}s | Cells: {run.get('total_cells', 0)}</p>
+        """
+        
+        if 'key_outputs' in run and run['key_outputs']:
+            html += '<div class="outputs">'
+            for output in run['key_outputs'][-5:]:
+                html += f"{output}<br>"
+            html += '</div>'
+        
+        html += "</div>"
+    
+    html += f"""
+            <div class="footer">
+                <p>🤖 Generated by Trade Beacon v17.3 | Run #{len(runs_data)}</p>
+                <p>GitHub Repository: {os.getenv('GITHUB_USERNAME')}/{os.getenv('GITHUB_REPO')}</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return html
+
+if __name__ == "__main__":
+    html_content = generate_html_report()
+    with open('email_report.html', 'w') as f:
+        f.write(html_content)
+    print("✅ Email report generated")

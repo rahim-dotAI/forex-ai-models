@@ -137,8 +137,8 @@ jobs:
           
           mkdir -p data/processed database .github/run_history
           
-          python check_pickles.py
-          CHECK_EXIT=$?
+          python check_pickles.py || CHECK_EXIT=$?
+          CHECK_EXIT=${CHECK_EXIT:-0}
           
           if [ $CHECK_EXIT -eq 0 ]; then
             echo "all_files_valid=true" >> $GITHUB_OUTPUT
@@ -158,6 +158,8 @@ jobs:
             rm -f database/memory_v85.db 2>/dev/null || true
             echo "✅ Cleanup complete - will run full notebook"
           fi
+          
+          exit 0
 
       - name: Check Data
         id: data

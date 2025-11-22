@@ -140,45 +140,111 @@ jobs:
               def preprocess_cell(self, cell, resources, idx):
                   if idx not in self.tagged: return cell, resources
                   n = self.tagged.index(idx) + 1
-                  print(f"\n{'='*60}\n🔄 CELL {n}/{len(self.tagged)}\n{'='*60}")
+                  print(f"\n{'='*70}\n🔄 CELL {n}/{len(self.tagged)} - Starting Execution\n{'='*70}")
                   
-                  # Show cell preview
-                  preview = cell.source[:200].replace('\n', ' ')
-                  print(f"📝 Preview: {preview}...")
+                  # Show full cell source (first 500 chars)
+                  preview = cell.source[:500]
+                  print(f"📝 Cell Source Preview:\n{preview}")
+                  if len(cell.source) > 500:
+                      print(f"... ({len(cell.source) - 500} more characters)")
+                  print(f"\n{'─'*70}")
                   
                   t = time.time()
                   try:
                       cell, resources = super().preprocess_cell(cell, resources, idx)
                       duration = time.time()-t
-                      print(f"✅ Completed in {duration:.1f}s")
-                      self.summaries.append({'cell': n, 'duration': duration, 'status': 'success'})
+                      
+                      # Show ALL cell outputs
+                      print(f"\n{'─'*70}")
+                      print(f"📤 CELL {n} OUTPUT:")
+                      print(f"{'─'*70}")
+                      
+                      if cell.outputs:
+                          for out_idx, output in enumerate(cell.outputs, 1):
+                              if output.output_type == 'stream':
+                                  # Show full stream output (remove ANSI codes)
+                                  text = re.sub(r'\x1b\[[0-9;]*m', '', output.text)
+                                  lines = text.strip().split('\n')
+                                  
+                                  print(f"\n[Output Block {out_idx} - Stream - {len(lines)} lines]")
+                                  # Show all lines (not truncated)
+                                  for line in lines:
+                                      print(line)
+                                  
+                              elif output.output_type == 'execute_result':
+                                  print(f"\n[Output Block {out_idx} - Execute Result]")
+                                  if 'text/plain' in output.data:
+                                      print(output.data['text/plain'])
+                                  
+                              elif output.output_type == 'display_data':
+                                  print(f"\n[Output Block {out_idx} - Display Data]")
+                                  if 'text/plain' in output.data:
+                                      print(output.data['text/plain'])
+                                  if 'text/html' in output.data:
+                                      print("[HTML output present]")
+                                  
+                              elif output.output_type == 'error':
+                                  print(f"\n[Output Block {out_idx} - Error]")
+                                  print(f"❌ {output.ename}: {output.evalue}")
+                                  if hasattr(output, 'traceback') and output.traceback:
+                                      print("\nFull Traceback:")
+                                      for tb_line in output.traceback:
+                                          # Remove ANSI codes from traceback
+                                          clean_line = re.sub(r'\x1b\[[0-9;]*m', '', tb_line)
+                                          print(clean_line)
+                      else:
+                          print("(No outputs generated)")
+                      
+                      print(f"\n{'─'*70}")
+                      print(f"✅ Cell {n} completed in {duration:.1f}s")
+                      print(f"{'='*70}\n")
+                      
+                      self.summaries.append({
+                          'cell': n, 
+                          'duration': duration, 
+                          'status': 'success',
+                          'output_blocks': len(cell.outputs) if cell.outputs else 0
+                      })
+                      
                   except Exception as e:
                       duration = time.time()-t
                       error_type = type(e).__name__
                       error_msg = str(e)[:500]
                       
-                      print(f"❌ Failed after {duration:.1f}s")
-                      print(f"   Error Type: {error_type}")
-                      print(f"   Error Message: {error_msg}")
+                      print(f"\n{'─'*70}")
+                      print(f"❌ CELL {n} FAILED after {duration:.1f}s")
+                      print(f"{'─'*70}")
+                      print(f"Error Type: {error_type}")
+                      print(f"Error Message: {error_msg}")
                       
                       # Try to extract actual error from CellExecutionError
                       if hasattr(e, 'ename'):
-                          print(f"   Actual Error: {e.ename}: {e.evalue}")
+                          print(f"\nActual Error: {e.ename}: {e.evalue}")
                       
-                      # Print last few output lines if available
+                      # Print ALL outputs before error
                       if cell.outputs:
-                          print("\n📋 Last outputs:")
-                          for output in cell.outputs[-3:]:
+                          print(f"\n{'─'*70}")
+                          print(f"📤 OUTPUTS BEFORE ERROR:")
+                          print(f"{'─'*70}")
+                          
+                          for out_idx, output in enumerate(cell.outputs, 1):
                               if output.output_type == 'stream':
-                                  lines = output.text.strip().split('\n')
-                                  for line in lines[-5:]:
-                                      print(f"   {line}")
+                                  text = re.sub(r'\x1b\[[0-9;]*m', '', output.text)
+                                  lines = text.strip().split('\n')
+                                  print(f"\n[Output Block {out_idx} - {len(lines)} lines]")
+                                  for line in lines:
+                                      print(line)
+                                      
                               elif output.output_type == 'error':
-                                  print(f"   ❌ {output.ename}: {output.evalue}")
-                                  if hasattr(output, 'traceback'):
-                                      print("   Traceback (last 5 lines):")
-                                      for tb_line in output.traceback[-5:]:
-                                          print(f"   {tb_line}")
+                                  print(f"\n[Output Block {out_idx} - Error]")
+                                  print(f"❌ {output.ename}: {output.evalue}")
+                                  if hasattr(output, 'traceback') and output.traceback:
+                                      print("\nFull Traceback:")
+                                      for tb_line in output.traceback:
+                                          clean_line = re.sub(r'\x1b\[[0-9;]*m', '', tb_line)
+                                          print(clean_line)
+                      
+                      print(f"\n{'='*70}\n")
                       
                       self.summaries.append({
                           'cell': n, 
@@ -188,7 +254,7 @@ jobs:
                       })
                       
                       # Don't raise - continue to next cell
-                      print(f"\n⚠️ Continuing to next cell despite error...")
+                      print(f"⚠️ Continuing to next cell despite error...\n")
                       
                   return cell, resources
           
@@ -202,6 +268,10 @@ jobs:
           ep = TaggedExecutor(timeout=2400, kernel_name='python3', allow_errors=True)
           start = time.time()
           
+          print("="*70)
+          print("🚀 STARTING TAGGED CELLS EXECUTION")
+          print("="*70)
+          
           try:
               ep.preprocess(nb, {'metadata': {'path': '.'}})
           except Exception as e:
@@ -211,13 +281,25 @@ jobs:
           success_count = sum(1 for s in ep.summaries if s['status']=='success')
           failed_count = sum(1 for s in ep.summaries if s['status']=='failed')
           
-          print(f"\n{'='*60}")
-          print(f"📊 EXECUTION SUMMARY")
-          print(f"{'='*60}")
-          print(f"Total cells: {len(ep.summaries)}")
+          print(f"\n{'='*70}")
+          print(f"📊 FINAL EXECUTION SUMMARY")
+          print(f"{'='*70}")
+          print(f"Total cells executed: {len(ep.summaries)}")
           print(f"✅ Successful: {success_count}")
           print(f"❌ Failed: {failed_count}")
           print(f"⏱️ Total time: {duration:.1f}s")
+          
+          if ep.summaries:
+              print(f"\nDetailed Results:")
+              for s in ep.summaries:
+                  status_icon = "✅" if s['status'] == 'success' else "❌"
+                  print(f"  {status_icon} Cell {s['cell']}: {s['duration']:.1f}s - {s['status']}")
+                  if 'output_blocks' in s:
+                      print(f"     └─ {s['output_blocks']} output blocks")
+                  if 'error' in s:
+                      print(f"     └─ {s['error']}")
+          
+          print(f"{'='*70}\n")
           
           report = {
               'timestamp': datetime.now().isoformat(), 
@@ -235,7 +317,7 @@ jobs:
           
           # Exit with success if at least 1 cell succeeded, or if no cells were found
           if success_count > 0 or len(ep.summaries) == 0:
-              print("✅ Tagged cells execution completed")
+              print("✅ Tagged cells execution completed successfully")
               sys.exit(0)
           else:
               print("❌ All tagged cells failed")
@@ -243,9 +325,56 @@ jobs:
           EOF
           
           cat > run_full.py << 'EOF'
-          import nbformat, sys, time, json, os, traceback
+          import nbformat, sys, time, json, os, traceback, re
           from nbconvert.preprocessors import ExecutePreprocessor
           from datetime import datetime
+          
+          class VerboseExecutor(ExecutePreprocessor):
+              def __init__(self, *args, **kwargs):
+                  super().__init__(*args, **kwargs)
+                  self.cell_count = 0
+                  self.start_time = None
+              
+              def preprocess(self, nb, resources=None, km=None):
+                  code_cells = sum(1 for c in nb.cells if c.cell_type=='code')
+                  print(f"📊 Processing {len(nb.cells)} cells ({code_cells} code cells)...")
+                  self.start_time = time.time()
+                  return super().preprocess(nb, resources, km)
+              
+              def preprocess_cell(self, cell, resources, idx):
+                  if cell.cell_type != 'code':
+                      return cell, resources
+                  
+                  self.cell_count += 1
+                  
+                  # Show progress every cell
+                  elapsed = time.time() - self.start_time
+                  print(f"\n{'─'*70}")
+                  print(f"⏳ Cell {self.cell_count} ({elapsed:.0f}s elapsed)")
+                  print(f"{'─'*70}")
+                  
+                  cell, resources = super().preprocess_cell(cell, resources, idx)
+                  
+                  # Show key outputs from each cell
+                  if cell.outputs:
+                      for output in cell.outputs:
+                          if output.output_type == 'stream':
+                              text = re.sub(r'\x1b\[[0-9;]*m', '', output.text)
+                              lines = text.strip().split('\n')
+                              
+                              # Show lines with important markers
+                              important_lines = [l for l in lines if any(marker in l for marker in 
+                                  ['✅', '⚠️', '❌', '💰', '🧠', '💾', '📊', 'COMPLETE', 'ERROR', 
+                                   'Win Rate', 'P&L', 'Iteration', 'Mode:', 'Total', 'Average'])]
+                              
+                              if important_lines:
+                                  for line in important_lines[:10]:
+                                      print(f"  {line}")
+                              
+                          elif output.output_type == 'error':
+                              print(f"  ❌ Error: {output.ename}: {output.evalue}")
+                  
+                  return cell, resources
           
           if not os.path.exists('AI_Forex_Brain_2.ipynb'):
               print("❌ ERROR: AI_Forex_Brain_2.ipynb not found!")
@@ -254,34 +383,47 @@ jobs:
           with open('AI_Forex_Brain_2.ipynb', 'r') as f:
               nb = nbformat.read(f, as_version=4)
           
-          print("🚀 Starting full notebook execution...")
-          print(f"📊 Total cells: {len(nb.cells)}")
-          print(f"📊 Code cells: {sum(1 for c in nb.cells if c.cell_type=='code')}")
+          print("="*70)
+          print("🚀 STARTING FULL NOTEBOOK EXECUTION")
+          print("="*70)
           
-          ep = ExecutePreprocessor(timeout=2400, kernel_name='python3', allow_errors=True)
+          ep = VerboseExecutor(timeout=2400, kernel_name='python3', allow_errors=True)
           start = time.time()
           
           try:
               ep.preprocess(nb, {'metadata': {'path': '.'}})
               duration = time.time() - start
-              print(f"✅ Completed in {duration:.1f}s")
+              
+              print(f"\n{'='*70}")
+              print(f"✅ EXECUTION COMPLETED")
+              print(f"{'='*70}")
+              print(f"Total code cells: {ep.cell_count}")
+              print(f"Duration: {duration:.1f}s")
+              print(f"{'='*70}\n")
               
               report = {
                   'timestamp': datetime.now().isoformat(), 
                   'mode': 'full', 
                   'duration': duration,
+                  'cells_executed': ep.cell_count,
                   'status': 'success'
               }
               
           except Exception as e:
               duration = time.time() - start
-              print(f"⚠️ Execution completed with errors after {duration:.1f}s")
-              print(f"   Error: {type(e).__name__}: {str(e)[:200]}")
+              
+              print(f"\n{'='*70}")
+              print(f"⚠️ EXECUTION COMPLETED WITH ERRORS")
+              print(f"{'='*70}")
+              print(f"Error: {type(e).__name__}: {str(e)[:200]}")
+              print(f"Duration: {duration:.1f}s")
+              print(f"{'='*70}\n")
               
               report = {
                   'timestamp': datetime.now().isoformat(), 
                   'mode': 'full', 
                   'duration': duration,
+                  'cells_executed': ep.cell_count,
                   'status': 'completed_with_errors',
                   'error': f"{type(e).__name__}: {str(e)[:200]}"
               }

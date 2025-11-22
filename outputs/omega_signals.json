@@ -1,56 +1,60 @@
 {
-  "timestamp": "2025-11-22T04:45:53.333209+00:00",
-  "iteration": 2,
+  "timestamp": "2025-11-22T04:59:44.578257+00:00",
+  "iteration": 3,
   "version": "v16.0-final",
-  "mode": "WEEKEND_REPLAY",
+  "mode": "WEEKEND_LEARNING",
   "signals": {
     "EUR/USD": {
       "direction": "HOLD",
       "last_price": 1.151,
       "SL": 1.151,
       "TP": 1.151,
-      "confidence": 29.757797950496155,
-      "threshold": 35.0,
-      "timestamp": "2025-11-22T04:45:53.285530+00:00"
+      "confidence": 23.006921240786287,
+      "threshold": 35.1578947368421,
+      "timestamp": "2025-11-22T04:59:44.538213+00:00"
     },
     "GBP/USD": {
       "direction": "HOLD",
       "last_price": 1.308,
       "SL": 1.308,
       "TP": 1.308,
-      "confidence": 14.74637727085389,
-      "threshold": 35.0,
-      "timestamp": "2025-11-22T04:45:53.303882+00:00"
+      "confidence": 22.310042469404465,
+      "threshold": 35.1578947368421,
+      "timestamp": "2025-11-22T04:59:44.551779+00:00"
     },
     "USD/JPY": {
-      "direction": "SELL",
+      "direction": "HOLD",
       "last_price": 156.39,
-      "SL": 156.52928449358257,
-      "TP": 156.18107325962612,
-      "confidence": 49.29963313136072,
-      "threshold": 35.0,
-      "timestamp": "2025-11-22T04:45:53.319473+00:00"
+      "SL": 156.39,
+      "TP": 156.39,
+      "confidence": 30.51656635336884,
+      "threshold": 35.1578947368421,
+      "timestamp": "2025-11-22T04:59:44.565104+00:00"
     },
     "AUD/USD": {
       "direction": "HOLD",
       "last_price": 0.6453,
       "SL": 0.6453,
       "TP": 0.6453,
-      "confidence": 28.183833282195774,
-      "threshold": 35.0,
-      "timestamp": "2025-11-22T04:45:53.333098+00:00"
+      "confidence": 33.32332316177749,
+      "threshold": 35.1578947368421,
+      "timestamp": "2025-11-22T04:59:44.578152+00:00"
     }
   },
   "rl_stats": {
-    "total_updates": 0,
-    "total_trades": 0,
-    "profitable_trades": 0,
-    "total_pnl": 0.0,
-    "win_rate": 0.0,
-    "avg_reward": 0.0,
-    "epsilon_history": [],
+    "total_updates": 1,
+    "total_trades": 100,
+    "profitable_trades": 29,
+    "total_pnl": -2.0602491580063433,
+    "win_rate": 0.29,
+    "avg_reward": -46.54902231891957,
+    "epsilon_history": [
+      0.995
+    ],
     "loss_history": [],
-    "q_value_history": []
+    "q_value_history": [
+      0.39309546124448635
+    ]
   },
   "active_trades": 0
 }

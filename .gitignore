@@ -1,73 +1,114 @@
 # Python
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
 .Python
+env/
 venv/
-
-# Data (too large)
-data/raw/**/*.csv
-data/processed/*.pkl
-data/models/*.pkl
-*.db*
-logs/*.log
-
-# Temp
-temp/
-archive/
-cache/
-
-# Secrets
-.env
-.git-credentials
-
-# Notebooks (keep only main ones in root)
-notebooks/*.ipynb
-*_output_*.ipynb
-*_executed.ipynb
-
-# Keep structure
-!**/.gitkeep
-!README.md
-!requirements.txt
-
-# ========================================================================
-# RL Memory Cache Files (Auto-generated, should not be committed)
-# ========================================================================
-rl_memory/experience_replay*.pkl
-backups/experience_replay_*.pkl
-
-# Temporary files
-*.tmp
-*.bak
-**/*.tmp
-**/*.bak
-
-# Keep folder structure
-!rl_memory/.gitkeep
-!backups/.gitkeep
-
-# Python cache
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
 # Jupyter Notebook
 .ipynb_checkpoints
+*.ipynb
 
-# Environment
+# Environment variables
 .env
-.venv
-env/
-venv/
+.env.local
 
-# OS files
-.DS_Store
-Thumbs.db
-
-# IDE
+# IDEs
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
+
+# MacOS
+.DS_Store
+
+# ======================================================
+# 🚨 CRITICAL: EXCLUDE ALL MODEL PICKLE FILES
+# ======================================================
+# These files get corrupted due to concurrent writes
+# Models should be rebuilt fresh from data each run
+
+# All model files (any location)
+**/*_model.pkl
+**/*_sgd_model.pkl
+**/*_rf_model.pkl
+**/indicator_cache*.pkl
+
+# Specific paths
+data/processed/*_model.pkl
+data/processed/*_sgd_model.pkl
+data/processed/*_rf_model.pkl
+data/processed/indicator_cache*.pkl
+data/processed/corrupted/
+data/processed/.tmp_*
+data/processed/.backup_*
+
+# RL model files
+rl_models/*.pkl
+rl_memory/*.pkl
+rl_memory/experience_replay.pkl
+
+# Temporary files
+*.tmp
+.tmp_*
+.backup_*
+
+# Corrupted files backup
+**/corrupted/
+
+# ======================================================
+# KEEP: Data pickles (these are stable and needed)
+# ======================================================
+# These files should be committed:
+# - EUR_USD_1h.pkl
+# - GBP_USD_5m.pkl
+# - etc.
+# 
+# But NOT the model files that end in _model.pkl
+
+# ======================================================
+# Logs and outputs
+# ======================================================
+logs/
+*.log
+
+# Database files (optional - decide if you want to commit these)
+database/*.db
+database/*.sqlite
+database/*.sqlite3
+
+# Large output files
+outputs/*.csv
+outputs/*.xlsx
+
+# Compiled files
+*.pyc
+*.pyo
+
+# Test files
+tests/__pycache__/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS files
+Thumbs.db

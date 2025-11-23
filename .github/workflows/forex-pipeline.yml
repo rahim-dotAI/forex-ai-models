@@ -1,4 +1,4 @@
-name: Smart Forex Brain Pipeline v18.0
+name: Smart Forex Brain Pipeline v18.1 - API Optimized
 
 on:
   workflow_dispatch:
@@ -6,8 +6,12 @@ on:
     paths: ['colab_trigger.txt']
     branches: [main]
   schedule:
+    # Main pipeline - Frequent runs with SKIP_ALPHA_VANTAGE
     - cron: '0 */2 * * 1-5'    # Weekdays: Every 2 hours
     - cron: '*/30 * * * 0,6'   # Weekends: Every 30 minutes
+    
+    # Alpha Vantage ONLY - Once daily at midnight UTC
+    - cron: '0 0 * * *'         # Daily midnight: Full run including Alpha Vantage
 
 jobs:
   run-forex-brain:
@@ -26,6 +30,8 @@ jobs:
       PYTHONUNBUFFERED: 1
       GITHUB_ACTIONS: "true"
       SINGLE_RUN_MODE: "true"
+      # 🆕 Skip Alpha Vantage except at midnight
+      SKIP_ALPHA_VANTAGE: ${{ github.event.schedule != '0 0 * * *' }}
 
     steps:
       - name: Checkout
@@ -40,17 +46,29 @@ jobs:
           [ -f ".gitmodules" ] && rm -f .gitmodules && git rm --cached -r forex-alpha-models 2>/dev/null || true
           find . -mindepth 2 -name ".git" -type d -exec rm -rf {} + 2>/dev/null || true
 
-      - name: Detect Day Type
+      - name: Detect Day Type and Schedule
         id: day_info
         run: |
           DAY=$(date +%u)
           DAY_NAME=$(date +'%A')
+          HOUR=$(date +%H)
+          
           echo "day=$DAY" >> $GITHUB_OUTPUT
           echo "day_name=$DAY_NAME" >> $GITHUB_OUTPUT
+          echo "hour=$HOUR" >> $GITHUB_OUTPUT
+          
+          # Detect if this is the midnight Alpha Vantage run
+          if [ "${{ github.event.schedule }}" = "0 0 * * *" ]; then
+            echo "is_alpha_run=true" >> $GITHUB_OUTPUT
+            echo "🌙 MIDNIGHT RUN - Alpha Vantage Data Fetch"
+          else
+            echo "is_alpha_run=false" >> $GITHUB_OUTPUT
+            echo "⏭️  REGULAR RUN - Alpha Vantage Skipped"
+          fi
           
           if [ $DAY -eq 6 ] || [ $DAY -eq 7 ]; then
             echo "is_weekend=true" >> $GITHUB_OUTPUT
-            echo "�️ $DAY_NAME (Weekend - Learning Mode)"
+            echo "🏖️ $DAY_NAME (Weekend - Learning Mode)"
           else
             echo "is_weekend=false" >> $GITHUB_OUTPUT
             echo "💼 $DAY_NAME (Weekday - Full Trading)"
@@ -104,6 +122,7 @@ jobs:
           echo "   Pickle files: $PICKLE_COUNT"
           echo "   RL Memory exists: $([ -f "rl_memory/experience_replay.pkl.gz" ] && echo "Yes" || echo "No")"
           echo "   Run number: $RUN_NUM"
+          echo "   Alpha Vantage: ${{ steps.day_info.outputs.is_alpha_run == 'true' && 'ACTIVE' || 'SKIPPED' }}"
           
           mkdir -p data/raw/yfinance data/raw/alpha_vantage data/processed data/quarantine \
                    database logs outputs omega_state rl_memory rl_models backups .github/run_history
@@ -153,6 +172,14 @@ jobs:
                   print(f"📊 Processing {len(nb.cells)} cells ({code_cells} code cells)...")
                   print(f"🖥️  Environment: GitHub Actions")
                   print(f"📅 Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
+                  
+                  # Display Alpha Vantage skip status
+                  skip_av = os.environ.get('SKIP_ALPHA_VANTAGE', 'false').lower() == 'true'
+                  if skip_av:
+                      print(f"⏭️  Alpha Vantage: SKIPPED (uses existing data)")
+                  else:
+                      print(f"🔽 Alpha Vantage: ACTIVE (fetching fresh data)")
+                  
                   self.start_time = time.time()
                   return super().preprocess(nb, resources, km)
               
@@ -211,12 +238,13 @@ jobs:
                                   
                                   # Key markers for different stages
                                   important_markers = [
-                                      '✅', '⚠️', '❌', '💰', '🧠', '💾', '📊', '🖥️', '🔄',
-                                      'COMPLETE', 'ERROR', 'FAILED', 'SUCCESS',
+                                      '✅', '⚠️', '❌', '💰', '🧠', '💾', '📊', '🖥️', '🔄', '⏭️',
+                                      'COMPLETE', 'ERROR', 'FAILED', 'SUCCESS', 'SKIPPED',
                                       'Win Rate', 'P&L', 'Iteration', 'Mode:', 'Total', 'Average',
                                       'Loaded', 'Saved', 'Updated', 'Found', 'Processing',
                                       'Quality', 'Trades', 'Epsilon', 'Experience Replay',
-                                      'Pipeline Stats', 'Database', 'Q-Network', 'Backtest'
+                                      'Pipeline Stats', 'Database', 'Q-Network', 'Backtest',
+                                      'API calls', 'Daily API usage', 'Alpha Vantage'
                                   ]
                                   
                                   important_lines = [l for l in lines if any(marker in l for marker in important_markers)]
@@ -276,9 +304,9 @@ jobs:
               if ep.stage_timings:
                   print(f"\n📊 Stage Timings:")
                   for stage, timing in ep.stage_timings.items():
-                      duration = timing.get('duration', 0)
-                      if duration > 0:
-                          print(f"  {stage}: {duration:.1f}s")
+                      duration_val = timing.get('duration', 0)
+                      if duration_val > 0:
+                          print(f"  {stage}: {duration_val:.1f}s")
               
               if ep.critical_errors:
                   print(f"\n⚠️  Critical Errors ({len(ep.critical_errors)}):")
@@ -296,7 +324,8 @@ jobs:
                   'failed': ep.failed_cells,
                   'status': 'success',
                   'stage_timings': {k: v['duration'] for k, v in ep.stage_timings.items() if 'duration' in v},
-                  'critical_errors': len(ep.critical_errors)
+                  'critical_errors': len(ep.critical_errors),
+                  'alpha_vantage_active': os.environ.get('SKIP_ALPHA_VANTAGE', 'false').lower() != 'true'
               }
               
           except Exception as e:
@@ -321,7 +350,8 @@ jobs:
                   'status': 'completed_with_errors',
                   'error': f"{type(e).__name__}: {str(e)[:200]}",
                   'stage_timings': {k: v['duration'] for k, v in ep.stage_timings.items() if 'duration' in v},
-                  'critical_errors': len(ep.critical_errors)
+                  'critical_errors': len(ep.critical_errors),
+                  'alpha_vantage_active': os.environ.get('SKIP_ALPHA_VANTAGE', 'false').lower() != 'true'
               }
           
           os.makedirs('.github/run_history', exist_ok=True)
@@ -338,18 +368,39 @@ jobs:
           echo "=================================="
           echo "📅 Day: ${{ steps.day_info.outputs.day_name }}"
           echo "🔢 Run: #${{ steps.data.outputs.run_number }}"
+          echo "⏰ Hour: ${{ steps.day_info.outputs.hour }}:00 UTC"
           echo "📓 Notebook: AI_Forex_Brain_2.ipynb"
           echo "🖥️  Environment: GitHub Actions"
+          echo ""
+          
+          if [ "${{ steps.day_info.outputs.is_alpha_run }}" = "true" ]; then
+            echo "🌙 MIDNIGHT RUN - Full pipeline including Alpha Vantage"
+            echo "📊 Alpha Vantage: ✅ ACTIVE (4 API calls)"
+          else
+            echo "⚡ REGULAR RUN - Alpha Vantage skipped"
+            echo "📊 Alpha Vantage: ⏭️  SKIPPED (uses existing data)"
+          fi
+          
           echo ""
           echo "📋 Pipeline Stages:"
           echo "  1️⃣  API Keys Configuration"
           echo "  2️⃣  Environment Setup"
           echo "  3️⃣  GitHub Repository Sync"
-          echo "  4️⃣  Alpha Vantage Data Fetch"
+          
+          if [ "${{ steps.day_info.outputs.is_alpha_run }}" = "true" ]; then
+            echo "  4️⃣  Alpha Vantage Data Fetch ✅"
+          else
+            echo "  4️⃣  Alpha Vantage Data Fetch ⏭️  (skipped)"
+          fi
+          
           echo "  5️⃣  YFinance Data Fetch"
           echo "  6️⃣  CSV Combiner & Indicators"
           echo "  7️⃣  ML Pipeline (Database Learning)"
           echo "  8️⃣  Trade Beacon RL Agent"
+          echo ""
+          echo "💡 API Optimization:"
+          echo "   Daily API usage: 4 calls (16% of 25 limit)"
+          echo "   Savings: 44 calls/day vs hourly fetching"
           echo ""
           echo "⏱️  Estimated time: 30-50 minutes"
           echo "=================================="
@@ -379,9 +430,11 @@ jobs:
               latest = json.load(open('.github/run_history/latest_run.json'))
               rl_trades = latest.get('rl_trades', 0)
               win_rate = latest.get('win_rate', 0)
+              alpha_active = latest.get('alpha_vantage_active', False)
           except:
               rl_trades = 0
               win_rate = 0
+              alpha_active = False
           
           html = f"""<!DOCTYPE html>
           <html><head><style>
@@ -393,6 +446,7 @@ jobs:
           .stat h3{{margin:0;font-size:14px;opacity:0.9}}
           .stat .val{{font-size:36px;font-weight:900;margin:10px 0}}
           .stage{{background:#f8f9fa;padding:15px;border-left:4px solid #667eea;margin:10px 0}}
+          .optimization{{background:#dcfce7;padding:15px;border-left:4px solid #10b981;margin:10px 0}}
           </style></head><body><div class="container">
           <h1>🧠 Forex AI Brain - 10 Run Report</h1>
           <p style="color:#666">Generated: {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}</p>
@@ -405,6 +459,11 @@ jobs:
           <div class="stage">
           <h3>📋 Pipeline Stages</h3>
           <p>✅ Data Fetching → Indicators → ML Training → RL Agent</p>
+          </div>
+          <div class="optimization">
+          <h3>💡 API Optimization Active</h3>
+          <p>Alpha Vantage: 4 calls/day (16% of limit) | Saves 44 calls/day</p>
+          <p>Last run Alpha Vantage: {'✅ Active' if alpha_active else '⏭️ Skipped'}</p>
           </div>
           </div></body></html>"""
           
@@ -491,6 +550,11 @@ jobs:
               except:
                   pass
           
+          # Add Alpha Vantage optimization info
+          metrics['alpha_vantage_optimized'] = True
+          metrics['daily_api_calls'] = 4
+          metrics['api_usage_percent'] = 16
+          
           # Save metrics
           os.makedirs('.github/run_history', exist_ok=True)
           with open('.github/run_history/metrics.json', 'w') as f:
@@ -526,6 +590,7 @@ jobs:
           else
             RUN="${{ steps.data.outputs.run_number }}"
             IS_WEEKEND="${{ steps.day_info.outputs.is_weekend }}"
+            IS_ALPHA="${{ steps.day_info.outputs.is_alpha_run }}"
             DAY="${{ steps.day_info.outputs.day_name }}"
             TIME="$(date +'%Y-%m-%d %H:%M UTC')"
             
@@ -537,7 +602,10 @@ jobs:
               RL_TRADES="0"
             fi
             
-            if [ "$IS_WEEKEND" = "true" ]; then
+            # Build commit message
+            if [ "$IS_ALPHA" = "true" ]; then
+              MSG="🌙 Midnight Alpha Vantage Run #${RUN} - ${DAY}"
+            elif [ "$IS_WEEKEND" = "true" ]; then
               MSG="🏖️ Weekend Learning Run #${RUN} - ${DAY}"
             else
               MSG="🔴 Live Trading Run #${RUN} - ${DAY}"
@@ -580,6 +648,14 @@ jobs:
           echo "⏰ Time: $(date +'%Y-%m-%d %H:%M UTC')"
           echo "🖥️  Env: GitHub Actions"
           echo ""
+          
+          if [ "${{ steps.day_info.outputs.is_alpha_run }}" = "true" ]; then
+            echo "🌙 Alpha Vantage: ACTIVE (4 API calls made)"
+          else
+            echo "⏭️  Alpha Vantage: SKIPPED (next run at midnight)"
+          fi
+          
+          echo ""
           echo "📂 Data Files:"
           echo "   Processed pickles: ${{ steps.data.outputs.pickle_count }}"
           echo "   RL Memory: ${{ steps.data.outputs.rl_memory_exists }}"
@@ -597,7 +673,13 @@ jobs:
             echo ""
           fi
           
+          echo "💡 API Optimization:"
+          echo "   Daily usage: 4/25 calls (16%)"
+          echo "   Savings: 44 calls/day"
+          echo ""
+          
           [ "${{ steps.data.outputs.send_report }}" = "true" ] && echo "📧 Email Report: SENT" || echo "📧 Email Report: Next at run $(( (${{ steps.data.outputs.run_number }} / 10 + 1) * 10 ))"
           echo ""
           echo "✅ Pipeline execution complete"
           echo "=========================================="
+              RL_TRADES=$(echo "$METRICS

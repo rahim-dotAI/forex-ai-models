@@ -1,11 +1,22 @@
-# 🧠 Forex AI Brain - Autonomous Trading System
+# 🧠 Trade Beacon - Autonomous AI Trading System
 
 [![GitHub Actions](https://img.shields.io/badge/Automated-GitHub%20Actions-blue)](https://github.com/features/actions)
 [![Python](https://img.shields.io/badge/Python-3.11-green)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Production-success)](https://github.com/rahim-dotAI/forex-ai-models)
+[![Version](https://img.shields.io/badge/Version-v18.1-blueviolet)](https://github.com/rahim-dotAI/forex-ai-models)
 
-> **A fully autonomous AI-powered Forex trading system that learns, adapts, and trades 24/7 using Deep Q-Learning and Machine Learning**
+> **Trade Beacon: A fully autonomous AI-powered Forex trading system that learns, adapts, and trades 24/7 using Deep Q-Learning and advanced Machine Learning**
+
+## 🎯 **What is Trade Beacon?**
+
+**Trade Beacon** is an intelligent, self-learning Forex trading system powered by Deep Q-Learning. It combines:
+- 🤖 **Reinforcement Learning** - Learns optimal trading strategies through experience
+- 📊 **Multi-source data** - Alpha Vantage + YFinance across 5 timeframes
+- ⚡ **Zero-cost hosting** - Runs 100% on GitHub Actions (free tier)
+- 🧠 **Continuous improvement** - Gets smarter with every trade
+
+The system operates autonomously 24/7, switching between **weekend learning mode** (backtesting) and **live trading mode** (real execution) to maximize profitability while minimizing risk.
 
 ---
 
@@ -64,6 +75,7 @@ Currently trading 4 major Forex pairs:
 ```
 ┌─────────────────────────────────────────────────────────┐
 │           GitHub Actions (Automated Pipeline)           │
+│              Trade Beacon Controller v18.3              │
 └─────────────────────────────────────────────────────────┘
                            │
                            ▼
@@ -72,15 +84,17 @@ Currently trading 4 major Forex pairs:
 │  ┌──────────────┐              ┌──────────────┐        │
 │  │ Alpha Vantage│              │   YFinance   │        │
 │  │ (Daily OHLC) │              │ (5 timeframes)│        │
+│  │  4 calls/day │              │ 20 endpoints │        │
 │  └──────────────┘              └──────────────┘        │
 └─────────────────────────────────────────────────────────┘
                            │
                            ▼
 ┌─────────────────────────────────────────────────────────┐
 │              Data Processing & Indicators                │
-│  • ATR, RSI, MACD, Bollinger Bands                      │
-│  • Quality validation & cleaning                        │
-│  • Multi-timeframe consolidation                        │
+│  • ATR, RSI, MACD, Bollinger Bands, Williams %R         │
+│  • Quality validation & automatic quarantine            │
+│  • Multi-timeframe feature engineering                  │
+│  • 30+ technical indicators per currency pair           │
 └─────────────────────────────────────────────────────────┘
                            │
                            ▼
@@ -88,29 +102,32 @@ Currently trading 4 major Forex pairs:
 │                ML Pipeline (Pipeline v5.0)               │
 │  • SGD Classifier (fast incremental learning)           │
 │  • Random Forest (ensemble predictions)                 │
-│  • Fresh model training each run                        │
+│  • Fresh model training each run (no corruption!)       │
+│  • Processes 24 data streams simultaneously             │
 └─────────────────────────────────────────────────────────┘
                            │
                            ▼
 ┌─────────────────────────────────────────────────────────┐
-│           Trade Beacon RL Agent (v18.1)                  │
+│           🎯 Trade Beacon RL Agent (v18.1) 🎯            │
 │  ┌─────────────────────────────────────────┐            │
 │  │    Deep Q-Network (128→64→32 nodes)    │            │
 │  │    • State: 30 features                 │            │
 │  │    • Actions: BUY, SELL, HOLD           │            │
 │  │    • Reward: P&L + Risk-adjusted return │            │
+│  │    • Experience Replay: 3,891 samples   │            │
 │  └─────────────────────────────────────────┘            │
 │                                                          │
-│  Weekend: Backtest & Learn (631 trades/run)             │
-│  Weekday: Live Trading (Real money)                     │
+│  🏖️  Weekend: Backtest & Learn (631 trades/run)         │
+│  💰 Weekday: Live Trading (Real money)                  │
 └─────────────────────────────────────────────────────────┘
                            │
                            ▼
 ┌─────────────────────────────────────────────────────────┐
 │                   Trade Execution                        │
-│  • Browserless API for live prices                      │
-│  • Dynamic position sizing                              │
+│  • Browserless API for real-time prices                │
+│  • Dynamic position sizing (confidence-based)           │
 │  • ATR-based SL/TP (2x/3x multipliers)                  │
+│  • Max 2 concurrent positions                           │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -119,10 +136,10 @@ Currently trading 4 major Forex pairs:
 ## 📁 **Repository Structure**
 
 ```
-forex-ai-models/
-├── 📓 AI_Forex_Brain_2.ipynb        # Main notebook (8 cells)
+forex-ai-models/ (Trade Beacon)
+├── 📓 AI_Forex_Brain_2.ipynb        # Main pipeline notebook (8 cells)
 ├── ⚙️  .github/workflows/
-│   └── main.yml                      # GitHub Actions automation
+│   └── main.yml                      # Trade Beacon automation (v18.3)
 ├── 📊 data/
 │   ├── raw/
 │   │   ├── yfinance/                 # YFinance CSVs (20 files)
@@ -130,18 +147,24 @@ forex-ai-models/
 │   ├── processed/                    # Processed pickles (24 files)
 │   └── quarantine/                   # Failed quality checks
 ├── 💾 database/
-│   └── memory_v85.db                 # SQLite trade history
-├── 🧠 rl_memory/
-│   ├── experience_replay.json.gz     # 3,891 experiences
-│   ├── network_weights.json          # Q-network weights
-│   ├── learning_stats.json           # Training metrics
-│   └── trade_history.json            # Historical trades
+│   └── memory_v85.db                 # SQLite trade history (Pipeline v5.0)
+├── 🧠 rl_memory/                     # Trade Beacon brain
+│   ├── experience_replay.json.gz     # 3,891 trading experiences
+│   ├── network_weights.json          # Q-network weights (128→64→32)
+│   ├── learning_stats.json           # Win rate, P&L, epsilon
+│   ├── pipeline_sync.json            # Last database sync
+│   └── trade_history.json            # All executed trades
 ├── 📤 outputs/
-│   └── omega_signals.json            # Latest trading signals
+│   ├── omega_signals.json            # Latest trading signals
+│   └── signals_*.json                # Timestamped signal history
 ├── 🌀 omega_state/
 │   └── omega_iteration.json          # Run counter & history
-├── 💼 backups/                       # Automatic backups
+├── 💼 backups/                       # Automatic state backups
+│   ├── experience_replay_backup.gz
+│   ├── network_weights_backup.json
+│   └── learning_stats_backup.json
 └── 📝 logs/                          # Execution logs
+    └── trade_beacon_*.log            # Detailed run logs
 ```
 
 ---
@@ -336,36 +359,52 @@ MAX_POSITIONS = 2            # Concurrent trades
 
 ## 🚀 **Roadmap**
 
-### **Current Version: v18.1**
-- ✅ Corruption-free architecture
-- ✅ Weekend backtest learning
-- ✅ Fixed model persistence
-- ✅ Multi-pair support
+### **Current Version: Trade Beacon v18.1**
+- ✅ Deep Q-Learning with experience replay
+- ✅ Corruption-free architecture (no model file I/O)
+- ✅ Weekend backtest learning (631 trades/run)
+- ✅ Confidence-based trade filtering
+- ✅ Multi-pair support (4 major pairs)
+- ✅ API optimization (92% reduction in calls)
+- ✅ Automatic state backups
+- ✅ Email notifications
 
-### **Planned Features**
-- [ ] Support for 8+ currency pairs
-- [ ] Advanced sentiment analysis
-- [ ] Multi-model ensemble voting
-- [ ] Real-time dashboard UI
-- [ ] Telegram bot notifications
-- [ ] Cloud deployment option
-- [ ] Backtesting web interface
+### **v19.0 - Coming Soon**
+- [ ] 🌍 Support for 8+ currency pairs (EUR/GBP, USD/CAD, NZD/USD, etc.)
+- [ ] 📰 News sentiment analysis integration
+- [ ] 🗳️ Multi-model ensemble voting (3+ models)
+- [ ] 📱 Telegram bot for real-time alerts
+- [ ] 📈 Interactive backtesting dashboard
+
+### **v20.0 - Future**
+- [ ] ☁️ Cloud deployment option (AWS/GCP)
+- [ ] 🎨 Web UI for configuration & monitoring
+- [ ] 🧬 Genetic algorithm for hyperparameter tuning
+- [ ] 🌐 Multi-broker integration
+- [ ] 📊 Advanced risk analytics dashboard
 
 ---
 
 ## 📚 **Documentation**
 
-### **Key Files**
-- `AI_Forex_Brain_2.ipynb` - Main pipeline (8 cells)
-- Cell 1: API Keys Configuration
-- Cell 2: Environment Setup
-- Cell 3: GitHub Sync
-- Cell 4: Dependencies
-- Cell 5: Alpha Vantage Fetcher
-- Cell 6: YFinance Fetcher
-- Cell 7: CSV Combiner
-- Cell 8: ML Pipeline v5.0
-- Cell 9: Trade Beacon RL Agent v18.1
+### **Pipeline Structure**
+**Trade Beacon** runs through 8 sequential cells in `AI_Forex_Brain_2.ipynb`:
+
+1. **🔑 API Keys Configuration** - Loads Alpha Vantage & Browserless credentials
+2. **🌍 Environment Detection** - Detects Colab/GitHub Actions/Local environment
+3. **🔄 GitHub Sync** - Clones/syncs repository with organized folder structure
+4. **📦 Dependencies** - Installs Python packages (scikit-learn, ta, yfinance, etc.)
+5. **🌙 Alpha Vantage Fetcher** - Fetches daily OHLC (midnight only, 4 calls/day)
+6. **📊 YFinance Fetcher** - Fetches 5 timeframes (1m, 5m, 15m, 1h, 1d)
+7. **🔧 CSV Combiner** - Merges data sources, calculates 30+ indicators
+8. **🤖 ML Pipeline v5.0** - Trains SGD + Random Forest models
+9. **🎯 Trade Beacon v18.1** - Deep Q-Learning agent executes trades
+
+### **Key Technologies**
+- **Deep Q-Learning** - [Mnih et al., 2015](https://arxiv.org/abs/1312.5602)
+- **Experience Replay** - [Lin, 1992](https://link.springer.com/article/10.1007/BF00992699)
+- **Epsilon-Greedy** - Exploration vs exploitation balance
+- **Target Networks** - Stabilizes Q-learning convergence
 
 ### **References**
 - [Alpha Vantage API Docs](https://www.alphavantage.co/documentation/)
@@ -407,18 +446,21 @@ MIT License - See [LICENSE](LICENSE) file for details
 
 ## 👨‍💻 **Author**
 
-**Rahim Dotai**
-- GitHub: [@rahim-dotAI](https://github.com/rahim-dotAI)
-- Email: nakatonabira3@gmail.com
+**Rahim Dotai** - AI/ML Engineer & Algorithmic Trading Specialist
+- 🌐 GitHub: [@rahim-dotAI](https://github.com/rahim-dotAI)
+- 📧 Email: nakatonabira3@gmail.com
+- 💼 Project: Trade Beacon v18.1
 
 ---
 
 ## 🙏 **Acknowledgments**
 
-- Alpha Vantage for free financial data API
-- YFinance for multi-timeframe market data
-- GitHub Actions for free automation
-- The open-source community
+- **Alpha Vantage** - For providing free financial data API
+- **YFinance** - For comprehensive multi-timeframe market data
+- **GitHub Actions** - For free CI/CD automation infrastructure
+- **scikit-learn** - For machine learning algorithms
+- **The RL community** - For deep Q-learning research and implementations
+- **Open-source contributors** - For libraries that made this possible
 
 ---
 
@@ -432,8 +474,10 @@ MIT License - See [LICENSE](LICENSE) file for details
 
 <div align="center">
 
-### **⭐ Star this repo if you find it useful!**
+### **⭐ Star this repo if you find Trade Beacon useful!**
 
-**Made with ❤️ and 🧠 by Rahim Dotai**
+**Built with ❤️, 🧠, and ☕ by Rahim Dotai**
+
+*Trade Beacon v18.1 - Intelligent. Autonomous. Profitable.*
 
 </div>

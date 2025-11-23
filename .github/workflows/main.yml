@@ -1,4 +1,4 @@
-name: Smart Forex Brain Pipeline v18.2 - Fixed & Optimized
+name: Smart Forex Brain Pipeline v18.3 - Notebook Compatible
 
 on:
   workflow_dispatch:
@@ -103,7 +103,7 @@ jobs:
           echo "pickle_count=$PICKLE_COUNT" >> $GITHUB_OUTPUT
           
           # Count RL experience replay
-          if [ -f "rl_memory/experience_replay.pkl.gz" ]; then
+          if [ -f "rl_memory/experience_replay.json.gz" ]; then
             echo "rl_memory_exists=true" >> $GITHUB_OUTPUT
           else
             echo "rl_memory_exists=false" >> $GITHUB_OUTPUT
@@ -120,12 +120,12 @@ jobs:
           
           echo "📊 Status:"
           echo "   Pickle files: $PICKLE_COUNT"
-          echo "   RL Memory exists: $([ -f "rl_memory/experience_replay.pkl.gz" ] && echo "Yes" || echo "No")"
+          echo "   RL Memory exists: $([ -f "rl_memory/experience_replay.json.gz" ] && echo "Yes" || echo "No")"
           echo "   Run number: $RUN_NUM"
           echo "   Alpha Vantage: ${{ steps.day_info.outputs.is_alpha_run == 'true' && 'ACTIVE' || 'SKIPPED' }}"
           
           mkdir -p data/raw/yfinance data/raw/alpha_vantage data/processed data/quarantine \
-                   database logs outputs omega_state rl_memory rl_models backups .github/run_history
+                   database logs outputs omega_state rl_memory backups .github/run_history
 
       - name: Verify Notebook
         run: |
@@ -147,11 +147,11 @@ jobs:
           " 2>/dev/null || echo "0")
           
           echo "📊 Code cells found: $CELLS"
-          echo "ℹ️  Expected: API Keys → Env Setup → GitHub Sync → Alpha Vantage → YFinance → Combiner → Pipeline → Trade Beacon"
+          echo "ℹ️  Pipeline: API Keys → Environment → GitHub Sync → Alpha Vantage → YFinance → CSV Combiner → ML Pipeline → Trade Beacon"
 
       - name: Create Enhanced Notebook Executor
         run: |
-          cat > run_full.py << 'EOF'
+          cat > run_full.py << 'EOFPYTHON'
           import nbformat, sys, time, json, os, re
           from nbconvert.preprocessors import ExecutePreprocessor
           from datetime import datetime
@@ -173,7 +173,6 @@ jobs:
                   print(f"🖥️  Environment: GitHub Actions")
                   print(f"📅 Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
                   
-                  # Display Alpha Vantage skip status
                   skip_av = os.environ.get('SKIP_ALPHA_VANTAGE', 'false').lower() == 'true'
                   if skip_av:
                       print(f"⏭️  Alpha Vantage: SKIPPED (uses existing data)")
@@ -184,7 +183,6 @@ jobs:
                   return super().preprocess(nb, resources, km)
               
               def detect_stage(self, cell_source):
-                  """Detect pipeline stage from cell content"""
                   source_lower = cell_source.lower()
                   if 'api_keys' in source_lower or 'alpha_vantage_key' in source_lower:
                       return "1️⃣ API Keys"
@@ -198,7 +196,7 @@ jobs:
                       return "5️⃣ YFinance"
                   elif 'combiner' in source_lower or 'indicator' in source_lower:
                       return "6️⃣ CSV Combiner"
-                  elif 'ultra-persistent' in source_lower and 'pipeline' in source_lower:
+                  elif 'ultra-persistent' in source_lower or 'pipeline' in source_lower:
                       return "7️⃣ ML Pipeline"
                   elif 'trade beacon' in source_lower or 'deep q-learning' in source_lower:
                       return "8️⃣ RL Agent"
@@ -210,7 +208,6 @@ jobs:
                   
                   self.cell_count += 1
                   
-                  # Detect stage
                   new_stage = self.detect_stage(cell.source)
                   if new_stage != self.current_stage:
                       stage_start = time.time()
@@ -229,14 +226,12 @@ jobs:
                       cell, resources = super().preprocess_cell(cell, resources, idx)
                       self.successful_cells += 1
                       
-                      # Extract and display key outputs
                       if cell.outputs:
                           for output in cell.outputs:
                               if output.output_type == 'stream':
                                   text = re.sub(r'\x1b\[[0-9;]*m', '', output.text)
                                   lines = text.strip().split('\n')
                                   
-                                  # Key markers for different stages
                                   important_markers = [
                                       '✅', '⚠️', '❌', '💰', '🧠', '💾', '📊', '🖥️', '🔄', '⏭️',
                                       'COMPLETE', 'ERROR', 'FAILED', 'SUCCESS', 'SKIPPED',
@@ -360,7 +355,7 @@ jobs:
           
           print("✅ Full notebook execution completed")
           print("📝 Report saved to .github/run_history/latest_run.json")
-          EOF
+          EOFPYTHON
 
       - name: Run Full Notebook Pipeline
         run: |
@@ -408,107 +403,10 @@ jobs:
           python run_full.py
         timeout-minutes: 50
 
-      - name: Generate Enhanced Email Report
-        if: steps.data.outputs.send_report == 'true'
-        run: |
-          cat > report.py << 'EOF'
-          import json, os
-          from glob import glob
-          from datetime import datetime
-          
-          runs = sorted(glob('.github/run_history/archive/run_*.json'))[-10:]
-          if not runs:
-              print("No runs to report")
-              exit(0)
-          
-          data = [json.load(open(f)) for f in runs]
-          success = sum(1 for r in data if r.get('status') == 'success')
-          avg_duration = sum(r.get('duration', 0) for r in data) / len(data)
-          
-          # Extract RL stats if available
-          try:
-              latest = json.load(open('.github/run_history/latest_run.json'))
-              rl_trades = latest.get('rl_trades', 0)
-              win_rate = latest.get('win_rate', 0)
-              alpha_active = latest.get('alpha_vantage_active', False)
-          except:
-              rl_trades = 0
-              win_rate = 0
-              alpha_active = False
-          
-          html = f"""<!DOCTYPE html>
-          <html><head><style>
-          body{{font-family:-apple-system,sans-serif;padding:20px;background:#0f172a}}
-          .container{{max-width:900px;margin:0 auto;background:#fff;padding:40px;border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.4)}}
-          h1{{color:#2c3e50;border-bottom:3px solid #667eea;padding-bottom:15px}}
-          .stats{{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin:30px 0}}
-          .stat{{background:linear-gradient(135deg,#667eea,#764ba2);padding:25px;border-radius:10px;color:#fff;text-align:center}}
-          .stat h3{{margin:0;font-size:14px;opacity:0.9}}
-          .stat .val{{font-size:36px;font-weight:900;margin:10px 0}}
-          .stage{{background:#f8f9fa;padding:15px;border-left:4px solid #667eea;margin:10px 0}}
-          .optimization{{background:#dcfce7;padding:15px;border-left:4px solid #10b981;margin:10px 0}}
-          </style></head><body><div class="container">
-          <h1>🧠 Forex AI Brain - 10 Run Report</h1>
-          <p style="color:#666">Generated: {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}</p>
-          <div class="stats">
-          <div class="stat"><h3>✅ Success Rate</h3><p class="val">{success}/{len(data)}</p></div>
-          <div class="stat"><h3>⏱️ Avg Duration</h3><p class="val">{avg_duration/60:.1f}m</p></div>
-          <div class="stat"><h3>🧠 RL Trades</h3><p class="val">{rl_trades}</p></div>
-          <div class="stat"><h3>📊 Win Rate</h3><p class="val">{win_rate:.1f}%</p></div>
-          </div>
-          <div class="stage">
-          <h3>📋 Pipeline Stages</h3>
-          <p>✅ Data Fetching → Indicators → ML Training → RL Agent</p>
-          </div>
-          <div class="optimization">
-          <h3>💡 API Optimization Active</h3>
-          <p>Alpha Vantage: 4 calls/day (16% of limit) | Saves 44 calls/day</p>
-          <p>Last run Alpha Vantage: {'✅ Active' if alpha_active else '⏭️ Skipped'}</p>
-          </div>
-          </div></body></html>"""
-          
-          with open('report.html', 'w') as f: f.write(html)
-          print("✅ Email report generated")
-          EOF
-          python report.py
-
-      - name: Send Email Report
-        if: steps.data.outputs.send_report == 'true'
-        run: |
-          cat > email.py << 'EOF'
-          import smtplib, os
-          from email.mime.multipart import MIMEMultipart
-          from email.mime.text import MIMEText
-          from datetime import datetime
-          
-          sender = os.getenv('GMAIL_USER')
-          password = os.getenv('GMAIL_APP_PASSWORD')
-          if not sender or not password: 
-              print("⚠️ Email credentials not found")
-              exit(0)
-          
-          with open('report.html') as f: html = f.read()
-          msg = MIMEMultipart('alternative')
-          msg['Subject'] = f'🧠 Forex AI Brain Report - {datetime.now().strftime("%Y-%m-%d")}'
-          msg['From'] = msg['To'] = sender
-          msg.attach(MIMEText(html, 'html'))
-          
-          try:
-              s = smtplib.SMTP('smtp.gmail.com', 587)
-              s.starttls()
-              s.login(sender, password)
-              s.send_message(msg)
-              s.quit()
-              print("✅ Email sent successfully")
-          except Exception as e:
-              print(f"⚠️ Email failed: {e}")
-          EOF
-          python email.py || true
-
       - name: Extract Pipeline Metrics
         if: always()
         run: |
-          cat > extract_metrics.py << 'EOF'
+          cat > extract_metrics.py << 'EOFPYTHON'
           import sqlite3, json, os
           from pathlib import Path
           
@@ -534,7 +432,7 @@ jobs:
                   metrics['db_error'] = str(e)
           
           # Check RL memory
-          rl_memory = Path('rl_memory/experience_replay.pkl.gz')
+          rl_memory = Path('rl_memory/experience_replay.json.gz')
           if rl_memory.exists():
               metrics['rl_memory_size'] = rl_memory.stat().st_size
           
@@ -563,7 +461,7 @@ jobs:
           print("✅ Metrics extracted:")
           for key, value in metrics.items():
               print(f"  {key}: {value}")
-          EOF
+          EOFPYTHON
           python extract_metrics.py
 
       - name: Commit All Changes
@@ -578,9 +476,8 @@ jobs:
             logs/*.log \
             outputs/*.json \
             omega_state/*.json \
-            rl_memory/*.pkl* \
             rl_memory/*.json* \
-            rl_models/*.npz \
+            rl_memory/*.gz \
             backups/* \
             .github/run_history/* \
             2>/dev/null || true
@@ -632,7 +529,6 @@ jobs:
           name: pipeline-logs-${{ github.run_number }}
           path: |
             .github/run_history/*.json
-            report.html
             logs/*.log
           retention-days: 7
           if-no-files-found: ignore
@@ -678,13 +574,5 @@ jobs:
           echo "   Savings: 44 calls/day"
           echo ""
           
-          if [ "${{ steps.data.outputs.send_report }}" = "true" ]; then
-            echo "📧 Email Report: SENT"
-          else
-            NEXT_REPORT=$(( (${{ steps.data.outputs.run_number }} / 10 + 1) * 10 ))
-            echo "📧 Email Report: Next at run ${NEXT_REPORT}"
-          fi
-          
-          echo ""
           echo "✅ Pipeline execution complete"
           echo "=========================================="

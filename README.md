@@ -5,8 +5,17 @@
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Production-success)](https://github.com/rahim-dotAI/forex-ai-models)
 [![Version](https://img.shields.io/badge/Version-v18.1-blueviolet)](https://github.com/rahim-dotAI/forex-ai-models)
+[![Live Dashboard](https://img.shields.io/badge/Dashboard-Live-brightgreen)](https://rahim-dotai.github.io/forex-ai-models/)
 
 > **Trade Beacon: A fully autonomous AI-powered Forex trading system that learns, adapts, and trades 24/7 using Deep Q-Learning and advanced Machine Learning**
+
+---
+
+## 🎯 **[📊 View Live Dashboard →](https://rahim-dotai.github.io/forex-ai-models/)**
+
+**Real-time monitoring of Trade Beacon's performance, signals, and system health!**
+
+---
 
 ## 🎯 **What is Trade Beacon?**
 
@@ -18,6 +27,8 @@
 
 The system operates autonomously 24/7, switching between **weekend learning mode** (backtesting) and **live trading mode** (real execution) to maximize profitability while minimizing risk.
 
+**[🚀 Watch it live →](https://rahim-dotai.github.io/forex-ai-models/)**
+
 ---
 
 ## 🌟 **Key Features**
@@ -27,6 +38,7 @@ The system operates autonomously 24/7, switching between **weekend learning mode
 - **Weekend learning mode** - Backtests and trains on historical data
 - **Live trading mode** - Executes real trades during weekdays
 - **Self-learning** - Improves performance over time through experience
+- **Real-time dashboard** - Monitor everything at [rahim-dotai.github.io/forex-ai-models](https://rahim-dotai.github.io/forex-ai-models/)
 
 ### 🧠 **Advanced AI Architecture**
 - **Deep Q-Learning** - Neural network-based decision making
@@ -50,6 +62,8 @@ The system operates autonomously 24/7, switching between **weekend learning mode
 
 ## 📈 **Current Performance**
 
+**[🔴 Live Stats →](https://rahim-dotai.github.io/forex-ai-models/)**
+
 | Metric | Value | Status |
 |--------|-------|--------|
 | **Win Rate** | 42.2% | 🟡 Improving |
@@ -57,6 +71,8 @@ The system operates autonomously 24/7, switching between **weekend learning mode
 | **Total P&L** | $4.23 | ✅ Profitable |
 | **Experience Pool** | 3,891 samples | ✅ Deep learning |
 | **API Efficiency** | 16% of limit | ✅ Optimized |
+
+*Auto-refreshes every 60 seconds on the live dashboard*
 
 ---
 
@@ -67,6 +83,8 @@ Currently trading 4 major Forex pairs:
 - 🇬🇧 **GBP/USD** - British Pound / US Dollar
 - 🇯🇵 **USD/JPY** - US Dollar / Japanese Yen
 - 🇦🇺 **AUD/USD** - Australian Dollar / US Dollar
+
+**[See live signals →](https://rahim-dotai.github.io/forex-ai-models/)**
 
 ---
 
@@ -129,6 +147,10 @@ Currently trading 4 major Forex pairs:
 │  • ATR-based SL/TP (2x/3x multipliers)                  │
 │  • Max 2 concurrent positions                           │
 └─────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+                  📊 Live Dashboard
+          https://rahim-dotai.github.io/forex-ai-models/
 ```
 
 ---
@@ -137,6 +159,7 @@ Currently trading 4 major Forex pairs:
 
 ```
 forex-ai-models/ (Trade Beacon)
+├── 🌐 index.html                     # Live dashboard (auto-refresh)
 ├── 📓 AI_Forex_Brain_2.ipynb        # Main pipeline notebook (8 cells)
 ├── ⚙️  .github/workflows/
 │   └── main.yml                      # Trade Beacon automation (v18.3)
@@ -194,10 +217,16 @@ forex-ai-models/ (Trade Beacon)
    - Go to Actions tab
    - Click "Enable workflows"
 
-4. **That's it!** 🎉
+4. **Enable GitHub Pages**
+   - Go to Settings → Pages
+   - Source: Deploy from branch "main" → "/ (root)"
+   - Your dashboard will be live at `https://yourusername.github.io/forex-ai-models/`
+
+5. **That's it!** 🎉
    - System runs automatically every 2 hours (weekdays)
    - Runs every 30 minutes (weekends)
    - Alpha Vantage fetch once daily at midnight
+   - Dashboard updates in real-time!
 
 ---
 
@@ -208,6 +237,7 @@ forex-ai-models/ (Trade Beacon)
 | **Weekdays** | Every 2 hours | 🔴 **LIVE TRADING** |
 | **Weekends** | Every 30 minutes | 🏖️ **LEARNING MODE** |
 | **Midnight UTC** | Daily | 🌙 **Alpha Vantage Fetch** |
+| **Continuous** | Dashboard refresh | 📊 **Every 60 seconds** |
 
 ---
 
@@ -229,6 +259,7 @@ forex-ai-models/ (Trade Beacon)
 5. Executes trades with ATR-based risk management
 6. Monitors open positions for SL/TP exits
 7. Records outcomes for continuous learning
+8. Updates dashboard in real-time
 
 ---
 
@@ -283,6 +314,17 @@ Reward = (
 ## 📈 **Performance Tracking**
 
 ### **Live Dashboard**
+**[🔴 View Live →](https://rahim-dotai.github.io/forex-ai-models/)**
+
+Features:
+- Real-time win rate & P&L tracking
+- Active trading signals for all pairs
+- System health monitoring
+- Market mode indicator (Live/Learning)
+- Countdown to market open/close
+- Auto-refresh every 60 seconds
+
+### **JSON Data**
 Check latest run: `.github/run_history/latest_run.json`
 
 ```json
@@ -340,6 +382,11 @@ MAX_POSITIONS = 2            # Concurrent trades
 - Verify secrets are set correctly
 - Ensure API keys are valid
 
+### **Dashboard not updating**
+- Check GitHub Pages is enabled
+- Wait 1-2 minutes after enabling Pages
+- Verify JSON files exist in `/rl_memory/` and `/outputs/`
+
 ### **Low win rate (<30%)**
 - System is still learning (needs more data)
 - Continue weekend training
@@ -368,17 +415,18 @@ MAX_POSITIONS = 2            # Concurrent trades
 - ✅ API optimization (92% reduction in calls)
 - ✅ Automatic state backups
 - ✅ Email notifications
+- ✅ **Real-time web dashboard**
 
 ### **v19.0 - Coming Soon**
 - [ ] 🌍 Support for 8+ currency pairs (EUR/GBP, USD/CAD, NZD/USD, etc.)
 - [ ] 📰 News sentiment analysis integration
 - [ ] 🗳️ Multi-model ensemble voting (3+ models)
 - [ ] 📱 Telegram bot for real-time alerts
-- [ ] 📈 Interactive backtesting dashboard
+- [ ] 📈 Interactive backtesting dashboard with charts
 
 ### **v20.0 - Future**
 - [ ] ☁️ Cloud deployment option (AWS/GCP)
-- [ ] 🎨 Web UI for configuration & monitoring
+- [ ] 🎨 Enhanced web UI with trade history charts
 - [ ] 🧬 Genetic algorithm for hyperparameter tuning
 - [ ] 🌐 Multi-broker integration
 - [ ] 📊 Advanced risk analytics dashboard
@@ -400,6 +448,12 @@ MAX_POSITIONS = 2            # Concurrent trades
 8. **🤖 ML Pipeline v5.0** - Trains SGD + Random Forest models
 9. **🎯 Trade Beacon v18.1** - Deep Q-Learning agent executes trades
 
+### **Dashboard Files**
+- `index.html` - Live dashboard interface
+- `rl_memory/learning_stats.json` - Win rate, P&L, epsilon data
+- `outputs/omega_signals.json` - Latest trading signals
+- `omega_state/omega_iteration.json` - Run counter
+
 ### **Key Technologies**
 - **Deep Q-Learning** - [Mnih et al., 2015](https://arxiv.org/abs/1312.5602)
 - **Experience Replay** - [Lin, 1992](https://link.springer.com/article/10.1007/BF00992699)
@@ -411,6 +465,7 @@ MAX_POSITIONS = 2            # Concurrent trades
 - [YFinance Documentation](https://pypi.org/project/yfinance/)
 - [Deep Q-Learning Paper](https://arxiv.org/abs/1312.5602)
 - [GitHub Actions Guide](https://docs.github.com/en/actions)
+- [GitHub Pages Setup](https://docs.github.com/en/pages)
 
 ---
 
@@ -448,6 +503,7 @@ MIT License - See [LICENSE](LICENSE) file for details
 
 **Rahim Dotai** - AI/ML Engineer & Algorithmic Trading Specialist
 - 🌐 GitHub: [@rahim-dotAI](https://github.com/rahim-dotAI)
+- 📊 Live Dashboard: [rahim-dotai.github.io/forex-ai-models](https://rahim-dotai.github.io/forex-ai-models/)
 - 📧 Email: nakatonabira3@gmail.com
 - 💼 Project: Trade Beacon v18.1
 
@@ -458,6 +514,7 @@ MIT License - See [LICENSE](LICENSE) file for details
 - **Alpha Vantage** - For providing free financial data API
 - **YFinance** - For comprehensive multi-timeframe market data
 - **GitHub Actions** - For free CI/CD automation infrastructure
+- **GitHub Pages** - For free static site hosting
 - **scikit-learn** - For machine learning algorithms
 - **The RL community** - For deep Q-learning research and implementations
 - **Open-source contributors** - For libraries that made this possible
@@ -475,6 +532,8 @@ MIT License - See [LICENSE](LICENSE) file for details
 <div align="center">
 
 ### **⭐ Star this repo if you find Trade Beacon useful!**
+
+### **[📊 View Live Dashboard](https://rahim-dotai.github.io/forex-ai-models/)**
 
 **Built with ❤️, 🧠, and ☕ by Rahim Dotai**
 

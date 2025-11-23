@@ -1,4 +1,4 @@
-name: Smart Forex Brain Pipeline v18.1 - API Optimized
+name: Smart Forex Brain Pipeline v18.2 - Fixed & Optimized
 
 on:
   workflow_dispatch:
@@ -30,7 +30,7 @@ jobs:
       PYTHONUNBUFFERED: 1
       GITHUB_ACTIONS: "true"
       SINGLE_RUN_MODE: "true"
-      # 🆕 Skip Alpha Vantage except at midnight
+      # Skip Alpha Vantage except at midnight
       SKIP_ALPHA_VANTAGE: ${{ github.event.schedule != '0 0 * * *' }}
 
     steps:
@@ -678,8 +678,13 @@ jobs:
           echo "   Savings: 44 calls/day"
           echo ""
           
-          [ "${{ steps.data.outputs.send_report }}" = "true" ] && echo "📧 Email Report: SENT" || echo "📧 Email Report: Next at run $(( (${{ steps.data.outputs.run_number }} / 10 + 1) * 10 ))"
+          if [ "${{ steps.data.outputs.send_report }}" = "true" ]; then
+            echo "📧 Email Report: SENT"
+          else
+            NEXT_REPORT=$(( (${{ steps.data.outputs.run_number }} / 10 + 1) * 10 ))
+            echo "📧 Email Report: Next at run ${NEXT_REPORT}"
+          fi
+          
           echo ""
           echo "✅ Pipeline execution complete"
           echo "=========================================="
-              RL_TRADES=$(echo "$METRICS

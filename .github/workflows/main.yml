@@ -7,16 +7,52 @@ on:
     branches: [main]
   schedule:
     # Main pipeline - Frequent runs with SKIP_ALPHA_VANTAGE
-    - cron: '0 */2 * * 1-5'    # Weekdays: Every 2 hours
+    - cron: '0 */2 * * 1-5'    # Weekdays: Every 2 hours (EXCLUDING midnight)
     - cron: '*/30 * * * 0,6'   # Weekends: Every 30 minutes
     
-    # Alpha Vantage ONLY - Once daily at midnight UTC
+    # Alpha Vantage ONLY - Once daily at midnight UTC (separate job)
     - cron: '0 0 * * *'         # Daily midnight: Full run including Alpha Vantage
 
 jobs:
+  # Check if another run is in progress
+  check-concurrent:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+      is_alpha_run: ${{ steps.check.outputs.is_alpha_run }}
+    steps:
+      - name: Check for concurrent runs
+        id: check
+        run: |
+          HOUR=$(date +%H)
+          IS_ALPHA="false"
+          
+          # Detect if this is midnight Alpha Vantage run
+          if [ "${{ github.event.schedule }}" = "0 0 * * *" ]; then
+            IS_ALPHA="true"
+            echo "is_alpha_run=true" >> $GITHUB_OUTPUT
+            echo "🌙 This is the MIDNIGHT Alpha Vantage run"
+          else
+            echo "is_alpha_run=false" >> $GITHUB_OUTPUT
+            
+            # If it's midnight hour but NOT the Alpha run, skip
+            if [ "$HOUR" = "00" ]; then
+              echo "⏭️ Skipping regular run at midnight to avoid conflict"
+              echo "should_run=false" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+          fi
+          
+          echo "should_run=true" >> $GITHUB_OUTPUT
+
   run-forex-brain:
+    needs: check-concurrent
+    if: needs.check-concurrent.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 55
+    concurrency:
+      group: forex-brain-pipeline
+      cancel-in-progress: false
 
     env:
       FOREX_PAT: ${{ secrets.FOREX_PAT }}
@@ -31,7 +67,7 @@ jobs:
       GITHUB_ACTIONS: "true"
       SINGLE_RUN_MODE: "true"
       # Skip Alpha Vantage except at midnight
-      SKIP_ALPHA_VANTAGE: ${{ github.event.schedule != '0 0 * * *' }}
+      SKIP_ALPHA_VANTAGE: ${{ needs.check-concurrent.outputs.is_alpha_run != 'true' }}
 
     steps:
       - name: Checkout
@@ -58,12 +94,12 @@ jobs:
           echo "hour=$HOUR" >> $GITHUB_OUTPUT
           
           # Detect if this is the midnight Alpha Vantage run
-          if [ "${{ github.event.schedule }}" = "0 0 * * *" ]; then
+          if [ "${{ needs.check-concurrent.outputs.is_alpha_run }}" = "true" ]; then
             echo "is_alpha_run=true" >> $GITHUB_OUTPUT
             echo "🌙 MIDNIGHT RUN - Alpha Vantage Data Fetch"
           else
             echo "is_alpha_run=false" >> $GITHUB_OUTPUT
-            echo "⏭️  REGULAR RUN - Alpha Vantage Skipped"
+            echo "⏭️ REGULAR RUN - Alpha Vantage Skipped"
           fi
           
           if [ $DAY -eq 6 ] || [ $DAY -eq 7 ]; then
@@ -464,6 +500,17 @@ jobs:
           EOFPYTHON
           python extract_metrics.py
 
+      - name: Pull Latest Changes Before Commit
+        if: success()
+        run: |
+          echo "🔄 Pulling latest changes from remote..."
+          git fetch origin main
+          git pull --rebase origin main || {
+            echo "⚠️ Rebase conflict detected, attempting to resolve..."
+            git rebase --abort
+            git pull --strategy-option=theirs origin main
+          }
+
       - name: Commit All Changes
         if: success()
         run: |
@@ -512,14 +559,26 @@ jobs:
             
             git commit -m "${MSG}" || true
             
-            # Push with retry
-            for i in {1..3}; do
-              git push origin main && break || { 
-                [ $i -lt 3 ] && sleep 5 && git pull --rebase origin main || exit 1
-              }
+            # Push with retry and pull-rebase strategy
+            for i in {1..5}; do
+              if git push origin main; then
+                echo "✅ Successfully pushed changes"
+                break
+              else
+                if [ $i -lt 5 ]; then
+                  echo "⚠️ Push failed, attempt $i/5. Pulling and retrying..."
+                  sleep $((i * 3))
+                  git pull --rebase origin main || {
+                    echo "⚠️ Rebase failed, using merge strategy..."
+                    git rebase --abort
+                    git pull --no-rebase --strategy-option=ours origin main
+                  }
+                else
+                  echo "❌ Failed to push after 5 attempts"
+                  exit 1
+                fi
+              fi
             done
-            
-            echo "✅ Changes committed and pushed"
           fi
 
       - name: Upload Artifacts

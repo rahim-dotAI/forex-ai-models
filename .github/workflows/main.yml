@@ -174,8 +174,13 @@ jobs:
 
       - name: Create Enhanced Notebook Executor
         run: |
-          cat > run_full.py << 'EOFPYTHON'
-          import nbformat, sys, time, json, os, re
+          cat > run_full.py << 'EOF'
+          import nbformat
+          import sys
+          import time
+          import json
+          import os
+          import re
           from nbconvert.preprocessors import ExecutePreprocessor
           from datetime import datetime
           
@@ -288,7 +293,7 @@ jobs:
           
           print("✅ Full notebook execution completed")
           print("📝 Report saved to .github/run_history/latest_run.json")
-          EOFPYTHON
+          EOF
 
       - name: Run Full Notebook Pipeline
         run: |
@@ -339,8 +344,10 @@ jobs:
       - name: Extract Pipeline Metrics
         if: always()
         run: |
-          cat > extract_metrics.py << 'EOFPYTHON'
-          import sqlite3, json, os
+          cat > extract_metrics.py << 'EOF'
+          import sqlite3
+          import json
+          import os
           from pathlib import Path
           
           metrics = {'status': 'no_data'}
@@ -399,7 +406,7 @@ jobs:
           print("✅ Metrics extracted:")
           for key, value in metrics.items():
               print(f"  {key}: {value}")
-          EOFPYTHON
+          EOF
           python extract_metrics.py
 
       - name: Prepare Git for Commit

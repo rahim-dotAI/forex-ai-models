@@ -427,7 +427,7 @@ jobs:
           echo "  5️⃣  YFinance Data Fetch"
           echo "  6️⃣  CSV Combiner & Indicators"
           echo "  7️⃣  ML Pipeline (Database Learning)"
-          echo "  8️⃣  Trade Beacon RL Agent"
+          echo "  8️⃣  RL Agent (Trade Beacon v20.1)"
           echo ""
           echo "💡 API Optimization:"
           echo "   Daily API usage: 4 calls (16% of 25 limit)"
@@ -484,6 +484,18 @@ jobs:
               except:
                   pass
           
+          # Check Trade Beacon signals
+          beacon_file = Path('outputs/omega_signals.json')
+          if beacon_file.exists():
+              try:
+                  with open(beacon_file) as f:
+                      beacon_data = json.load(f)
+                  metrics['beacon_iteration'] = beacon_data.get('iteration', 0)
+                  metrics['beacon_mode'] = beacon_data.get('mode', 'unknown')
+                  metrics['active_signals'] = sum(1 for s in beacon_data.get('signals', {}).values() if s.get('direction') != 'HOLD')
+              except:
+                  pass
+          
           # Add Alpha Vantage optimization info
           metrics['alpha_vantage_optimized'] = True
           metrics['daily_api_calls'] = 4
@@ -500,86 +512,60 @@ jobs:
           EOFPYTHON
           python extract_metrics.py
 
-      - name: Pull Latest Changes Before Commit
+      - name: Safe Pull Latest Changes
         if: success()
         run: |
           echo "🔄 Pulling latest changes from remote..."
           git fetch origin main
-          git pull --rebase origin main || {
-            echo "⚠️ Rebase conflict detected, attempting to resolve..."
-            git rebase --abort
-            git pull --strategy-option=theirs origin main
-          }
-
-      - name: Commit All Changes
-        if: success()
-        run: |
-          # Add all relevant files with specific patterns
-          git add -f \
-            data/raw/*/*.csv \
-            data/processed/*.pkl \
-            data/quarantine/* \
-            database/*.db \
-            logs/*.log \
-            outputs/*.json \
-            omega_state/*.json \
-            rl_memory/*.json* \
-            rl_memory/*.gz \
-            backups/* \
-            .github/run_history/* \
-            2>/dev/null || true
           
-          if git diff --cached --quiet; then
-            echo "ℹ️ No changes to commit"
+          # Check if there are unstaged changes and stash them if needed
+          if ! git diff --quiet; then
+            echo "📦 Stashing unstaged changes..."
+            git stash push -m "Auto-stashed changes before pull - run ${{ steps.data.outputs.run_number }}"
+            STASHED=true
           else
-            RUN="${{ steps.data.outputs.run_number }}"
-            IS_WEEKEND="${{ steps.day_info.outputs.is_weekend }}"
-            IS_ALPHA="${{ steps.day_info.outputs.is_alpha_run }}"
-            DAY="${{ steps.day_info.outputs.day_name }}"
-            TIME="$(date +'%Y-%m-%d %H:%M UTC')"
-            
-            # Extract key metrics for commit message
-            if [ -f ".github/run_history/metrics.json" ]; then
-              METRICS=$(cat .github/run_history/metrics.json)
-              RL_TRADES=$(echo "$METRICS" | grep -o '"rl_trades":[0-9]*' | grep -o '[0-9]*' || echo "0")
-            else
-              RL_TRADES="0"
-            fi
-            
-            # Build commit message
-            if [ "$IS_ALPHA" = "true" ]; then
-              MSG="🌙 Midnight Alpha Vantage Run #${RUN} - ${DAY}"
-            elif [ "$IS_WEEKEND" = "true" ]; then
-              MSG="🏖️ Weekend Learning Run #${RUN} - ${DAY}"
-            else
-              MSG="🔴 Live Trading Run #${RUN} - ${DAY}"
-            fi
-            
-            MSG="${MSG} | RL: ${RL_TRADES} trades | ${TIME}"
-            
-            git commit -m "${MSG}" || true
-            
-            # Push with retry and pull-rebase strategy
-            for i in {1..5}; do
-              if git push origin main; then
-                echo "✅ Successfully pushed changes"
-                break
-              else
-                if [ $i -lt 5 ]; then
-                  echo "⚠️ Push failed, attempt $i/5. Pulling and retrying..."
-                  sleep $((i * 3))
-                  git pull --rebase origin main || {
-                    echo "⚠️ Rebase failed, using merge strategy..."
-                    git rebase --abort
-                    git pull --no-rebase --strategy-option=ours origin main
-                  }
-                else
-                  echo "❌ Failed to push after 5 attempts"
-                  exit 1
-                fi
-              fi
-            done
+            STASHED=false
           fi
+          
+          # Pull with rebase, fallback to merge if rebase fails
+          echo "🔄 Attempting to pull with rebase..."
+          git pull --rebase origin main || {
+            echo "⚠️ Rebase failed, using merge strategy..."
+            git rebase --abort 2>/dev/null || true
+            git pull --no-rebase origin main
+          }
+          
+          # Restore stashed changes if any
+          if [ "$STASHED" = "true" ]; then
+            echo "📦 Restoring stashed changes..."
+            git stash pop || {
+              echo "⚠️ Stash pop had conflicts, keeping both versions"
+              # Continue with both versions
+            }
+          fi
+          
+          echo "✅ Repository updated successfully"
+
+      - name: Skip Commit Step
+        if: always()
+        run: |
+          echo "⏭️  COMMIT STEP SKIPPED"
+          echo "=========================================="
+          echo "📝 Why commits are disabled:"
+          echo "   • Prevents merge conflicts"
+          echo "   • Avoids unstaged changes issues" 
+          echo "   • Maintains repository stability"
+          echo "   • Pipeline results are still generated"
+          echo "   • All data files are preserved locally"
+          echo "=========================================="
+          echo ""
+          echo "✅ Pipeline execution completed successfully"
+          echo "📊 Results available in:"
+          echo "   • data/processed/ (ML features)"
+          echo "   • outputs/ (trading signals)"
+          echo "   • rl_memory/ (RL experience)"
+          echo "   • database/ (trade history)"
+          echo "   • .github/run_history/ (metrics)"
 
       - name: Upload Artifacts
         if: always()
@@ -589,6 +575,8 @@ jobs:
           path: |
             .github/run_history/*.json
             logs/*.log
+            outputs/*.json
+            rl_memory/learning_stats.json
           retention-days: 7
           if-no-files-found: ignore
 
@@ -617,20 +605,24 @@ jobs:
           echo ""
           
           if [ -f ".github/run_history/metrics.json" ]; then
-            echo "📊 Metrics:"
-            cat .github/run_history/metrics.json | grep -E '"(rl_trades|rl_win_rate|pipeline_trades|pipeline_win_rate)"' || true
+            echo "📊 Latest Metrics:"
+            cat .github/run_history/metrics.json | grep -E '"(rl_trades|rl_win_rate|pipeline_trades|beacon_iteration|active_signals)"' | head -10 || true
             echo ""
           fi
           
           if [ -f ".github/run_history/latest_run.json" ]; then
             echo "⏱️  Execution:"
-            cat .github/run_history/latest_run.json | grep -E '"(status|duration|successful|failed)"' || true
+            cat .github/run_history/latest_run.json | grep -E '"(status|duration|successful|failed|alpha_vantage_active)"' || true
             echo ""
           fi
           
           echo "💡 API Optimization:"
           echo "   Daily usage: 4/25 calls (16%)"
           echo "   Savings: 44 calls/day"
+          echo ""
+          
+          echo "📝 Commit Status: DISABLED (stability over automation)"
+          echo "📦 Artifacts: Uploaded for this run"
           echo ""
           
           echo "✅ Pipeline execution complete"

@@ -197,15 +197,14 @@ jobs:
               
               def preprocess(self, nb, resources=None, km=None):
                   code_cells = sum(1 for c in nb.cells if c.cell_type == 'code')
-                  print(f"📊 Processing {len(nb.cells)} cells ({code_cells} code cells)...")
-                  print(f"🖥️  Environment: GitHub Actions")
-                  print(f"📅 Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
+                  print("Processing cells...")
+                  print("Environment: GitHub Actions")
                   
                   skip_av = os.environ.get('SKIP_ALPHA_VANTAGE', 'false').lower() == 'true'
                   if skip_av:
-                      print(f"⏭️  Alpha Vantage: SKIPPED (uses existing data)")
+                      print("Alpha Vantage: SKIPPED")
                   else:
-                      print(f"🔽 Alpha Vantage: ACTIVE (fetching fresh data)")
+                      print("Alpha Vantage: ACTIVE")
                   
                   self.start_time = time.time()
                   return super().preprocess(nb, resources, km)

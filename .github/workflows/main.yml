@@ -583,17 +583,10 @@ jobs:
               DB_SIZE_MB="0"
             fi
             
-            # Build comprehensive commit message
-            if [ "$IS_ALPHA" = "true" ]; then
-              PREFIX="🌙 MIDNIGHT"
-            elif [ "$IS_WEEKEND" = "true" ]; then
-              PREFIX="🏖️ WEEKEND"
-            else
-              PREFIX="🔴 LIVE"
-            fi
-            
-            COMMIT_MSG="$PREFIX Run #${RUN} - ${DAY}
-            
+            # Build comprehensive commit message - FIXED MULTI-LINE SYNTAX
+            COMMIT_MSG=$(cat << EOF
+🌙 MIDNIGHT Run #${RUN} - ${DAY}
+
 📊 RL Agent: ${RL_TRADES} trades, ${RL_WINRATE}% WR
 💾 Database: ${DB_SIZE_MB}MB
 🔄 Alpha Vantage: ${IS_ALPHA}
@@ -607,15 +600,17 @@ jobs:
    • RL experience replay and weights
    • Trade history database
    • Trading signals and outputs
-   • Execution logs and metrics"
-
+   • Execution logs and metrics
+EOF
+)
+            
             echo "📝 Commit message:"
             echo "$COMMIT_MSG"
             echo ""
             
             git commit -m "$COMMIT_MSG" || {
               echo "⚠️ Commit failed, trying with simpler message..."
-              git commit -m "$PREFIX Run #${RUN} - ${DAY} | RL: ${RL_TRADES} trades" || true
+              git commit -m "🌙 MIDNIGHT Run #${RUN} - ${DAY} | RL: ${RL_TRADES} trades" || true
             }
             
             # Push with robust retry logic

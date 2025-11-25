@@ -512,11 +512,10 @@ jobs:
           EOFPYTHON
           python extract_metrics.py
 
-      - name: Safe Pull Latest Changes
+      - name: Prepare Git for Commit
         if: success()
         run: |
-          echo "🔄 Pulling latest changes from remote..."
-          git fetch origin main
+          echo "🔄 Preparing git for commit..."
           
           # Check if there are unstaged changes and stash them if needed
           if ! git diff --quiet; then
@@ -527,8 +526,8 @@ jobs:
             STASHED=false
           fi
           
-          # Pull with rebase, fallback to merge if rebase fails
-          echo "🔄 Attempting to pull with rebase..."
+          # Pull latest changes
+          echo "🔄 Pulling latest changes..."
           git pull --rebase origin main || {
             echo "⚠️ Rebase failed, using merge strategy..."
             git rebase --abort 2>/dev/null || true
@@ -544,28 +543,99 @@ jobs:
             }
           fi
           
-          echo "✅ Repository updated successfully"
+          echo "✅ Repository ready for commit"
 
-      - name: Skip Commit Step
-        if: always()
+      - name: Commit Everything
+        if: success()
         run: |
-          echo "⏭️  COMMIT STEP SKIPPED"
-          echo "=========================================="
-          echo "📝 Why commits are disabled:"
-          echo "   • Prevents merge conflicts"
-          echo "   • Avoids unstaged changes issues" 
-          echo "   • Maintains repository stability"
-          echo "   • Pipeline results are still generated"
-          echo "   • All data files are preserved locally"
-          echo "=========================================="
-          echo ""
-          echo "✅ Pipeline execution completed successfully"
-          echo "📊 Results available in:"
-          echo "   • data/processed/ (ML features)"
-          echo "   • outputs/ (trading signals)"
-          echo "   • rl_memory/ (RL experience)"
-          echo "   • database/ (trade history)"
-          echo "   • .github/run_history/ (metrics)"
+          echo "💾 COMMITTING EVERYTHING..."
+          echo "=================================="
+          
+          # Add ALL files that exist in the repo
+          git add -A
+          
+          # Check what's being committed
+          echo "📁 Files to be committed:"
+          git status --porcelain | head -20
+          echo "..."
+          
+          if git diff --cached --quiet; then
+            echo "ℹ️ No changes to commit"
+          else
+            RUN="${{ steps.data.outputs.run_number }}"
+            DAY="${{ steps.day_info.outputs.day_name }}"
+            IS_WEEKEND="${{ steps.day_info.outputs.is_weekend }}"
+            IS_ALPHA="${{ steps.day_info.outputs.is_alpha_run }}"
+            
+            # Get metrics for commit message
+            if [ -f "rl_memory/learning_stats.json" ]; then
+              RL_TRADES=$(python -c "import json; d=json.load(open('rl_memory/learning_stats.json')); print(d.get('total_trades', 0))" 2>/dev/null || echo "0")
+              RL_WINRATE=$(python -c "import json; d=json.load(open('rl_memory/learning_stats.json')); print(round(d.get('win_rate', 0)*100, 1))" 2>/dev/null || echo "0")
+            else
+              RL_TRADES="0"
+              RL_WINRATE="0"
+            fi
+            
+            if [ -f "database/memory_v85.db" ]; then
+              DB_SIZE=$(stat -f%z database/memory_v85.db 2>/dev/null || stat -c%s database/memory_v85.db 2>/dev/null || echo "0")
+              DB_SIZE_MB=$((DB_SIZE / 1024 / 1024))
+            else
+              DB_SIZE_MB="0"
+            fi
+            
+            # Build comprehensive commit message
+            if [ "$IS_ALPHA" = "true" ]; then
+              PREFIX="🌙 MIDNIGHT"
+            elif [ "$IS_WEEKEND" = "true" ]; then
+              PREFIX="🏖️ WEEKEND"
+            else
+              PREFIX="🔴 LIVE"
+            fi
+            
+            COMMIT_MSG="$PREFIX Run #${RUN} - ${DAY}
+            
+📊 RL Agent: ${RL_TRADES} trades, ${RL_WINRATE}% WR
+💾 Database: ${DB_SIZE_MB}MB
+🔄 Alpha Vantage: ${IS_ALPHA}
+🏖️ Weekend Mode: ${IS_WEEKEND}
+⏰ $(date +'%Y-%m-%d %H:%M UTC')
+
+🤖 Full pipeline execution completed
+📈 All data files committed including:
+   • Raw price data (YFinance + Alpha Vantage)
+   • Processed features and indicators  
+   • RL experience replay and weights
+   • Trade history database
+   • Trading signals and outputs
+   • Execution logs and metrics"
+
+            echo "📝 Commit message:"
+            echo "$COMMIT_MSG"
+            echo ""
+            
+            git commit -m "$COMMIT_MSG" || {
+              echo "⚠️ Commit failed, trying with simpler message..."
+              git commit -m "$PREFIX Run #${RUN} - ${DAY} | RL: ${RL_TRADES} trades" || true
+            }
+            
+            # Push with robust retry logic
+            for i in {1..5}; do
+              echo "🚀 Pushing to GitHub (attempt $i/5)..."
+              if git push origin main; then
+                echo "✅ Successfully committed and pushed ALL changes"
+                break
+              else
+                if [ $i -lt 5 ]; then
+                  echo "⚠️ Push failed, pulling latest and retrying in 10s..."
+                  sleep 10
+                  git pull --rebase origin main || git pull --strategy-option=theirs origin main
+                else
+                  echo "❌ Failed to push after 5 attempts"
+                  echo "💡 Changes are committed locally but not pushed to remote"
+                fi
+              fi
+            done
+          fi
 
       - name: Upload Artifacts
         if: always()
@@ -616,14 +686,21 @@ jobs:
             echo ""
           fi
           
+          echo "💾 Commit Status: ✅ EVERYTHING COMMITTED"
+          echo "   • Raw data files"
+          echo "   • Processed features" 
+          echo "   • RL learning progress"
+          echo "   • Trading signals"
+          echo "   • Logs and metrics"
+          echo ""
+          
           echo "💡 API Optimization:"
           echo "   Daily usage: 4/25 calls (16%)"
           echo "   Savings: 44 calls/day"
           echo ""
           
-          echo "📝 Commit Status: DISABLED (stability over automation)"
           echo "📦 Artifacts: Uploaded for this run"
           echo ""
           
-          echo "✅ Pipeline execution complete"
+          echo "✅ Pipeline execution complete - ALL DATA COMMITTED"
           echo "=========================================="

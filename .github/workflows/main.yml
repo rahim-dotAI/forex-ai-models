@@ -174,13 +174,8 @@ jobs:
 
       - name: Create Enhanced Notebook Executor
         run: |
-          cat > run_full.py << 'EOF'
-          import nbformat
-          import sys
-          import time
-          import json
-          import os
-          import re
+          cat > run_full.py <<EOF
+          import nbformat, sys, time, json, os, re
           from nbconvert.preprocessors import ExecutePreprocessor
           from datetime import datetime
           
@@ -196,16 +191,8 @@ jobs:
                   self.current_stage = "Unknown"
               
               def preprocess(self, nb, resources=None, km=None):
-                  code_cells = sum(1 for c in nb.cells if c.cell_type == 'code')
+                  code_cells = sum(1 for c in nb.cells if c.cell_type == "code")
                   print("Processing cells...")
-                  print("Environment: GitHub Actions")
-                  
-                  skip_av = os.environ.get('SKIP_ALPHA_VANTAGE', 'false').lower() == 'true'
-                  if skip_av:
-                      print("Alpha Vantage: SKIPPED")
-                  else:
-                      print("Alpha Vantage: ACTIVE")
-                  
                   self.start_time = time.time()
                   return super().preprocess(nb, resources, km)
               
@@ -290,8 +277,8 @@ jobs:
           with open('.github/run_history/latest_run.json', 'w') as f: 
               json.dump(report, f, indent=2)
           
-          print("✅ Full notebook execution completed")
-          print("📝 Report saved to .github/run_history/latest_run.json")
+          print("Full notebook execution completed")
+          print("Report saved to .github/run_history/latest_run.json")
           EOF
 
       - name: Run Full Notebook Pipeline
@@ -343,10 +330,8 @@ jobs:
       - name: Extract Pipeline Metrics
         if: always()
         run: |
-          cat > extract_metrics.py << 'EOF'
-          import sqlite3
-          import json
-          import os
+          cat > extract_metrics.py <<EOF
+          import sqlite3, json, os
           from pathlib import Path
           
           metrics = {'status': 'no_data'}
@@ -402,7 +387,7 @@ jobs:
           with open('.github/run_history/metrics.json', 'w') as f:
               json.dump(metrics, f, indent=2)
           
-          print("✅ Metrics extracted:")
+          print("Metrics extracted:")
           for key, value in metrics.items():
               print(f"  {key}: {value}")
           EOF

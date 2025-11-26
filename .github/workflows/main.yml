@@ -559,30 +559,14 @@ jobs:
               DB_SIZE_MB="0"
             fi
             
-            COMMIT_MSG="🌙 MIDNIGHT Run #${RUN} - ${DAY}
-
-📊 RL Agent: ${RL_TRADES} trades, ${RL_WINRATE}% WR
-💾 Database: ${DB_SIZE_MB}MB
-🔄 Alpha Vantage: ${IS_ALPHA}
-🏖️ Weekend Mode: ${IS_WEEKEND}
-⏰ $(date +'%Y-%m-%d %H:%M UTC')
-
-🤖 Full pipeline execution completed
-📈 All data files committed including:
-   • Raw price data (YFinance + Alpha Vantage)
-   • Processed features and indicators  
-   • RL experience replay and weights
-   • Trade history database
-   • Trading signals and outputs
-   • Execution logs and metrics"
-            
-            echo "📝 Commit message:"
-            echo "$COMMIT_MSG"
-            echo ""
-            
-            git commit -m "$COMMIT_MSG" || {
+            git commit -m "Run #${RUN} - ${DAY}" \
+                       -m "RL Agent: ${RL_TRADES} trades, ${RL_WINRATE}% WR" \
+                       -m "Database: ${DB_SIZE_MB}MB" \
+                       -m "Alpha Vantage: ${IS_ALPHA}" \
+                       -m "Weekend Mode: ${IS_WEEKEND}" \
+                       -m "Time: $(date +'%Y-%m-%d %H:%M UTC')" || {
               echo "⚠️ Commit failed, trying with simpler message..."
-              git commit -m "🌙 MIDNIGHT Run #${RUN} - ${DAY} | RL: ${RL_TRADES} trades" || true
+              git commit -m "Run #${RUN} - ${DAY}" || true
             }
             
             for i in {1..5}; do

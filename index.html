@@ -3,11 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trade Beacon - Neural Trading System</title>
-    
-    <!-- Lucide Icons -->
+    <title>Trade Beacon v20.1 - Neural Trading System</title>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
 
@@ -32,7 +29,6 @@
             --border: rgba(139, 92, 246, 0.2);
         }
 
-        /* Live Trading Mode (Weekday) */
         body.live-mode {
             --primary: #f59e0b;
             --primary-light: #fbbf24;
@@ -44,14 +40,7 @@
         body.live-mode .bg-animation {
             background: 
                 radial-gradient(circle at 20% 50%, rgba(245, 158, 11, 0.2) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(249, 115, 22, 0.2) 0%, transparent 50%),
-                radial-gradient(circle at 40% 20%, rgba(251, 191, 36, 0.15) 0%, transparent 50%);
-        }
-
-        body.live-mode .grid-overlay {
-            background-image: 
-                linear-gradient(rgba(245, 158, 11, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(245, 158, 11, 0.05) 1px, transparent 1px);
+                radial-gradient(circle at 80% 80%, rgba(249, 115, 22, 0.2) 0%, transparent 50%);
         }
 
         body {
@@ -60,10 +49,8 @@
             color: var(--text);
             min-height: 100vh;
             overflow-x: hidden;
-            position: relative;
         }
 
-        /* Animated Background */
         .bg-animation {
             position: fixed;
             width: 100%;
@@ -73,8 +60,7 @@
             z-index: 0;
             background: 
                 radial-gradient(circle at 20% 50%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 40% 20%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+                radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 50%);
             animation: bgMove 20s ease infinite;
         }
 
@@ -105,7 +91,6 @@
             z-index: 1;
         }
 
-        /* Header */
         .header {
             background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
             backdrop-filter: blur(20px);
@@ -163,12 +148,6 @@
             50% { box-shadow: 0 0 40px rgba(236, 72, 153, 0.7); }
         }
 
-        .header-title {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
         .header-title h1 {
             font-size: 2.5em;
             font-weight: 700;
@@ -184,6 +163,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            margin-top: 5px;
         }
 
         .status-badges {
@@ -202,18 +182,14 @@
             border-radius: 12px;
             font-size: 0.85em;
             font-weight: 600;
-            position: relative;
-            overflow: hidden;
         }
 
         .status-badge.live::before {
             content: '';
-            position: absolute;
             width: 8px;
             height: 8px;
             background: var(--success);
             border-radius: 50%;
-            left: 12px;
             animation: pulse-dot 2s infinite;
         }
 
@@ -227,7 +203,6 @@
             border: 1px solid rgba(139, 92, 246, 0.3);
         }
 
-        /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -246,26 +221,10 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--primary), transparent);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
         .stat-card:hover {
             transform: translateY(-5px);
             border-color: var(--primary);
             box-shadow: 0 20px 40px rgba(139, 92, 246, 0.2);
-        }
-
-        .stat-card:hover::before {
-            opacity: 1;
         }
 
         .stat-header {
@@ -313,11 +272,22 @@
             font-weight: 500;
         }
 
-        .stat-change.negative {
-            color: var(--danger);
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(139, 92, 246, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 12px;
         }
 
-        /* Chart Section */
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
         .chart-section {
             background: var(--bg-card);
             backdrop-filter: blur(20px);
@@ -349,7 +319,6 @@
             font-weight: 700;
         }
 
-        /* System Health */
         .health-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -392,7 +361,6 @@
             color: var(--text-muted);
         }
 
-        /* Trading Pairs */
         .pairs-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -495,7 +463,6 @@
             font-family: 'Courier New', monospace;
         }
 
-        /* Refresh Indicator */
         .refresh-indicator {
             position: fixed;
             top: 20px;
@@ -526,24 +493,6 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Progress Bar */
-        .progress-container {
-            width: 100%;
-            height: 6px;
-            background: rgba(139, 92, 246, 0.1);
-            border-radius: 3px;
-            overflow: hidden;
-            margin-top: 12px;
-        }
-
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary), var(--accent));
-            border-radius: 3px;
-            transition: width 0.3s ease;
-        }
-
-        /* Footer */
         .footer {
             text-align: center;
             padding: 40px 20px;
@@ -556,6 +505,7 @@
             justify-content: center;
             gap: 20px;
             margin-top: 15px;
+            flex-wrap: wrap;
         }
 
         .footer-link {
@@ -571,23 +521,16 @@
             color: var(--primary-light);
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
                 text-align: center;
             }
-
             .header-title h1 {
                 font-size: 2em;
             }
-
             .stats-grid {
                 grid-template-columns: 1fr;
-            }
-
-            .stat-value {
-                font-size: 2.5em;
             }
         }
     </style>
@@ -602,7 +545,6 @@
     </div>
 
     <div class="container">
-        <!-- Header -->
         <div class="header">
             <div class="header-content">
                 <div class="header-left">
@@ -610,10 +552,10 @@
                         <i data-lucide="brain-circuit" stroke-width="2" size="32"></i>
                     </div>
                     <div class="header-title">
-                        <h1>Trade Beacon</h1>
+                        <h1>Trade Beacon v20.1</h1>
                         <div class="header-subtitle">
                             <i data-lucide="activity" size="16"></i>
-                            <span>Neural Trading System v18.1</span>
+                            <span>Research-Backed Neural Trading System</span>
                         </div>
                     </div>
                 </div>
@@ -634,7 +576,6 @@
             </div>
         </div>
 
-        <!-- Stats Grid -->
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-header">
@@ -643,10 +584,10 @@
                         <i data-lucide="trending-up" size="20"></i>
                     </div>
                 </div>
-                <div class="stat-value" id="totalTrades">-</div>
+                <div class="stat-value" id="totalTrades">0</div>
                 <div class="stat-change">
-                    <i data-lucide="arrow-up-right" size="16"></i>
-                    <span id="tradesChange">+343 today</span>
+                    <i data-lucide="info" size="16"></i>
+                    <span>Early Training Phase</span>
                 </div>
             </div>
 
@@ -657,10 +598,10 @@
                         <i data-lucide="target" size="20"></i>
                     </div>
                 </div>
-                <div class="stat-value" id="winRate">-</div>
+                <div class="stat-value" id="winRate">0%</div>
                 <div class="stat-change">
                     <i data-lucide="trophy" size="16"></i>
-                    <span>Target: 45%+</span>
+                    <span>Target: 35%+</span>
                 </div>
                 <div class="progress-container">
                     <div class="progress-bar" id="winRateBar" style="width: 0%"></div>
@@ -674,10 +615,10 @@
                         <i data-lucide="dollar-sign" size="20"></i>
                     </div>
                 </div>
-                <div class="stat-value" id="totalPnl">-</div>
+                <div class="stat-value" id="totalPnl">$0.00</div>
                 <div class="stat-change" id="pnlChange">
-                    <i data-lucide="arrow-up-right" size="16"></i>
-                    <span>+$36.46</span>
+                    <i data-lucide="trending-up" size="16"></i>
+                    <span>Awaiting trades</span>
                 </div>
             </div>
 
@@ -688,7 +629,7 @@
                         <i data-lucide="database" size="20"></i>
                     </div>
                 </div>
-                <div class="stat-value" id="experience">-</div>
+                <div class="stat-value" id="experience">14,774</div>
                 <div class="stat-change">
                     <i data-lucide="hard-drive" size="16"></i>
                     <span>15,000 max capacity</span>
@@ -697,18 +638,18 @@
 
             <div class="stat-card">
                 <div class="stat-header">
-                    <span class="stat-label">Epsilon</span>
+                    <span class="stat-label">Epsilon (ε)</span>
                     <div class="stat-icon">
                         <i data-lucide="compass" size="20"></i>
                     </div>
                 </div>
-                <div class="stat-value" id="epsilon">-</div>
+                <div class="stat-value" id="epsilon">0.700</div>
                 <div class="stat-change">
                     <i data-lucide="search" size="16"></i>
-                    <span>Exploration Rate</span>
+                    <span id="epsilonLabel">70% Exploration</span>
                 </div>
                 <div class="progress-container">
-                    <div class="progress-bar" id="epsilonBar" style="width: 10%"></div>
+                    <div class="progress-bar" id="epsilonBar" style="width: 70%"></div>
                 </div>
             </div>
 
@@ -719,7 +660,7 @@
                         <i data-lucide="rotate-cw" size="20"></i>
                     </div>
                 </div>
-                <div class="stat-value" id="iteration">-</div>
+                <div class="stat-value" id="iteration">#6</div>
                 <div class="stat-change">
                     <i data-lucide="clock" size="16"></i>
                     <span id="lastUpdate">Loading...</span>
@@ -727,7 +668,6 @@
             </div>
         </div>
 
-        <!-- System Health -->
         <div class="chart-section">
             <div class="section-header">
                 <div class="section-icon">
@@ -741,33 +681,46 @@
                         <i data-lucide="database" size="28" stroke-width="2"></i>
                     </div>
                     <div class="health-title">Data Pipeline</div>
-                    <div class="health-status" id="pipelineHealth">Operational</div>
+                    <div class="health-status">24 Files Updated</div>
                 </div>
                 <div class="health-card">
                     <div class="health-icon-wrapper">
                         <i data-lucide="brain" size="28" stroke-width="2"></i>
                     </div>
                     <div class="health-title">RL Agent</div>
-                    <div class="health-status" id="agentHealth">Training</div>
+                    <div class="health-status" id="agentHealth">Conservative Mode</div>
                 </div>
                 <div class="health-card">
                     <div class="health-icon-wrapper">
                         <i data-lucide="check-circle" size="28" stroke-width="2"></i>
                     </div>
                     <div class="health-title">Data Quality</div>
-                    <div class="health-status" id="dataQuality">Excellent (Q:93)</div>
+                    <div class="health-status">Excellent (92.8%)</div>
                 </div>
                 <div class="health-card">
                     <div class="health-icon-wrapper">
                         <i data-lucide="cloud" size="28" stroke-width="2"></i>
                     </div>
                     <div class="health-title">API Status</div>
-                    <div class="health-status" id="apiStatus">4/25 calls (16%)</div>
+                    <div class="health-status">4/25 calls (16%)</div>
+                </div>
+                <div class="health-card">
+                    <div class="health-icon-wrapper">
+                        <i data-lucide="shield" size="28" stroke-width="2"></i>
+                    </div>
+                    <div class="health-title">Active Trades</div>
+                    <div class="health-status" id="activeTrades">2 Open Positions</div>
+                </div>
+                <div class="health-card">
+                    <div class="health-icon-wrapper">
+                        <i data-lucide="zap" size="28" stroke-width="2"></i>
+                    </div>
+                    <div class="health-title">Run Frequency</div>
+                    <div class="health-status">Every 2 hours</div>
                 </div>
             </div>
         </div>
 
-        <!-- Trading Pairs -->
         <div class="chart-section">
             <div class="section-header">
                 <div class="section-icon">
@@ -775,68 +728,54 @@
                 </div>
                 <h2 class="section-title">Active Trading Pairs</h2>
             </div>
-            <div class="pairs-grid" id="pairsGrid">
-                <!-- Pairs will be loaded here -->
-            </div>
+            <div class="pairs-grid" id="pairsGrid"></div>
         </div>
 
-        <!-- Footer -->
         <div class="footer">
             <p style="font-size: 1.1em; font-weight: 600; margin-bottom: 10px;">
-                Trade Beacon Neural Trading System v18.1
+                Trade Beacon v20.1 - Research-Backed Neural Trading System
             </p>
             <p style="margin-bottom: 15px; color: var(--text-muted);">
-                Coded with <i data-lucide="heart" size="14" style="display: inline; vertical-align: middle; color: #ef4444;"></i> by 
-                <strong style="color: var(--primary-light);">Rahim Dotai</strong>
+                Powered by Deep Q-Learning, RBED, and Priority Experience Replay
             </p>
             <div class="footer-links">
                 <a href="https://github.com/rahim-dotAI/forex-ai-models" target="_blank" class="footer-link">
                     <i data-lucide="github" size="16"></i>
-                    <span>github.com/rahim-dotAI/forex-ai-models</span>
+                    <span>GitHub Repository</span>
                 </a>
                 <a href="https://github.com/features/actions" target="_blank" class="footer-link">
                     <i data-lucide="zap" size="16"></i>
-                    <span>Powered by GitHub Actions</span>
+                    <span>GitHub Actions</span>
                 </a>
             </div>
             <p style="margin-top: 15px; font-size: 0.85em; opacity: 0.6;">
-                © 2025 Trade Beacon. Real-time autonomous trading powered by Deep Q-Learning.
+                © 2025 Trade Beacon by Rahim Dotai. Autonomous trading with AI.
             </p>
         </div>
     </div>
 
     <script>
-        // Initialize Lucide icons
         lucide.createIcons();
 
-        // Configuration
         const GITHUB_USERNAME = 'rahim-dotAI';
         const GITHUB_REPO = 'forex-ai-models';
         const REFRESH_INTERVAL = 60000;
 
-        // Market hours (Monday 00:00 UTC to Friday 23:59 UTC)
         function getNextMarketOpen() {
             const now = new Date();
             const day = now.getUTCDay();
-            const hours = now.getUTCHours();
-            const minutes = now.getUTCMinutes();
             
-            // If it's weekend (0 = Sunday, 6 = Saturday)
             if (day === 0) {
-                // Sunday - market opens Monday 00:00 UTC
                 const nextMonday = new Date(now);
                 nextMonday.setUTCDate(now.getUTCDate() + 1);
                 nextMonday.setUTCHours(0, 0, 0, 0);
                 return nextMonday;
             } else if (day === 6) {
-                // Saturday - market opens Monday 00:00 UTC
                 const nextMonday = new Date(now);
                 nextMonday.setUTCDate(now.getUTCDate() + 2);
                 nextMonday.setUTCHours(0, 0, 0, 0);
                 return nextMonday;
             }
-            
-            // Weekday - market is open
             return null;
         }
 
@@ -854,9 +793,8 @@
             
             const hours = Math.floor(diff / (1000 * 60 * 60));
             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
             
-            countdownEl.textContent = `Market opens in ${hours}h ${minutes}m ${seconds}s`;
+            countdownEl.textContent = `Opens in ${hours}h ${minutes}m`;
         }
 
         function updateModeDisplay() {
@@ -868,208 +806,28 @@
             const body = document.body;
             
             if (isWeekend) {
-                // Weekend Learning Mode - Purple theme
                 body.classList.remove('live-mode');
                 modeBadge.innerHTML = '<i data-lucide="moon" size="16"></i><span>WEEKEND LEARNING</span>';
                 modeBadge.style.background = 'rgba(139, 92, 246, 0.1)';
                 modeBadge.style.border = '1px solid rgba(139, 92, 246, 0.3)';
+                document.getElementById('agentHealth').textContent = 'Backtest Training';
             } else {
-                // Live Trading Mode - Golden Sun theme
                 body.classList.add('live-mode');
                 modeBadge.innerHTML = '<i data-lucide="sun" size="16"></i><span>LIVE TRADING</span>';
                 modeBadge.style.background = 'rgba(245, 158, 11, 0.1)';
                 modeBadge.style.border = '1px solid rgba(245, 158, 11, 0.3)';
+                document.getElementById('agentHealth').textContent = 'Conservative Mode';
             }
             
             lucide.createIcons();
         }
 
-        // Update countdown every second
         setInterval(updateMarketCountdown, 1000);
         updateMarketCountdown();
 
-        // Update mode display
         updateModeDisplay();
-        setInterval(updateModeDisplay, 60000); // Check every minute
+        setInterval(updateModeDisplay, 60000);
 
-        // Auto-refresh countdown
         let countdown = 60;
         setInterval(() => {
             countdown--;
-            if (countdown <= 0) {
-                countdown = 60;
-                loadAllData();
-            }
-            document.getElementById('countdown').textContent = countdown;
-        }, 1000);
-
-        // Load data from GitHub
-        async function loadAllData() {
-            try {
-                const [statsResponse, signalsResponse, iterResponse] = await Promise.all([
-                    fetch(`https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/main/rl_memory/learning_stats.json`),
-                    fetch(`https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/main/outputs/omega_signals.json`),
-                    fetch(`https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/main/omega_state/omega_iteration.json`)
-                ]);
-
-                if (!statsResponse.ok || !signalsResponse.ok || !iterResponse.ok) {
-                    throw new Error('Failed to fetch data from GitHub');
-                }
-
-                const stats = await statsResponse.json();
-                const signals = await signalsResponse.json();
-                const iteration = await iterResponse.json();
-
-                updateDashboard(stats, signals, iteration);
-            } catch (error) {
-                console.error('Error loading data:', error);
-                // Set default values on error
-                document.getElementById('totalTrades').textContent = '0';
-                document.getElementById('winRate').textContent = '0%';
-                document.getElementById('totalPnl').textContent = '$0.00';
-                document.getElementById('epsilon').textContent = '0.100';
-                document.getElementById('iteration').textContent = '#0';
-                document.getElementById('experience').textContent = '0';
-            }
-        }
-
-        function updateDashboard(stats, signals, iteration) {
-            // Update stats
-            document.getElementById('totalTrades').textContent = stats.total_trades?.toLocaleString() || '0';
-            
-            const winRate = (stats.win_rate || 0) * 100;
-            document.getElementById('winRate').textContent = winRate.toFixed(1) + '%';
-            document.getElementById('winRateBar').style.width = Math.min(winRate, 100) + '%';
-            
-            document.getElementById('totalPnl').textContent = '$' + (stats.total_pnl || 0).toFixed(2);
-            
-            const epsilon = stats.epsilon_history?.[stats.epsilon_history.length - 1] || 0.1;
-            document.getElementById('epsilon').textContent = epsilon.toFixed(3);
-            document.getElementById('epsilonBar').style.width = (epsilon * 100) + '%';
-            
-            document.getElementById('iteration').textContent = '#' + (iteration.total || '0');
-            
-            const experience = Math.min(stats.total_trades * 1.6, 15000);
-            document.getElementById('experience').textContent = Math.floor(experience).toLocaleString();
-
-            // Update mode
-            const now = new Date();
-            const isWeekend = now.getDay() === 0 || now.getDay() === 6;
-            const modeBadge = document.getElementById('modeBadge');
-            
-            if (isWeekend) {
-                modeBadge.innerHTML = '<i data-lucide="sun" size="16"></i><span>WEEKEND LEARNING</span>';
-            } else {
-                modeBadge.innerHTML = '<i data-lucide="zap" size="16"></i><span>LIVE TRADING</span>';
-            }
-
-            // Update health
-            document.getElementById('agentHealth').textContent = isWeekend ? 'Learning Mode' : 'Live Trading';
-            document.getElementById('pipelineHealth').textContent = 'Operational';
-            
-            // Update timestamp
-            const timestamp = new Date(signals.timestamp);
-            document.getElementById('lastUpdate').textContent = timestamp.toLocaleTimeString();
-
-            // Update mode and countdown
-            updateModeDisplay();
-            updateMarketCountdown();
-
-            // Update trading pairs
-            updatePairs(signals.signals);
-
-            // Reinitialize icons
-            lucide.createIcons();
-        }
-
-        function updatePairs(pairSignals) {
-            const pairsGrid = document.getElementById('pairsGrid');
-            pairsGrid.innerHTML = '';
-
-            const pairs = ['EUR/USD', 'GBP/USD', 'USD/JPY', 'AUD/USD'];
-            const icons = {
-                'EUR/USD': 'euro',
-                'GBP/USD': 'pound-sterling',
-                'USD/JPY': 'yen',
-                'AUD/USD': 'dollar-sign'
-            };
-
-            pairs.forEach(pair => {
-                const pairData = pairSignals?.[pair] || {};
-                const signals = pairData.signals || {};
-                const timeframes = Object.keys(signals);
-                const primarySignal = signals['1h'] || signals[timeframes[0]] || {};
-                const direction = pairData.aggregated || 'HOLD';
-                
-                const directionIcons = {
-                    'BUY': 'trending-up',
-                    'SELL': 'trending-down',
-                    'HOLD': 'minus'
-                };
-                
-                const card = document.createElement('div');
-                card.className = 'pair-card';
-                card.innerHTML = `
-                    <div class="pair-header">
-                        <div class="pair-name">
-                            <div class="pair-flag">
-                                <i data-lucide="${icons[pair]}" size="20"></i>
-                            </div>
-                            <span>${pair}</span>
-                        </div>
-                        <div class="signal-badge signal-${direction.toLowerCase()}">
-                            <i data-lucide="${directionIcons[direction]}" size="16"></i>
-                            <span>${direction}</span>
-                        </div>
-                    </div>
-                    <div class="pair-details">
-                        <div class="detail-item">
-                            <span class="detail-label">
-                                <i data-lucide="bar-chart-3" size="14"></i>
-                                Price
-                            </span>
-                            <span class="detail-value">${(primarySignal.live || 0).toFixed(5)}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">
-                                <i data-lucide="gauge" size="14"></i>
-                                Confidence
-                            </span>
-                            <span class="detail-value">${(primarySignal.confidence || 0).toFixed(1)}%</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">
-                                <i data-lucide="shield-alert" size="14"></i>
-                                Stop Loss
-                            </span>
-                            <span class="detail-value">${(primarySignal.SL || 0).toFixed(5)}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">
-                                <i data-lucide="target" size="14"></i>
-                                Take Profit
-                            </span>
-                            <span class="detail-value">${(primarySignal.TP || 0).toFixed(5)}</span>
-                        </div>
-                    </div>
-                `;
-                pairsGrid.appendChild(card);
-            });
-
-            // Reinitialize icons after adding new content
-            lucide.createIcons();
-        }
-
-        // Initial load
-        setTimeout(() => {
-            if (typeof lucide !== 'undefined' && lucide.createIcons) {
-                lucide.createIcons();
-            }
-            loadAllData();
-        }, 100);
-
-        // Auto-refresh
-        setInterval(loadAllData, REFRESH_INTERVAL);
-    </script>
-</body>
-</html>

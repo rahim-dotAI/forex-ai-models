@@ -1,14 +1,11 @@
-name: Multi-Source Learning System v20.2 - Simplified
+name: Multi-Source Learning System v20.2 - Pipedream Triggered
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # Manual trigger (Pipedream will use this!)
   push:
     paths: ['colab_trigger.txt']
     branches: [main]
-  schedule:
-    # Every 2 hours at EVEN hours (0,2,4,6,8,10,12,14,16,18,20,22)
-    - cron: '0 0,2,4,6,8,10,12,14,16,18,20,22 * * 1-5'  # Weekdays
-    - cron: '0 0,2,4,6,8,10,12,14,16,18,20,22 * * 0,6'  # Weekends
+  # REMOVED: schedule section (Pipedream handles timing now)
 
 jobs:
   run-learning-system:
@@ -76,8 +73,7 @@ jobs:
           
           echo ""
           echo "📅 Current: $DAY_NAME at $HOUR:00 UTC"
-          echo "⏰ Scheduled: Every 2 hours (00,02,04,06,08,10,12,14,16,18,20,22)"
-          echo "⚠️  Note: GitHub Actions may delay scheduled runs by 5-30+ minutes"
+          echo "⚡ Triggered by: Pipedream (Every 2 hours, exact timing!)"
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -124,14 +120,11 @@ jobs:
           echo $RUN_NUM > .github/run_history/run_counter.txt
           echo "run_number=$RUN_NUM" >> $GITHUB_OUTPUT
           
-          [ $((RUN_NUM % 10)) -eq 0 ] && echo "send_report=true" >> $GITHUB_OUTPUT || echo "send_report=false" >> $GITHUB_OUTPUT
-          
           echo "📊 Status:"
           echo "   Pickle files: $PICKLE_COUNT"
           echo "   RL Memory: $([ -f "rl_memory/experience_replay.json.gz" ] && echo "Yes" || echo "No")"
           echo "   Learning outcomes: $LEARNING_COUNT"
           echo "   Run number: $RUN_NUM"
-          echo "   Alpha Vantage: ${{ steps.day_info.outputs.is_alpha_run == 'true' && 'ACTIVE' || 'SKIPPED' }}"
           
           mkdir -p data/raw/yfinance data/raw/alpha_vantage data/processed data/quarantine \
                    database logs outputs omega_state rl_memory backups learning_data .github/run_history
@@ -140,10 +133,8 @@ jobs:
         run: |
           if [ ! -f "AI_Forex_Brain_2.ipynb" ]; then
             echo "❌ ERROR: AI_Forex_Brain_2.ipynb not found!"
-            ls -la *.ipynb 2>/dev/null || echo "No .ipynb files found"
             exit 1
           fi
-          
           echo "✅ Found AI_Forex_Brain_2.ipynb"
 
       - name: Create Enhanced Notebook Executor
@@ -170,36 +161,32 @@ jobs:
                   self.current_stage = "Unknown"
               
               def preprocess(self, nb, resources=None, km=None):
-                  code_cells = sum(1 for c in nb.cells if c.cell_type == 'code')
                   print("Processing cells...")
-                  print("Environment: GitHub Actions")
+                  print("Triggered by: Pipedream (exact 2-hour intervals)")
                   
                   skip_av = os.environ.get('SKIP_ALPHA_VANTAGE', 'false').lower() == 'true'
-                  if skip_av:
-                      print("Alpha Vantage: SKIPPED")
-                  else:
-                      print("Alpha Vantage: ACTIVE")
+                  print("Alpha Vantage:", "SKIPPED" if skip_av else "ACTIVE")
                   
                   self.start_time = time.time()
                   return super().preprocess(nb, resources, km)
               
               def detect_stage(self, cell_source):
                   source_lower = cell_source.lower()
-                  if 'api_keys' in source_lower or 'alpha_vantage_key' in source_lower:
+                  if 'api_keys' in source_lower:
                       return "API Keys"
-                  elif 'environment detection' in source_lower or 'in_colab' in source_lower:
+                  elif 'environment detection' in source_lower:
                       return "Environment"
-                  elif 'github sync' in source_lower or 'repo_folder' in source_lower:
+                  elif 'github sync' in source_lower:
                       return "GitHub Sync"
                   elif 'alpha vantage' in source_lower and 'fetcher' in source_lower:
                       return "Alpha Vantage"
                   elif 'yfinance' in source_lower and 'fetcher' in source_lower:
                       return "YFinance"
-                  elif 'combiner' in source_lower or 'indicator' in source_lower:
+                  elif 'combiner' in source_lower:
                       return "CSV Combiner"
-                  elif 'ultra-persistent' in source_lower or 'pipeline v6' in source_lower:
+                  elif 'pipeline v6' in source_lower:
                       return "Pipeline v6.1"
-                  elif 'trade beacon v20.2' in source_lower or 'multi-source learning' in source_lower:
+                  elif 'trade beacon' in source_lower:
                       return "Trade Beacon v20.2"
                   return self.current_stage
               
@@ -208,18 +195,17 @@ jobs:
                       return cell, resources
                   
                   self.cell_count += 1
-                  
                   new_stage = self.detect_stage(cell.source)
+                  
                   if new_stage != self.current_stage:
-                      stage_start = time.time()
                       if self.current_stage in self.stage_timings:
-                          self.stage_timings[self.current_stage]['duration'] = stage_start - self.stage_timings[self.current_stage]['start']
+                          self.stage_timings[self.current_stage]['duration'] = time.time() - self.stage_timings[self.current_stage]['start']
                       self.current_stage = new_stage
-                      self.stage_timings[new_stage] = {'start': stage_start, 'duration': 0}
-                      print("STAGE: " + new_stage)
+                      self.stage_timings[new_stage] = {'start': time.time(), 'duration': 0}
+                      print(f"STAGE: {new_stage}")
                   
                   elapsed = time.time() - self.start_time
-                  print("Cell " + str(self.cell_count) + " | " + self.current_stage + " | " + str(int(elapsed)) + "s elapsed")
+                  print(f"Cell {self.cell_count} | {self.current_stage} | {int(elapsed)}s")
                   
                   try:
                       cell, resources = super().preprocess_cell(cell, resources, idx)
@@ -229,57 +215,23 @@ jobs:
                           for output in cell.outputs:
                               if output.output_type == 'stream':
                                   text = re.sub(r'\x1b\[[0-9;]*m', '', output.text)
-                                  lines = text.strip().split('\n')
-                                  
-                                  important_markers = [
-                                      'COMPLETE', 'ERROR', 'FAILED', 'SUCCESS', 'SKIPPED',
-                                      'Win Rate', 'P&L', 'Iteration', 'Mode:', 'Total', 'Average',
-                                      'Loaded', 'Saved', 'Updated', 'Found', 'Processing',
-                                      'Quality', 'Trades', 'Epsilon', 'Experience Replay',
-                                      'Pipeline Stats', 'Database', 'Q-Network', 'Backtest',
-                                      'API calls', 'Daily API usage', 'Alpha Vantage',
-                                      'MULTI-SOURCE LEARNING', 'Pipeline v6', 'Trade Beacon',
-                                      'Learning outcomes', 'Validated', 'learning_outcomes.json'
-                                  ]
-                                  
-                                  important_lines = [l for l in lines if any(marker in l for marker in important_markers)]
-                                  
-                                  if important_lines:
-                                      for line in important_lines[:20]:
-                                          print("  " + line)
-                              
-                              elif output.output_type == 'error':
-                                  error_msg = output.ename + ": " + output.evalue
-                                  print("  Error: " + error_msg)
-                                  self.critical_errors.append({
-                                      'cell': self.cell_count,
-                                      'stage': self.current_stage,
-                                      'error': error_msg
-                                  })
-                  
+                                  important = ['COMPLETE', 'ERROR', 'Win Rate', 'LEARNING', 
+                                             'Evaluated', 'learning_outcomes', 'Pipeline v6']
+                                  for line in text.split('\n'):
+                                      if any(m in line for m in important):
+                                          print(f"  {line}")
                   except Exception as e:
                       self.failed_cells += 1
-                      error_summary = str(e)[:200]
-                      print("  Cell " + str(self.cell_count) + " error: " + error_summary)
-                      print("  Continuing to next cell...")
-                      self.critical_errors.append({
-                          'cell': self.cell_count,
-                          'stage': self.current_stage,
-                          'error': error_summary
-                      })
+                      print(f"  Error: {str(e)[:100]}")
                   
                   return cell, resources
-          
-          if not os.path.exists('AI_Forex_Brain_2.ipynb'):
-              print("ERROR: AI_Forex_Brain_2.ipynb not found!")
-              sys.exit(1)
           
           with open('AI_Forex_Brain_2.ipynb', 'r') as f:
               nb = nbformat.read(f, as_version=4)
           
-          print("=" * 70)
-          print("MULTI-SOURCE LEARNING SYSTEM v20.2")
-          print("=" * 70)
+          print("="*70)
+          print("PIPEDREAM-TRIGGERED LEARNING SYSTEM")
+          print("="*70)
           
           ep = SmartExecutor(timeout=2400, kernel_name='python3', allow_errors=True)
           start = time.time()
@@ -288,96 +240,44 @@ jobs:
               ep.preprocess(nb, {'metadata': {'path': '.'}})
               duration = time.time() - start
               
-              print("\n" + "=" * 70)
+              print(f"\n{'='*70}")
               print("EXECUTION COMPLETED")
-              print("=" * 70)
-              print("Duration: " + str(round(duration, 1)) + "s (" + str(round(duration/60, 1)) + " min)")
-              print("Cells: " + str(ep.cell_count) + " total")
-              print("Success: " + str(ep.successful_cells))
-              print("Failed: " + str(ep.failed_cells))
-              
-              if ep.stage_timings:
-                  print("\nStage Timings:")
-                  for stage, timing in ep.stage_timings.items():
-                      duration_val = timing.get('duration', 0)
-                      if duration_val > 0:
-                          print("  " + stage + ": " + str(round(duration_val, 1)) + "s")
-              
-              if ep.critical_errors:
-                  print("\nCritical Errors (" + str(len(ep.critical_errors)) + "):")
-                  for err in ep.critical_errors[:5]:
-                      print("  Cell " + str(err['cell']) + " (" + err['stage'] + "): " + err['error'][:100])
-              
-              print("=" * 70 + "\n")
+              print(f"Duration: {round(duration, 1)}s")
+              print(f"Success: {ep.successful_cells}, Failed: {ep.failed_cells}")
+              print(f"{'='*70}\n")
               
               report = {
-                  'timestamp': datetime.now().isoformat(), 
-                  'mode': 'multi_source_learning', 
+                  'timestamp': datetime.now().isoformat(),
+                  'trigger': 'pipedream',
                   'duration': duration,
                   'cells_executed': ep.cell_count,
                   'successful': ep.successful_cells,
                   'failed': ep.failed_cells,
-                  'status': 'success',
-                  'stage_timings': {k: v['duration'] for k, v in ep.stage_timings.items() if 'duration' in v},
-                  'critical_errors': len(ep.critical_errors),
-                  'alpha_vantage_active': os.environ.get('SKIP_ALPHA_VANTAGE', 'false').lower() != 'true',
-                  'version': 'Pipeline v6.1 + Trade Beacon v20.2'
+                  'status': 'success'
               }
-              
           except Exception as e:
               duration = time.time() - start
-              
-              print("\n" + "=" * 70)
-              print("EXECUTION COMPLETED WITH ERRORS")
-              print("=" * 70)
-              print("Error: " + type(e).__name__ + ": " + str(e)[:200])
-              print("Duration: " + str(round(duration, 1)) + "s (" + str(round(duration/60, 1)) + " min)")
-              print("Successful cells: " + str(ep.successful_cells))
-              print("Failed cells: " + str(ep.failed_cells))
-              print("=" * 70 + "\n")
-              
+              print(f"\nError: {str(e)[:200]}")
               report = {
-                  'timestamp': datetime.now().isoformat(), 
-                  'mode': 'multi_source_learning', 
+                  'timestamp': datetime.now().isoformat(),
+                  'trigger': 'pipedream',
                   'duration': duration,
-                  'cells_executed': ep.cell_count,
-                  'successful': ep.successful_cells,
-                  'failed': ep.failed_cells,
-                  'status': 'completed_with_errors',
-                  'error': type(e).__name__ + ": " + str(e)[:200],
-                  'stage_timings': {k: v['duration'] for k, v in ep.stage_timings.items() if 'duration' in v},
-                  'critical_errors': len(ep.critical_errors),
-                  'alpha_vantage_active': os.environ.get('SKIP_ALPHA_VANTAGE', 'false').lower() != 'true',
-                  'version': 'Pipeline v6.1 + Trade Beacon v20.2'
+                  'status': 'error',
+                  'error': str(e)[:200]
               }
           
           os.makedirs('.github/run_history', exist_ok=True)
-          with open('.github/run_history/latest_run.json', 'w') as f: 
+          with open('.github/run_history/latest_run.json', 'w') as f:
               json.dump(report, f, indent=2)
-          
-          print("Full notebook execution completed")
-          print("Report saved to .github/run_history/latest_run.json")
           EOF
 
       - name: Run Full Notebook Pipeline
         run: |
-          echo "🚀 MULTI-SOURCE LEARNING SYSTEM v20.2"
+          echo "🚀 PIPEDREAM-TRIGGERED RUN"
           echo "=================================="
+          echo "⚡ Triggered at exactly: $(date +'%H:%M UTC')"
           echo "📅 Day: ${{ steps.day_info.outputs.day_name }}"
           echo "🔢 Run: #${{ steps.data.outputs.run_number }}"
-          echo "⏰ Hour: ${{ steps.day_info.outputs.hour }}:00 UTC"
-          echo "📓 Notebook: AI_Forex_Brain_2.ipynb"
-          echo ""
-          
-          if [ "${{ steps.day_info.outputs.is_alpha_run }}" = "true" ]; then
-            echo "🌙 ALPHA VANTAGE RUN - Full pipeline with fresh daily data"
-          else
-            echo "⚡ REGULAR RUN - Alpha Vantage skipped"
-          fi
-          
-          echo ""
-          echo "⏱️  Estimated time: 30-50 minutes"
-          echo "=================================="
           echo ""
           python run_full.py
         timeout-minutes: 50
@@ -391,24 +291,21 @@ jobs:
           import os
           from pathlib import Path
           
-          metrics = {'status': 'no_data', 'version': 'v20.2'}
+          metrics = {'status': 'no_data', 'version': 'v20.2', 'trigger': 'pipedream'}
           
           db_path = Path('database/memory_v85.db')
           if db_path.exists():
               try:
                   conn = sqlite3.connect(str(db_path))
                   c = conn.cursor()
-                  
                   c.execute("SELECT COUNT(*), SUM(CASE WHEN hit_tp THEN 1 ELSE 0 END) FROM completed_trades")
                   result = c.fetchone()
                   if result and result[0]:
                       metrics['pipeline_trades'] = result[0]
                       metrics['pipeline_wins'] = result[1] or 0
-                      metrics['pipeline_win_rate'] = (result[1] / result[0] * 100) if result[0] else 0
-                  
                   conn.close()
-              except Exception as e:
-                  metrics['db_error'] = str(e)
+              except:
+                  pass
           
           rl_memory = Path('rl_memory/experience_replay.json.gz')
           if rl_memory.exists():
@@ -421,27 +318,8 @@ jobs:
                       rl_stats = json.load(f)
                   metrics['rl_trades'] = rl_stats.get('total_trades', 0)
                   metrics['rl_win_rate'] = rl_stats.get('win_rate', 0) * 100
-                  metrics['rl_pnl'] = rl_stats.get('total_pnl', 0)
-                  metrics['epsilon'] = rl_stats.get('epsilon_history', [0.7])[-1] if rl_stats.get('epsilon_history') else 0.7
-                  
                   metrics['pipeline_v6_learned'] = rl_stats.get('pipeline_v6_learned', 0)
                   metrics['live_validated'] = rl_stats.get('live_validated', 0)
-                  metrics['backtest_learned'] = rl_stats.get('backtest_learned', 0)
-                  metrics['total_learning_sources'] = rl_stats.get('total_learning_sources', 0)
-              except:
-                  pass
-          
-          beacon_file = Path('outputs/omega_signals.json')
-          if beacon_file.exists():
-              try:
-                  with open(beacon_file) as f:
-                      beacon_data = json.load(f)
-                  metrics['beacon_iteration'] = beacon_data.get('iteration', 0)
-                  metrics['beacon_mode'] = beacon_data.get('mode', 'unknown')
-                  metrics['active_signals'] = sum(1 for s in beacon_data.get('signals', {}).values() if s.get('direction') != 'HOLD')
-                  
-                  if 'learning_summary' in beacon_data:
-                      metrics['learning_summary'] = beacon_data['learning_summary']
               except:
                   pass
           
@@ -451,41 +329,22 @@ jobs:
                   with open(learning_db) as f:
                       outcomes = json.load(f)
                   metrics['learning_outcomes_count'] = len(outcomes)
-                  if outcomes:
-                      wins = sum(1 for o in outcomes if o.get('was_correct', False))
-                      metrics['learning_outcomes_wr'] = (wins / len(outcomes) * 100) if len(outcomes) else 0
               except:
                   pass
-          
-          pred_file = Path('learning_data/predictions_history.json')
-          if pred_file.exists():
-              try:
-                  with open(pred_file) as f:
-                      predictions = json.load(f)
-                  metrics['predictions_pending'] = sum(1 for p in predictions if not p.get('evaluated', True))
-              except:
-                  pass
-          
-          metrics['alpha_vantage_optimized'] = True
-          metrics['daily_api_calls'] = 4
-          metrics['api_usage_percent'] = 16
-          metrics['run_frequency'] = 'Every 2 hours'
           
           os.makedirs('.github/run_history', exist_ok=True)
           with open('.github/run_history/metrics.json', 'w') as f:
               json.dump(metrics, f, indent=2)
-          
-          print("Metrics extracted")
           EOF
           python extract_metrics.py
 
       - name: Prepare Git for Commit
         if: success()
         run: |
-          echo "🔄 Preparing git for commit..."
+          echo "🔄 Preparing git..."
           
           if ! git diff --quiet; then
-            git stash push -m "Auto-stashed - run ${{ steps.data.outputs.run_number }}"
+            git stash push -m "Auto-stash - run ${{ steps.data.outputs.run_number }}"
             STASHED=true
           else
             STASHED=false
@@ -497,7 +356,7 @@ jobs:
           }
           
           if [ "$STASHED" = "true" ]; then
-            git stash pop || echo "⚠️ Stash conflicts kept"
+            git stash pop || echo "⚠️ Kept both versions"
           fi
 
       - name: Commit Everything
@@ -507,12 +366,12 @@ jobs:
           git add -A
           
           if git diff --cached --quiet; then
-            echo "ℹ️ No changes to commit"
+            echo "ℹ️ No changes"
           else
             RUN="${{ steps.data.outputs.run_number }}"
             DAY="${{ steps.day_info.outputs.day_name }}"
             
-            git commit -m "🎓 Run #${RUN} - ${DAY} - Multi-Source Learning v20.2" || true
+            git commit -m "🎓 Run #${RUN} - ${DAY} - Pipedream Triggered" || true
             
             for i in {1..5}; do
               if git push origin main; then
@@ -531,14 +390,13 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: learning-system-logs-${{ github.run_number }}
+          name: learning-logs-${{ github.run_number }}
           path: |
             .github/run_history/*.json
             logs/*.log
             outputs/*.json
             rl_memory/learning_stats.json
             learning_data/learning_outcomes.json
-            learning_data/predictions_history.json
           retention-days: 7
           if-no-files-found: ignore
 
@@ -546,25 +404,12 @@ jobs:
         if: always()
         run: |
           echo "=========================================="
-          echo "🎓 MULTI-SOURCE LEARNING SYSTEM SUMMARY"
+          echo "🎓 PIPEDREAM-TRIGGERED RUN SUMMARY"
           echo "=========================================="
           echo "📅 Day: ${{ steps.day_info.outputs.day_name }}"
           echo "🔢 Run: #${{ steps.data.outputs.run_number }}"
           echo "⏰ Time: $(date +'%Y-%m-%d %H:%M UTC')"
-          echo "📦 Version: Pipeline v6.1 + Trade Beacon v20.2"
-          echo ""
-          
-          if [ "${{ steps.day_info.outputs.is_alpha_run }}" = "true" ]; then
-            echo "🌙 Alpha Vantage: ACTIVE (4 API calls)"
-          else
-            echo "⏭️  Alpha Vantage: SKIPPED"
-          fi
-          
-          echo ""
-          echo "📂 Data Files:"
-          echo "   Processed pickles: ${{ steps.data.outputs.pickle_count }}"
-          echo "   RL Memory: ${{ steps.data.outputs.rl_memory_exists }}"
-          echo "   Learning outcomes: ${{ steps.data.outputs.learning_outcomes }}"
+          echo "⚡ Trigger: Pipedream (exact 2-hour intervals)"
           echo ""
           
           if [ -f ".github/run_history/metrics.json" ]; then
@@ -573,5 +418,5 @@ jobs:
           fi
           
           echo ""
-          echo "✅ Multi-source learning cycle complete"
+          echo "✅ Run complete"
           echo "=========================================="

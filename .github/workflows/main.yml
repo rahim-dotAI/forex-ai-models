@@ -1,4 +1,4 @@
-name: Multi-Source Learning System v20.2 - Pipeline v6.1 + Trade Beacon v20.2
+name: Multi-Source Learning System v20.2 - Simplified
 
 on:
   workflow_dispatch:
@@ -6,43 +6,12 @@ on:
     paths: ['colab_trigger.txt']
     branches: [main]
   schedule:
-    # FIXED: Every 2 hours at EVEN hours (0,2,4,6,8,10,12,14,16,18,20,22)
-    # Old schedule had ODD hours every 2 hours which caused faster runs
-    - cron: '0 0,2,4,6,8,10,12,14,16,18,20,22 * * 1-5'  # Weekdays every 2 hours
-    # Weekend schedule - Every 2 hours for backtest learning
-    - cron: '0 0,2,4,6,8,10,12,14,16,18,20,22 * * 0,6'  # Weekends every 2 hours
+    # Every 2 hours at EVEN hours (0,2,4,6,8,10,12,14,16,18,20,22)
+    - cron: '0 0,2,4,6,8,10,12,14,16,18,20,22 * * 1-5'  # Weekdays
+    - cron: '0 0,2,4,6,8,10,12,14,16,18,20,22 * * 0,6'  # Weekends
 
 jobs:
-  check-concurrent:
-    runs-on: ubuntu-latest
-    outputs:
-      should_run: ${{ steps.check.outputs.should_run }}
-      is_alpha_run: ${{ steps.check.outputs.is_alpha_run }}
-    steps:
-      - name: Check for concurrent runs
-        id: check
-        run: |
-          HOUR=$(date +%H)
-          DAY=$(date +%u)
-          IS_ALPHA="false"
-          
-          # Alpha Vantage runs at 00:00 UTC daily (midnight)
-          # Changed from 01:00 to 00:00 to align with 2-hour schedule
-          if [ "$HOUR" = "00" ]; then
-            IS_ALPHA="true"
-            echo "is_alpha_run=true" >> $GITHUB_OUTPUT
-            echo "🌙 ALPHA VANTAGE RUN (00:00 UTC daily)"
-          else
-            echo "is_alpha_run=false" >> $GITHUB_OUTPUT
-            echo "⚡ Regular run - Alpha Vantage SKIPPED"
-          fi
-          
-          echo "should_run=true" >> $GITHUB_OUTPUT
-          echo "✅ Run approved - Hour: $HOUR, Day: $DAY, Alpha: $IS_ALPHA"
-
   run-learning-system:
-    needs: check-concurrent
-    if: needs.check-concurrent.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 55
     concurrency:
@@ -61,7 +30,6 @@ jobs:
       PYTHONUNBUFFERED: 1
       GITHUB_ACTIONS: "true"
       SINGLE_RUN_MODE: "true"
-      SKIP_ALPHA_VANTAGE: ${{ needs.check-concurrent.outputs.is_alpha_run != 'true' }}
 
     steps:
       - name: Checkout
@@ -79,35 +47,37 @@ jobs:
       - name: Detect Day Type and Schedule
         id: day_info
         run: |
+          HOUR=$(date +%H)
           DAY=$(date +%u)
           DAY_NAME=$(date +'%A')
-          HOUR=$(date +%H)
           
           echo "day=$DAY" >> $GITHUB_OUTPUT
           echo "day_name=$DAY_NAME" >> $GITHUB_OUTPUT
           echo "hour=$HOUR" >> $GITHUB_OUTPUT
           
-          if [ "${{ needs.check-concurrent.outputs.is_alpha_run }}" = "true" ]; then
+          # Alpha Vantage runs ONLY at 00:00 UTC
+          if [ "$HOUR" = "00" ]; then
             echo "is_alpha_run=true" >> $GITHUB_OUTPUT
-            echo "🌙 ALPHA VANTAGE RUN - Fresh Daily Data (00:00 UTC)"
+            echo "SKIP_ALPHA_VANTAGE=false" >> $GITHUB_ENV
+            echo "🌙 ALPHA VANTAGE RUN (00:00 UTC)"
           else
             echo "is_alpha_run=false" >> $GITHUB_OUTPUT
-            echo "⏭️ REGULAR RUN - Alpha Vantage Skipped"
+            echo "SKIP_ALPHA_VANTAGE=true" >> $GITHUB_ENV
+            echo "⚡ Regular run - Alpha Vantage SKIPPED"
           fi
           
           if [ $DAY -eq 6 ] || [ $DAY -eq 7 ]; then
             echo "is_weekend=true" >> $GITHUB_OUTPUT
-            echo "🏖️ $DAY_NAME (Weekend - Intensive Learning Mode)"
+            echo "🏖️ $DAY_NAME (Weekend - Intensive Learning)"
           else
             echo "is_weekend=false" >> $GITHUB_OUTPUT
-            echo "💼 $DAY_NAME (Weekday - Live Trading Mode)"
+            echo "💼 $DAY_NAME (Weekday - Live Trading)"
           fi
           
           echo ""
-          echo "📅 Schedule Info:"
-          echo "   Current: $DAY_NAME at $HOUR:00 UTC"
-          echo "   Frequency: Every 2 hours (00,02,04,06,08,10,12,14,16,18,20,22)"
-          echo "   Next run: In 2 hours at $(date -d '+2 hours' +'%H:00 UTC' 2>/dev/null || echo 'N/A')"
+          echo "📅 Current: $DAY_NAME at $HOUR:00 UTC"
+          echo "⏰ Scheduled: Every 2 hours (00,02,04,06,08,10,12,14,16,18,20,22)"
+          echo "⚠️  Note: GitHub Actions may delay scheduled runs by 5-30+ minutes"
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -142,7 +112,6 @@ jobs:
             echo "rl_memory_exists=false" >> $GITHUB_OUTPUT
           fi
           
-          # Check learning database
           if [ -f "learning_data/learning_outcomes.json" ]; then
             LEARNING_COUNT=$(python3 -c "import json; print(len(json.load(open('learning_data/learning_outcomes.json'))))" 2>/dev/null || echo "0")
             echo "learning_outcomes=$LEARNING_COUNT" >> $GITHUB_OUTPUT
@@ -159,7 +128,7 @@ jobs:
           
           echo "📊 Status:"
           echo "   Pickle files: $PICKLE_COUNT"
-          echo "   RL Memory exists: $([ -f "rl_memory/experience_replay.json.gz" ] && echo "Yes" || echo "No")"
+          echo "   RL Memory: $([ -f "rl_memory/experience_replay.json.gz" ] && echo "Yes" || echo "No")"
           echo "   Learning outcomes: $LEARNING_COUNT"
           echo "   Run number: $RUN_NUM"
           echo "   Alpha Vantage: ${{ steps.day_info.outputs.is_alpha_run == 'true' && 'ACTIVE' || 'SKIPPED' }}"
@@ -176,17 +145,6 @@ jobs:
           fi
           
           echo "✅ Found AI_Forex_Brain_2.ipynb"
-          
-          CELLS=$(python -c "
-          import nbformat
-          with open('AI_Forex_Brain_2.ipynb', 'r') as f:
-              nb = nbformat.read(f, 4)
-          code_cells = sum(1 for c in nb.cells if c.cell_type=='code')
-          print(code_cells)
-          " 2>/dev/null || echo "0")
-          
-          echo "📊 Code cells found: $CELLS"
-          echo "ℹ️  Pipeline: API Keys → Environment → GitHub Sync → Alpha Vantage → YFinance → CSV Combiner → Pipeline v6.1 → Trade Beacon v20.2"
 
       - name: Create Enhanced Notebook Executor
         run: |
@@ -409,51 +367,14 @@ jobs:
           echo "🔢 Run: #${{ steps.data.outputs.run_number }}"
           echo "⏰ Hour: ${{ steps.day_info.outputs.hour }}:00 UTC"
           echo "📓 Notebook: AI_Forex_Brain_2.ipynb"
-          echo "🖥️  Environment: GitHub Actions"
           echo ""
           
           if [ "${{ steps.day_info.outputs.is_alpha_run }}" = "true" ]; then
             echo "🌙 ALPHA VANTAGE RUN - Full pipeline with fresh daily data"
-            echo "📊 Alpha Vantage: ✅ ACTIVE (4 API calls)"
           else
             echo "⚡ REGULAR RUN - Alpha Vantage skipped"
-            echo "📊 Alpha Vantage: ⏭️  SKIPPED (uses existing data)"
           fi
           
-          echo ""
-          echo "📋 Pipeline Stages:"
-          echo "  1️⃣  API Keys Configuration"
-          echo "  2️⃣  Environment Setup"
-          echo "  3️⃣  GitHub Repository Sync"
-          
-          if [ "${{ steps.day_info.outputs.is_alpha_run }}" = "true" ]; then
-            echo "  4️⃣  Alpha Vantage Data Fetch ✅"
-          else
-            echo "  4️⃣  Alpha Vantage Data Fetch ⏭️  (skipped)"
-          fi
-          
-          echo "  5️⃣  YFinance Data Fetch"
-          echo "  6️⃣  CSV Combiner & Indicators"
-          echo "  7️⃣  Ultra-Persistent Pipeline v6.1 (NEW)"
-          echo "      • Evaluates previous predictions"
-          echo "      • Generates new predictions"
-          echo "      • Outputs learning_outcomes.json"
-          echo "  8️⃣  Trade Beacon v20.2 (NEW)"
-          echo "      • Multi-source learning active"
-          echo "      • Learns from Pipeline v6.1"
-          echo "      • Validates live signals"
-          echo "      • Weekend backtest mode"
-          echo ""
-          echo "🎓 Multi-Source Learning:"
-          echo "   Source 1: Pipeline v6.1 outcomes"
-          echo "   Source 2: Live signal validation"
-          echo "   Source 3: Pipeline database"
-          echo "   Source 4: Weekend backtest"
-          echo ""
-          echo "💡 API Optimization:"
-          echo "   Daily API usage: 4 calls (16% of 25 limit)"
-          echo "   Run frequency: Every 2 hours"
-          echo "   Learning outcomes: ${{ steps.data.outputs.learning_outcomes }}"
           echo ""
           echo "⏱️  Estimated time: 30-50 minutes"
           echo "=================================="
@@ -472,7 +393,6 @@ jobs:
           
           metrics = {'status': 'no_data', 'version': 'v20.2'}
           
-          # Pipeline database
           db_path = Path('database/memory_v85.db')
           if db_path.exists():
               try:
@@ -490,12 +410,10 @@ jobs:
               except Exception as e:
                   metrics['db_error'] = str(e)
           
-          # RL memory
           rl_memory = Path('rl_memory/experience_replay.json.gz')
           if rl_memory.exists():
               metrics['rl_memory_size'] = rl_memory.stat().st_size
           
-          # RL stats
           stats_file = Path('rl_memory/learning_stats.json')
           if stats_file.exists():
               try:
@@ -506,7 +424,6 @@ jobs:
                   metrics['rl_pnl'] = rl_stats.get('total_pnl', 0)
                   metrics['epsilon'] = rl_stats.get('epsilon_history', [0.7])[-1] if rl_stats.get('epsilon_history') else 0.7
                   
-                  # Multi-source stats
                   metrics['pipeline_v6_learned'] = rl_stats.get('pipeline_v6_learned', 0)
                   metrics['live_validated'] = rl_stats.get('live_validated', 0)
                   metrics['backtest_learned'] = rl_stats.get('backtest_learned', 0)
@@ -514,7 +431,6 @@ jobs:
               except:
                   pass
           
-          # Trade Beacon signals
           beacon_file = Path('outputs/omega_signals.json')
           if beacon_file.exists():
               try:
@@ -524,13 +440,11 @@ jobs:
                   metrics['beacon_mode'] = beacon_data.get('mode', 'unknown')
                   metrics['active_signals'] = sum(1 for s in beacon_data.get('signals', {}).values() if s.get('direction') != 'HOLD')
                   
-                  # Learning summary
                   if 'learning_summary' in beacon_data:
                       metrics['learning_summary'] = beacon_data['learning_summary']
               except:
                   pass
           
-          # Pipeline v6.1 learning outcomes
           learning_db = Path('learning_data/learning_outcomes.json')
           if learning_db.exists():
               try:
@@ -543,7 +457,6 @@ jobs:
               except:
                   pass
           
-          # Pipeline v6.1 predictions
           pred_file = Path('learning_data/predictions_history.json')
           if pred_file.exists():
               try:
@@ -562,9 +475,7 @@ jobs:
           with open('.github/run_history/metrics.json', 'w') as f:
               json.dump(metrics, f, indent=2)
           
-          print("Metrics extracted:")
-          for key, value in metrics.items():
-              print("  " + key + ": " + str(value))
+          print("Metrics extracted")
           EOF
           python extract_metrics.py
 
@@ -574,96 +485,43 @@ jobs:
           echo "🔄 Preparing git for commit..."
           
           if ! git diff --quiet; then
-            echo "📦 Stashing unstaged changes..."
-            git stash push -m "Auto-stashed changes before pull - run ${{ steps.data.outputs.run_number }}"
+            git stash push -m "Auto-stashed - run ${{ steps.data.outputs.run_number }}"
             STASHED=true
           else
             STASHED=false
           fi
           
-          echo "🔄 Pulling latest changes..."
           git pull --rebase origin main || {
-            echo "⚠️ Rebase failed, using merge strategy..."
             git rebase --abort 2>/dev/null || true
             git pull --no-rebase origin main
           }
           
           if [ "$STASHED" = "true" ]; then
-            echo "📦 Restoring stashed changes..."
-            git stash pop || {
-              echo "⚠️ Stash pop had conflicts, keeping both versions"
-            }
+            git stash pop || echo "⚠️ Stash conflicts kept"
           fi
-          
-          echo "✅ Repository ready for commit"
 
       - name: Commit Everything
         if: success()
         run: |
-          echo "💾 COMMITTING EVERYTHING..."
-          echo "=================================="
-          
+          echo "💾 Committing changes..."
           git add -A
-          
-          echo "📁 Files to be committed:"
-          git status --porcelain | head -25
-          echo "..."
           
           if git diff --cached --quiet; then
             echo "ℹ️ No changes to commit"
           else
             RUN="${{ steps.data.outputs.run_number }}"
             DAY="${{ steps.day_info.outputs.day_name }}"
-            IS_WEEKEND="${{ steps.day_info.outputs.is_weekend }}"
-            IS_ALPHA="${{ steps.day_info.outputs.is_alpha_run }}"
             
-            if [ -f "rl_memory/learning_stats.json" ]; then
-              RL_TRADES=$(python -c "import json; d=json.load(open('rl_memory/learning_stats.json')); print(d.get('total_trades', 0))" 2>/dev/null || echo "0")
-              RL_WINRATE=$(python -c "import json; d=json.load(open('rl_memory/learning_stats.json')); print(round(d.get('win_rate', 0)*100, 1))" 2>/dev/null || echo "0")
-              EPSILON=$(python -c "import json; d=json.load(open('rl_memory/learning_stats.json')); h=d.get('epsilon_history',[]); print(round(h[-1],3) if h else 0.7)" 2>/dev/null || echo "0.7")
-            else
-              RL_TRADES="0"
-              RL_WINRATE="0"
-              EPSILON="0.7"
-            fi
-            
-            if [ -f "learning_data/learning_outcomes.json" ]; then
-              LEARNING_COUNT=$(python -c "import json; print(len(json.load(open('learning_data/learning_outcomes.json'))))" 2>/dev/null || echo "0")
-            else
-              LEARNING_COUNT="0"
-            fi
-            
-            if [ -f "database/memory_v85.db" ]; then
-              DB_SIZE=$(stat -f%z database/memory_v85.db 2>/dev/null || stat -c%s database/memory_v85.db 2>/dev/null || echo "0")
-              DB_SIZE_MB=$((DB_SIZE / 1024 / 1024))
-            else
-              DB_SIZE_MB="0"
-            fi
-            
-            git commit -m "🎓 Run #${RUN} - ${DAY} - Multi-Source Learning v20.2" \
-                       -m "Trade Beacon: ${RL_TRADES} trades, ${RL_WINRATE}% WR, ε=${EPSILON}" \
-                       -m "Pipeline v6.1: ${LEARNING_COUNT} learning outcomes" \
-                       -m "Database: ${DB_SIZE_MB}MB" \
-                       -m "Alpha Vantage: ${IS_ALPHA}" \
-                       -m "Weekend Mode: ${IS_WEEKEND}" \
-                       -m "Time: $(date +'%Y-%m-%d %H:%M UTC')" || {
-              echo "⚠️ Commit failed, trying with simpler message..."
-              git commit -m "Run #${RUN} - ${DAY}" || true
-            }
+            git commit -m "🎓 Run #${RUN} - ${DAY} - Multi-Source Learning v20.2" || true
             
             for i in {1..5}; do
-              echo "🚀 Pushing to GitHub (attempt $i/5)..."
               if git push origin main; then
-                echo "✅ Successfully committed and pushed ALL changes"
+                echo "✅ Successfully pushed"
                 break
               else
                 if [ $i -lt 5 ]; then
-                  echo "⚠️ Push failed, pulling latest and retrying in 10s..."
                   sleep 10
                   git pull --rebase origin main || git pull --strategy-option=theirs origin main
-                else
-                  echo "❌ Failed to push after 5 attempts"
-                  echo "💡 Changes are committed locally but not pushed to remote"
                 fi
               fi
             done
@@ -693,14 +551,13 @@ jobs:
           echo "📅 Day: ${{ steps.day_info.outputs.day_name }}"
           echo "🔢 Run: #${{ steps.data.outputs.run_number }}"
           echo "⏰ Time: $(date +'%Y-%m-%d %H:%M UTC')"
-          echo "🖥️  Env: GitHub Actions"
           echo "📦 Version: Pipeline v6.1 + Trade Beacon v20.2"
           echo ""
           
           if [ "${{ steps.day_info.outputs.is_alpha_run }}" = "true" ]; then
-            echo "🌙 Alpha Vantage: ACTIVE (4 API calls made)"
+            echo "🌙 Alpha Vantage: ACTIVE (4 API calls)"
           else
-            echo "⏭️  Alpha Vantage: SKIPPED (next run at 00:00 UTC)"
+            echo "⏭️  Alpha Vantage: SKIPPED"
           fi
           
           echo ""
@@ -712,53 +569,9 @@ jobs:
           
           if [ -f ".github/run_history/metrics.json" ]; then
             echo "📊 Latest Metrics:"
-            cat .github/run_history/metrics.json | python3 -m json.tool 2>/dev/null | grep -E '"(rl_trades|rl_win_rate|epsilon|pipeline_v6_learned|live_validated|backtest_learned|learning_outcomes_count|predictions_pending|beacon_iteration|active_signals)"' | head -15 || true
-            echo ""
+            cat .github/run_history/metrics.json | python3 -m json.tool 2>/dev/null || true
           fi
           
-          if [ -f ".github/run_history/latest_run.json" ]; then
-            echo "⏱️  Execution:"
-            cat .github/run_history/latest_run.json | python3 -m json.tool 2>/dev/null | grep -E '"(status|duration|successful|failed|alpha_vantage_active|version)"' || true
-            echo ""
-          fi
-          
-          echo "💾 Commit Status: ✅ EVERYTHING COMMITTED"
-          echo "   • Raw data files"
-          echo "   • Processed features" 
-          echo "   • RL learning progress"
-          echo "   • Trading signals"
-          echo "   • Pipeline v6.1 predictions"
-          echo "   • Learning outcomes database"
-          echo "   • Logs and metrics"
           echo ""
-          
-          echo "🎓 Multi-Source Learning Status:"
-          if [ -f "rl_memory/learning_stats.json" ]; then
-            echo "   Pipeline v6.1: $(python3 -c "import json; print(json.load(open('rl_memory/learning_stats.json')).get('pipeline_v6_learned', 0))" 2>/dev/null || echo "0") outcomes learned"
-            echo "   Live Validation: $(python3 -c "import json; print(json.load(open('rl_memory/learning_stats.json')).get('live_validated', 0))" 2>/dev/null || echo "0") signals validated"
-            echo "   Pipeline DB: $(python3 -c "import json; print(json.load(open('rl_memory/learning_stats.json')).get('pipeline_trades_learned', 0))" 2>/dev/null || echo "0") trades learned"
-            echo "   Backtest: $(python3 -c "import json; print(json.load(open('rl_memory/learning_stats.json')).get('backtest_learned', 0))" 2>/dev/null || echo "0") trades learned"
-            echo "   Total: $(python3 -c "import json; print(json.load(open('rl_memory/learning_stats.json')).get('total_learning_sources', 0))" 2>/dev/null || echo "0") experiences this run"
-          else
-            echo "   (Stats not available yet)"
-          fi
-          echo ""
-          
-          echo "💡 API Optimization:"
-          echo "   Daily usage: 4/25 calls (16%)"
-          echo "   Run frequency: Every 2 hours (00,02,04,...,22)"
-          echo "   Savings: 44 calls/day vs hourly"
-          echo ""
-          
-          echo "⏰ Schedule Info:"
-          echo "   Current: ${{ steps.day_info.outputs.hour }}:00 UTC"
-          echo "   Next run: 2 hours from now"
-          echo "   Weekday: Every 2 hours (learning + trading)"
-          echo "   Weekend: Every 2 hours (intensive learning)"
-          echo ""
-          
-          echo "📦 Artifacts: Uploaded for this run"
-          echo ""
-          
-          echo "✅ Multi-source learning cycle complete - ALL DATA COMMITTED"
+          echo "✅ Multi-source learning cycle complete"
           echo "=========================================="

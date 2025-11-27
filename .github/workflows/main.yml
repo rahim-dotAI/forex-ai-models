@@ -1,4 +1,4 @@
-name: Smart Forex Brain Pipeline v18.3 - Notebook Compatible
+name: Smart Forex Brain Pipeline v18.5 - Fixed Alpha Detection
 
 on:
   workflow_dispatch:
@@ -6,9 +6,10 @@ on:
     paths: ['colab_trigger.txt']
     branches: [main]
   schedule:
-    - cron: '0 */2 * * 1-5'
+    # Weekday schedule - Every 2 hours at ODD hours (1,3,5,7,9,11,13,15,17,19,21,23)
+    - cron: '0 1,3,5,7,9,11,13,15,17,19,21,23 * * 1-5'
+    # Weekend schedule - Every 30 minutes
     - cron: '*/30 * * * 0,6'
-    - cron: '0 0 * * *'
 
 jobs:
   check-concurrent:
@@ -21,23 +22,22 @@ jobs:
         id: check
         run: |
           HOUR=$(date +%H)
+          DAY=$(date +%u)
           IS_ALPHA="false"
           
-          if [ "${{ github.event.schedule }}" = "0 0 * * *" ]; then
+          # Alpha Vantage runs at 01:00 UTC on weekdays (Monday=1 to Friday=5)
+          # This is midnight + 1 hour buffer for GitHub Actions delays
+          if [ "$HOUR" = "01" ] && [ "$DAY" -ge 1 ] && [ "$DAY" -le 5 ]; then
             IS_ALPHA="true"
             echo "is_alpha_run=true" >> $GITHUB_OUTPUT
-            echo "🌙 This is the MIDNIGHT Alpha Vantage run"
+            echo "🌙 This is the ALPHA VANTAGE run (01:00 UTC weekday)"
           else
             echo "is_alpha_run=false" >> $GITHUB_OUTPUT
-            
-            if [ "$HOUR" = "00" ]; then
-              echo "⏭️ Skipping regular run at midnight to avoid conflict"
-              echo "should_run=false" >> $GITHUB_OUTPUT
-              exit 0
-            fi
+            echo "⚡ Regular run - Alpha Vantage SKIPPED"
           fi
           
           echo "should_run=true" >> $GITHUB_OUTPUT
+          echo "✅ Run approved - Hour: $HOUR, Day: $DAY, Alpha: $IS_ALPHA"
 
   run-forex-brain:
     needs: check-concurrent
@@ -88,7 +88,7 @@ jobs:
           
           if [ "${{ needs.check-concurrent.outputs.is_alpha_run }}" = "true" ]; then
             echo "is_alpha_run=true" >> $GITHUB_OUTPUT
-            echo "🌙 MIDNIGHT RUN - Alpha Vantage Data Fetch"
+            echo "🌙 ALPHA VANTAGE RUN - Fresh Daily Data (01:00 UTC)"
           else
             echo "is_alpha_run=false" >> $GITHUB_OUTPUT
             echo "⏭️ REGULAR RUN - Alpha Vantage Skipped"
@@ -393,7 +393,7 @@ jobs:
           echo ""
           
           if [ "${{ steps.day_info.outputs.is_alpha_run }}" = "true" ]; then
-            echo "🌙 MIDNIGHT RUN - Full pipeline including Alpha Vantage"
+            echo "🌙 ALPHA VANTAGE RUN - Full pipeline with fresh daily data"
             echo "📊 Alpha Vantage: ✅ ACTIVE (4 API calls)"
           else
             echo "⚡ REGULAR RUN - Alpha Vantage skipped"
@@ -615,7 +615,7 @@ jobs:
           if [ "${{ steps.day_info.outputs.is_alpha_run }}" = "true" ]; then
             echo "🌙 Alpha Vantage: ACTIVE (4 API calls made)"
           else
-            echo "⏭️  Alpha Vantage: SKIPPED (next run at midnight)"
+            echo "⏭️  Alpha Vantage: SKIPPED (next run at 01:00 UTC)"
           fi
           
           echo ""

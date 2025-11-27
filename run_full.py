@@ -46,10 +46,10 @@ class SmartExecutor(ExecutePreprocessor):
             return "YFinance"
         elif 'combiner' in source_lower or 'indicator' in source_lower:
             return "CSV Combiner"
-        elif 'ultra-persistent' in source_lower or 'pipeline' in source_lower:
-            return "ML Pipeline"
-        elif 'trade beacon' in source_lower or 'deep q-learning' in source_lower:
-            return "RL Agent"
+        elif 'ultra-persistent' in source_lower or 'pipeline v6' in source_lower:
+            return "Pipeline v6.1"
+        elif 'trade beacon v20.2' in source_lower or 'multi-source learning' in source_lower:
+            return "Trade Beacon v20.2"
         return self.current_stage
     
     def preprocess_cell(self, cell, resources, idx):
@@ -86,13 +86,15 @@ class SmartExecutor(ExecutePreprocessor):
                             'Loaded', 'Saved', 'Updated', 'Found', 'Processing',
                             'Quality', 'Trades', 'Epsilon', 'Experience Replay',
                             'Pipeline Stats', 'Database', 'Q-Network', 'Backtest',
-                            'API calls', 'Daily API usage', 'Alpha Vantage'
+                            'API calls', 'Daily API usage', 'Alpha Vantage',
+                            'MULTI-SOURCE LEARNING', 'Pipeline v6', 'Trade Beacon',
+                            'Learning outcomes', 'Validated', 'learning_outcomes.json'
                         ]
                         
                         important_lines = [l for l in lines if any(marker in l for marker in important_markers)]
                         
                         if important_lines:
-                            for line in important_lines[:15]:
+                            for line in important_lines[:20]:
                                 print("  " + line)
                     
                     elif output.output_type == 'error':
@@ -125,7 +127,7 @@ with open('AI_Forex_Brain_2.ipynb', 'r') as f:
     nb = nbformat.read(f, as_version=4)
 
 print("=" * 70)
-print("FOREX AI BRAIN - FULL PIPELINE EXECUTION")
+print("MULTI-SOURCE LEARNING SYSTEM v20.2")
 print("=" * 70)
 
 ep = SmartExecutor(timeout=2400, kernel_name='python3', allow_errors=True)
@@ -159,7 +161,7 @@ try:
     
     report = {
         'timestamp': datetime.now().isoformat(), 
-        'mode': 'full_pipeline', 
+        'mode': 'multi_source_learning', 
         'duration': duration,
         'cells_executed': ep.cell_count,
         'successful': ep.successful_cells,
@@ -167,7 +169,8 @@ try:
         'status': 'success',
         'stage_timings': {k: v['duration'] for k, v in ep.stage_timings.items() if 'duration' in v},
         'critical_errors': len(ep.critical_errors),
-        'alpha_vantage_active': os.environ.get('SKIP_ALPHA_VANTAGE', 'false').lower() != 'true'
+        'alpha_vantage_active': os.environ.get('SKIP_ALPHA_VANTAGE', 'false').lower() != 'true',
+        'version': 'Pipeline v6.1 + Trade Beacon v20.2'
     }
     
 except Exception as e:
@@ -184,7 +187,7 @@ except Exception as e:
     
     report = {
         'timestamp': datetime.now().isoformat(), 
-        'mode': 'full_pipeline', 
+        'mode': 'multi_source_learning', 
         'duration': duration,
         'cells_executed': ep.cell_count,
         'successful': ep.successful_cells,
@@ -193,7 +196,8 @@ except Exception as e:
         'error': type(e).__name__ + ": " + str(e)[:200],
         'stage_timings': {k: v['duration'] for k, v in ep.stage_timings.items() if 'duration' in v},
         'critical_errors': len(ep.critical_errors),
-        'alpha_vantage_active': os.environ.get('SKIP_ALPHA_VANTAGE', 'false').lower() != 'true'
+        'alpha_vantage_active': os.environ.get('SKIP_ALPHA_VANTAGE', 'false').lower() != 'true',
+        'version': 'Pipeline v6.1 + Trade Beacon v20.2'
     }
 
 os.makedirs('.github/run_history', exist_ok=True)

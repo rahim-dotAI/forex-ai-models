@@ -1,58 +1,62 @@
 {
-  "timestamp": "2025-11-28T12:03:51.827730+00:00",
-  "iteration": 23,
+  "timestamp": "2025-11-28T23:17:45.518938+00:00",
+  "iteration": 24,
   "version": "v20.2-multi-source",
   "mode": "LIVE_TRADING",
   "signals": {
     "EUR/USD": {
       "direction": "BUY",
-      "last_price": 1.156,
-      "SL": 1.1554360523223877,
-      "TP": 1.1567049345970153,
-      "confidence": 23.13399736039445,
+      "last_price": 1.159,
+      "SL": 1.1585746386391775,
+      "TP": 1.159531701701028,
+      "confidence": 31.44109777494652,
       "threshold": 10.0,
       "rb_epsilon": 0.7,
-      "timestamp": "2025-11-28T12:03:51.812406+00:00"
+      "timestamp": "2025-11-28T23:17:45.503503+00:00"
     },
     "GBP/USD": {
       "direction": "BUY",
-      "last_price": 1.32,
-      "SL": 1.3195998920713152,
-      "TP": 1.320500134910856,
-      "confidence": 23.28952762703139,
+      "last_price": 1.323,
+      "SL": 1.3229630175999232,
+      "TP": 1.3230462280000959,
+      "confidence": 31.126737525825604,
       "threshold": 10.0,
       "rb_epsilon": 0.7,
-      "timestamp": "2025-11-28T12:03:51.817569+00:00"
+      "timestamp": "2025-11-28T23:17:45.508695+00:00"
     },
     "USD/JPY": {
       "direction": "BUY",
-      "last_price": 156.23,
-      "SL": 156.00942705426897,
-      "TP": 156.50571618216378,
-      "confidence": 20.69263892430563,
+      "last_price": 156.15,
+      "SL": 156.04228079659597,
+      "TP": 156.28464900425502,
+      "confidence": 32.76163212613971,
       "threshold": 10.0,
       "rb_epsilon": 0.7,
-      "timestamp": "2025-11-28T12:03:51.822630+00:00"
+      "timestamp": "2025-11-28T23:17:45.513949+00:00"
     },
     "AUD/USD": {
       "direction": "BUY",
-      "last_price": 0.6523,
-      "SL": 0.6513530269214085,
-      "TP": 0.6534837163482393,
-      "confidence": 23.400191446592146,
+      "last_price": 0.6541,
+      "SL": 0.6527406393187387,
+      "TP": 0.6557992008515767,
+      "confidence": 32.236224212487464,
       "threshold": 10.0,
       "rb_epsilon": 0.7,
-      "timestamp": "2025-11-28T12:03:51.827721+00:00"
+      "timestamp": "2025-11-28T23:17:45.518928+00:00"
     }
   },
   "rl_stats": {
-    "total_updates": 12,
-    "total_trades": 3,
-    "profitable_trades": 2,
-    "total_pnl": -0.18641333018029038,
-    "win_rate": 0.6666666666666666,
-    "avg_reward": 33.92823341196086,
+    "total_updates": 16,
+    "total_trades": 6,
+    "profitable_trades": 5,
+    "total_pnl": -0.1840245443241797,
+    "win_rate": 0.8333333333333334,
+    "avg_reward": 66.56320541407247,
     "epsilon_history": [
+      0.7,
+      0.7,
+      0.7,
+      0.7,
       0.7,
       0.7,
       0.7,
@@ -78,15 +82,19 @@
       0.19785454946837197,
       0.23279713667193014,
       0.2473721616785418,
-      17908876901.697693
+      17908876901.697693,
+      20122111788.59853,
+      0.36134156892235597,
+      0.4084338288689608,
+      0.478701310956571
     ],
     "pipeline_trades_learned": 0,
-    "pipeline_v6_learned": 519,
-    "live_validated": 3,
+    "pipeline_v6_learned": 673,
+    "live_validated": 6,
     "backtest_learned": 0,
-    "total_learning_sources": 122,
+    "total_learning_sources": 157,
     "rbed_milestones": [],
-    "consecutive_losses": 1,
+    "consecutive_losses": 0,
     "v20_1_archive": {
       "total_updates": 0,
       "total_trades": 0,
@@ -114,10 +122,10 @@
     "last_trade": null
   },
   "learning_summary": {
-    "pipeline_v6": 519,
-    "live_validated": 3,
+    "pipeline_v6": 673,
+    "live_validated": 6,
     "pipeline_db": 0,
     "backtest": 0,
-    "total_this_run": 122
+    "total_this_run": 157
   }
 }

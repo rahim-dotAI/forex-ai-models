@@ -5,9 +5,10 @@ from pathlib import Path
 
 metrics = {
     'status': 'no_data', 
-    'version': 'v20.3',
+    'version': 'v20.3-pipedream',
     'trigger': 'github_actions',
-    'scheduler': 'native'
+    'scheduler': 'pipedream_schedule',
+    'hours': 'even (0,2,4,6,8,10,12,14,16,18,20,22)'
 }
 
 # Database metrics

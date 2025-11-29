@@ -21,13 +21,14 @@ class DetailedOutputExecutor(ExecutePreprocessor):
     
     def preprocess(self, nb, resources=None, km=None):
         print("="*80)
-        print("🚀 GITHUB ACTIONS NATIVE SCHEDULER - ENHANCED OUTPUT MODE")
+        print("🚀 GITHUB ACTIONS - PIPEDREAM SCHEDULE - ENHANCED OUTPUT MODE")
         print("="*80)
         print(f"📅 Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
         
         skip_av = os.environ.get('SKIP_ALPHA_VANTAGE', 'false').lower() == 'true'
-        print(f"🔧 Alpha Vantage: {'SKIPPED ⏭️' if skip_av else 'ACTIVE ✅'}")
+        print(f"🔧 Alpha Vantage: {'SKIPPED ⏭️' if skip_av else 'ACTIVE ✅ (00:00 UTC = 3:00 AM EAT)'}")
         print(f"📊 Total cells to execute: {len([c for c in nb.cells if c.cell_type == 'code'])}")
+        print(f"⏰ Schedule: EVEN hours (0,2,4,6,8,10,12,14,16,18,20,22)")
         print("="*80)
         print()
         
@@ -151,7 +152,8 @@ print("🤖 FOREX AI BRAIN - DETAILED EXECUTION LOG")
 print("="*80)
 print(f"📓 Notebook: AI_Forex_Brain_2.ipynb")
 print(f"🔧 Mode: Single Run (GitHub Actions)")
-print(f"⚙️  Executor: DetailedOutputExecutor v20.3")
+print(f"⚙️  Executor: DetailedOutputExecutor v20.3-Pipedream")
+print(f"⏰ Schedule: EVEN hours (0,2,4,6,8,10,12,14,16,18,20,22)")
 print("="*80)
 print()
 
@@ -188,7 +190,8 @@ try:
     
     report = {
         'timestamp': datetime.now().isoformat(),
-        'trigger': 'github_actions',
+        'trigger': 'github_actions_pipedream_schedule',
+        'schedule_type': 'even_hours',
         'duration': duration,
         'cells_executed': ep.cell_count,
         'successful': ep.successful_cells,
@@ -209,7 +212,8 @@ except Exception as e:
     
     report = {
         'timestamp': datetime.now().isoformat(),
-        'trigger': 'github_actions',
+        'trigger': 'github_actions_pipedream_schedule',
+        'schedule_type': 'even_hours',
         'duration': duration,
         'cells_executed': ep.cell_count,
         'status': 'error',

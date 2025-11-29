@@ -5,9 +5,9 @@ import json
 import os
 import re
 from nbconvert.preprocessors import ExecutePreprocessor
-from datetime import datetime
+from datetime import datetime, timezone
 
-class DetailedOutputExecutor(ExecutePreprocessor):
+class AdaptiveWeekendExecutor(ExecutePreprocessor):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.cell_count = 0
@@ -17,16 +17,27 @@ class DetailedOutputExecutor(ExecutePreprocessor):
         self.critical_errors = []
         self.stage_timings = {}
         self.current_stage = "Unknown"
-        self.cell_outputs = []
+        self.is_weekend = datetime.now(timezone.utc).weekday() in [5, 6]
     
     def preprocess(self, nb, resources=None, km=None):
         print("="*80)
-        print("🚀 GITHUB ACTIONS - PIPEDREAM SCHEDULE - ENHANCED OUTPUT MODE")
+        print("🚀 ADAPTIVE WEEKEND SCHEDULE v20.4")
         print("="*80)
         print(f"📅 Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
         
         skip_av = os.environ.get('SKIP_ALPHA_VANTAGE', 'false').lower() == 'true'
-        print(f"🔧 Alpha Vantage: {'SKIPPED ⏭️' if skip_av else 'ACTIVE ✅ (00:00 UTC = 3:00 AM EAT)'}")
+        print(f"🔧 Alpha Vantage: {'SKIPPED ⏭️' if skip_av else 'ACTIVE ✅ (00:00 UTC)'}")
+        
+        if self.is_weekend:
+            print("🏖️  WEEKEND MODE: 2-hour intervals for adaptive evaluation")
+            print("   Min eval window: 2-12 hours")
+            print("   Max timeout: 24-72 hours")
+            print("   Schedule matches adaptive pipeline needs ✅")
+        else:
+            print("💼 WEEKDAY MODE: 2-hour intervals for live trading")
+            print("   Min eval window: 1-6 hours")
+            print("   Max timeout: 12-36 hours")
+        
         print(f"📊 Total cells to execute: {len([c for c in nb.cells if c.cell_type == 'code'])}")
         print(f"⏰ Schedule: EVEN hours (0,2,4,6,8,10,12,14,16,18,20,22)")
         print("="*80)
@@ -49,12 +60,12 @@ class DetailedOutputExecutor(ExecutePreprocessor):
             return "📊 YFinance Fetcher"
         elif 'combiner' in source_lower:
             return "🔗 CSV Combiner"
-        elif 'pipeline v6' in source_lower:
-            return "🧠 Pipeline v6.1 Processor"
+        elif 'pipeline v6' in source_lower or 'ultra-persistent' in source_lower:
+            return "🧠 Pipeline v6.2 Adaptive Processor"
         elif 'trade beacon' in source_lower:
-            return "🎯 Trade Beacon v20.3"
+            return "🎯 Trade Beacon v20.4"
         elif 'learning' in source_lower and 'system' in source_lower:
-            return "🎓 Learning System"
+            return "🎓 Adaptive Learning System"
         elif 'backtest' in source_lower:
             return "📉 Backtesting Module"
         return self.current_stage
@@ -76,12 +87,13 @@ class DetailedOutputExecutor(ExecutePreprocessor):
             self.stage_timings[new_stage] = {'start': time.time(), 'duration': 0}
             print("="*80)
             print(f"📍 STAGE: {new_stage}")
+            if self.is_weekend and 'Pipeline' in new_stage:
+                print("   🏖️  Weekend adaptive mode active")
             print("="*80)
         
         elapsed = time.time() - self.start_time
         cell_start = time.time()
         
-        # Show cell preview (first 100 chars)
         preview = cell.source[:100].replace('\n', ' ')
         if len(cell.source) > 100:
             preview += "..."
@@ -94,7 +106,6 @@ class DetailedOutputExecutor(ExecutePreprocessor):
             cell_duration = time.time() - cell_start
             self.successful_cells += 1
             
-            # ENHANCED OUTPUT DISPLAY
             if cell.outputs:
                 print(f"   ⏱️  Executed in {cell_duration:.2f}s")
                 print(f"   📤 Output:")
@@ -103,12 +114,10 @@ class DetailedOutputExecutor(ExecutePreprocessor):
                 output_lines = 0
                 for output in cell.outputs:
                     if output.output_type == 'stream':
-                        # Clean ANSI codes
                         text = re.sub(r'\x1b\[[0-9;]*m', '', output.text)
                         
-                        # Print ALL lines (not just important ones)
                         for line in text.split('\n'):
-                            if line.strip():  # Skip empty lines
+                            if line.strip():
                                 print(f"   │ {line}")
                                 output_lines += 1
                                 
@@ -148,17 +157,17 @@ with open('AI_Forex_Brain_2.ipynb', 'r') as f:
     nb = nbformat.read(f, as_version=4)
 
 print("\n" + "="*80)
-print("🤖 FOREX AI BRAIN - DETAILED EXECUTION LOG")
+print("🤖 FOREX AI BRAIN - ADAPTIVE WEEKEND EXECUTION")
 print("="*80)
 print(f"📓 Notebook: AI_Forex_Brain_2.ipynb")
-print(f"🔧 Mode: Single Run (GitHub Actions)")
-print(f"⚙️  Executor: DetailedOutputExecutor v20.3-Pipedream")
-print(f"⏰ Schedule: EVEN hours (0,2,4,6,8,10,12,14,16,18,20,22)")
+print(f"🔧 Mode: Adaptive Weekend Schedule")
+print(f"⚙️  Executor: AdaptiveWeekendExecutor v20.4")
+print(f"⏰ Schedule: 2-hour intervals (matches adaptive eval windows)")
 print("="*80)
 print()
 
-# Execute with detailed output
-ep = DetailedOutputExecutor(timeout=2400, kernel_name='python3', allow_errors=True)
+# Execute
+ep = AdaptiveWeekendExecutor(timeout=2400, kernel_name='python3', allow_errors=True)
 start = time.time()
 
 try:
@@ -172,6 +181,11 @@ try:
     print(f"✅ Successful Cells: {ep.successful_cells}")
     print(f"❌ Failed Cells: {ep.failed_cells}")
     print(f"📊 Success Rate: {(ep.successful_cells/(ep.successful_cells+ep.failed_cells)*100):.1f}%")
+    
+    if ep.is_weekend:
+        print(f"\n🏖️  Weekend Mode Summary:")
+        print(f"   2-hour schedule allows proper adaptive evaluation")
+        print(f"   Next evaluation window: 2-12 hours (volatility-dependent)")
     
     if ep.stage_timings:
         print("\n📊 Stage Timings:")
@@ -190,8 +204,9 @@ try:
     
     report = {
         'timestamp': datetime.now().isoformat(),
-        'trigger': 'github_actions_pipedream_schedule',
-        'schedule_type': 'even_hours',
+        'trigger': 'github_actions_adaptive_schedule',
+        'schedule_type': 'adaptive_2h_intervals',
+        'is_weekend': ep.is_weekend,
         'duration': duration,
         'cells_executed': ep.cell_count,
         'successful': ep.successful_cells,
@@ -212,8 +227,9 @@ except Exception as e:
     
     report = {
         'timestamp': datetime.now().isoformat(),
-        'trigger': 'github_actions_pipedream_schedule',
-        'schedule_type': 'even_hours',
+        'trigger': 'github_actions_adaptive_schedule',
+        'schedule_type': 'adaptive_2h_intervals',
+        'is_weekend': ep.is_weekend,
         'duration': duration,
         'cells_executed': ep.cell_count,
         'status': 'error',

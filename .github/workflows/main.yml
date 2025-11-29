@@ -1,4 +1,4 @@
-name: Multi-Source Learning System v20.3 - Pipedream Schedule + Enhanced Output
+name: Multi-Source Learning System v20.4 - Adaptive Weekend Schedule
 
 on:
   workflow_dispatch:  # Manual trigger
@@ -6,8 +6,9 @@ on:
     # Weekdays - Every 2 hours at EVEN hours (12 runs/day) - SAME AS PIPEDREAM!
     - cron: '0 0,2,4,6,8,10,12,14,16,18,20,22 * * 1-5'
     
-    # Weekends - Every 30 minutes (48 runs/day)
-    - cron: '*/30 * * * 0,6'
+    # Weekends - Every 2 hours (12 runs/day) - ADAPTIVE WINDOW FRIENDLY
+    # Changed from 30min to 2h to match minimum adaptive evaluation window
+    - cron: '0 0,2,4,6,8,10,12,14,16,18,20,22 * * 0,6'
 
 jobs:
   run-learning-system:
@@ -67,7 +68,8 @@ jobs:
           
           if [ $DAY -eq 6 ] || [ $DAY -eq 7 ]; then
             echo "is_weekend=true" >> $GITHUB_OUTPUT
-            echo "🏖️ $DAY_NAME (Weekend - Intensive Learning)"
+            echo "🏖️ $DAY_NAME (Weekend - Adaptive Learning Mode)"
+            echo "📊 Using 2-hour intervals (adaptive evaluation windows)"
           else
             echo "is_weekend=false" >> $GITHUB_OUTPUT
             echo "💼 $DAY_NAME (Weekday - Live Trading)"
@@ -75,9 +77,10 @@ jobs:
           
           echo ""
           echo "📅 Current: $DAY_NAME at $HOUR:00 UTC"
-          echo "⚡ Triggered by: GitHub Actions (Pipedream Schedule)"
-          echo "📊 Schedule: Weekdays EVEN hours (0,2,4,6,8,10,12,14,16,18,20,22) | Weekends every 30min"
-          echo "🕐 Next weekday run: $(date -u -d "+2 hours" +'%H:00 UTC')"
+          echo "⚡ Triggered by: GitHub Actions (Adaptive Schedule)"
+          echo "📊 Schedule: Weekdays & Weekends EVEN hours (0,2,4,6,8,10,12,14,16,18,20,22)"
+          echo "🔧 Weekend Mode: 2h intervals match adaptive evaluation windows"
+          echo "🕐 Next run: $(date -u -d "+2 hours" +'%H:00 UTC')"
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -119,6 +122,25 @@ jobs:
             echo "learning_outcomes=0" >> $GITHUB_OUTPUT
           fi
           
+          # Check last evaluation time for adaptive scheduling
+          if [ -f "learning_data/predictions_history.json" ]; then
+            PENDING=$(python3 -c "
+          import json
+          from datetime import datetime, timezone
+          try:
+              with open('learning_data/predictions_history.json') as f:
+                  preds = json.load(f)
+              pending = sum(1 for p in preds if not p.get('evaluated', False))
+              print(pending)
+          except:
+              print(0)
+          " 2>/dev/null || echo "0")
+            echo "pending_predictions=$PENDING" >> $GITHUB_OUTPUT
+            echo "📊 Pending predictions: $PENDING"
+          else
+            echo "pending_predictions=0" >> $GITHUB_OUTPUT
+          fi
+          
           [ -f ".github/run_history/run_counter.txt" ] && RUN_NUM=$(cat .github/run_history/run_counter.txt) || RUN_NUM=0
           RUN_NUM=$((RUN_NUM + 1))
           echo $RUN_NUM > .github/run_history/run_counter.txt
@@ -128,6 +150,7 @@ jobs:
           echo "   Pickle files: $PICKLE_COUNT"
           echo "   RL Memory: $([ -f "rl_memory/experience_replay.json.gz" ] && echo "Yes" || echo "No")"
           echo "   Learning outcomes: $LEARNING_COUNT"
+          echo "   Pending evaluations: $PENDING"
           echo "   Run number: $RUN_NUM"
           
           mkdir -p data/raw/yfinance data/raw/alpha_vantage data/processed data/quarantine \
@@ -141,7 +164,7 @@ jobs:
           fi
           echo "✅ Found AI_Forex_Brain_2.ipynb"
 
-      - name: Create Enhanced Notebook Executor with Detailed Output
+      - name: Create Enhanced Notebook Executor with Adaptive Weekend Logic
         run: |
           cat > run_full.py << 'EOF'
           import nbformat
@@ -151,9 +174,9 @@ jobs:
           import os
           import re
           from nbconvert.preprocessors import ExecutePreprocessor
-          from datetime import datetime
+          from datetime import datetime, timezone
           
-          class DetailedOutputExecutor(ExecutePreprocessor):
+          class AdaptiveWeekendExecutor(ExecutePreprocessor):
               def __init__(self, *args, **kwargs):
                   super().__init__(*args, **kwargs)
                   self.cell_count = 0
@@ -163,16 +186,27 @@ jobs:
                   self.critical_errors = []
                   self.stage_timings = {}
                   self.current_stage = "Unknown"
-                  self.cell_outputs = []
+                  self.is_weekend = datetime.now(timezone.utc).weekday() in [5, 6]
               
               def preprocess(self, nb, resources=None, km=None):
                   print("="*80)
-                  print("🚀 GITHUB ACTIONS - PIPEDREAM SCHEDULE - ENHANCED OUTPUT MODE")
+                  print("🚀 ADAPTIVE WEEKEND SCHEDULE v20.4")
                   print("="*80)
                   print(f"📅 Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
                   
                   skip_av = os.environ.get('SKIP_ALPHA_VANTAGE', 'false').lower() == 'true'
-                  print(f"🔧 Alpha Vantage: {'SKIPPED ⏭️' if skip_av else 'ACTIVE ✅ (00:00 UTC = 3:00 AM EAT)'}")
+                  print(f"🔧 Alpha Vantage: {'SKIPPED ⏭️' if skip_av else 'ACTIVE ✅ (00:00 UTC)'}")
+                  
+                  if self.is_weekend:
+                      print("🏖️  WEEKEND MODE: 2-hour intervals for adaptive evaluation")
+                      print("   Min eval window: 2-12 hours")
+                      print("   Max timeout: 24-72 hours")
+                      print("   Schedule matches adaptive pipeline needs ✅")
+                  else:
+                      print("💼 WEEKDAY MODE: 2-hour intervals for live trading")
+                      print("   Min eval window: 1-6 hours")
+                      print("   Max timeout: 12-36 hours")
+                  
                   print(f"📊 Total cells to execute: {len([c for c in nb.cells if c.cell_type == 'code'])}")
                   print(f"⏰ Schedule: EVEN hours (0,2,4,6,8,10,12,14,16,18,20,22)")
                   print("="*80)
@@ -195,12 +229,12 @@ jobs:
                       return "📊 YFinance Fetcher"
                   elif 'combiner' in source_lower:
                       return "🔗 CSV Combiner"
-                  elif 'pipeline v6' in source_lower:
-                      return "🧠 Pipeline v6.1 Processor"
+                  elif 'pipeline v6' in source_lower or 'ultra-persistent' in source_lower:
+                      return "🧠 Pipeline v6.2 Adaptive Processor"
                   elif 'trade beacon' in source_lower:
-                      return "🎯 Trade Beacon v20.3"
+                      return "🎯 Trade Beacon v20.4"
                   elif 'learning' in source_lower and 'system' in source_lower:
-                      return "🎓 Learning System"
+                      return "🎓 Adaptive Learning System"
                   elif 'backtest' in source_lower:
                       return "📉 Backtesting Module"
                   return self.current_stage
@@ -222,12 +256,13 @@ jobs:
                       self.stage_timings[new_stage] = {'start': time.time(), 'duration': 0}
                       print("="*80)
                       print(f"📍 STAGE: {new_stage}")
+                      if self.is_weekend and 'Pipeline' in new_stage:
+                          print("   🏖️  Weekend adaptive mode active")
                       print("="*80)
                   
                   elapsed = time.time() - self.start_time
                   cell_start = time.time()
                   
-                  # Show cell preview (first 100 chars)
                   preview = cell.source[:100].replace('\n', ' ')
                   if len(cell.source) > 100:
                       preview += "..."
@@ -240,7 +275,6 @@ jobs:
                       cell_duration = time.time() - cell_start
                       self.successful_cells += 1
                       
-                      # ENHANCED OUTPUT DISPLAY
                       if cell.outputs:
                           print(f"   ⏱️  Executed in {cell_duration:.2f}s")
                           print(f"   📤 Output:")
@@ -249,12 +283,10 @@ jobs:
                           output_lines = 0
                           for output in cell.outputs:
                               if output.output_type == 'stream':
-                                  # Clean ANSI codes
                                   text = re.sub(r'\x1b\[[0-9;]*m', '', output.text)
                                   
-                                  # Print ALL lines (not just important ones)
                                   for line in text.split('\n'):
-                                      if line.strip():  # Skip empty lines
+                                      if line.strip():
                                           print(f"   │ {line}")
                                           output_lines += 1
                                           
@@ -294,17 +326,17 @@ jobs:
               nb = nbformat.read(f, as_version=4)
           
           print("\n" + "="*80)
-          print("🤖 FOREX AI BRAIN - DETAILED EXECUTION LOG")
+          print("🤖 FOREX AI BRAIN - ADAPTIVE WEEKEND EXECUTION")
           print("="*80)
           print(f"📓 Notebook: AI_Forex_Brain_2.ipynb")
-          print(f"🔧 Mode: Single Run (GitHub Actions)")
-          print(f"⚙️  Executor: DetailedOutputExecutor v20.3-Pipedream")
-          print(f"⏰ Schedule: EVEN hours (0,2,4,6,8,10,12,14,16,18,20,22)")
+          print(f"🔧 Mode: Adaptive Weekend Schedule")
+          print(f"⚙️  Executor: AdaptiveWeekendExecutor v20.4")
+          print(f"⏰ Schedule: 2-hour intervals (matches adaptive eval windows)")
           print("="*80)
           print()
           
-          # Execute with detailed output
-          ep = DetailedOutputExecutor(timeout=2400, kernel_name='python3', allow_errors=True)
+          # Execute
+          ep = AdaptiveWeekendExecutor(timeout=2400, kernel_name='python3', allow_errors=True)
           start = time.time()
           
           try:
@@ -318,6 +350,11 @@ jobs:
               print(f"✅ Successful Cells: {ep.successful_cells}")
               print(f"❌ Failed Cells: {ep.failed_cells}")
               print(f"📊 Success Rate: {(ep.successful_cells/(ep.successful_cells+ep.failed_cells)*100):.1f}%")
+              
+              if ep.is_weekend:
+                  print(f"\n🏖️  Weekend Mode Summary:")
+                  print(f"   2-hour schedule allows proper adaptive evaluation")
+                  print(f"   Next evaluation window: 2-12 hours (volatility-dependent)")
               
               if ep.stage_timings:
                   print("\n📊 Stage Timings:")
@@ -336,8 +373,9 @@ jobs:
               
               report = {
                   'timestamp': datetime.now().isoformat(),
-                  'trigger': 'github_actions_pipedream_schedule',
-                  'schedule_type': 'even_hours',
+                  'trigger': 'github_actions_adaptive_schedule',
+                  'schedule_type': 'adaptive_2h_intervals',
+                  'is_weekend': ep.is_weekend,
                   'duration': duration,
                   'cells_executed': ep.cell_count,
                   'successful': ep.successful_cells,
@@ -358,8 +396,9 @@ jobs:
               
               report = {
                   'timestamp': datetime.now().isoformat(),
-                  'trigger': 'github_actions_pipedream_schedule',
-                  'schedule_type': 'even_hours',
+                  'trigger': 'github_actions_adaptive_schedule',
+                  'schedule_type': 'adaptive_2h_intervals',
+                  'is_weekend': ep.is_weekend,
                   'duration': duration,
                   'cells_executed': ep.cell_count,
                   'status': 'error',
@@ -374,20 +413,21 @@ jobs:
           print(f"💾 Run report saved to .github/run_history/latest_run.json")
           EOF
 
-      - name: Run Full Notebook Pipeline with Enhanced Output
+      - name: Run Full Notebook Pipeline with Adaptive Weekend Logic
         run: |
-          echo "🚀 STARTING ENHANCED EXECUTION (PIPEDREAM SCHEDULE)"
-          echo "===================================================="
+          echo "🚀 STARTING ADAPTIVE WEEKEND EXECUTION"
+          echo "======================================================"
           echo "⚡ Triggered at: $(date +'%H:%M UTC')"
           echo "📅 Day: ${{ steps.day_info.outputs.day_name }}"
           echo "🔢 Run: #${{ steps.data.outputs.run_number }}"
-          echo "📊 Mode: DETAILED OUTPUT (All cell outputs visible)"
+          echo "📊 Mode: 2-HOUR INTERVALS (Adaptive Window Compatible)"
           echo "⏰ Schedule: EVEN hours (0,2,4,6,8,10,12,14,16,18,20,22)"
+          echo "🎯 Pending Predictions: ${{ steps.data.outputs.pending_predictions }}"
           echo ""
           python run_full.py
         timeout-minutes: 50
 
-      - name: Extract Pipeline Metrics
+      - name: Extract Pipeline Metrics with Weekend Analysis
         if: always()
         run: |
           cat > extract_metrics.py << 'EOF'
@@ -395,13 +435,14 @@ jobs:
           import json
           import os
           from pathlib import Path
+          from datetime import datetime, timezone
           
           metrics = {
               'status': 'no_data', 
-              'version': 'v20.3-pipedream',
+              'version': 'v20.4-adaptive',
               'trigger': 'github_actions',
-              'scheduler': 'pipedream_schedule',
-              'hours': 'even (0,2,4,6,8,10,12,14,16,18,20,22)'
+              'scheduler': 'adaptive_2h_intervals',
+              'is_weekend': datetime.now(timezone.utc).weekday() in [5, 6]
           }
           
           # Database metrics
@@ -435,26 +476,70 @@ jobs:
                       rl_stats = json.load(f)
                   metrics['rl_trades'] = rl_stats.get('total_trades', 0)
                   metrics['rl_win_rate'] = round(rl_stats.get('win_rate', 0) * 100, 2)
-                  metrics['pipeline_v6_learned'] = rl_stats.get('pipeline_v6_learned', 0)
-                  metrics['live_validated'] = rl_stats.get('live_validated', 0)
+                  metrics['rl_pnl'] = round(rl_stats.get('total_pnl', 0), 2)
               except Exception as e:
                   metrics['learning_stats_error'] = str(e)[:100]
           
-          # Learning outcomes
+          # Learning outcomes with weekend split
           learning_db = Path('learning_data/learning_outcomes.json')
           if learning_db.exists():
               try:
                   with open(learning_db) as f:
                       outcomes = json.load(f)
-                  metrics['learning_outcomes_count'] = len(outcomes)
                   
-                  # Recent outcomes analysis
-                  if outcomes:
-                      recent = outcomes[-10:] if len(outcomes) >= 10 else outcomes
-                      wins = sum(1 for o in recent if o.get('outcome') == 'win')
-                      metrics['recent_win_rate'] = round(wins / len(recent) * 100, 2)
+                  metrics['total_outcomes'] = len(outcomes)
+                  
+                  # Split by weekend/weekday
+                  weekend_outcomes = [o for o in outcomes if o.get('was_weekend_pred', False)]
+                  weekday_outcomes = [o for o in outcomes if not o.get('was_weekend_pred', False)]
+                  
+                  if weekend_outcomes:
+                      weekend_wins = sum(1 for o in weekend_outcomes if o.get('was_correct', False))
+                      metrics['weekend_outcomes'] = len(weekend_outcomes)
+                      metrics['weekend_win_rate'] = round(weekend_wins / len(weekend_outcomes) * 100, 2)
+                  
+                  if weekday_outcomes:
+                      weekday_wins = sum(1 for o in weekday_outcomes if o.get('was_correct', False))
+                      metrics['weekday_outcomes'] = len(weekday_outcomes)
+                      metrics['weekday_win_rate'] = round(weekday_wins / len(weekday_outcomes) * 100, 2)
+                  
+                  # Check if adaptive windows are being used
+                  if outcomes and 'min_wait_hours' in outcomes[-1]:
+                      metrics['using_adaptive_windows'] = True
+                      last_outcome = outcomes[-1]
+                      metrics['last_min_wait'] = last_outcome.get('min_wait_hours', 0)
+                      metrics['last_max_wait'] = last_outcome.get('max_wait_hours', 0)
+                  else:
+                      metrics['using_adaptive_windows'] = False
+                  
               except Exception as e:
                   metrics['outcomes_error'] = str(e)[:100]
+          
+          # Predictions status
+          predictions_file = Path('learning_data/predictions_history.json')
+          if predictions_file.exists():
+              try:
+                  with open(predictions_file) as f:
+                      predictions = json.load(f)
+                  
+                  pending = sum(1 for p in predictions if not p.get('evaluated', False))
+                  evaluated = sum(1 for p in predictions if p.get('evaluated', False))
+                  
+                  metrics['pending_predictions'] = pending
+                  metrics['evaluated_predictions'] = evaluated
+                  metrics['total_predictions'] = len(predictions)
+                  
+                  # Check oldest pending prediction age
+                  if predictions:
+                      pending_preds = [p for p in predictions if not p.get('evaluated', False)]
+                      if pending_preds:
+                          oldest = pending_preds[0]
+                          pred_time = datetime.fromisoformat(oldest['timestamp'].replace('Z', '+00:00'))
+                          hours_waiting = (datetime.now(timezone.utc) - pred_time).total_seconds() / 3600
+                          metrics['oldest_pending_hours'] = round(hours_waiting, 1)
+                  
+              except Exception as e:
+                  metrics['predictions_error'] = str(e)[:100]
           
           # Save metrics
           os.makedirs('.github/run_history', exist_ok=True)
@@ -463,11 +548,42 @@ jobs:
           
           # Print summary
           print("\n" + "="*70)
-          print("📊 EXTRACTED METRICS")
+          print("📊 EXTRACTED METRICS (ADAPTIVE WEEKEND MODE)")
           print("="*70)
           for key, value in metrics.items():
               print(f"{key}: {value}")
           print("="*70)
+          
+          # Weekend-specific analysis
+          if metrics.get('is_weekend'):
+              print("\n🏖️  WEEKEND ANALYSIS:")
+              print("="*70)
+              if metrics.get('weekend_outcomes', 0) > 0:
+                  print(f"   Weekend Predictions: {metrics['weekend_outcomes']}")
+                  print(f"   Weekend Win Rate: {metrics['weekend_win_rate']}%")
+              if metrics.get('weekday_outcomes', 0) > 0:
+                  print(f"   Weekday Predictions: {metrics['weekday_outcomes']}")
+                  print(f"   Weekday Win Rate: {metrics['weekday_win_rate']}%")
+              
+              if metrics.get('using_adaptive_windows'):
+                  print(f"\n   ✅ Adaptive Windows: ACTIVE")
+                  print(f"   Last min wait: {metrics.get('last_min_wait', 0)}h")
+                  print(f"   Last max wait: {metrics.get('last_max_wait', 0)}h")
+              else:
+                  print(f"\n   ⚠️  Adaptive Windows: NOT DETECTED")
+                  print(f"   Consider updating to Pipeline v6.2 Pro")
+              
+              if metrics.get('pending_predictions', 0) > 0:
+                  print(f"\n   📊 Pending: {metrics['pending_predictions']} predictions")
+                  print(f"   Oldest waiting: {metrics.get('oldest_pending_hours', 0)}h")
+                  
+                  oldest_hours = metrics.get('oldest_pending_hours', 0)
+                  if oldest_hours >= 2:
+                      print(f"   ✅ Ready for evaluation (>2h wait)")
+                  else:
+                      print(f"   ⏳ Needs more time ({2 - oldest_hours:.1f}h remaining)")
+              
+              print("="*70)
           EOF
           python extract_metrics.py
 
@@ -507,10 +623,16 @@ jobs:
             
             # Read metrics if available
             if [ -f ".github/run_history/metrics.json" ]; then
-              TRADES=$(python3 -c "import json; d=json.load(open('.github/run_history/metrics.json')); print(d.get('learning_outcomes_count', 0))" 2>/dev/null || echo "0")
-              git commit -m "🎓 Run #${RUN} - ${DAY} ${HOUR}:00 UTC | ${TRADES} outcomes | Pipedream Schedule" || true
+              OUTCOMES=$(python3 -c "import json; d=json.load(open('.github/run_history/metrics.json')); print(d.get('total_outcomes', 0))" 2>/dev/null || echo "0")
+              PENDING=$(python3 -c "import json; d=json.load(open('.github/run_history/metrics.json')); print(d.get('pending_predictions', 0))" 2>/dev/null || echo "0")
+              
+              if [ "${{ steps.day_info.outputs.is_weekend }}" = "true" ]; then
+                git commit -m "🏖️  Run #${RUN} - ${DAY} ${HOUR}:00 UTC | ${OUTCOMES} outcomes | ${PENDING} pending | Adaptive 2h" || true
+              else
+                git commit -m "💼 Run #${RUN} - ${DAY} ${HOUR}:00 UTC | ${OUTCOMES} outcomes | ${PENDING} pending | Adaptive 2h" || true
+              fi
             else
-              git commit -m "🎓 Run #${RUN} - ${DAY} ${HOUR}:00 UTC | Pipedream Schedule" || true
+              git commit -m "🎓 Run #${RUN} - ${DAY} ${HOUR}:00 UTC | Adaptive Schedule" || true
             fi
             
             # Push with retry
@@ -541,27 +663,44 @@ jobs:
             outputs/*.json
             rl_memory/learning_stats.json
             learning_data/learning_outcomes.json
+            learning_data/predictions_history.json
           retention-days: 7
           if-no-files-found: ignore
 
-      - name: Final Summary
+      - name: Final Summary with Adaptive Analysis
         if: always()
         run: |
           echo ""
           echo "=========================================="
-          echo "🎓 PIPEDREAM SCHEDULE RUN SUMMARY"
+          echo "🎓 ADAPTIVE WEEKEND SCHEDULE - RUN SUMMARY"
           echo "=========================================="
           echo "📅 Day: ${{ steps.day_info.outputs.day_name }}"
           echo "🔢 Run: #${{ steps.data.outputs.run_number }}"
           echo "⏰ Time: $(date +'%Y-%m-%d %H:%M UTC')"
-          echo "⚡ Trigger: GitHub Actions (Pipedream Schedule)"
-          echo "📊 Schedule: Weekdays EVEN hours (0,2,4,6,8,10,12,14,16,18,20,22)"
-          echo "            Weekends every 30min"
+          echo "⚡ Trigger: GitHub Actions (Adaptive 2h Schedule)"
+          echo "📊 Schedule: EVEN hours (0,2,4,6,8,10,12,14,16,18,20,22)"
           echo ""
+          
+          if [ "${{ steps.day_info.outputs.is_weekend }}" = "true" ]; then
+            echo "🏖️  WEEKEND MODE ACTIVE"
+            echo "   • 2-hour intervals match adaptive evaluation windows"
+            echo "   • Minimum eval: 2-12 hours (volatility-dependent)"
+            echo "   • Maximum timeout: 24-72 hours"
+            echo "   • Smart timeout: Only counts if price moved >0.5 ATR"
+            echo ""
+          else
+            echo "💼 WEEKDAY MODE ACTIVE"
+            echo "   • 2-hour intervals for live trading"
+            echo "   • Minimum eval: 1-6 hours (volatility-dependent)"
+            echo "   • Maximum timeout: 12-36 hours"
+            echo ""
+          fi
+          
           echo "📈 Data Status:"
           echo "   Pickle files: ${{ steps.data.outputs.pickle_count }}"
           echo "   RL Memory: ${{ steps.data.outputs.rl_memory_exists == 'true' && 'Yes' || 'No' }}"
           echo "   Learning outcomes: ${{ steps.data.outputs.learning_outcomes }}"
+          echo "   Pending predictions: ${{ steps.data.outputs.pending_predictions }}"
           echo ""
           
           if [ -f ".github/run_history/metrics.json" ]; then
@@ -580,22 +719,23 @@ jobs:
           echo "=========================================="
           echo ""
           echo "💡 Next scheduled runs (EAT = UTC+3):"
-          CURRENT_HOUR=$(date -u +%H)
-          if [ ${{ steps.day_info.outputs.day }} -ge 1 ] && [ ${{ steps.day_info.outputs.day }} -le 5 ]; then
-            echo "   Weekday mode: Runs at EVEN hours"
-            echo "   00:00 UTC = 3:00 AM EAT 🌙 (Alpha Vantage)"
-            echo "   02:00 UTC = 5:00 AM EAT"
-            echo "   04:00 UTC = 7:00 AM EAT"
-            echo "   06:00 UTC = 9:00 AM EAT"
-            echo "   08:00 UTC = 11:00 AM EAT"
-            echo "   10:00 UTC = 1:00 PM EAT"
-            echo "   12:00 UTC = 3:00 PM EAT"
-            echo "   14:00 UTC = 5:00 PM EAT"
-            echo "   16:00 UTC = 7:00 PM EAT"
-            echo "   18:00 UTC = 9:00 PM EAT"
-            echo "   20:00 UTC = 11:00 PM EAT"
-            echo "   22:00 UTC = 1:00 AM EAT"
-          else
-            echo "   Weekend mode: Runs every 30 minutes"
-          fi
+          echo "   All days: EVEN hours only"
+          echo "   00:00 UTC = 3:00 AM EAT 🌙"
+          echo "   02:00 UTC = 5:00 AM EAT"
+          echo "   04:00 UTC = 7:00 AM EAT"
+          echo "   06:00 UTC = 9:00 AM EAT"
+          echo "   08:00 UTC = 11:00 AM EAT"
+          echo "   10:00 UTC = 1:00 PM EAT"
+          echo "   12:00 UTC = 3:00 PM EAT"
+          echo "   14:00 UTC = 5:00 PM EAT"
+          echo "   16:00 UTC = 7:00 PM EAT"
+          echo "   18:00 UTC = 9:00 PM EAT"
+          echo "   20:00 UTC = 11:00 PM EAT"
+          echo "   22:00 UTC = 1:00 AM EAT"
+          echo ""
+          echo "🔧 Adaptive Benefits:"
+          echo "   ✅ 2h intervals give predictions time to mature"
+          echo "   ✅ Weekend volatility properly accounted for"
+          echo "   ✅ Reduced false losses from premature evaluation"
+          echo "   ✅ Better learning signal quality"
           echo "=========================================="

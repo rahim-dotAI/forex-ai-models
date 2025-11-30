@@ -7,8 +7,8 @@ from datetime import datetime, timezone
 metrics = {
     'status': 'no_data', 
     'version': 'v20.4-adaptive',
-    'trigger': 'github_actions',
-    'scheduler': 'adaptive_2h_intervals',
+    'trigger': 'manual_or_colab_trigger',
+    'scheduler': 'manual_trigger',
     'is_weekend': datetime.now(timezone.utc).weekday() in [5, 6]
 }
 

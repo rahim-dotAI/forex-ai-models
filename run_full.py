@@ -39,7 +39,7 @@ class AdaptiveWeekendExecutor(ExecutePreprocessor):
             print("   Max timeout: 12-36 hours")
         
         print(f"📊 Total cells to execute: {len([c for c in nb.cells if c.cell_type == 'code'])}")
-        print(f"⏰ Schedule: EVEN hours (0,2,4,6,8,10,12,14,16,18,20,22)")
+        print(f"⏰ Trigger: Manual or colab_trigger.txt")
         print("="*80)
         print()
         
@@ -162,7 +162,7 @@ print("="*80)
 print(f"📓 Notebook: AI_Forex_Brain_2.ipynb")
 print(f"🔧 Mode: Adaptive Weekend Schedule")
 print(f"⚙️  Executor: AdaptiveWeekendExecutor v20.4")
-print(f"⏰ Schedule: 2-hour intervals (matches adaptive eval windows)")
+print(f"⏰ Trigger: Manual or colab_trigger.txt")
 print("="*80)
 print()
 
@@ -204,8 +204,8 @@ try:
     
     report = {
         'timestamp': datetime.now().isoformat(),
-        'trigger': 'github_actions_adaptive_schedule',
-        'schedule_type': 'adaptive_2h_intervals',
+        'trigger': 'manual_or_colab_trigger',
+        'schedule_type': 'manual_trigger',
         'is_weekend': ep.is_weekend,
         'duration': duration,
         'cells_executed': ep.cell_count,
@@ -227,8 +227,8 @@ except Exception as e:
     
     report = {
         'timestamp': datetime.now().isoformat(),
-        'trigger': 'github_actions_adaptive_schedule',
-        'schedule_type': 'adaptive_2h_intervals',
+        'trigger': 'manual_or_colab_trigger',
+        'schedule_type': 'manual_trigger',
         'is_weekend': ep.is_weekend,
         'duration': duration,
         'cells_executed': ep.cell_count,

@@ -1,14 +1,10 @@
-name: Multi-Source Learning System v20.4 - Adaptive Weekend Schedule
+name: Multi-Source Learning System v20.4 - Manual Trigger
 
 on:
-  workflow_dispatch:  # Manual trigger
-  schedule:
-    # Weekdays - Every 2 hours at EVEN hours (12 runs/day) - SAME AS PIPEDREAM!
-    - cron: '0 0,2,4,6,8,10,12,14,16,18,20,22 * * 1-5'
-    
-    # Weekends - Every 2 hours (12 runs/day) - ADAPTIVE WINDOW FRIENDLY
-    # Changed from 30min to 2h to match minimum adaptive evaluation window
-    - cron: '0 0,2,4,6,8,10,12,14,16,18,20,22 * * 0,6'
+  workflow_dispatch:
+  push:
+    paths: ['colab_trigger.txt']
+    branches: [main]
 
 jobs:
   run-learning-system:
@@ -77,10 +73,8 @@ jobs:
           
           echo ""
           echo "📅 Current: $DAY_NAME at $HOUR:00 UTC"
-          echo "⚡ Triggered by: GitHub Actions (Adaptive Schedule)"
-          echo "📊 Schedule: Weekdays & Weekends EVEN hours (0,2,4,6,8,10,12,14,16,18,20,22)"
-          echo "🔧 Weekend Mode: 2h intervals match adaptive evaluation windows"
-          echo "🕐 Next run: $(date -u -d "+2 hours" +'%H:00 UTC')"
+          echo "⚡ Triggered by: Push to colab_trigger.txt or Manual"
+          echo "🕐 Next run: Manual trigger required"
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -208,7 +202,7 @@ jobs:
                       print("   Max timeout: 12-36 hours")
                   
                   print(f"📊 Total cells to execute: {len([c for c in nb.cells if c.cell_type == 'code'])}")
-                  print(f"⏰ Schedule: EVEN hours (0,2,4,6,8,10,12,14,16,18,20,22)")
+                  print(f"⏰ Trigger: Manual or colab_trigger.txt")
                   print("="*80)
                   print()
                   
@@ -331,7 +325,7 @@ jobs:
           print(f"📓 Notebook: AI_Forex_Brain_2.ipynb")
           print(f"🔧 Mode: Adaptive Weekend Schedule")
           print(f"⚙️  Executor: AdaptiveWeekendExecutor v20.4")
-          print(f"⏰ Schedule: 2-hour intervals (matches adaptive eval windows)")
+          print(f"⏰ Trigger: Manual or colab_trigger.txt")
           print("="*80)
           print()
           
@@ -373,8 +367,8 @@ jobs:
               
               report = {
                   'timestamp': datetime.now().isoformat(),
-                  'trigger': 'github_actions_adaptive_schedule',
-                  'schedule_type': 'adaptive_2h_intervals',
+                  'trigger': 'manual_or_colab_trigger',
+                  'schedule_type': 'manual_trigger',
                   'is_weekend': ep.is_weekend,
                   'duration': duration,
                   'cells_executed': ep.cell_count,
@@ -396,8 +390,8 @@ jobs:
               
               report = {
                   'timestamp': datetime.now().isoformat(),
-                  'trigger': 'github_actions_adaptive_schedule',
-                  'schedule_type': 'adaptive_2h_intervals',
+                  'trigger': 'manual_or_colab_trigger',
+                  'schedule_type': 'manual_trigger',
                   'is_weekend': ep.is_weekend,
                   'duration': duration,
                   'cells_executed': ep.cell_count,
@@ -420,8 +414,8 @@ jobs:
           echo "⚡ Triggered at: $(date +'%H:%M UTC')"
           echo "📅 Day: ${{ steps.day_info.outputs.day_name }}"
           echo "🔢 Run: #${{ steps.data.outputs.run_number }}"
-          echo "📊 Mode: 2-HOUR INTERVALS (Adaptive Window Compatible)"
-          echo "⏰ Schedule: EVEN hours (0,2,4,6,8,10,12,14,16,18,20,22)"
+          echo "📊 Mode: MANUAL TRIGGER (colab_trigger.txt)"
+          echo "⏰ Trigger: Manual or Push Event"
           echo "🎯 Pending Predictions: ${{ steps.data.outputs.pending_predictions }}"
           echo ""
           python run_full.py
@@ -440,8 +434,8 @@ jobs:
           metrics = {
               'status': 'no_data', 
               'version': 'v20.4-adaptive',
-              'trigger': 'github_actions',
-              'scheduler': 'adaptive_2h_intervals',
+              'trigger': 'manual_or_colab_trigger',
+              'scheduler': 'manual_trigger',
               'is_weekend': datetime.now(timezone.utc).weekday() in [5, 6]
           }
           
@@ -627,12 +621,12 @@ jobs:
               PENDING=$(python3 -c "import json; d=json.load(open('.github/run_history/metrics.json')); print(d.get('pending_predictions', 0))" 2>/dev/null || echo "0")
               
               if [ "${{ steps.day_info.outputs.is_weekend }}" = "true" ]; then
-                git commit -m "🏖️  Run #${RUN} - ${DAY} ${HOUR}:00 UTC | ${OUTCOMES} outcomes | ${PENDING} pending | Adaptive 2h" || true
+                git commit -m "🏖️  Run #${RUN} - ${DAY} ${HOUR}:00 UTC | ${OUTCOMES} outcomes | ${PENDING} pending | Manual Trigger" || true
               else
-                git commit -m "💼 Run #${RUN} - ${DAY} ${HOUR}:00 UTC | ${OUTCOMES} outcomes | ${PENDING} pending | Adaptive 2h" || true
+                git commit -m "💼 Run #${RUN} - ${DAY} ${HOUR}:00 UTC | ${OUTCOMES} outcomes | ${PENDING} pending | Manual Trigger" || true
               fi
             else
-              git commit -m "🎓 Run #${RUN} - ${DAY} ${HOUR}:00 UTC | Adaptive Schedule" || true
+              git commit -m "🎓 Run #${RUN} - ${DAY} ${HOUR}:00 UTC | Manual Trigger" || true
             fi
             
             # Push with retry
@@ -677,20 +671,19 @@ jobs:
           echo "📅 Day: ${{ steps.day_info.outputs.day_name }}"
           echo "🔢 Run: #${{ steps.data.outputs.run_number }}"
           echo "⏰ Time: $(date +'%Y-%m-%d %H:%M UTC')"
-          echo "⚡ Trigger: GitHub Actions (Adaptive 2h Schedule)"
-          echo "📊 Schedule: EVEN hours (0,2,4,6,8,10,12,14,16,18,20,22)"
+          echo "⚡ Trigger: Manual or colab_trigger.txt"
           echo ""
           
           if [ "${{ steps.day_info.outputs.is_weekend }}" = "true" ]; then
             echo "🏖️  WEEKEND MODE ACTIVE"
-            echo "   • 2-hour intervals match adaptive evaluation windows"
+            echo "   • Manual trigger for adaptive evaluation"
             echo "   • Minimum eval: 2-12 hours (volatility-dependent)"
             echo "   • Maximum timeout: 24-72 hours"
             echo "   • Smart timeout: Only counts if price moved >0.5 ATR"
             echo ""
           else
             echo "💼 WEEKDAY MODE ACTIVE"
-            echo "   • 2-hour intervals for live trading"
+            echo "   • Manual trigger for live trading"
             echo "   • Minimum eval: 1-6 hours (volatility-dependent)"
             echo "   • Maximum timeout: 12-36 hours"
             echo ""
@@ -718,23 +711,12 @@ jobs:
           echo "✅ Run complete"
           echo "=========================================="
           echo ""
-          echo "💡 Next scheduled runs (EAT = UTC+3):"
-          echo "   All days: EVEN hours only"
-          echo "   00:00 UTC = 3:00 AM EAT 🌙"
-          echo "   02:00 UTC = 5:00 AM EAT"
-          echo "   04:00 UTC = 7:00 AM EAT"
-          echo "   06:00 UTC = 9:00 AM EAT"
-          echo "   08:00 UTC = 11:00 AM EAT"
-          echo "   10:00 UTC = 1:00 PM EAT"
-          echo "   12:00 UTC = 3:00 PM EAT"
-          echo "   14:00 UTC = 5:00 PM EAT"
-          echo "   16:00 UTC = 7:00 PM EAT"
-          echo "   18:00 UTC = 9:00 PM EAT"
-          echo "   20:00 UTC = 11:00 PM EAT"
-          echo "   22:00 UTC = 1:00 AM EAT"
+          echo "💡 Next run trigger options:"
+          echo "   • Manual: workflow_dispatch from GitHub Actions"
+          echo "   • Automatic: Push changes to colab_trigger.txt"
           echo ""
           echo "🔧 Adaptive Benefits:"
-          echo "   ✅ 2h intervals give predictions time to mature"
+          echo "   ✅ Manual control over evaluation timing"
           echo "   ✅ Weekend volatility properly accounted for"
           echo "   ✅ Reduced false losses from premature evaluation"
           echo "   ✅ Better learning signal quality"

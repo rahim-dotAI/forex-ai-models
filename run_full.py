@@ -7,7 +7,7 @@ import re
 from nbconvert.preprocessors import ExecutePreprocessor
 from datetime import datetime, timezone
 
-class AdaptiveWeekendExecutor(ExecutePreprocessor):
+class WeekendContrarianExecutor(ExecutePreprocessor):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.cell_count = 0
@@ -21,7 +21,7 @@ class AdaptiveWeekendExecutor(ExecutePreprocessor):
     
     def preprocess(self, nb, resources=None, km=None):
         print("="*80)
-        print("🚀 ADAPTIVE WEEKEND SCHEDULE v20.4")
+        print("🚀 WEEKEND CONTRARIAN SCHEDULE v21.0 (1.5x Optimized)")
         print("="*80)
         print(f"📅 Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
         
@@ -29,14 +29,19 @@ class AdaptiveWeekendExecutor(ExecutePreprocessor):
         print(f"🔧 Alpha Vantage: {'SKIPPED ⏭️' if skip_av else 'ACTIVE ✅ (00:00 UTC)'}")
         
         if self.is_weekend:
-            print("🏖️  WEEKEND MODE: 2-hour intervals for adaptive evaluation")
-            print("   Min eval window: 2-12 hours")
-            print("   Max timeout: 24-72 hours")
-            print("   Schedule matches adaptive pipeline needs ✅")
+            print("🏖️  WEEKEND MODE: Pipeline v6.3.1 Contrarian Active")
+            print("   • Using 1.5x SL/TP (optimized for low volatility)")
+            print("   • A/B Testing: 50% normal, 50% contrarian")
+            print("   • Min eval window: 2-12 hours")
+            print("   • Max timeout: 24-72 hours")
+            print("   • Regime-aware Trade Beacon v21.0")
         else:
-            print("💼 WEEKDAY MODE: 2-hour intervals for live trading")
-            print("   Min eval window: 1-6 hours")
-            print("   Max timeout: 12-36 hours")
+            print("💼 WEEKDAY MODE: Live trading with regime detection")
+            print("   • Pipeline v6.3.1 normal mode")
+            print("   • Using 2x normal SL/TP")
+            print("   • Min eval window: 1-6 hours")
+            print("   • Max timeout: 12-36 hours")
+            print("   • Trade Beacon v21.0 with full regime detection")
         
         print(f"📊 Total cells to execute: {len([c for c in nb.cells if c.cell_type == 'code'])}")
         print(f"⏰ Trigger: Manual or colab_trigger.txt")
@@ -60,10 +65,10 @@ class AdaptiveWeekendExecutor(ExecutePreprocessor):
             return "📊 YFinance Fetcher"
         elif 'combiner' in source_lower:
             return "🔗 CSV Combiner"
-        elif 'pipeline v6' in source_lower or 'ultra-persistent' in source_lower:
-            return "🧠 Pipeline v6.2 Adaptive Processor"
-        elif 'trade beacon' in source_lower:
-            return "🎯 Trade Beacon v20.4"
+        elif 'pipeline v6.3' in source_lower or 'weekend contrarian' in source_lower:
+            return "🧠 Pipeline v6.3.1 Weekend Contrarian"
+        elif 'trade beacon' in source_lower and 'v21' in source_lower:
+            return "🌍 Trade Beacon v21.0 - Regime-Aware"
         elif 'learning' in source_lower and 'system' in source_lower:
             return "🎓 Adaptive Learning System"
         elif 'backtest' in source_lower:
@@ -88,7 +93,9 @@ class AdaptiveWeekendExecutor(ExecutePreprocessor):
             print("="*80)
             print(f"📍 STAGE: {new_stage}")
             if self.is_weekend and 'Pipeline' in new_stage:
-                print("   🏖️  Weekend adaptive mode active")
+                print("   🏖️  Weekend contrarian mode (1.5x SL/TP)")
+            if 'Beacon' in new_stage:
+                print("   🌍 Market regime detection active")
             print("="*80)
         
         elapsed = time.time() - self.start_time
@@ -157,17 +164,18 @@ with open('AI_Forex_Brain_2.ipynb', 'r') as f:
     nb = nbformat.read(f, as_version=4)
 
 print("\n" + "="*80)
-print("🤖 FOREX AI BRAIN - ADAPTIVE WEEKEND EXECUTION")
+print("🤖 FOREX AI BRAIN - WEEKEND CONTRARIAN v21.0")
 print("="*80)
 print(f"📓 Notebook: AI_Forex_Brain_2.ipynb")
-print(f"🔧 Mode: Adaptive Weekend Schedule")
-print(f"⚙️  Executor: AdaptiveWeekendExecutor v20.4")
+print(f"🔧 Mode: Weekend Contrarian with Regime Detection")
+print(f"⚙️  Pipeline: v6.3.1 (1.5x SL/TP optimization)")
+print(f"⚙️  Trade Beacon: v21.0 (Market regime awareness)")
 print(f"⏰ Trigger: Manual or colab_trigger.txt")
 print("="*80)
 print()
 
 # Execute
-ep = AdaptiveWeekendExecutor(timeout=2400, kernel_name='python3', allow_errors=True)
+ep = WeekendContrarianExecutor(timeout=2400, kernel_name='python3', allow_errors=True)
 start = time.time()
 
 try:
@@ -184,8 +192,10 @@ try:
     
     if ep.is_weekend:
         print(f"\n🏖️  Weekend Mode Summary:")
-        print(f"   2-hour schedule allows proper adaptive evaluation")
-        print(f"   Next evaluation window: 2-12 hours (volatility-dependent)")
+        print(f"   • Pipeline v6.3.1 contrarian active (1.5x SL/TP)")
+        print(f"   • A/B testing 50% normal vs 50% contrarian")
+        print(f"   • Faster evaluation with tighter stops")
+        print(f"   • Trade Beacon v21.0 regime detection active")
     
     if ep.stage_timings:
         print("\n📊 Stage Timings:")
@@ -214,7 +224,10 @@ try:
         'success_rate': round(ep.successful_cells/(ep.successful_cells+ep.failed_cells)*100, 2),
         'stage_timings': {k: v.get('duration', 0) for k, v in ep.stage_timings.items()},
         'critical_errors': len(ep.critical_errors),
-        'status': 'success'
+        'status': 'success',
+        'version': 'v21.0',
+        'pipeline_version': 'v6.3.1',
+        'beacon_version': 'v21.0'
     }
     
 except Exception as e:
@@ -233,7 +246,8 @@ except Exception as e:
         'duration': duration,
         'cells_executed': ep.cell_count,
         'status': 'error',
-        'error': str(e)[:300]
+        'error': str(e)[:300],
+        'version': 'v21.0'
     }
 
 # Save report

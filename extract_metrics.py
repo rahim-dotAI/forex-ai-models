@@ -5,8 +5,10 @@ from pathlib import Path
 from datetime import datetime, timezone
 
 metrics = {
-    'status': 'no_data', 
-    'version': 'v20.4-adaptive',
+    'status': 'no_data',
+    'version': 'v21.0',
+    'pipeline_version': 'v6.3.1',
+    'beacon_version': 'v21.0',
     'trigger': 'manual_or_colab_trigger',
     'scheduler': 'manual_trigger',
     'is_weekend': datetime.now(timezone.utc).weekday() in [5, 6]
@@ -43,11 +45,13 @@ if stats_file.exists():
             rl_stats = json.load(f)
         metrics['rl_trades'] = rl_stats.get('total_trades', 0)
         metrics['rl_win_rate'] = round(rl_stats.get('win_rate', 0) * 100, 2)
-        metrics['rl_pnl'] = round(rl_stats.get('total_pnl', 0), 2)
+        metrics['rl_pnl'] = round(rl_stats.get('total_pnl', 0.0), 2)
+        metrics['epsilon'] = rl_stats.get('epsilon_history', [0.7])[-1] if rl_stats.get('epsilon_history') else 0.7
+        metrics['regime_filtered'] = rl_stats.get('regime_filtered_trades', 0)
     except Exception as e:
         metrics['learning_stats_error'] = str(e)[:100]
 
-# Learning outcomes with weekend split
+# Learning outcomes with weekend contrarian split
 learning_db = Path('learning_data/learning_outcomes.json')
 if learning_db.exists():
     try:
@@ -56,14 +60,20 @@ if learning_db.exists():
         
         metrics['total_outcomes'] = len(outcomes)
         
-        # Split by weekend/weekday
-        weekend_outcomes = [o for o in outcomes if o.get('was_weekend_pred', False)]
+        # Split by weekend/weekday AND contrarian strategy
+        weekend_normal = [o for o in outcomes if o.get('was_weekend_pred', False) and not o.get('is_contrarian', False)]
+        weekend_contrarian = [o for o in outcomes if o.get('was_weekend_pred', False) and o.get('is_contrarian', False)]
         weekday_outcomes = [o for o in outcomes if not o.get('was_weekend_pred', False)]
         
-        if weekend_outcomes:
-            weekend_wins = sum(1 for o in weekend_outcomes if o.get('was_correct', False))
-            metrics['weekend_outcomes'] = len(weekend_outcomes)
-            metrics['weekend_win_rate'] = round(weekend_wins / len(weekend_outcomes) * 100, 2)
+        if weekend_normal:
+            weekend_normal_wins = sum(1 for o in weekend_normal if o.get('was_correct', False))
+            metrics['weekend_normal_outcomes'] = len(weekend_normal)
+            metrics['weekend_normal_win_rate'] = round(weekend_normal_wins / len(weekend_normal) * 100, 2)
+        
+        if weekend_contrarian:
+            weekend_contrarian_wins = sum(1 for o in weekend_contrarian if o.get('was_correct', False))
+            metrics['weekend_contrarian_outcomes'] = len(weekend_contrarian)
+            metrics['weekend_contrarian_win_rate'] = round(weekend_contrarian_wins / len(weekend_contrarian) * 100, 2)
         
         if weekday_outcomes:
             weekday_wins = sum(1 for o in weekday_outcomes if o.get('was_correct', False))
@@ -108,6 +118,29 @@ if predictions_file.exists():
     except Exception as e:
         metrics['predictions_error'] = str(e)[:100]
 
+# Regime performance stats
+regime_stats_file = Path('regime_stats/regime_performance.json')
+if regime_stats_file.exists():
+    try:
+        with open(regime_stats_file) as f:
+            regime_data = json.load(f)
+        
+        # Find best performing regimes
+        best_regimes = []
+        for key, data in regime_data.items():
+            if data.get('total', 0) >= 5:
+                win_rate = data['wins'] / data['total']
+                best_regimes.append((key, win_rate, data['total']))
+        
+        best_regimes.sort(key=lambda x: x[1], reverse=True)
+        metrics['best_regimes'] = [
+            {'regime': r[0], 'win_rate': round(r[1] * 100, 2), 'trades': r[2]}
+            for r in best_regimes[:5]
+        ]
+        
+    except Exception as e:
+        metrics['regime_error'] = str(e)[:100]
+
 # Save metrics
 os.makedirs('.github/run_history', exist_ok=True)
 with open('.github/run_history/metrics.json', 'w') as f:
@@ -115,7 +148,7 @@ with open('.github/run_history/metrics.json', 'w') as f:
 
 # Print summary
 print("\n" + "="*70)
-print("📊 EXTRACTED METRICS (ADAPTIVE WEEKEND MODE)")
+print("📊 EXTRACTED METRICS (WEEKEND CONTRARIAN v21.0)")
 print("="*70)
 for key, value in metrics.items():
     print(f"{key}: {value}")
@@ -123,22 +156,50 @@ print("="*70)
 
 # Weekend-specific analysis
 if metrics.get('is_weekend'):
-    print("\n🏖️  WEEKEND ANALYSIS:")
+    print("\n🏖️  WEEKEND CONTRARIAN A/B TEST:")
     print("="*70)
-    if metrics.get('weekend_outcomes', 0) > 0:
-        print(f"   Weekend Predictions: {metrics['weekend_outcomes']}")
-        print(f"   Weekend Win Rate: {metrics['weekend_win_rate']}%")
+    
+    if metrics.get('weekend_normal_outcomes', 0) > 0:
+        print(f"   📊 NORMAL Strategy:")
+        print(f"      Predictions: {metrics['weekend_normal_outcomes']}")
+        print(f"      Win Rate: {metrics['weekend_normal_win_rate']}%")
+    
+    if metrics.get('weekend_contrarian_outcomes', 0) > 0:
+        print(f"\n   🔄 CONTRARIAN Strategy:")
+        print(f"      Predictions: {metrics['weekend_contrarian_outcomes']}")
+        print(f"      Win Rate: {metrics['weekend_contrarian_win_rate']}%")
+        
+        # Compare
+        if metrics.get('weekend_normal_outcomes', 0) > 0:
+            normal_wr = metrics['weekend_normal_win_rate']
+            contrarian_wr = metrics['weekend_contrarian_win_rate']
+            diff = contrarian_wr - normal_wr
+            
+            print(f"\n   📈 Performance Comparison:")
+            print(f"      Difference: {diff:+.2f}%")
+            
+            if diff > 20:
+                print(f"      Status: 🎉 CONTRARIAN HUGE SUCCESS!")
+                print(f"      Recommendation: Switch to 100% contrarian on weekends")
+            elif diff > 5:
+                print(f"      Status: ✅ CONTRARIAN BETTER")
+                print(f"      Recommendation: Continue A/B testing")
+            elif diff < -5:
+                print(f"      Status: ❌ CONTRARIAN WORSE")
+                print(f"      Recommendation: Stick with normal strategy")
+            else:
+                print(f"      Status: ⚖️  INCONCLUSIVE")
+                print(f"      Recommendation: Need more data")
+    
     if metrics.get('weekday_outcomes', 0) > 0:
-        print(f"   Weekday Predictions: {metrics['weekday_outcomes']}")
-        print(f"   Weekday Win Rate: {metrics['weekday_win_rate']}%")
+        print(f"\n   💼 WEEKDAY Baseline:")
+        print(f"      Predictions: {metrics['weekday_outcomes']}")
+        print(f"      Win Rate: {metrics['weekday_win_rate']}%")
     
     if metrics.get('using_adaptive_windows'):
         print(f"\n   ✅ Adaptive Windows: ACTIVE")
         print(f"   Last min wait: {metrics.get('last_min_wait', 0)}h")
         print(f"   Last max wait: {metrics.get('last_max_wait', 0)}h")
-    else:
-        print(f"\n   ⚠️  Adaptive Windows: NOT DETECTED")
-        print(f"   Consider updating to Pipeline v6.2 Pro")
     
     if metrics.get('pending_predictions', 0) > 0:
         print(f"\n   📊 Pending: {metrics['pending_predictions']} predictions")
@@ -151,3 +212,20 @@ if metrics.get('is_weekend'):
             print(f"   ⏳ Needs more time ({2 - oldest_hours:.1f}h remaining)")
     
     print("="*70)
+
+# Regime detection summary
+if metrics.get('best_regimes'):
+    print("\n🌍 TOP PERFORMING REGIMES:")
+    print("="*70)
+    for i, regime in enumerate(metrics['best_regimes'], 1):
+        print(f"   {i}. {regime['regime']}")
+        print(f"      Win Rate: {regime['win_rate']}%")
+        print(f"      Trades: {regime['trades']}")
+    print("="*70)
+
+# Trade Beacon v21.0 stats
+if metrics.get('regime_filtered', 0) > 0:
+    print(f"\n🌍 REGIME FILTERING:")
+    print(f"   Trades filtered by regime detection: {metrics['regime_filtered']}")
+    print(f"   This prevents trading in unfavorable market conditions")
+

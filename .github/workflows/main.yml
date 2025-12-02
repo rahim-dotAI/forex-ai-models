@@ -1,4 +1,4 @@
-name: Multi-Source Learning System v20.4 - Manual Trigger
+name: Multi-Source Learning System v21.0 - Manual Trigger
 
 on:
   workflow_dispatch:
@@ -148,7 +148,7 @@ jobs:
           echo "   Run number: $RUN_NUM"
           
           mkdir -p data/raw/yfinance data/raw/alpha_vantage data/processed data/quarantine \
-                   database logs outputs omega_state rl_memory backups learning_data .github/run_history
+                   database logs outputs omega_state rl_memory backups learning_data .github/run_history regime_stats
 
       - name: Verify Notebook
         run: |
@@ -158,7 +158,7 @@ jobs:
           fi
           echo "✅ Found AI_Forex_Brain_2.ipynb"
 
-      - name: Create Enhanced Notebook Executor with Adaptive Weekend Logic
+      - name: Create Enhanced Notebook Executor with Weekend Contrarian Logic
         run: |
           cat > run_full.py << 'EOF'
           import nbformat
@@ -170,7 +170,7 @@ jobs:
           from nbconvert.preprocessors import ExecutePreprocessor
           from datetime import datetime, timezone
           
-          class AdaptiveWeekendExecutor(ExecutePreprocessor):
+          class WeekendContrarianExecutor(ExecutePreprocessor):
               def __init__(self, *args, **kwargs):
                   super().__init__(*args, **kwargs)
                   self.cell_count = 0
@@ -184,7 +184,7 @@ jobs:
               
               def preprocess(self, nb, resources=None, km=None):
                   print("="*80)
-                  print("🚀 ADAPTIVE WEEKEND SCHEDULE v20.4")
+                  print("🚀 WEEKEND CONTRARIAN SCHEDULE v21.0 (1.5x Optimized)")
                   print("="*80)
                   print(f"📅 Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
                   
@@ -192,14 +192,19 @@ jobs:
                   print(f"🔧 Alpha Vantage: {'SKIPPED ⏭️' if skip_av else 'ACTIVE ✅ (00:00 UTC)'}")
                   
                   if self.is_weekend:
-                      print("🏖️  WEEKEND MODE: 2-hour intervals for adaptive evaluation")
-                      print("   Min eval window: 2-12 hours")
-                      print("   Max timeout: 24-72 hours")
-                      print("   Schedule matches adaptive pipeline needs ✅")
+                      print("🏖️  WEEKEND MODE: Pipeline v6.3.1 Contrarian Active")
+                      print("   • Using 1.5x SL/TP (optimized for low volatility)")
+                      print("   • A/B Testing: 50% normal, 50% contrarian")
+                      print("   • Min eval window: 2-12 hours")
+                      print("   • Max timeout: 24-72 hours")
+                      print("   • Regime-aware Trade Beacon v21.0")
                   else:
-                      print("💼 WEEKDAY MODE: 2-hour intervals for live trading")
-                      print("   Min eval window: 1-6 hours")
-                      print("   Max timeout: 12-36 hours")
+                      print("💼 WEEKDAY MODE: Live trading with regime detection")
+                      print("   • Pipeline v6.3.1 normal mode")
+                      print("   • Using 2x normal SL/TP")
+                      print("   • Min eval window: 1-6 hours")
+                      print("   • Max timeout: 12-36 hours")
+                      print("   • Trade Beacon v21.0 with full regime detection")
                   
                   print(f"📊 Total cells to execute: {len([c for c in nb.cells if c.cell_type == 'code'])}")
                   print(f"⏰ Trigger: Manual or colab_trigger.txt")
@@ -223,10 +228,10 @@ jobs:
                       return "📊 YFinance Fetcher"
                   elif 'combiner' in source_lower:
                       return "🔗 CSV Combiner"
-                  elif 'pipeline v6' in source_lower or 'ultra-persistent' in source_lower:
-                      return "🧠 Pipeline v6.2 Adaptive Processor"
-                  elif 'trade beacon' in source_lower:
-                      return "🎯 Trade Beacon v20.4"
+                  elif 'pipeline v6.3' in source_lower or 'weekend contrarian' in source_lower:
+                      return "🧠 Pipeline v6.3.1 Weekend Contrarian"
+                  elif 'trade beacon' in source_lower and 'v21' in source_lower:
+                      return "🌍 Trade Beacon v21.0 - Regime-Aware"
                   elif 'learning' in source_lower and 'system' in source_lower:
                       return "🎓 Adaptive Learning System"
                   elif 'backtest' in source_lower:
@@ -251,7 +256,9 @@ jobs:
                       print("="*80)
                       print(f"📍 STAGE: {new_stage}")
                       if self.is_weekend and 'Pipeline' in new_stage:
-                          print("   🏖️  Weekend adaptive mode active")
+                          print("   🏖️  Weekend contrarian mode (1.5x SL/TP)")
+                      if 'Beacon' in new_stage:
+                          print("   🌍 Market regime detection active")
                       print("="*80)
                   
                   elapsed = time.time() - self.start_time
@@ -320,17 +327,18 @@ jobs:
               nb = nbformat.read(f, as_version=4)
           
           print("\n" + "="*80)
-          print("🤖 FOREX AI BRAIN - ADAPTIVE WEEKEND EXECUTION")
+          print("🤖 FOREX AI BRAIN - WEEKEND CONTRARIAN v21.0")
           print("="*80)
           print(f"📓 Notebook: AI_Forex_Brain_2.ipynb")
-          print(f"🔧 Mode: Adaptive Weekend Schedule")
-          print(f"⚙️  Executor: AdaptiveWeekendExecutor v20.4")
+          print(f"🔧 Mode: Weekend Contrarian with Regime Detection")
+          print(f"⚙️  Pipeline: v6.3.1 (1.5x SL/TP optimization)")
+          print(f"⚙️  Trade Beacon: v21.0 (Market regime awareness)")
           print(f"⏰ Trigger: Manual or colab_trigger.txt")
           print("="*80)
           print()
           
           # Execute
-          ep = AdaptiveWeekendExecutor(timeout=2400, kernel_name='python3', allow_errors=True)
+          ep = WeekendContrarianExecutor(timeout=2400, kernel_name='python3', allow_errors=True)
           start = time.time()
           
           try:
@@ -347,8 +355,10 @@ jobs:
               
               if ep.is_weekend:
                   print(f"\n🏖️  Weekend Mode Summary:")
-                  print(f"   2-hour schedule allows proper adaptive evaluation")
-                  print(f"   Next evaluation window: 2-12 hours (volatility-dependent)")
+                  print(f"   • Pipeline v6.3.1 contrarian active (1.5x SL/TP)")
+                  print(f"   • A/B testing 50% normal vs 50% contrarian")
+                  print(f"   • Faster evaluation with tighter stops")
+                  print(f"   • Trade Beacon v21.0 regime detection active")
               
               if ep.stage_timings:
                   print("\n📊 Stage Timings:")
@@ -377,7 +387,10 @@ jobs:
                   'success_rate': round(ep.successful_cells/(ep.successful_cells+ep.failed_cells)*100, 2),
                   'stage_timings': {k: v.get('duration', 0) for k, v in ep.stage_timings.items()},
                   'critical_errors': len(ep.critical_errors),
-                  'status': 'success'
+                  'status': 'success',
+                  'version': 'v21.0',
+                  'pipeline_version': 'v6.3.1',
+                  'beacon_version': 'v21.0'
               }
               
           except Exception as e:
@@ -396,7 +409,8 @@ jobs:
                   'duration': duration,
                   'cells_executed': ep.cell_count,
                   'status': 'error',
-                  'error': str(e)[:300]
+                  'error': str(e)[:300],
+                  'version': 'v21.0'
               }
           
           # Save report
@@ -407,9 +421,9 @@ jobs:
           print(f"💾 Run report saved to .github/run_history/latest_run.json")
           EOF
 
-      - name: Run Full Notebook Pipeline with Adaptive Weekend Logic
+      - name: Run Full Notebook Pipeline v6.3.1 (Weekend Contrarian - Optimized)
         run: |
-          echo "🚀 STARTING ADAPTIVE WEEKEND EXECUTION"
+          echo "🚀 STARTING WEEKEND CONTRARIAN v21.0 EXECUTION"
           echo "======================================================"
           echo "⚡ Triggered at: $(date +'%H:%M UTC')"
           echo "📅 Day: ${{ steps.day_info.outputs.day_name }}"
@@ -417,11 +431,12 @@ jobs:
           echo "📊 Mode: MANUAL TRIGGER (colab_trigger.txt)"
           echo "⏰ Trigger: Manual or Push Event"
           echo "🎯 Pending Predictions: ${{ steps.data.outputs.pending_predictions }}"
+          echo "🌍 Pipeline: v6.3.1 | Beacon: v21.0"
           echo ""
           python run_full.py
         timeout-minutes: 50
 
-      - name: Extract Pipeline Metrics with Weekend Analysis
+      - name: Extract Pipeline Metrics with Weekend Contrarian Analysis
         if: always()
         run: |
           cat > extract_metrics.py << 'EOF'
@@ -432,8 +447,10 @@ jobs:
           from datetime import datetime, timezone
           
           metrics = {
-              'status': 'no_data', 
-              'version': 'v20.4-adaptive',
+              'status': 'no_data',
+              'version': 'v21.0',
+              'pipeline_version': 'v6.3.1',
+              'beacon_version': 'v21.0',
               'trigger': 'manual_or_colab_trigger',
               'scheduler': 'manual_trigger',
               'is_weekend': datetime.now(timezone.utc).weekday() in [5, 6]
@@ -470,11 +487,13 @@ jobs:
                       rl_stats = json.load(f)
                   metrics['rl_trades'] = rl_stats.get('total_trades', 0)
                   metrics['rl_win_rate'] = round(rl_stats.get('win_rate', 0) * 100, 2)
-                  metrics['rl_pnl'] = round(rl_stats.get('total_pnl', 0), 2)
+                  metrics['rl_pnl'] = round(rl_stats.get('total_pnl', 0.0), 2)
+                  metrics['epsilon'] = rl_stats.get('epsilon_history', [0.7])[-1] if rl_stats.get('epsilon_history') else 0.7
+                  metrics['regime_filtered'] = rl_stats.get('regime_filtered_trades', 0)
               except Exception as e:
                   metrics['learning_stats_error'] = str(e)[:100]
           
-          # Learning outcomes with weekend split
+          # Learning outcomes with weekend contrarian split
           learning_db = Path('learning_data/learning_outcomes.json')
           if learning_db.exists():
               try:
@@ -483,14 +502,20 @@ jobs:
                   
                   metrics['total_outcomes'] = len(outcomes)
                   
-                  # Split by weekend/weekday
-                  weekend_outcomes = [o for o in outcomes if o.get('was_weekend_pred', False)]
+                  # Split by weekend/weekday AND contrarian strategy
+                  weekend_normal = [o for o in outcomes if o.get('was_weekend_pred', False) and not o.get('is_contrarian', False)]
+                  weekend_contrarian = [o for o in outcomes if o.get('was_weekend_pred', False) and o.get('is_contrarian', False)]
                   weekday_outcomes = [o for o in outcomes if not o.get('was_weekend_pred', False)]
                   
-                  if weekend_outcomes:
-                      weekend_wins = sum(1 for o in weekend_outcomes if o.get('was_correct', False))
-                      metrics['weekend_outcomes'] = len(weekend_outcomes)
-                      metrics['weekend_win_rate'] = round(weekend_wins / len(weekend_outcomes) * 100, 2)
+                  if weekend_normal:
+                      weekend_normal_wins = sum(1 for o in weekend_normal if o.get('was_correct', False))
+                      metrics['weekend_normal_outcomes'] = len(weekend_normal)
+                      metrics['weekend_normal_win_rate'] = round(weekend_normal_wins / len(weekend_normal) * 100, 2)
+                  
+                  if weekend_contrarian:
+                      weekend_contrarian_wins = sum(1 for o in weekend_contrarian if o.get('was_correct', False))
+                      metrics['weekend_contrarian_outcomes'] = len(weekend_contrarian)
+                      metrics['weekend_contrarian_win_rate'] = round(weekend_contrarian_wins / len(weekend_contrarian) * 100, 2)
                   
                   if weekday_outcomes:
                       weekday_wins = sum(1 for o in weekday_outcomes if o.get('was_correct', False))
@@ -535,6 +560,29 @@ jobs:
               except Exception as e:
                   metrics['predictions_error'] = str(e)[:100]
           
+          # Regime performance stats
+          regime_stats_file = Path('regime_stats/regime_performance.json')
+          if regime_stats_file.exists():
+              try:
+                  with open(regime_stats_file) as f:
+                      regime_data = json.load(f)
+                  
+                  # Find best performing regimes
+                  best_regimes = []
+                  for key, data in regime_data.items():
+                      if data.get('total', 0) >= 5:
+                          win_rate = data['wins'] / data['total']
+                          best_regimes.append((key, win_rate, data['total']))
+                  
+                  best_regimes.sort(key=lambda x: x[1], reverse=True)
+                  metrics['best_regimes'] = [
+                      {'regime': r[0], 'win_rate': round(r[1] * 100, 2), 'trades': r[2]}
+                      for r in best_regimes[:5]
+                  ]
+                  
+              except Exception as e:
+                  metrics['regime_error'] = str(e)[:100]
+          
           # Save metrics
           os.makedirs('.github/run_history', exist_ok=True)
           with open('.github/run_history/metrics.json', 'w') as f:
@@ -542,7 +590,7 @@ jobs:
           
           # Print summary
           print("\n" + "="*70)
-          print("📊 EXTRACTED METRICS (ADAPTIVE WEEKEND MODE)")
+          print("📊 EXTRACTED METRICS (WEEKEND CONTRARIAN v21.0)")
           print("="*70)
           for key, value in metrics.items():
               print(f"{key}: {value}")
@@ -550,22 +598,50 @@ jobs:
           
           # Weekend-specific analysis
           if metrics.get('is_weekend'):
-              print("\n🏖️  WEEKEND ANALYSIS:")
+              print("\n🏖️  WEEKEND CONTRARIAN A/B TEST:")
               print("="*70)
-              if metrics.get('weekend_outcomes', 0) > 0:
-                  print(f"   Weekend Predictions: {metrics['weekend_outcomes']}")
-                  print(f"   Weekend Win Rate: {metrics['weekend_win_rate']}%")
+              
+              if metrics.get('weekend_normal_outcomes', 0) > 0:
+                  print(f"   📊 NORMAL Strategy:")
+                  print(f"      Predictions: {metrics['weekend_normal_outcomes']}")
+                  print(f"      Win Rate: {metrics['weekend_normal_win_rate']}%")
+              
+              if metrics.get('weekend_contrarian_outcomes', 0) > 0:
+                  print(f"\n   🔄 CONTRARIAN Strategy:")
+                  print(f"      Predictions: {metrics['weekend_contrarian_outcomes']}")
+                  print(f"      Win Rate: {metrics['weekend_contrarian_win_rate']}%")
+                  
+                  # Compare
+                  if metrics.get('weekend_normal_outcomes', 0) > 0:
+                      normal_wr = metrics['weekend_normal_win_rate']
+                      contrarian_wr = metrics['weekend_contrarian_win_rate']
+                      diff = contrarian_wr - normal_wr
+                      
+                      print(f"\n   📈 Performance Comparison:")
+                      print(f"      Difference: {diff:+.2f}%")
+                      
+                      if diff > 20:
+                          print(f"      Status: 🎉 CONTRARIAN HUGE SUCCESS!")
+                          print(f"      Recommendation: Switch to 100% contrarian on weekends")
+                      elif diff > 5:
+                          print(f"      Status: ✅ CONTRARIAN BETTER")
+                          print(f"      Recommendation: Continue A/B testing")
+                      elif diff < -5:
+                          print(f"      Status: ❌ CONTRARIAN WORSE")
+                          print(f"      Recommendation: Stick with normal strategy")
+                      else:
+                          print(f"      Status: ⚖️  INCONCLUSIVE")
+                          print(f"      Recommendation: Need more data")
+              
               if metrics.get('weekday_outcomes', 0) > 0:
-                  print(f"   Weekday Predictions: {metrics['weekday_outcomes']}")
-                  print(f"   Weekday Win Rate: {metrics['weekday_win_rate']}%")
+                  print(f"\n   💼 WEEKDAY Baseline:")
+                  print(f"      Predictions: {metrics['weekday_outcomes']}")
+                  print(f"      Win Rate: {metrics['weekday_win_rate']}%")
               
               if metrics.get('using_adaptive_windows'):
                   print(f"\n   ✅ Adaptive Windows: ACTIVE")
                   print(f"   Last min wait: {metrics.get('last_min_wait', 0)}h")
                   print(f"   Last max wait: {metrics.get('last_max_wait', 0)}h")
-              else:
-                  print(f"\n   ⚠️  Adaptive Windows: NOT DETECTED")
-                  print(f"   Consider updating to Pipeline v6.2 Pro")
               
               if metrics.get('pending_predictions', 0) > 0:
                   print(f"\n   📊 Pending: {metrics['pending_predictions']} predictions")
@@ -578,6 +654,23 @@ jobs:
                       print(f"   ⏳ Needs more time ({2 - oldest_hours:.1f}h remaining)")
               
               print("="*70)
+          
+          # Regime detection summary
+          if metrics.get('best_regimes'):
+              print("\n🌍 TOP PERFORMING REGIMES:")
+              print("="*70)
+              for i, regime in enumerate(metrics['best_regimes'], 1):
+                  print(f"   {i}. {regime['regime']}")
+                  print(f"      Win Rate: {regime['win_rate']}%")
+                  print(f"      Trades: {regime['trades']}")
+              print("="*70)
+          
+          # Trade Beacon v21.0 stats
+          if metrics.get('regime_filtered', 0) > 0:
+              print(f"\n🌍 REGIME FILTERING:")
+              print(f"   Trades filtered by regime detection: {metrics['regime_filtered']}")
+              print(f"   This prevents trading in unfavorable market conditions")
+          
           EOF
           python extract_metrics.py
 
@@ -619,14 +712,15 @@ jobs:
             if [ -f ".github/run_history/metrics.json" ]; then
               OUTCOMES=$(python3 -c "import json; d=json.load(open('.github/run_history/metrics.json')); print(d.get('total_outcomes', 0))" 2>/dev/null || echo "0")
               PENDING=$(python3 -c "import json; d=json.load(open('.github/run_history/metrics.json')); print(d.get('pending_predictions', 0))" 2>/dev/null || echo "0")
+              REGIME_FILTERED=$(python3 -c "import json; d=json.load(open('.github/run_history/metrics.json')); print(d.get('regime_filtered', 0))" 2>/dev/null || echo "0")
               
               if [ "${{ steps.day_info.outputs.is_weekend }}" = "true" ]; then
-                git commit -m "🏖️  Run #${RUN} - ${DAY} ${HOUR}:00 UTC | ${OUTCOMES} outcomes | ${PENDING} pending | Manual Trigger" || true
+                git commit -m "🏖️  v21.0 Run #${RUN} - ${DAY} ${HOUR}:00 UTC | ${OUTCOMES} outcomes | ${PENDING} pending | ${REGIME_FILTERED} regime-filtered | Manual" || true
               else
-                git commit -m "💼 Run #${RUN} - ${DAY} ${HOUR}:00 UTC | ${OUTCOMES} outcomes | ${PENDING} pending | Manual Trigger" || true
+                git commit -m "💼 v21.0 Run #${RUN} - ${DAY} ${HOUR}:00 UTC | ${OUTCOMES} outcomes | ${PENDING} pending | ${REGIME_FILTERED} regime-filtered | Manual" || true
               fi
             else
-              git commit -m "🎓 Run #${RUN} - ${DAY} ${HOUR}:00 UTC | Manual Trigger" || true
+              git commit -m "🎓 v21.0 Run #${RUN} - ${DAY} ${HOUR}:00 UTC | Manual Trigger" || true
             fi
             
             # Push with retry
@@ -658,36 +752,59 @@ jobs:
             rl_memory/learning_stats.json
             learning_data/learning_outcomes.json
             learning_data/predictions_history.json
+            regime_stats/regime_performance.json
           retention-days: 7
           if-no-files-found: ignore
 
-      - name: Final Summary with Adaptive Analysis
+      - name: Final Summary with Weekend Contrarian Analysis
         if: always()
         run: |
           echo ""
           echo "=========================================="
-          echo "🎓 ADAPTIVE WEEKEND SCHEDULE - RUN SUMMARY"
+          echo "🎓 WEEKEND CONTRARIAN v21.0 - RUN SUMMARY"
           echo "=========================================="
           echo "📅 Day: ${{ steps.day_info.outputs.day_name }}"
           echo "🔢 Run: #${{ steps.data.outputs.run_number }}"
           echo "⏰ Time: $(date +'%Y-%m-%d %H:%M UTC')"
           echo "⚡ Trigger: Manual or colab_trigger.txt"
+          echo "🔧 Version: v21.0"
           echo ""
           
           if [ "${{ steps.day_info.outputs.is_weekend }}" = "true" ]; then
             echo "🏖️  WEEKEND MODE ACTIVE"
-            echo "   • Manual trigger for adaptive evaluation"
-            echo "   • Minimum eval: 2-12 hours (volatility-dependent)"
-            echo "   • Maximum timeout: 24-72 hours"
-            echo "   • Smart timeout: Only counts if price moved >0.5 ATR"
+            echo "   • Pipeline v6.3.1: Weekend Contrarian A/B Test"
+            echo "   • Using 1.5x TIGHTER SL/TP (not 3x)"
+            echo "   • A/B Test: 50% normal vs 50% contrarian"
+            echo "   • Adaptive windows: 2-12h min, 24-72h max"
+            echo "   • Trade Beacon v21.0: Market regime detection"
             echo ""
+            echo "   🧪 HYPOTHESIS: Weekend markets are range-bound"
+            echo "      Normal predictions: Low win rate (~2.6%)"
+            echo "      Contrarian predictions: Should succeed (~97%?)"
+            echo ""
+            echo "   ⚡ v6.3.1 OPTIMIZATION:"
+            echo "      • Tighter stops for faster evaluation"
+            echo "      • Low-volatility optimized"
+            echo "      • Results available in 4-8 hours (was 24-72h)"
           else
             echo "💼 WEEKDAY MODE ACTIVE"
-            echo "   • Manual trigger for live trading"
-            echo "   • Minimum eval: 1-6 hours (volatility-dependent)"
-            echo "   • Maximum timeout: 12-36 hours"
+            echo "   • Pipeline v6.3.1: Normal prediction logic"
+            echo "   • Using 2x normal SL/TP"
+            echo "   • Adaptive windows: 1-6h min, 12-36h max"
+            echo "   • Trade Beacon v21.0: Full regime detection"
             echo ""
+            echo "   🌍 REGIME DETECTION:"
+            echo "      • Volatility: LOW/NORMAL/HIGH/EXTREME"
+            echo "      • Trend: 5 types (STRONG_UP to STRONG_DOWN)"
+            echo "      • Session: ASIA/LONDON/NY/OVERLAP"
+            echo "      • Behavior: MOMENTUM/MEAN_REVERT/NEUTRAL"
+            echo ""
+            echo "   🎯 SMART FILTERING:"
+            echo "      • Only trade in favorable regimes"
+            echo "      • Dynamic SL/TP adjustment"
+            echo "      • Session-matched pairs"
           fi
+          echo ""
           
           echo "📈 Data Status:"
           echo "   Pickle files: ${{ steps.data.outputs.pickle_count }}"
@@ -715,9 +832,24 @@ jobs:
           echo "   • Manual: workflow_dispatch from GitHub Actions"
           echo "   • Automatic: Push changes to colab_trigger.txt"
           echo ""
-          echo "🔧 Adaptive Benefits:"
+          echo "🔧 v21.0 Key Features:"
+          echo "   ✅ Pipeline v6.3.1: Weekend contrarian (1.5x SL/TP)"
+          echo "   ✅ Trade Beacon v21.0: Market regime detection"
+          echo "   ✅ Volatility regime: LOW/NORMAL/HIGH/EXTREME"
+          echo "   ✅ Trend regime: 5 types (STRONG_UP to STRONG_DOWN)"
+          echo "   ✅ Session regime: ASIA/LONDON/NY/OVERLAP"
+          echo "   ✅ Behavior regime: MOMENTUM/MEAN_REVERT/NEUTRAL"
+          echo "   ✅ Dynamic SL/TP adjustment by regime"
+          echo "   ✅ Smart trade filtering (avoid unfavorable conditions)"
+          echo "   ✅ Weekend: 100% contrarian in ranging markets"
+          echo "   ✅ Weekday: Regime-aware normal trading"
+          echo ""
+          echo "🎯 Benefits:"
           echo "   ✅ Manual control over evaluation timing"
           echo "   ✅ Weekend volatility properly accounted for"
           echo "   ✅ Reduced false losses from premature evaluation"
           echo "   ✅ Better learning signal quality"
+          echo "   ✅ Regime filtering prevents bad trades"
+          echo "   ✅ 1.5x optimization = faster weekend results"
+          echo "   ✅ A/B testing proves which strategy works best"
           echo "=========================================="

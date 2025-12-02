@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-12-02T01:22:15.747866+00:00",
-  "iteration": 87,
+  "timestamp": "2025-12-02T02:04:06.101062+00:00",
+  "iteration": 88,
   "version": "v21.0-regime-aware",
   "mode": "LIVE_TRADING",
   "signals": {
@@ -9,7 +9,7 @@
       "last_price": 1.16,
       "skip_reason": "Pair not optimal for ASIA_SESSION",
       "regimes": {
-        "volatility": "HIGH_VOL",
+        "volatility": "NORMAL_VOL",
         "trend": "RANGING",
         "session": "ASIA_SESSION",
         "behavior": "MEAN_REVERT"
@@ -17,21 +17,21 @@
     },
     "GBP/USD": {
       "direction": "HOLD",
-      "last_price": 1.32,
+      "last_price": 1.321,
       "skip_reason": "Pair not optimal for ASIA_SESSION",
       "regimes": {
         "volatility": "NORMAL_VOL",
         "trend": "WEAK_DOWNTREND",
         "session": "ASIA_SESSION",
-        "behavior": "MEAN_REVERT"
+        "behavior": "MOMENTUM"
       }
     },
     "USD/JPY": {
       "direction": "BUY",
-      "last_price": 155.72,
-      "SL": 155.58800449916293,
-      "TP": 155.9262429700579,
-      "confidence": 30.655651006065487,
+      "last_price": 155.61,
+      "SL": 155.42194555664062,
+      "TP": 155.90383506774904,
+      "confidence": 32.06657910959792,
       "threshold": 65.0,
       "rb_epsilon": 0.1,
       "regimes": {
@@ -42,14 +42,14 @@
       },
       "sl_multiplier": 2.4,
       "tp_multiplier": 3.75,
-      "timestamp": "2025-12-02T01:22:15.733038+00:00"
+      "timestamp": "2025-12-02T02:04:06.094333+00:00"
     },
     "AUD/USD": {
       "direction": "BUY",
-      "last_price": 0.654,
-      "SL": 0.653731809261867,
-      "TP": 0.6543352384226663,
-      "confidence": 24.0631693955715,
+      "last_price": 0.6544,
+      "SL": 0.6532700930595398,
+      "TP": 0.6558123836755753,
+      "confidence": 28.430323166177544,
       "threshold": 65.0,
       "rb_epsilon": 0.1,
       "regimes": {
@@ -60,16 +60,16 @@
       },
       "sl_multiplier": 2.0,
       "tp_multiplier": 2.5,
-      "timestamp": "2025-12-02T01:22:15.747729+00:00"
+      "timestamp": "2025-12-02T02:04:06.100896+00:00"
     }
   },
   "rl_stats": {
-    "total_updates": 35677,
-    "total_trades": 37029,
-    "profitable_trades": 16568,
-    "total_pnl": 47.95270369127396,
-    "win_rate": 0.4474330929811769,
-    "avg_reward": -1.5988361260632336,
+    "total_updates": 35679,
+    "total_trades": 37030,
+    "profitable_trades": 16569,
+    "total_pnl": 47.953038929696625,
+    "win_rate": 0.44744801512287335,
+    "avg_reward": -1.598023222588882,
     "epsilon_history": [
       0.7,
       0.6640024999999999,
@@ -589,6 +589,8 @@
       0.10214380109387869,
       0.101532315850206,
       0.10062194487748828,
+      0.1,
+      0.1,
       0.1,
       0.1,
       0.1,
@@ -71426,13 +71428,15 @@
       67.48995354604178,
       104.10390463904054,
       58.41025141593249,
-      68.46687257729356
+      68.46687257729356,
+      85.14508514770161,
+      75.92774276356131
     ],
     "pipeline_trades_learned": 0,
-    "pipeline_v6_learned": 37588,
-    "live_validated": 0,
+    "pipeline_v6_learned": 38863,
+    "live_validated": 1,
     "backtest_learned": 35618,
-    "total_learning_sources": 1273,
+    "total_learning_sources": 1276,
     "rbed_milestones": [],
     "consecutive_losses": 0,
     "v20_4_archive": {
@@ -74360,12 +74364,13 @@
     },
     "reset_date": "2025-11-29T01:48:45.963366+00:00",
     "reset_reason": "v20.5 Aggressive Q-Stability: Fixed tracking + 25x scale reduction",
-    "pipeline_v6_contrarian": 1509,
+    "pipeline_v6_contrarian": 1645,
     "v20_6_upgrade": {
       "date": "2025-11-29T23:31:58.462154+00:00",
       "reason": "Added contrarian tracking for Pipeline v6.3"
     },
-    "regime_filtered_trades": 2
+    "regime_filtered_trades": 4,
+    "regime_stats": {}
   },
   "active_trades": 2,
   "pipeline_stats": {
@@ -74386,19 +74391,19 @@
     "AUD/USD_session": "ASIA_SESSION",
     "AUD/USD_behavior": "MEAN_REVERT"
   },
-  "regime_filters_applied": 2,
+  "regime_filters_applied": 4,
   "contrarian_tracking": {
-    "total_v6_learned": 37588,
-    "contrarian_learned": 1509,
-    "normal_learned": 36079,
-    "contrarian_percentage": 4.014579120996062
+    "total_v6_learned": 38863,
+    "contrarian_learned": 1645,
+    "normal_learned": 37218,
+    "contrarian_percentage": 4.23281784730978
   },
   "learning_summary": {
-    "pipeline_v6": 37588,
-    "pipeline_v6_contrarian": 1509,
-    "live_validated": 0,
+    "pipeline_v6": 38863,
+    "pipeline_v6_contrarian": 1645,
+    "live_validated": 1,
     "pipeline_db": 0,
     "backtest": 35618,
-    "total_this_run": 1273
+    "total_this_run": 1276
   }
 }

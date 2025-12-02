@@ -1,10 +1,10 @@
 {
-  "total_updates": 35686,
-  "total_trades": 37032,
-  "profitable_trades": 16569,
-  "total_pnl": 47.951417913943565,
-  "win_rate": 0.44742384964355153,
-  "avg_reward": -1.5987472413046009,
+  "total_updates": 35688,
+  "total_trades": 37033,
+  "profitable_trades": 16570,
+  "total_pnl": 47.95201965629632,
+  "win_rate": 0.44743877082602,
+  "avg_reward": -1.5980828490032757,
   "epsilon_history": [
     0.7,
     0.6640024999999999,
@@ -524,6 +524,8 @@
     0.10214380109387869,
     0.101532315850206,
     0.10062194487748828,
+    0.1,
+    0.1,
     0.1,
     0.1,
     0.1,
@@ -71379,15 +71381,17 @@
     82.57496887738647,
     84.3567529761871,
     72.58586522951782,
-    69.68915162126905
+    69.68915162126905,
+    84.52207694436353,
+    76.10954336775355
   ],
   "pipeline_trades_learned": 0,
-  "pipeline_v6_learned": 45502,
-  "live_validated": 3,
+  "pipeline_v6_learned": 46882,
+  "live_validated": 4,
   "backtest_learned": 35618,
-  "total_learning_sources": 1360,
+  "total_learning_sources": 1381,
   "rbed_milestones": [],
-  "consecutive_losses": 1,
+  "consecutive_losses": 0,
   "v20_4_archive": {
     "total_updates": 830,
     "total_trades": 1411,
@@ -74313,12 +74317,12 @@
   },
   "reset_date": "2025-11-29T01:48:45.963366+00:00",
   "reset_reason": "v20.5 Aggressive Q-Stability: Fixed tracking + 25x scale reduction",
-  "pipeline_v6_contrarian": 2330,
+  "pipeline_v6_contrarian": 2467,
   "v20_6_upgrade": {
     "date": "2025-11-29T23:31:58.462154+00:00",
     "reason": "Added contrarian tracking for Pipeline v6.3"
   },
-  "regime_filtered_trades": 16,
+  "regime_filtered_trades": 17,
   "regime_stats": {
     "volatility_NORMAL_VOL": {
       "wins": 1,
@@ -74336,9 +74340,9 @@
       "pnl": 0.0003352384226662508
     },
     "behavior_MEAN_REVERT": {
-      "wins": 1,
-      "total": 3,
-      "pnl": -0.0012857773303982523
+      "wins": 2,
+      "total": 4,
+      "pnl": -0.0006840349776402466
     },
     "volatility_EXTREME_VOL": {
       "wins": 0,
@@ -74351,9 +74355,19 @@
       "pnl": -0.001621015753064503
     },
     "trend_WEAK_DOWNTREND": {
-      "wins": 0,
+      "wins": 1,
+      "total": 2,
+      "pnl": -0.0002309820822306019
+    },
+    "volatility_HIGH_VOL": {
+      "wins": 1,
       "total": 1,
-      "pnl": -0.0008327244349886076
+      "pnl": 0.0006017423527580057
+    },
+    "session_OVERLAP_SESSION": {
+      "wins": 1,
+      "total": 1,
+      "pnl": 0.0006017423527580057
     }
   }
 }

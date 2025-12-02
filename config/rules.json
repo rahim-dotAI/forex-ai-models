@@ -1,0 +1,518 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "last_updated": "2025-12-02",
+    "total_rules": 100,
+    "categories": ["performance", "parameters", "regime", "learning", "risk"]
+  },
+  
+  "performance_monitoring": {
+    "description": "Rules that monitor system performance",
+    "rules": {
+      "R1": {
+        "name": "Weekday Performance Drop",
+        "condition": "weekday_wr < 40 for 3 consecutive days",
+        "action": "increase_confidence_threshold",
+        "params": {"delta": 0.05},
+        "priority": "high",
+        "enabled": true
+      },
+      "R2": {
+        "name": "Weekend Performance Failure",
+        "condition": "weekend_wr < 20 for 2 consecutive weekends",
+        "action": "force_contrarian_mode",
+        "params": {"on": "weekends_only"},
+        "priority": "high",
+        "enabled": true
+      },
+      "R3": {
+        "name": "Overall Win Rate Collapse",
+        "condition": "overall_wr < 30",
+        "action": "pause_all_trading",
+        "params": {"duration": "24h"},
+        "priority": "critical",
+        "enabled": true
+      },
+      "R4": {
+        "name": "Daily Loss Limit",
+        "condition": "daily_profit < -100",
+        "action": "pause_trading_today",
+        "params": {},
+        "priority": "critical",
+        "enabled": true
+      },
+      "R5": {
+        "name": "Profit Milestone",
+        "condition": "total_profit > 200",
+        "action": "increase_risk_slightly",
+        "params": {"multiplier": 1.1},
+        "priority": "low",
+        "enabled": true
+      },
+      "R6": {
+        "name": "Hot Streak Detection",
+        "condition": "win_streak > 10",
+        "action": "trust_system_more",
+        "params": {"confidence_adjustment": -0.05},
+        "priority": "medium",
+        "enabled": true
+      },
+      "R7": {
+        "name": "Cold Streak Protection",
+        "condition": "loss_streak > 15",
+        "action": "reduce_exposure",
+        "params": {"reduction": 0.5},
+        "priority": "high",
+        "enabled": true
+      },
+      "R8": {
+        "name": "Take Profit Too Far",
+        "condition": "tp_hit_rate < 30",
+        "action": "reduce_tp_multiplier",
+        "params": {"delta": -0.1},
+        "priority": "medium",
+        "enabled": true
+      },
+      "R9": {
+        "name": "Stop Loss Too Tight",
+        "condition": "sl_hit_rate > 70",
+        "action": "increase_sl_multiplier",
+        "params": {"delta": 0.1},
+        "priority": "medium",
+        "enabled": true
+      },
+      "R10": {
+        "name": "Predictions Going Stale",
+        "condition": "timeout_rate > 50",
+        "action": "reduce_max_timeout",
+        "params": {"new_timeout": "24h"},
+        "priority": "medium",
+        "enabled": true
+      },
+      "R11": {
+        "name": "Strong Pair Performance",
+        "condition": "pair_wr > 60",
+        "action": "increase_pair_allocation",
+        "params": {"increase": 1.2},
+        "priority": "low",
+        "enabled": true
+      },
+      "R12": {
+        "name": "Weak Pair Performance",
+        "condition": "pair_wr < 30",
+        "action": "reduce_pair_allocation",
+        "params": {"decrease": 0.5},
+        "priority": "medium",
+        "enabled": true
+      },
+      "R13": {
+        "name": "Best Timeframe Focus",
+        "condition": "timeframe_wr > other_timeframes + 10",
+        "action": "increase_timeframe_weight",
+        "params": {"weight": 1.5},
+        "priority": "low",
+        "enabled": true
+      },
+      "R14": {
+        "name": "Market Regime Change",
+        "condition": "all_timeframes_failing",
+        "action": "detect_regime_change",
+        "params": {"analyze_last_n_trades": 100},
+        "priority": "high",
+        "enabled": true
+      },
+      "R15": {
+        "name": "Contrarian Success",
+        "condition": "contrarian_wr > normal_wr + 20",
+        "action": "deploy_contrarian",
+        "params": {"percentage": 100},
+        "priority": "high",
+        "enabled": true
+      },
+      "R16": {
+        "name": "Over-Filtering Check",
+        "condition": "filtered_trades_wr > 60",
+        "action": "loosen_regime_filters",
+        "params": {"adjustment": 0.1},
+        "priority": "medium",
+        "enabled": true
+      },
+      "R17": {
+        "name": "Good Filtering Confirmation",
+        "condition": "filtered_trades_wr < 40",
+        "action": "maintain_filters",
+        "params": {},
+        "priority": "low",
+        "enabled": true
+      },
+      "R18": {
+        "name": "Session Performance",
+        "condition": "session_wr < 35",
+        "action": "reduce_session_trading",
+        "params": {"reduction": 0.5},
+        "priority": "medium",
+        "enabled": true
+      },
+      "R19": {
+        "name": "Data Quality Drop",
+        "condition": "data_quality < 80",
+        "action": "pause_until_quality_recovers",
+        "params": {},
+        "priority": "critical",
+        "enabled": true
+      },
+      "R20": {
+        "name": "Execution Time Alert",
+        "condition": "execution_time > 300",
+        "action": "alert_performance_issue",
+        "params": {},
+        "priority": "medium",
+        "enabled": true
+      }
+    }
+  },
+
+  "parameter_adjustment": {
+    "description": "Rules for adjusting trading parameters",
+    "rules": {
+      "R21": {
+        "name": "Keep Working Parameters",
+        "condition": "wr_improving",
+        "action": "maintain_current_params",
+        "params": {},
+        "priority": "low",
+        "enabled": true
+      },
+      "R22": {
+        "name": "Revert Bad Changes",
+        "condition": "wr_declining_after_change",
+        "action": "revert_to_last_good_params",
+        "params": {},
+        "priority": "high",
+        "enabled": true
+      },
+      "R23": {
+        "name": "SL Multiplier Range",
+        "condition": "always",
+        "action": "enforce_sl_range",
+        "params": {"min": 1.0, "max": 3.0, "step": 0.1},
+        "priority": "critical",
+        "enabled": true
+      },
+      "R24": {
+        "name": "TP Multiplier Range",
+        "condition": "always",
+        "action": "enforce_tp_range",
+        "params": {"min": 1.0, "max": 3.0, "step": 0.1},
+        "priority": "critical",
+        "enabled": true
+      },
+      "R25": {
+        "name": "Confidence Threshold Range",
+        "condition": "always",
+        "action": "enforce_confidence_range",
+        "params": {"min": 0.5, "max": 0.8, "step": 0.05},
+        "priority": "critical",
+        "enabled": true
+      },
+      "R26": {
+        "name": "Tighten Stops On Losses",
+        "condition": "losses_increasing",
+        "action": "reduce_sl_multiplier",
+        "params": {"delta": -0.2},
+        "priority": "high",
+        "enabled": true
+      },
+      "R27": {
+        "name": "Widen TP On Small Wins",
+        "condition": "wins_increasing_but_small",
+        "action": "increase_tp_multiplier",
+        "params": {"delta": 0.2},
+        "priority": "medium",
+        "enabled": true
+      },
+      "R28": {
+        "name": "Adaptive Eval Window",
+        "condition": "volatility_based",
+        "action": "adjust_eval_window",
+        "params": {"min_hours": 1, "max_hours": 6},
+        "priority": "medium",
+        "enabled": true
+      },
+      "R29": {
+        "name": "Adaptive Max Timeout",
+        "condition": "market_speed_based",
+        "action": "adjust_max_timeout",
+        "params": {"min_hours": 12, "max_hours": 72},
+        "priority": "medium",
+        "enabled": true
+      },
+      "R30": {
+        "name": "High Volatility Adjustment",
+        "condition": "high_volatility",
+        "action": "widen_stops",
+        "params": {"multiplier": 1.5},
+        "priority": "high",
+        "enabled": true
+      }
+    }
+  },
+
+  "market_regime": {
+    "description": "Rules for market regime detection and adaptation",
+    "rules": {
+      "R41": {
+        "name": "High Volatility Mode",
+        "condition": "vix > 30",
+        "action": "enable_high_vol_mode",
+        "params": {"sl_adjustment": 1.5, "tp_adjustment": 2.0},
+        "priority": "high",
+        "enabled": true
+      },
+      "R42": {
+        "name": "Low Volatility Mode",
+        "condition": "vix < 15",
+        "action": "enable_low_vol_mode",
+        "params": {"sl_adjustment": 0.8, "tp_adjustment": 0.8},
+        "priority": "high",
+        "enabled": true
+      },
+      "R43": {
+        "name": "Trending Market Detection",
+        "condition": "atr_increasing_3_days",
+        "action": "enable_trend_following",
+        "params": {},
+        "priority": "medium",
+        "enabled": true
+      },
+      "R44": {
+        "name": "Ranging Market Detection",
+        "condition": "atr_stable_or_decreasing",
+        "action": "enable_mean_reversion",
+        "params": {},
+        "priority": "medium",
+        "enabled": true
+      },
+      "R45": {
+        "name": "Range Confirmation",
+        "condition": "price_within_1pct_of_20d_range",
+        "action": "confirm_ranging",
+        "params": {"enable_contrarian": true},
+        "priority": "medium",
+        "enabled": true
+      },
+      "R46": {
+        "name": "Breakout Detection",
+        "condition": "breakout_from_20d_range",
+        "action": "confirm_trending",
+        "params": {"enable_momentum": true},
+        "priority": "medium",
+        "enabled": true
+      },
+      "R47": {
+        "name": "Asian Session Focus",
+        "condition": "time_0000_0800_utc",
+        "action": "focus_jpy_aud",
+        "params": {"pairs": ["USD/JPY", "AUD/USD"]},
+        "priority": "medium",
+        "enabled": true
+      },
+      "R48": {
+        "name": "European Session Focus",
+        "condition": "time_0800_1600_utc",
+        "action": "focus_eur_gbp",
+        "params": {"pairs": ["EUR/USD", "GBP/USD"]},
+        "priority": "medium",
+        "enabled": true
+      },
+      "R49": {
+        "name": "US Session Focus",
+        "condition": "time_1300_2200_utc",
+        "action": "focus_usd_pairs",
+        "params": {"pairs": ["EUR/USD", "GBP/USD", "USD/JPY"]},
+        "priority": "medium",
+        "enabled": true
+      },
+      "R50": {
+        "name": "Weekend Ranging Bias",
+        "condition": "is_weekend",
+        "action": "enable_contrarian",
+        "params": {"sl_multiplier": 1.5},
+        "priority": "high",
+        "enabled": true
+      }
+    }
+  },
+
+  "learning_adaptation": {
+    "description": "Rules for system learning and self-improvement",
+    "rules": {
+      "R61": {
+        "name": "Record All Changes",
+        "condition": "parameter_changed",
+        "action": "store_change_and_outcome",
+        "params": {"track_next_n_trades": 50},
+        "priority": "critical",
+        "enabled": true
+      },
+      "R62": {
+        "name": "Keep Successful Changes",
+        "condition": "change_improved_wr > 5",
+        "action": "make_permanent",
+        "params": {},
+        "priority": "high",
+        "enabled": true
+      },
+      "R63": {
+        "name": "Revert Bad Changes",
+        "condition": "change_degraded_wr > 5",
+        "action": "revert_immediately",
+        "params": {},
+        "priority": "critical",
+        "enabled": true
+      },
+      "R64": {
+        "name": "Test Before Deploy",
+        "condition": "new_strategy",
+        "action": "ab_test",
+        "params": {"sample_size": 50},
+        "priority": "high",
+        "enabled": true
+      },
+      "R65": {
+        "name": "AB Test Protocol",
+        "condition": "testing_new_approach",
+        "action": "split_50_50",
+        "params": {"control": "current", "test": "new"},
+        "priority": "high",
+        "enabled": true
+      },
+      "R66": {
+        "name": "Analyze Test Results",
+        "condition": "ab_test_complete",
+        "action": "deploy_winner",
+        "params": {"min_improvement": 5},
+        "priority": "high",
+        "enabled": true
+      },
+      "R67": {
+        "name": "Parameter History",
+        "condition": "always",
+        "action": "maintain_history",
+        "params": {"keep_last_n": 10},
+        "priority": "medium",
+        "enabled": true
+      },
+      "R68": {
+        "name": "Local Minimum Escape",
+        "condition": "stuck_at_same_performance",
+        "action": "random_parameter_jolt",
+        "params": {"variation": 0.2},
+        "priority": "medium",
+        "enabled": true
+      },
+      "R69": {
+        "name": "Pair-Specific Learning",
+        "condition": "sufficient_pair_data",
+        "action": "optimize_per_pair",
+        "params": {"min_trades": 100},
+        "priority": "medium",
+        "enabled": true
+      },
+      "R70": {
+        "name": "Timeframe-Specific Learning",
+        "condition": "sufficient_timeframe_data",
+        "action": "optimize_per_timeframe",
+        "params": {"min_trades": 100},
+        "priority": "medium",
+        "enabled": true
+      }
+    }
+  },
+
+  "risk_management": {
+    "description": "Rules for protecting capital",
+    "rules": {
+      "R81": {
+        "name": "Max Risk Per Trade",
+        "condition": "always",
+        "action": "enforce_max_risk",
+        "params": {"max_percent": 2.0},
+        "priority": "critical",
+        "enabled": true
+      },
+      "R82": {
+        "name": "Max Positions Per Pair",
+        "condition": "always",
+        "action": "enforce_position_limit",
+        "params": {"max_per_pair": 5},
+        "priority": "critical",
+        "enabled": true
+      },
+      "R83": {
+        "name": "Max Total Positions",
+        "condition": "always",
+        "action": "enforce_total_limit",
+        "params": {"max_total": 20},
+        "priority": "critical",
+        "enabled": true
+      },
+      "R84": {
+        "name": "10% Drawdown Response",
+        "condition": "drawdown > 10",
+        "action": "reduce_size_by_half",
+        "params": {},
+        "priority": "critical",
+        "enabled": true
+      },
+      "R85": {
+        "name": "20% Drawdown Emergency",
+        "condition": "drawdown > 20",
+        "action": "stop_all_trading",
+        "params": {},
+        "priority": "critical",
+        "enabled": true
+      },
+      "R86": {
+        "name": "Profit Protection",
+        "condition": "profit > 30_percent",
+        "action": "lock_gains_reduce_risk",
+        "params": {"risk_reduction": 0.3},
+        "priority": "high",
+        "enabled": true
+      },
+      "R87": {
+        "name": "Pair Loss Streak",
+        "condition": "pair_consecutive_losses >= 3",
+        "action": "pause_pair",
+        "params": {"duration": "24h"},
+        "priority": "high",
+        "enabled": true
+      },
+      "R88": {
+        "name": "Overall Loss Streak",
+        "condition": "consecutive_losses >= 5",
+        "action": "pause_all_trading",
+        "params": {"duration": "24h"},
+        "priority": "critical",
+        "enabled": true
+      },
+      "R89": {
+        "name": "Weekend Risk Reduction",
+        "condition": "is_weekend",
+        "action": "reduce_weekend_size",
+        "params": {"multiplier": 0.5},
+        "priority": "high",
+        "enabled": true
+      },
+      "R90": {
+        "name": "Correlation Check",
+        "condition": "pair_correlation > 0.9",
+        "action": "limit_correlated_positions",
+        "params": {"max_correlated": 2},
+        "priority": "high",
+        "enabled": true
+      }
+    }
+  }
+}

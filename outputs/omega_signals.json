@@ -1,75 +1,75 @@
 {
-  "timestamp": "2025-12-02T18:04:07.306675+00:00",
-  "iteration": 96,
+  "timestamp": "2025-12-03T00:04:54.390740+00:00",
+  "iteration": 97,
   "version": "v21.0-regime-aware",
   "mode": "LIVE_TRADING",
   "signals": {
     "EUR/USD": {
-      "direction": "BUY",
-      "last_price": 1.16,
-      "SL": 1.1590566103799,
-      "TP": 1.1609433896200998,
-      "confidence": 40.673568950300535,
-      "threshold": 70.0,
-      "rb_epsilon": 0.1,
-      "regimes": {
-        "volatility": "HIGH_VOL",
-        "trend": "RANGING",
-        "session": "NY_SESSION",
-        "behavior": "MEAN_REVERT"
-      },
-      "sl_multiplier": 3.0,
-      "tp_multiplier": 3.0,
-      "timestamp": "2025-12-02T18:04:07.293892+00:00"
-    },
-    "GBP/USD": {
       "direction": "HOLD",
-      "last_price": 1.319,
-      "skip_reason": "Pair not optimal for NY_SESSION",
+      "last_price": 1.162,
+      "skip_reason": "Pair not optimal for ASIA_SESSION",
       "regimes": {
         "volatility": "NORMAL_VOL",
         "trend": "RANGING",
-        "session": "NY_SESSION",
-        "behavior": "NEUTRAL"
+        "session": "ASIA_SESSION",
+        "behavior": "MEAN_REVERT"
+      }
+    },
+    "GBP/USD": {
+      "direction": "HOLD",
+      "last_price": 1.322,
+      "skip_reason": "Pair not optimal for ASIA_SESSION",
+      "regimes": {
+        "volatility": "NORMAL_VOL",
+        "trend": "RANGING",
+        "session": "ASIA_SESSION",
+        "behavior": "MEAN_REVERT"
       }
     },
     "USD/JPY": {
       "direction": "BUY",
-      "last_price": 155.93,
-      "SL": 155.36235761369977,
-      "TP": 156.68685651506698,
-      "confidence": 40.90325989270659,
-      "threshold": 70.0,
+      "last_price": 155.71,
+      "SL": 155.5488552594866,
+      "TP": 155.96178865705218,
+      "confidence": 40.079099642216256,
+      "threshold": 65.0,
       "rb_epsilon": 0.1,
       "regimes": {
-        "volatility": "HIGH_VOL",
-        "trend": "STRONG_UPTREND",
-        "session": "NY_SESSION",
+        "volatility": "NORMAL_VOL",
+        "trend": "WEAK_UPTREND",
+        "session": "ASIA_SESSION",
         "behavior": "MEAN_REVERT"
       },
-      "sl_multiplier": 4.5,
-      "tp_multiplier": 6.0,
-      "timestamp": "2025-12-02T18:04:07.304087+00:00"
+      "sl_multiplier": 2.4,
+      "tp_multiplier": 3.75,
+      "timestamp": "2025-12-03T00:04:54.382570+00:00"
     },
     "AUD/USD": {
-      "direction": "HOLD",
-      "last_price": 0.6554,
-      "skip_reason": "Pair not optimal for NY_SESSION",
+      "direction": "BUY",
+      "last_price": 0.6574,
+      "SL": 0.6559631687164307,
+      "TP": 0.6591960391044617,
+      "confidence": 44.93453016796832,
+      "threshold": 65.0,
+      "rb_epsilon": 0.1,
       "regimes": {
         "volatility": "NORMAL_VOL",
         "trend": "RANGING",
-        "session": "NY_SESSION",
+        "session": "ASIA_SESSION",
         "behavior": "MEAN_REVERT"
-      }
+      },
+      "sl_multiplier": 2.0,
+      "tp_multiplier": 2.5,
+      "timestamp": "2025-12-03T00:04:54.390585+00:00"
     }
   },
   "rl_stats": {
-    "total_updates": 35691,
-    "total_trades": 37034,
-    "profitable_trades": 16570,
-    "total_pnl": 47.95102853888702,
-    "win_rate": 0.4474266889884971,
-    "avg_reward": -1.5984448620729383,
+    "total_updates": 35693,
+    "total_trades": 37035,
+    "profitable_trades": 16571,
+    "total_pnl": 47.95197192850712,
+    "win_rate": 0.44744160928851084,
+    "avg_reward": -1.5976859098936869,
     "epsilon_history": [
       0.7,
       0.6640024999999999,
@@ -589,6 +589,8 @@
       0.10214380109387869,
       0.101532315850206,
       0.10062194487748828,
+      0.1,
+      0.1,
       0.1,
       0.1,
       0.1,
@@ -71454,15 +71456,17 @@
       76.10954336775355,
       66.60443789538472,
       73.49923596983736,
-      76.08934579937349
+      76.08934579937349,
+      92.44264574567251,
+      75.94406309314651
     ],
     "pipeline_trades_learned": 0,
-    "pipeline_v6_learned": 49684,
-    "live_validated": 5,
+    "pipeline_v6_learned": 51130,
+    "live_validated": 6,
     "backtest_learned": 35618,
-    "total_learning_sources": 1413,
+    "total_learning_sources": 1447,
     "rbed_milestones": [],
-    "consecutive_losses": 1,
+    "consecutive_losses": 0,
     "v20_4_archive": {
       "total_updates": 830,
       "total_trades": 1411,
@@ -74388,32 +74392,32 @@
     },
     "reset_date": "2025-11-29T01:48:45.963366+00:00",
     "reset_reason": "v20.5 Aggressive Q-Stability: Fixed tracking + 25x scale reduction",
-    "pipeline_v6_contrarian": 2741,
+    "pipeline_v6_contrarian": 2878,
     "v20_6_upgrade": {
       "date": "2025-11-29T23:31:58.462154+00:00",
       "reason": "Added contrarian tracking for Pipeline v6.3"
     },
-    "regime_filtered_trades": 22,
+    "regime_filtered_trades": 24,
     "regime_stats": {
       "volatility_NORMAL_VOL": {
-        "wins": 1,
-        "total": 2,
-        "pnl": -0.0004974860123223568
+        "wins": 2,
+        "total": 3,
+        "pnl": 0.00044590360777752025
       },
       "trend_RANGING": {
-        "wins": 1,
-        "total": 3,
-        "pnl": -0.0014441703047070042
+        "wins": 2,
+        "total": 4,
+        "pnl": -0.0005007806846071272
       },
       "session_ASIA_SESSION": {
-        "wins": 1,
-        "total": 1,
-        "pnl": 0.0003352384226662508
+        "wins": 2,
+        "total": 2,
+        "pnl": 0.0012786280427661278
       },
       "behavior_MEAN_REVERT": {
-        "wins": 2,
-        "total": 5,
-        "pnl": -0.0016751523869376062
+        "wins": 3,
+        "total": 6,
+        "pnl": -0.0007317627668377291
       },
       "volatility_EXTREME_VOL": {
         "wins": 0,
@@ -74457,28 +74461,28 @@
     "last_trade": null
   },
   "regime_summary": {
-    "EUR/USD_volatility": "HIGH_VOL",
-    "EUR/USD_trend": "RANGING",
-    "EUR/USD_session": "NY_SESSION",
-    "EUR/USD_behavior": "MEAN_REVERT",
-    "USD/JPY_volatility": "HIGH_VOL",
-    "USD/JPY_trend": "STRONG_UPTREND",
-    "USD/JPY_session": "NY_SESSION",
-    "USD/JPY_behavior": "MEAN_REVERT"
+    "USD/JPY_volatility": "NORMAL_VOL",
+    "USD/JPY_trend": "WEAK_UPTREND",
+    "USD/JPY_session": "ASIA_SESSION",
+    "USD/JPY_behavior": "MEAN_REVERT",
+    "AUD/USD_volatility": "NORMAL_VOL",
+    "AUD/USD_trend": "RANGING",
+    "AUD/USD_session": "ASIA_SESSION",
+    "AUD/USD_behavior": "MEAN_REVERT"
   },
-  "regime_filters_applied": 22,
+  "regime_filters_applied": 24,
   "contrarian_tracking": {
-    "total_v6_learned": 49684,
-    "contrarian_learned": 2741,
-    "normal_learned": 46943,
-    "contrarian_percentage": 5.51686659689236
+    "total_v6_learned": 51130,
+    "contrarian_learned": 2878,
+    "normal_learned": 48252,
+    "contrarian_percentage": 5.628789360453745
   },
   "learning_summary": {
-    "pipeline_v6": 49684,
-    "pipeline_v6_contrarian": 2741,
-    "live_validated": 5,
+    "pipeline_v6": 51130,
+    "pipeline_v6_contrarian": 2878,
+    "live_validated": 6,
     "pipeline_db": 0,
     "backtest": 35618,
-    "total_this_run": 1413
+    "total_this_run": 1447
   }
 }

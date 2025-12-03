@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-12-03T22:43:10.851873+00:00",
-  "iteration": 107,
+  "timestamp": "2025-12-03T22:47:45.099530+00:00",
+  "iteration": 108,
   "version": "v21.0-regime-aware",
   "mode": "LIVE_TRADING",
   "signals": {
@@ -39,7 +39,7 @@
     },
     "AUD/USD": {
       "direction": "HOLD",
-      "last_price": 0.6599,
+      "last_price": 0.66,
       "skip_reason": "Dead zone (21:00-00:00 UTC)",
       "regimes": {
         "volatility": "NORMAL_VOL",
@@ -50,7 +50,7 @@
     }
   },
   "rl_stats": {
-    "total_updates": 35708,
+    "total_updates": 35709,
     "total_trades": 37040,
     "profitable_trades": 16575,
     "total_pnl": 47.72882190564278,
@@ -575,6 +575,7 @@
       0.10214380109387869,
       0.101532315850206,
       0.10062194487748828,
+      0.1,
       0.1,
       0.1,
       0.1,
@@ -71474,10 +71475,11 @@
       82.80606173970035,
       71.22852311190069,
       65.90571020494667,
-      79.31949937099974
+      79.31949937099974,
+      77.07528445931412
     ],
     "pipeline_trades_learned": 0,
-    "pipeline_v6_learned": 66615,
+    "pipeline_v6_learned": 68250,
     "live_validated": 11,
     "backtest_learned": 35618,
     "total_learning_sources": 1635,
@@ -74408,12 +74410,12 @@
     },
     "reset_date": "2025-11-29T01:48:45.963366+00:00",
     "reset_reason": "v20.5 Aggressive Q-Stability: Fixed tracking + 25x scale reduction",
-    "pipeline_v6_contrarian": 4248,
+    "pipeline_v6_contrarian": 4385,
     "v20_6_upgrade": {
       "date": "2025-11-29T23:31:58.462154+00:00",
       "reason": "Added contrarian tracking for Pipeline v6.3"
     },
-    "regime_filtered_trades": 47,
+    "regime_filtered_trades": 51,
     "regime_stats": {
       "volatility_NORMAL_VOL": {
         "wins": 3,
@@ -74487,16 +74489,16 @@
     "last_trade": null
   },
   "regime_summary": {},
-  "regime_filters_applied": 47,
+  "regime_filters_applied": 51,
   "contrarian_tracking": {
-    "total_v6_learned": 66615,
-    "contrarian_learned": 4248,
-    "normal_learned": 62367,
-    "contrarian_percentage": 6.3769421301508675
+    "total_v6_learned": 68250,
+    "contrarian_learned": 4385,
+    "normal_learned": 63865,
+    "contrarian_percentage": 6.424908424908425
   },
   "learning_summary": {
-    "pipeline_v6": 66615,
-    "pipeline_v6_contrarian": 4248,
+    "pipeline_v6": 68250,
+    "pipeline_v6_contrarian": 4385,
     "live_validated": 11,
     "pipeline_db": 0,
     "backtest": 35618,

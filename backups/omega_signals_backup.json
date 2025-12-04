@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-12-04T00:05:00.376065+00:00",
-  "iteration": 111,
+  "timestamp": "2025-12-04T02:04:15.490601+00:00",
+  "iteration": 112,
   "version": "v21.0-regime-aware",
   "mode": "LIVE_TRADING",
   "signals": {
@@ -12,12 +12,12 @@
         "volatility": "NORMAL_VOL",
         "trend": "RANGING",
         "session": "ASIA_SESSION",
-        "behavior": "MEAN_REVERT"
+        "behavior": "NEUTRAL"
       }
     },
     "GBP/USD": {
       "direction": "HOLD",
-      "last_price": 1.334,
+      "last_price": 1.333,
       "skip_reason": "Extreme volatility detected",
       "regimes": {
         "volatility": "EXTREME_VOL",
@@ -28,10 +28,10 @@
     },
     "USD/JPY": {
       "direction": "BUY",
-      "last_price": 155.04,
-      "SL": 154.87542365373884,
-      "TP": 155.29715054103306,
-      "confidence": 49.8284544467066,
+      "last_price": 155.3,
+      "SL": 155.0713184291295,
+      "TP": 155.65731495448523,
+      "confidence": 63.2691033539473,
       "threshold": 65.0,
       "rb_epsilon": 0.1,
       "regimes": {
@@ -42,14 +42,14 @@
       },
       "sl_multiplier": 2.4,
       "tp_multiplier": 3.75,
-      "timestamp": "2025-12-04T00:05:00.367976+00:00"
+      "timestamp": "2025-12-04T02:04:15.483022+00:00"
     },
     "AUD/USD": {
       "direction": "BUY",
-      "last_price": 0.6606,
-      "SL": 0.6593530443464006,
-      "TP": 0.6621586945669992,
-      "confidence": 57.834019072992604,
+      "last_price": 0.6607,
+      "SL": 0.6595406693186078,
+      "TP": 0.6621491633517401,
+      "confidence": 59.889901152225214,
       "threshold": 65.0,
       "rb_epsilon": 0.1,
       "regimes": {
@@ -60,16 +60,16 @@
       },
       "sl_multiplier": 2.0,
       "tp_multiplier": 2.5,
-      "timestamp": "2025-12-04T00:05:00.375915+00:00"
+      "timestamp": "2025-12-04T02:04:15.490450+00:00"
     }
   },
   "rl_stats": {
-    "total_updates": 35712,
-    "total_trades": 37040,
-    "profitable_trades": 16575,
-    "total_pnl": 47.72882190564278,
-    "win_rate": 0.4474892008639309,
-    "avg_reward": -1.5952457344334638,
+    "total_updates": 35714,
+    "total_trades": 37041,
+    "profitable_trades": 16576,
+    "total_pnl": 47.98597244667585,
+    "win_rate": 0.4475041170594746,
+    "avg_reward": -1.5944313193154802,
     "epsilon_history": [
       0.7,
       0.6640024999999999,
@@ -589,6 +589,8 @@
       0.10214380109387869,
       0.101532315850206,
       0.10062194487748828,
+      0.1,
+      0.1,
       0.1,
       0.1,
       0.1,
@@ -71496,15 +71498,17 @@
       77.07528445931412,
       81.26273035761618,
       77.59854337755321,
-      89.17636265681456
+      89.17636265681456,
+      83.41282485319347,
+      83.90395010617519
     ],
     "pipeline_trades_learned": 0,
-    "pipeline_v6_learned": 73156,
-    "live_validated": 11,
+    "pipeline_v6_learned": 74816,
+    "live_validated": 12,
     "backtest_learned": 35618,
-    "total_learning_sources": 1636,
+    "total_learning_sources": 1661,
     "rbed_milestones": [],
-    "consecutive_losses": 1,
+    "consecutive_losses": 0,
     "v20_4_archive": {
       "total_updates": 830,
       "total_trades": 1411,
@@ -74430,17 +74434,17 @@
     },
     "reset_date": "2025-11-29T01:48:45.963366+00:00",
     "reset_reason": "v20.5 Aggressive Q-Stability: Fixed tracking + 25x scale reduction",
-    "pipeline_v6_contrarian": 4796,
+    "pipeline_v6_contrarian": 4933,
     "v20_6_upgrade": {
       "date": "2025-11-29T23:31:58.462154+00:00",
       "reason": "Added contrarian tracking for Pipeline v6.3"
     },
-    "regime_filtered_trades": 61,
+    "regime_filtered_trades": 63,
     "regime_stats": {
       "volatility_NORMAL_VOL": {
-        "wins": 3,
-        "total": 4,
-        "pnl": 0.000900691611426474
+        "wins": 4,
+        "total": 5,
+        "pnl": 0.2580512326444966
       },
       "trend_RANGING": {
         "wins": 5,
@@ -74448,14 +74452,14 @@
         "pnl": 0.0015001213380267941
       },
       "session_ASIA_SESSION": {
-        "wins": 2,
-        "total": 2,
-        "pnl": 0.0012786280427661278
+        "wins": 3,
+        "total": 3,
+        "pnl": 0.25842916907583624
       },
       "behavior_MEAN_REVERT": {
-        "wins": 4,
-        "total": 8,
-        "pnl": -0.2257628195796706
+        "wins": 5,
+        "total": 9,
+        "pnl": 0.03138772145339952
       },
       "volatility_EXTREME_VOL": {
         "wins": 0,
@@ -74493,9 +74497,9 @@
         "pnl": 0.0018810339484893746
       },
       "trend_WEAK_UPTREND": {
-        "wins": 0,
-        "total": 1,
-        "pnl": -0.22560571289062636
+        "wins": 1,
+        "total": 2,
+        "pnl": 0.03154482814244375
       }
     }
   },
@@ -74518,19 +74522,19 @@
     "AUD/USD_session": "ASIA_SESSION",
     "AUD/USD_behavior": "MEAN_REVERT"
   },
-  "regime_filters_applied": 61,
+  "regime_filters_applied": 63,
   "contrarian_tracking": {
-    "total_v6_learned": 73156,
-    "contrarian_learned": 4796,
-    "normal_learned": 68360,
-    "contrarian_percentage": 6.5558532451200175
+    "total_v6_learned": 74816,
+    "contrarian_learned": 4933,
+    "normal_learned": 69883,
+    "contrarian_percentage": 6.593509409751924
   },
   "learning_summary": {
-    "pipeline_v6": 73156,
-    "pipeline_v6_contrarian": 4796,
-    "live_validated": 11,
+    "pipeline_v6": 74816,
+    "pipeline_v6_contrarian": 4933,
+    "live_validated": 12,
     "pipeline_db": 0,
     "backtest": 35618,
-    "total_this_run": 1636
+    "total_this_run": 1661
   }
 }

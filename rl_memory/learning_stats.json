@@ -1,10 +1,10 @@
 {
-  "total_updates": 35712,
-  "total_trades": 37040,
-  "profitable_trades": 16575,
-  "total_pnl": 47.72882190564278,
-  "win_rate": 0.4474892008639309,
-  "avg_reward": -1.5952457344334638,
+  "total_updates": 35714,
+  "total_trades": 37041,
+  "profitable_trades": 16576,
+  "total_pnl": 47.98597244667585,
+  "win_rate": 0.4475041170594746,
+  "avg_reward": -1.5944313193154802,
   "epsilon_history": [
     0.7,
     0.6640024999999999,
@@ -524,6 +524,8 @@
     0.10214380109387869,
     0.101532315850206,
     0.10062194487748828,
+    0.1,
+    0.1,
     0.1,
     0.1,
     0.1,
@@ -71431,15 +71433,17 @@
     77.07528445931412,
     81.26273035761618,
     77.59854337755321,
-    89.17636265681456
+    89.17636265681456,
+    83.41282485319347,
+    83.90395010617519
   ],
   "pipeline_trades_learned": 0,
-  "pipeline_v6_learned": 73156,
-  "live_validated": 11,
+  "pipeline_v6_learned": 74816,
+  "live_validated": 12,
   "backtest_learned": 35618,
-  "total_learning_sources": 1636,
+  "total_learning_sources": 1661,
   "rbed_milestones": [],
-  "consecutive_losses": 1,
+  "consecutive_losses": 0,
   "v20_4_archive": {
     "total_updates": 830,
     "total_trades": 1411,
@@ -74365,17 +74369,17 @@
   },
   "reset_date": "2025-11-29T01:48:45.963366+00:00",
   "reset_reason": "v20.5 Aggressive Q-Stability: Fixed tracking + 25x scale reduction",
-  "pipeline_v6_contrarian": 4796,
+  "pipeline_v6_contrarian": 4933,
   "v20_6_upgrade": {
     "date": "2025-11-29T23:31:58.462154+00:00",
     "reason": "Added contrarian tracking for Pipeline v6.3"
   },
-  "regime_filtered_trades": 61,
+  "regime_filtered_trades": 63,
   "regime_stats": {
     "volatility_NORMAL_VOL": {
-      "wins": 3,
-      "total": 4,
-      "pnl": 0.000900691611426474
+      "wins": 4,
+      "total": 5,
+      "pnl": 0.2580512326444966
     },
     "trend_RANGING": {
       "wins": 5,
@@ -74383,14 +74387,14 @@
       "pnl": 0.0015001213380267941
     },
     "session_ASIA_SESSION": {
-      "wins": 2,
-      "total": 2,
-      "pnl": 0.0012786280427661278
+      "wins": 3,
+      "total": 3,
+      "pnl": 0.25842916907583624
     },
     "behavior_MEAN_REVERT": {
-      "wins": 4,
-      "total": 8,
-      "pnl": -0.2257628195796706
+      "wins": 5,
+      "total": 9,
+      "pnl": 0.03138772145339952
     },
     "volatility_EXTREME_VOL": {
       "wins": 0,
@@ -74428,9 +74432,9 @@
       "pnl": 0.0018810339484893746
     },
     "trend_WEAK_UPTREND": {
-      "wins": 0,
-      "total": 1,
-      "pnl": -0.22560571289062636
+      "wins": 1,
+      "total": 2,
+      "pnl": 0.03154482814244375
     }
   }
 }

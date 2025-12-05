@@ -29,7 +29,7 @@ class WeekendContrarianExecutor(ExecutePreprocessor):
         print(f"🔧 Alpha Vantage: {'SKIPPED ⏭️' if skip_av else 'ACTIVE ✅ (00:00 UTC)'}")
         
         if self.is_weekend:
-            print("🏖️  WEEKEND MODE: Pipeline v6.3.1 Contrarian Active")
+            print("🏖️  WEEKEND MODE: Pipeline v6.4.0 Contrarian Active")
             print("   • Using 1.5x SL/TP (optimized for low volatility)")
             print("   • A/B Testing: 50% normal, 50% contrarian")
             print("   • Min eval window: 2-12 hours")
@@ -37,7 +37,7 @@ class WeekendContrarianExecutor(ExecutePreprocessor):
             print("   • Regime-aware Trade Beacon v21.0")
         else:
             print("💼 WEEKDAY MODE: Live trading with regime detection")
-            print("   • Pipeline v6.3.1 normal mode")
+            print("   • Pipeline v6.4.0 normal mode")
             print("   • Using 2x normal SL/TP")
             print("   • Min eval window: 1-6 hours")
             print("   • Max timeout: 12-36 hours")
@@ -65,8 +65,8 @@ class WeekendContrarianExecutor(ExecutePreprocessor):
             return "📊 YFinance Fetcher"
         elif 'combiner' in source_lower:
             return "🔗 CSV Combiner"
-        elif 'pipeline v6.3' in source_lower or 'weekend contrarian' in source_lower:
-            return "🧠 Pipeline v6.3.1 Weekend Contrarian"
+        elif 'pipeline v6.4' in source_lower or 'weekend contrarian' in source_lower:
+            return "🧠 Pipeline v6.4.0 Weekend Contrarian"
         elif 'trade beacon' in source_lower and 'v21' in source_lower:
             return "🌍 Trade Beacon v21.0 - Regime-Aware"
         elif 'learning' in source_lower and 'system' in source_lower:
@@ -168,7 +168,7 @@ print("🤖 FOREX AI BRAIN - WEEKEND CONTRARIAN v21.0")
 print("="*80)
 print(f"📓 Notebook: AI_Forex_Brain_2.ipynb")
 print(f"🔧 Mode: Weekend Contrarian with Regime Detection")
-print(f"⚙️  Pipeline: v6.3.1 (1.5x SL/TP optimization)")
+print(f"⚙️  Pipeline: v6.4.0 (Adaptive 1.5x-2.5x SL/TP)")
 print(f"⚙️  Trade Beacon: v21.0 (Market regime awareness)")
 print(f"⏰ Trigger: Manual or colab_trigger.txt")
 print("="*80)
@@ -192,7 +192,7 @@ try:
     
     if ep.is_weekend:
         print(f"\n🏖️  Weekend Mode Summary:")
-        print(f"   • Pipeline v6.3.1 contrarian active (1.5x SL/TP)")
+        print(f"   • Pipeline v6.4.0 contrarian active (adaptive SL/TP)")
         print(f"   • A/B testing 50% normal vs 50% contrarian")
         print(f"   • Faster evaluation with tighter stops")
         print(f"   • Trade Beacon v21.0 regime detection active")
@@ -226,7 +226,7 @@ try:
         'critical_errors': len(ep.critical_errors),
         'status': 'success',
         'version': 'v21.0',
-        'pipeline_version': 'v6.3.1',
+        'pipeline_version': 'v6.4.0',
         'beacon_version': 'v21.0'
     }
     

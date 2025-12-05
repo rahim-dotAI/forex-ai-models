@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 metrics = {
     'status': 'no_data',
     'version': 'v21.0',
-    'pipeline_version': 'v6.3.1',
+    'pipeline_version': 'v6.4.0',
     'beacon_version': 'v21.0',
     'trigger': 'manual_or_colab_trigger',
     'scheduler': 'manual_trigger',

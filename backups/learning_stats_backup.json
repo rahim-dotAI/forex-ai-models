@@ -1,10 +1,10 @@
 {
-  "total_updates": 35742,
-  "total_trades": 37053,
+  "total_updates": 35745,
+  "total_trades": 37055,
   "profitable_trades": 16582,
-  "total_pnl": 47.69853472201745,
-  "win_rate": 0.4475211183979705,
-  "avg_reward": -1.5923339607646174,
+  "total_pnl": 47.6976498512158,
+  "win_rate": 0.44749696397247335,
+  "avg_reward": -1.5931117010058204,
   "epsilon_history": [
     0.7,
     0.6640024999999999,
@@ -524,6 +524,9 @@
     0.10214380109387869,
     0.101532315850206,
     0.10062194487748828,
+    0.1,
+    0.1,
+    0.1,
     0.1,
     0.1,
     0.1,
@@ -71491,15 +71494,18 @@
     79.72265749504669,
     62.78051854911297,
     78.56969352683997,
-    89.14488731025453
+    89.14488731025453,
+    65.31866482535963,
+    75.3197132404019,
+    63.86074672127476
   ],
   "pipeline_trades_learned": 0,
-  "pipeline_v6_learned": 103926,
-  "live_validated": 24,
+  "pipeline_v6_learned": 105896,
+  "live_validated": 26,
   "backtest_learned": 35618,
-  "total_learning_sources": 1959,
+  "total_learning_sources": 1972,
   "rbed_milestones": [],
-  "consecutive_losses": 0,
+  "consecutive_losses": 2,
   "v20_4_archive": {
     "total_updates": 830,
     "total_trades": 1411,
@@ -74425,12 +74431,12 @@
   },
   "reset_date": "2025-11-29T01:48:45.963366+00:00",
   "reset_reason": "v20.5 Aggressive Q-Stability: Fixed tracking + 25x scale reduction",
-  "pipeline_v6_contrarian": 7125,
+  "pipeline_v6_contrarian": 7262,
   "v20_6_upgrade": {
     "date": "2025-11-29T23:31:58.462154+00:00",
     "reason": "Added contrarian tracking for Pipeline v6.3"
   },
-  "regime_filtered_trades": 96,
+  "regime_filtered_trades": 98,
   "regime_stats": {
     "volatility_NORMAL_VOL": {
       "wins": 7,
@@ -74439,8 +74445,8 @@
     },
     "trend_RANGING": {
       "wins": 11,
-      "total": 17,
-      "pnl": 0.0024006709541590787
+      "total": 19,
+      "pnl": 0.001515800152506186
     },
     "session_ASIA_SESSION": {
       "wins": 3,
@@ -74449,8 +74455,8 @@
     },
     "behavior_MEAN_REVERT": {
       "wins": 7,
-      "total": 14,
-      "pnl": 0.030875183633400693
+      "total": 15,
+      "pnl": 0.030156819599020723
     },
     "volatility_EXTREME_VOL": {
       "wins": 1,
@@ -74469,8 +74475,8 @@
     },
     "volatility_HIGH_VOL": {
       "wins": 6,
-      "total": 8,
-      "pnl": 0.0026754868371139384
+      "total": 10,
+      "pnl": 0.0017906160354610456
     },
     "session_OVERLAP_SESSION": {
       "wins": 3,
@@ -74479,13 +74485,13 @@
     },
     "session_NY_SESSION": {
       "wins": 2,
-      "total": 5,
-      "pnl": -0.22640919235774604
+      "total": 7,
+      "pnl": -0.22729406315939893
     },
     "behavior_NEUTRAL": {
       "wins": 7,
-      "total": 9,
-      "pnl": -0.2841094550575365
+      "total": 10,
+      "pnl": -0.2842759618248094
     },
     "trend_WEAK_UPTREND": {
       "wins": 1,

@@ -6,37 +6,42 @@
   "trigger": "manual_or_colab_trigger",
   "scheduler": "manual_trigger",
   "is_weekend": true,
-  "rl_memory_size": 3336154,
+  "rl_memory_size": 3337323,
   "rl_memory_mb": 3.18,
-  "rl_trades": 43907,
-  "rl_win_rate": 44.71,
-  "rl_pnl": 74.19,
+  "rl_trades": 44342,
+  "rl_win_rate": 44.73,
+  "rl_pnl": 79.21,
   "epsilon": 0.1,
-  "regime_filtered": 119,
-  "total_outcomes": 2018,
-  "weekend_normal_outcomes": 123,
-  "weekend_normal_win_rate": 20.33,
-  "weekend_contrarian_outcomes": 152,
-  "weekend_contrarian_win_rate": 34.87,
+  "regime_filtered": 121,
+  "total_outcomes": 2020,
+  "weekend_normal_outcomes": 124,
+  "weekend_normal_win_rate": 20.16,
+  "weekend_contrarian_outcomes": 153,
+  "weekend_contrarian_win_rate": 35.29,
   "weekday_outcomes": 1743,
   "weekday_win_rate": 33.33,
   "using_adaptive_windows": true,
   "last_min_wait": 2.0,
   "last_max_wait": 72.0,
-  "pending_predictions": 286,
-  "evaluated_predictions": 714,
+  "pending_predictions": 304,
+  "evaluated_predictions": 696,
   "total_predictions": 1000,
-  "oldest_pending_hours": 58.0,
+  "oldest_pending_hours": 64.0,
   "best_regimes": [
     {
       "regime": "behavior_MOMENTUM",
-      "win_rate": 67.94,
-      "trades": 131
+      "win_rate": 66.67,
+      "trades": 135
     },
     {
       "regime": "volatility_NORMAL_VOL",
-      "win_rate": 40.84,
-      "trades": 4677
+      "win_rate": 41.14,
+      "trades": 4963
+    },
+    {
+      "regime": "behavior_MEAN_REVERT",
+      "win_rate": 40.4,
+      "trades": 4035
     },
     {
       "regime": "session_LONDON_SESSION",
@@ -44,14 +49,9 @@
       "trades": 1450
     },
     {
-      "regime": "session_OVERLAP_SESSION",
-      "win_rate": 40.24,
-      "trades": 497
-    },
-    {
       "regime": "trend_RANGING",
-      "win_rate": 40.21,
-      "trades": 4698
+      "win_rate": 40.33,
+      "trades": 4915
     }
   ]
 }

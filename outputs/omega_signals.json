@@ -1,52 +1,43 @@
 {
-  "timestamp": "2025-12-08T10:04:03.347321+00:00",
-  "iteration": 157,
+  "timestamp": "2025-12-08T12:04:13.845562+00:00",
+  "iteration": 158,
   "version": "v21.1-quality-filtered",
   "mode": "LIVE_TRADING",
   "signals": {
     "EUR/USD": {
       "direction": "HOLD",
       "last_price": 1.165,
-      "SL": 1.165,
-      "TP": 1.165,
-      "confidence": 99.99999987424579,
-      "threshold": 70.0,
-      "rb_epsilon": 0.1,
+      "skip_reason": "Extreme volatility detected",
       "regimes": {
-        "volatility": "HIGH_VOL",
+        "volatility": "EXTREME_VOL",
         "trend": "RANGING",
         "session": "LONDON_SESSION",
         "behavior": "MEAN_REVERT"
-      },
-      "sl_multiplier": 3.0,
-      "tp_multiplier": 3.0,
-      "timestamp": "2025-12-08T10:04:03.334745+00:00",
-      "pair": "EUR/USD",
-      "timeframe": "1h"
+      }
     },
     "GBP/USD": {
       "direction": "HOLD",
-      "last_price": 1.331,
-      "SL": 1.331,
-      "TP": 1.331,
+      "last_price": 1.332,
+      "SL": 1.332,
+      "TP": 1.332,
       "confidence": 99.99999987424579,
-      "threshold": 70.0,
+      "threshold": 65.0,
       "rb_epsilon": 0.1,
       "regimes": {
-        "volatility": "HIGH_VOL",
+        "volatility": "NORMAL_VOL",
         "trend": "RANGING",
         "session": "LONDON_SESSION",
         "behavior": "MEAN_REVERT"
       },
-      "sl_multiplier": 3.0,
-      "tp_multiplier": 3.0,
-      "timestamp": "2025-12-08T10:04:03.342119+00:00",
+      "sl_multiplier": 2.0,
+      "tp_multiplier": 2.5,
+      "timestamp": "2025-12-08T12:04:13.840070+00:00",
       "pair": "GBP/USD",
       "timeframe": "1h"
     },
     "USD/JPY": {
       "direction": "HOLD",
-      "last_price": 155.5,
+      "last_price": 155.56,
       "skip_reason": "Pair not optimal for LONDON_SESSION",
       "regimes": {
         "volatility": "NORMAL_VOL",
@@ -68,7 +59,7 @@
     }
   },
   "rl_stats": {
-    "total_updates": 46790,
+    "total_updates": 46791,
     "total_trades": 48072,
     "profitable_trades": 21483,
     "total_pnl": 111.39546952897928,
@@ -593,6 +584,7 @@
       0.10214380109387869,
       0.101532315850206,
       0.10062194487748828,
+      0.1,
       0.1,
       0.1,
       0.1,
@@ -93656,13 +93648,14 @@
       52.65490488945188,
       76.226946808698,
       65.30181950225857,
-      78.55530274329776
+      78.55530274329776,
+      78.89221918063383
     ],
     "pipeline_trades_learned": 0,
-    "pipeline_v6_learned": 164931,
+    "pipeline_v6_learned": 167442,
     "live_validated": 26,
     "backtest_learned": 46635,
-    "total_learning_sources": 2501,
+    "total_learning_sources": 2511,
     "rbed_milestones": [],
     "consecutive_losses": 1,
     "v20_4_archive": {
@@ -96590,12 +96583,12 @@
     },
     "reset_date": "2025-11-29T01:48:45.963366+00:00",
     "reset_reason": "v20.5 Aggressive Q-Stability: Fixed tracking + 25x scale reduction",
-    "pipeline_v6_contrarian": 12966,
+    "pipeline_v6_contrarian": 13393,
     "v20_6_upgrade": {
       "date": "2025-11-29T23:31:58.462154+00:00",
       "reason": "Added contrarian tracking for Pipeline v6.3"
     },
-    "regime_filtered_trades": 154,
+    "regime_filtered_trades": 157,
     "regime_stats": {
       "volatility_NORMAL_VOL": {
         "wins": 3129,
@@ -96684,11 +96677,7 @@
     "last_trade": null
   },
   "regime_summary": {
-    "EUR/USD_volatility": "HIGH_VOL",
-    "EUR/USD_trend": "RANGING",
-    "EUR/USD_session": "LONDON_SESSION",
-    "EUR/USD_behavior": "MEAN_REVERT",
-    "GBP/USD_volatility": "HIGH_VOL",
+    "GBP/USD_volatility": "NORMAL_VOL",
     "GBP/USD_trend": "RANGING",
     "GBP/USD_session": "LONDON_SESSION",
     "GBP/USD_behavior": "MEAN_REVERT"
@@ -96704,21 +96693,21 @@
   },
   "quality_scorer_stats": {
     "min_quality_score": 80.0,
-    "learning_iterations": 7,
-    "last_updated": "2025-12-08T10:03:54.948663+00:00",
+    "learning_iterations": 8,
+    "last_updated": "2025-12-08T12:04:05.527215+00:00",
     "key_weights": {
       "london_boost": 15.0,
       "contrarian_boost": 12.0,
       "confidence_weight": 20.0
     }
   },
-  "regime_filters_applied": 154,
+  "regime_filters_applied": 157,
   "learning_summary": {
-    "pipeline_v6": 164931,
-    "pipeline_v6_contrarian": 12966,
+    "pipeline_v6": 167442,
+    "pipeline_v6_contrarian": 13393,
     "live_validated": 26,
     "pipeline_db": 0,
     "backtest": 46635,
-    "total_this_run": 2501
+    "total_this_run": 2511
   }
 }

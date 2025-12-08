@@ -123,6 +123,13 @@ jobs:
             echo "quality_weights_exists=false" >> $GITHUB_OUTPUT
           fi
           
+          # Check strategy matrix status
+          if [ -f "strategy_matrix/pair_strategy_matrix.json" ]; then
+            echo "strategy_matrix_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "strategy_matrix_exists=false" >> $GITHUB_OUTPUT
+          fi
+          
           # Check last evaluation time for adaptive scheduling
           if [ -f "learning_data/predictions_history.json" ]; then
             PENDING=$(python3 -c "
@@ -152,12 +159,13 @@ jobs:
           echo "   RL Memory: $([ -f "rl_memory/experience_replay.json.gz" ] && echo "Yes" || echo "No")"
           echo "   Learning outcomes: $LEARNING_COUNT"
           echo "   Quality weights: $([ -f "quality_weights/learned_weights.json" ] && echo "Yes" || echo "No")"
+          echo "   Strategy matrix: $([ -f "strategy_matrix/pair_strategy_matrix.json" ] && echo "Yes" || echo "No")"
           echo "   Pending evaluations: $PENDING"
           echo "   Run number: $RUN_NUM"
           
           mkdir -p data/raw/yfinance data/raw/alpha_vantage data/processed data/quarantine \
                    database logs outputs omega_state rl_memory backups learning_data \
-                   .github/run_history regime_stats quality_weights
+                   .github/run_history regime_stats quality_weights strategy_matrix
 
       - name: Verify Notebook
         run: |
@@ -167,7 +175,7 @@ jobs:
           fi
           echo "✅ Found AI_Forex_Brain_2.ipynb"
 
-      - name: Create Enhanced Notebook Executor v21.1
+      - name: Create Enhanced Notebook Executor v22.0
         run: |
           cat > run_full.py << 'EOF'
           import nbformat
@@ -179,7 +187,7 @@ jobs:
           from nbconvert.preprocessors import ExecutePreprocessor
           from datetime import datetime, timezone
           
-          class QualityFilteredExecutor(ExecutePreprocessor):
+          class UltimateExecutor(ExecutePreprocessor):
               def __init__(self, *args, **kwargs):
                   super().__init__(*args, **kwargs)
                   self.cell_count = 0
@@ -193,7 +201,7 @@ jobs:
               
               def preprocess(self, nb, resources=None, km=None):
                   print("="*80)
-                  print("⭐ TRADE BEACON v21.1 - QUALITY FILTERED SIGNALS")
+                  print("🛡️ TRADE BEACON v22.0 - ULTIMATE TRADING SYSTEM")
                   print("="*80)
                   print(f"📅 Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
                   
@@ -201,19 +209,18 @@ jobs:
                   print(f"🔧 Alpha Vantage: {'SKIPPED ⏭️' if skip_av else 'ACTIVE ✅ (00:00 UTC)'}")
                   
                   if self.is_weekend:
-                      print("🏖️  WEEKEND MODE: Pipeline v6.4.0 + Quality Filtering")
-                      print("   • Using 1.5x SL/TP (optimized for low volatility)")
-                      print("   • A/B Testing: 50% normal, 50% contrarian")
-                      print("   • Min eval window: 2-12 hours")
-                      print("   • Max timeout: 24-72 hours")
-                      print("   • ⭐ Quality scoring: Filters to top signals")
+                      print("🏖️  WEEKEND MODE: Enhanced Contrarian v6.4.0")
+                      print("   • Adaptive volatility multipliers (1.5x-2.5x)")
+                      print("   • Momentum filter (don't fade strong trends)")
+                      print("   • Statistical confidence intervals")
+                      print("   • Performance-based allocation")
+                      print("   • 🛡️ Three-Layer Defense: Hard Rules + ML + Momentum")
                   else:
-                      print("💼 WEEKDAY MODE: Live trading with quality filtering")
+                      print("💼 WEEKDAY MODE: Live trading with full protection")
                       print("   • Pipeline v6.4.0 normal mode")
-                      print("   • Using 2x normal SL/TP")
-                      print("   • Min eval window: 1-6 hours")
-                      print("   • Max timeout: 12-36 hours")
-                      print("   • ⭐ Quality filtering: Premium signals only")
+                      print("   • 🛡️ Three-Layer Defense System active")
+                      print("   • Quality filtering: Premium signals only")
+                      print("   • Trade Beacon v22.0: Ultimate system")
                   
                   print(f"📊 Total cells to execute: {len([c for c in nb.cells if c.cell_type == 'code'])}")
                   print(f"⏰ Trigger: Manual or colab_trigger.txt")
@@ -235,12 +242,16 @@ jobs:
                       return "📈 Alpha Vantage Fetcher"
                   elif 'yfinance' in source_lower and 'fetcher' in source_lower:
                       return "📊 YFinance Fetcher"
-                  elif 'combiner' in source_lower:
+                  elif 'combiner' in source_lower or 'csv combiner' in source_lower:
                       return "🔗 CSV Combiner"
                   elif 'pipeline v6.4' in source_lower or 'weekend contrarian' in source_lower:
-                      return "🧠 Pipeline v6.4.0 Weekend Contrarian"
-                  elif 'trade beacon' in source_lower and ('v21' in source_lower or 'quality' in source_lower):
-                      return "⭐ Trade Beacon v21.1 - Quality Filtered"
+                      return "🧠 Pipeline v6.4.0 Enhanced Contrarian"
+                  elif 'trade beacon' in source_lower and ('v22' in source_lower or 'ultimate' in source_lower):
+                      return "🛡️ Trade Beacon v22.0 - Ultimate System"
+                  elif 'three-layer defense' in source_lower or 'three layer' in source_lower:
+                      return "🛡️ Three-Layer Defense Coordinator"
+                  elif 'quality scor' in source_lower:
+                      return "⭐ Quality Scoring System"
                   elif 'learning' in source_lower and 'system' in source_lower:
                       return "🎓 Adaptive Learning System"
                   elif 'backtest' in source_lower:
@@ -264,12 +275,17 @@ jobs:
                       self.stage_timings[new_stage] = {'start': time.time(), 'duration': 0}
                       print("="*80)
                       print(f"📍 STAGE: {new_stage}")
-                      if '21.1' in new_stage or 'Quality' in new_stage:
-                          print("   ⭐ Quality filtering active - Premium signals only")
-                      elif self.is_weekend and 'Pipeline' in new_stage:
-                          print("   🏖️  Weekend contrarian mode (1.5x SL/TP)")
-                      if 'Beacon' in new_stage:
-                          print("   🌍 Market regime detection active")
+                      if 'v22' in new_stage or 'Ultimate' in new_stage:
+                          print("   🛡️ Three-Layer Defense System active")
+                          print("   ⭐ Self-learning quality scoring")
+                          print("   📧 Professional email template")
+                      elif 'Three-Layer' in new_stage:
+                          print("   🛡️ Layer 1: Hard Rules (Empirical)")
+                          print("   🧠 Layer 2: ML Learning (Adaptive)")
+                          print("   📊 Layer 3: Momentum Filter (Real-time)")
+                      elif 'Pipeline' in new_stage:
+                          print("   🏖️ Weekend contrarian mode (adaptive SL/TP)")
+                          print("   📊 Statistical confidence intervals")
                       print("="*80)
                   
                   elapsed = time.time() - self.start_time
@@ -338,18 +354,18 @@ jobs:
               nb = nbformat.read(f, as_version=4)
           
           print("\n" + "="*80)
-          print("🤖 FOREX AI BRAIN - QUALITY FILTERED v21.1")
+          print("🛡️ FOREX AI BRAIN - ULTIMATE TRADING SYSTEM v22.0")
           print("="*80)
           print(f"📓 Notebook: AI_Forex_Brain_2.ipynb")
-          print(f"🔧 Mode: Weekend Contrarian + Quality Filtering")
-          print(f"⚙️  Pipeline: v6.4.0 (Adaptive 1.5x-2.5x SL/TP)")
-          print(f"⚙️  Trade Beacon: v21.1 (Quality filtered signals)")
+          print(f"🔧 Mode: Three-Layer Defense + Quality Filtering")
+          print(f"⚙️  Pipeline: v6.4.0 (Enhanced Weekend Contrarian)")
+          print(f"⚙️  Trade Beacon: v22.0 (Ultimate System)")
           print(f"⏰ Trigger: Manual or colab_trigger.txt")
           print("="*80)
           print()
           
           # Execute
-          ep = QualityFilteredExecutor(timeout=2400, kernel_name='python3', allow_errors=True)
+          ep = UltimateExecutor(timeout=2400, kernel_name='python3', allow_errors=True)
           start = time.time()
           
           try:
@@ -366,10 +382,16 @@ jobs:
               
               if ep.is_weekend:
                   print(f"\n🏖️  Weekend Mode Summary:")
-                  print(f"   • Pipeline v6.4.0 contrarian active (adaptive SL/TP)")
-                  print(f"   • A/B testing 50% normal vs 50% contrarian")
-                  print(f"   • Faster evaluation with tighter stops")
+                  print(f"   • Pipeline v6.4.0: Enhanced contrarian (adaptive SL/TP)")
+                  print(f"   • Statistical confidence intervals")
+                  print(f"   • Performance-based allocation")
+                  print(f"   • 🛡️ Three-Layer Defense active")
                   print(f"   • ⭐ Quality filtering: Top signals only")
+              
+              print(f"\n🛡️ Three-Layer Defense System:")
+              print(f"   • Layer 1: Hard Rules (Empirical protection)")
+              print(f"   • Layer 2: ML Learning (Adaptive intelligence)")
+              print(f"   • Layer 3: Momentum Filter (Real-time validation)")
               
               print(f"\n⭐ Quality Filtering:")
               print(f"   • Self-learning quality scoring")
@@ -405,10 +427,11 @@ jobs:
                   'stage_timings': {k: v.get('duration', 0) for k, v in ep.stage_timings.items()},
                   'critical_errors': len(ep.critical_errors),
                   'status': 'success',
-                  'version': 'v21.1',
+                  'version': 'v22.0',
                   'pipeline_version': 'v6.4.0',
-                  'beacon_version': 'v21.1',
-                  'quality_filtering': 'active'
+                  'beacon_version': 'v22.0',
+                  'quality_filtering': 'active',
+                  'three_layer_defense': 'active'
               }
               
           except Exception as e:
@@ -428,7 +451,7 @@ jobs:
                   'cells_executed': ep.cell_count,
                   'status': 'error',
                   'error': str(e)[:300],
-                  'version': 'v21.1'
+                  'version': 'v22.0'
               }
           
           # Save report
@@ -439,9 +462,9 @@ jobs:
           print(f"💾 Run report saved to .github/run_history/latest_run.json")
           EOF
 
-      - name: Run Full Notebook Pipeline v21.1 (Quality Filtered)
+      - name: Run Full Notebook Pipeline v22.0 (Ultimate System)
         run: |
-          echo "🚀 STARTING QUALITY FILTERED v21.1 EXECUTION"
+          echo "🚀 STARTING ULTIMATE SYSTEM v22.0 EXECUTION"
           echo "======================================================"
           echo "⚡ Triggered at: $(date +'%H:%M UTC')"
           echo "📅 Day: ${{ steps.day_info.outputs.day_name }}"
@@ -449,13 +472,14 @@ jobs:
           echo "📊 Mode: MANUAL TRIGGER (colab_trigger.txt)"
           echo "⏰ Trigger: Manual or Push Event"
           echo "🎯 Pending Predictions: ${{ steps.data.outputs.pending_predictions }}"
-          echo "🌍 Pipeline: v6.4.0 | Beacon: v21.1"
+          echo "🌍 Pipeline: v6.4.0 | Beacon: v22.0"
+          echo "🛡️ Three-Layer Defense: ACTIVE"
           echo "⭐ Quality Filtering: ACTIVE"
           echo ""
           python run_full.py
         timeout-minutes: 50
 
-      - name: Extract Pipeline Metrics with Quality Stats
+      - name: Extract Pipeline Metrics with Defense & Quality Stats
         if: always()
         run: |
           cat > extract_metrics.py << 'EOF'
@@ -467,13 +491,14 @@ jobs:
           
           metrics = {
               'status': 'no_data',
-              'version': 'v21.1',
+              'version': 'v22.0',
               'pipeline_version': 'v6.4.0',
-              'beacon_version': 'v21.1',
+              'beacon_version': 'v22.0',
               'trigger': 'manual_or_colab_trigger',
               'scheduler': 'manual_trigger',
               'is_weekend': datetime.now(timezone.utc).weekday() in [5, 6],
-              'quality_filtering': 'active'
+              'quality_filtering': 'active',
+              'three_layer_defense': 'active'
           }
           
           # Database metrics
@@ -511,6 +536,8 @@ jobs:
                   metrics['epsilon'] = rl_stats.get('epsilon_history', [0.7])[-1] if rl_stats.get('epsilon_history') else 0.7
                   metrics['regime_filtered'] = rl_stats.get('regime_filtered_trades', 0)
                   metrics['quality_filtered'] = rl_stats.get('quality_filtered_trades', 0)
+                  metrics['layer1_blocks'] = rl_stats.get('layer1_blocks', 0)
+                  metrics['layer3_blocks'] = rl_stats.get('layer3_blocks', 0)
               except Exception as e:
                   metrics['learning_stats_error'] = str(e)[:100]
           
@@ -525,6 +552,17 @@ jobs:
                   metrics['quality_last_update'] = quality_data.get('last_updated', 'Never')
               except Exception as e:
                   metrics['quality_error'] = str(e)[:100]
+          
+          # Strategy matrix
+          strategy_matrix_file = Path('strategy_matrix/pair_strategy_matrix.json')
+          if strategy_matrix_file.exists():
+              try:
+                  with open(strategy_matrix_file) as f:
+                      strategy_data = json.load(f)
+                  metrics['strategy_matrix_pairs'] = len(strategy_data)
+                  metrics['strategy_matrix_loaded'] = True
+              except Exception as e:
+                  metrics['strategy_error'] = str(e)[:100]
           
           # Learning outcomes with weekend contrarian split
           learning_db = Path('learning_data/learning_outcomes.json')
@@ -616,6 +654,30 @@ jobs:
               except Exception as e:
                   metrics['regime_error'] = str(e)[:100]
           
+          # Three-Layer Defense stats
+          omega_signals = Path('outputs/omega_signals.json')
+          if omega_signals.exists():
+              try:
+                  with open(omega_signals) as f:
+                      signals_data = json.load(f)
+                  
+                  defense_summary = signals_data.get('defense_summary', {})
+                  metrics['defense_total_checks'] = defense_summary.get('total_signals_checked', 0)
+                  metrics['defense_layer1_blocks'] = defense_summary.get('layer1_blocks', 0)
+                  metrics['defense_layer1_overrides'] = defense_summary.get('layer1_overrides', 0)
+                  metrics['defense_layer3_blocks'] = defense_summary.get('layer3_blocks', 0)
+                  metrics['defense_passed_all'] = defense_summary.get('passed_all_layers', 0)
+                  metrics['defense_rejection_rate'] = round(defense_summary.get('total_rejection_rate', 0) * 100, 2)
+                  
+                  quality_stats = signals_data.get('quality_stats', {})
+                  metrics['quality_total_generated'] = quality_stats.get('total_generated', 0)
+                  metrics['quality_premium_count'] = quality_stats.get('premium_count', 0)
+                  metrics['quality_filtered_out'] = quality_stats.get('filtered_out', 0)
+                  metrics['quality_avg_score'] = round(quality_stats.get('avg_score', 0), 1)
+                  
+              except Exception as e:
+                  metrics['defense_error'] = str(e)[:100]
+          
           # Save metrics
           os.makedirs('.github/run_history', exist_ok=True)
           with open('.github/run_history/metrics.json', 'w') as f:
@@ -623,17 +685,32 @@ jobs:
           
           # Print summary
           print("\n" + "="*70)
-          print("📊 EXTRACTED METRICS (QUALITY FILTERED v21.1)")
+          print("📊 EXTRACTED METRICS (ULTIMATE SYSTEM v22.0)")
           print("="*70)
           for key, value in metrics.items():
               print(f"{key}: {value}")
           print("="*70)
           
+          # Three-Layer Defense summary
+          if metrics.get('defense_total_checks', 0) > 0:
+              print("\n🛡️ THREE-LAYER DEFENSE SYSTEM:")
+              print("="*70)
+              print(f"   Total signals checked: {metrics['defense_total_checks']}")
+              print(f"   Layer 1 blocks: {metrics['defense_layer1_blocks']}")
+              print(f"   Layer 1 overrides: {metrics['defense_layer1_overrides']}")
+              print(f"   Layer 3 blocks: {metrics['defense_layer3_blocks']}")
+              print(f"   Passed all layers: {metrics['defense_passed_all']}")
+              print(f"   Rejection rate: {metrics['defense_rejection_rate']}%")
+              print("="*70)
+          
           # Quality filtering summary
-          if metrics.get('quality_filtered', 0) > 0:
+          if metrics.get('quality_total_generated', 0) > 0:
               print("\n⭐ QUALITY FILTERING:")
               print("="*70)
-              print(f"   Signals filtered: {metrics['quality_filtered']}")
+              print(f"   Signals generated: {metrics['quality_total_generated']}")
+              print(f"   Premium signals: {metrics['quality_premium_count']}")
+              print(f"   Filtered out: {metrics['quality_filtered_out']}")
+              print(f"   Average score: {metrics['quality_avg_score']}")
               print(f"   Min threshold: {metrics.get('quality_min_threshold', 80)}")
               print(f"   Learning iterations: {metrics.get('quality_iterations', 0)}")
               print("="*70)
@@ -729,16 +806,16 @@ jobs:
             if [ -f ".github/run_history/metrics.json" ]; then
               OUTCOMES=$(python3 -c "import json; d=json.load(open('.github/run_history/metrics.json')); print(d.get('total_outcomes', 0))" 2>/dev/null || echo "0")
               PENDING=$(python3 -c "import json; d=json.load(open('.github/run_history/metrics.json')); print(d.get('pending_predictions', 0))" 2>/dev/null || echo "0")
-              REGIME_FILTERED=$(python3 -c "import json; d=json.load(open('.github/run_history/metrics.json')); print(d.get('regime_filtered', 0))" 2>/dev/null || echo "0")
-              QUALITY_FILTERED=$(python3 -c "import json; d=json.load(open('.github/run_history/metrics.json')); print(d.get('quality_filtered', 0))" 2>/dev/null || echo "0")
+              DEFENSE_BLOCKS=$(python3 -c "import json; d=json.load(open('.github/run_history/metrics.json')); print(d.get('defense_layer1_blocks', 0) + d.get('defense_layer3_blocks', 0))" 2>/dev/null || echo "0")
+              QUALITY_PREMIUM=$(python3 -c "import json; d=json.load(open('.github/run_history/metrics.json')); print(d.get('quality_premium_count', 0))" 2>/dev/null || echo "0")
               
               if [ "${{ steps.day_info.outputs.is_weekend }}" = "true" ]; then
-                git commit -m "🏖️  v21.1 Run #${RUN} - ${DAY} ${HOUR}:00 UTC | ${OUTCOMES} outcomes | ${PENDING} pending | R:${REGIME_FILTERED} Q:${QUALITY_FILTERED} | Manual" || true
+                git commit -m "🏖️ v22.0 Run #${RUN} - ${DAY} ${HOUR}:00 UTC | ${OUTCOMES} outcomes | ${PENDING} pending | D:${DEFENSE_BLOCKS} Q:${QUALITY_PREMIUM} | Manual" || true
               else
-                git commit -m "💼 v21.1 Run #${RUN} - ${DAY} ${HOUR}:00 UTC | ${OUTCOMES} outcomes | ${PENDING} pending | R:${REGIME_FILTERED} Q:${QUALITY_FILTERED} | Manual" || true
+                git commit -m "💼 v22.0 Run #${RUN} - ${DAY} ${HOUR}:00 UTC | ${OUTCOMES} outcomes | ${PENDING} pending | D:${DEFENSE_BLOCKS} Q:${QUALITY_PREMIUM} | Manual" || true
               fi
             else
-              git commit -m "⭐ v21.1 Run #${RUN} - ${DAY} ${HOUR}:00 UTC | Quality Filtered | Manual" || true
+              git commit -m "🛡️ v22.0 Run #${RUN} - ${DAY} ${HOUR}:00 UTC | Ultimate System | Manual" || true
             fi
             
             # Push with retry
@@ -772,37 +849,39 @@ jobs:
             learning_data/predictions_history.json
             regime_stats/regime_performance.json
             quality_weights/learned_weights.json
+            strategy_matrix/pair_strategy_matrix.json
           retention-days: 7
           if-no-files-found: ignore
 
-      - name: Final Summary with Quality Filtering
+      - name: Final Summary with Full System Status
         if: always()
         run: |
           echo ""
           echo "=========================================="
-          echo "⭐ QUALITY FILTERED v21.1 - RUN SUMMARY"
+          echo "🛡️ ULTIMATE SYSTEM v22.0 - RUN SUMMARY"
           echo "=========================================="
           echo "📅 Day: ${{ steps.day_info.outputs.day_name }}"
           echo "🔢 Run: #${{ steps.data.outputs.run_number }}"
           echo "⏰ Time: $(date +'%Y-%m-%d %H:%M UTC')"
           echo "⚡ Trigger: Manual or colab_trigger.txt"
-          echo "🔧 Version: v21.1 (Quality Filtered)"
+          echo "🔧 Version: v22.0 (Ultimate System)"
           echo ""
           
           if [ "${{ steps.day_info.outputs.is_weekend }}" = "true" ]; then
             echo "🏖️  WEEKEND MODE ACTIVE"
             echo "   • Pipeline v6.4.0: Enhanced Weekend Contrarian"
             echo "   • Using adaptive 1.5x-2.5x SL/TP"
-            echo "   • A/B Test: Dynamic allocation"
+            echo "   • Statistical confidence intervals"
+            echo "   • Performance-based allocation"
             echo "   • Adaptive windows: 2-12h min, 24-72h max"
-            echo "   • Trade Beacon v21.1: Market regime + Quality filtering"
+            echo "   • 🛡️ Three-Layer Defense: Full protection"
             echo "   • ⭐ Quality filtering: Premium signals only"
           else
             echo "💼 WEEKDAY MODE ACTIVE"
             echo "   • Pipeline v6.4.0: Normal prediction logic"
             echo "   • Using 2x normal SL/TP"
             echo "   • Adaptive windows: 1-6h min, 12-36h max"
-            echo "   • Trade Beacon v21.1: Full regime + Quality filtering"
+            echo "   • 🛡️ Three-Layer Defense: Full protection"
             echo "   • ⭐ Quality filtering: Top signals only"
           fi
           echo ""
@@ -812,6 +891,7 @@ jobs:
           echo "   RL Memory: ${{ steps.data.outputs.rl_memory_exists == 'true' && 'Yes' || 'No' }}"
           echo "   Learning outcomes: ${{ steps.data.outputs.learning_outcomes }}"
           echo "   Quality weights: ${{ steps.data.outputs.quality_weights_exists == 'true' && 'Yes' || 'No' }}"
+          echo "   Strategy matrix: ${{ steps.data.outputs.strategy_matrix_exists == 'true' && 'Yes' || 'No' }}"
           echo "   Pending predictions: ${{ steps.data.outputs.pending_predictions }}"
           echo ""
           
@@ -834,24 +914,33 @@ jobs:
           echo "   • Manual: workflow_dispatch from GitHub Actions"
           echo "   • Automatic: Push changes to colab_trigger.txt"
           echo ""
-          echo "🔧 v21.1 Key Features:"
-          echo "   ✅ Pipeline v6.4.0: Enhanced weekend contrarian"
-          echo "   ✅ Trade Beacon v21.1: Quality filtered signals"
+          echo "🛡️ v22.0 KEY FEATURES:"
+          echo "   ✅ THREE-LAYER DEFENSE SYSTEM"
+          echo "      • Layer 1: Hard Rules (Empirical protection)"
+          echo "      • Layer 2: ML Learning (Adaptive intelligence)"
+          echo "      • Layer 3: Momentum Filter (Real-time validation)"
           echo "   ✅ Self-learning quality scoring system"
           echo "   ✅ Premium signal filtering (score >80)"
           echo "   ✅ Adaptive quality thresholds"
           echo "   ✅ Quality weight optimization from outcomes"
-          echo "   ✅ Market regime detection (volatility/trend/session)"
+          echo "   ✅ Pair-specific strategy matrix (USD/JPY fix!)"
+          echo "   ✅ Enhanced regime detection (volatility/trend/session)"
           echo "   ✅ Dynamic SL/TP adjustment by regime"
-          echo "   ✅ Smart trade filtering (regime + quality)"
-          echo "   ✅ Weekend: 100% contrarian in ranging markets"
-          echo "   ✅ Weekday: Regime-aware normal trading"
+          echo "   ✅ Smart trade filtering (defense + quality)"
+          echo "   ✅ Weekend: Enhanced contrarian with stats"
+          echo "   ✅ Weekday: Full protection normal trading"
+          echo "   ✅ Professional email template with stunning design"
           echo ""
-          echo "🎯 v21.1 Benefits:"
+          echo "🎯 v22.0 BENEFITS:"
+          echo "   ✅ Maximum protection from losses"
+          echo "   ✅ USD/JPY short-term contrarian blocked (0% WR)"
           echo "   ✅ Only receive premium quality signals"
-          echo "   ✅ AI learns optimal quality weights"
+          echo "   ✅ AI learns optimal strategies per pair"
+          echo "   ✅ Real-time momentum validation"
+          echo "   ✅ Statistical confidence intervals"
+          echo "   ✅ Performance-based allocation"
           echo "   ✅ Reduced noise from low-quality setups"
           echo "   ✅ Higher probability trades only"
-          echo "   ✅ All v21.0 learning preserved"
           echo "   ✅ Enhanced visibility into signal quality"
+          echo "   ✅ Beautiful professional email reports"
           echo "=========================================="

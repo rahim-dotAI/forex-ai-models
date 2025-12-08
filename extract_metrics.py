@@ -6,12 +6,13 @@ from datetime import datetime, timezone
 
 metrics = {
     'status': 'no_data',
-    'version': 'v21.0',
+    'version': 'v21.1',
     'pipeline_version': 'v6.4.0',
-    'beacon_version': 'v21.0',
+    'beacon_version': 'v21.1',
     'trigger': 'manual_or_colab_trigger',
     'scheduler': 'manual_trigger',
-    'is_weekend': datetime.now(timezone.utc).weekday() in [5, 6]
+    'is_weekend': datetime.now(timezone.utc).weekday() in [5, 6],
+    'quality_filtering': 'active'
 }
 
 # Database metrics
@@ -48,8 +49,21 @@ if stats_file.exists():
         metrics['rl_pnl'] = round(rl_stats.get('total_pnl', 0.0), 2)
         metrics['epsilon'] = rl_stats.get('epsilon_history', [0.7])[-1] if rl_stats.get('epsilon_history') else 0.7
         metrics['regime_filtered'] = rl_stats.get('regime_filtered_trades', 0)
+        metrics['quality_filtered'] = rl_stats.get('quality_filtered_trades', 0)
     except Exception as e:
         metrics['learning_stats_error'] = str(e)[:100]
+
+# Quality weights
+quality_weights_file = Path('quality_weights/learned_weights.json')
+if quality_weights_file.exists():
+    try:
+        with open(quality_weights_file) as f:
+            quality_data = json.load(f)
+        metrics['quality_min_threshold'] = quality_data.get('min_quality_score', 80)
+        metrics['quality_iterations'] = quality_data.get('learning_iterations', 0)
+        metrics['quality_last_update'] = quality_data.get('last_updated', 'Never')
+    except Exception as e:
+        metrics['quality_error'] = str(e)[:100]
 
 # Learning outcomes with weekend contrarian split
 learning_db = Path('learning_data/learning_outcomes.json')
@@ -148,11 +162,20 @@ with open('.github/run_history/metrics.json', 'w') as f:
 
 # Print summary
 print("\n" + "="*70)
-print("📊 EXTRACTED METRICS (WEEKEND CONTRARIAN v21.0)")
+print("📊 EXTRACTED METRICS (QUALITY FILTERED v21.1)")
 print("="*70)
 for key, value in metrics.items():
     print(f"{key}: {value}")
 print("="*70)
+
+# Quality filtering summary
+if metrics.get('quality_filtered', 0) > 0:
+    print("\n⭐ QUALITY FILTERING:")
+    print("="*70)
+    print(f"   Signals filtered: {metrics['quality_filtered']}")
+    print(f"   Min threshold: {metrics.get('quality_min_threshold', 80)}")
+    print(f"   Learning iterations: {metrics.get('quality_iterations', 0)}")
+    print("="*70)
 
 # Weekend-specific analysis
 if metrics.get('is_weekend'):
@@ -180,36 +203,17 @@ if metrics.get('is_weekend'):
             
             if diff > 20:
                 print(f"      Status: 🎉 CONTRARIAN HUGE SUCCESS!")
-                print(f"      Recommendation: Switch to 100% contrarian on weekends")
             elif diff > 5:
                 print(f"      Status: ✅ CONTRARIAN BETTER")
-                print(f"      Recommendation: Continue A/B testing")
             elif diff < -5:
                 print(f"      Status: ❌ CONTRARIAN WORSE")
-                print(f"      Recommendation: Stick with normal strategy")
             else:
                 print(f"      Status: ⚖️  INCONCLUSIVE")
-                print(f"      Recommendation: Need more data")
     
     if metrics.get('weekday_outcomes', 0) > 0:
         print(f"\n   💼 WEEKDAY Baseline:")
         print(f"      Predictions: {metrics['weekday_outcomes']}")
         print(f"      Win Rate: {metrics['weekday_win_rate']}%")
-    
-    if metrics.get('using_adaptive_windows'):
-        print(f"\n   ✅ Adaptive Windows: ACTIVE")
-        print(f"   Last min wait: {metrics.get('last_min_wait', 0)}h")
-        print(f"   Last max wait: {metrics.get('last_max_wait', 0)}h")
-    
-    if metrics.get('pending_predictions', 0) > 0:
-        print(f"\n   📊 Pending: {metrics['pending_predictions']} predictions")
-        print(f"   Oldest waiting: {metrics.get('oldest_pending_hours', 0)}h")
-        
-        oldest_hours = metrics.get('oldest_pending_hours', 0)
-        if oldest_hours >= 2:
-            print(f"   ✅ Ready for evaluation (>2h wait)")
-        else:
-            print(f"   ⏳ Needs more time ({2 - oldest_hours:.1f}h remaining)")
     
     print("="*70)
 
@@ -222,10 +226,4 @@ if metrics.get('best_regimes'):
         print(f"      Win Rate: {regime['win_rate']}%")
         print(f"      Trades: {regime['trades']}")
     print("="*70)
-
-# Trade Beacon v21.0 stats
-if metrics.get('regime_filtered', 0) > 0:
-    print(f"\n🌍 REGIME FILTERING:")
-    print(f"   Trades filtered by regime detection: {metrics['regime_filtered']}")
-    print(f"   This prevents trading in unfavorable market conditions")
 

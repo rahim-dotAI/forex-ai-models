@@ -7,7 +7,7 @@ import re
 from nbconvert.preprocessors import ExecutePreprocessor
 from datetime import datetime, timezone
 
-class WeekendContrarianExecutor(ExecutePreprocessor):
+class QualityFilteredExecutor(ExecutePreprocessor):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.cell_count = 0
@@ -21,7 +21,7 @@ class WeekendContrarianExecutor(ExecutePreprocessor):
     
     def preprocess(self, nb, resources=None, km=None):
         print("="*80)
-        print("🚀 WEEKEND CONTRARIAN SCHEDULE v21.0 (1.5x Optimized)")
+        print("⭐ TRADE BEACON v21.1 - QUALITY FILTERED SIGNALS")
         print("="*80)
         print(f"📅 Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
         
@@ -29,19 +29,19 @@ class WeekendContrarianExecutor(ExecutePreprocessor):
         print(f"🔧 Alpha Vantage: {'SKIPPED ⏭️' if skip_av else 'ACTIVE ✅ (00:00 UTC)'}")
         
         if self.is_weekend:
-            print("🏖️  WEEKEND MODE: Pipeline v6.4.0 Contrarian Active")
+            print("🏖️  WEEKEND MODE: Pipeline v6.4.0 + Quality Filtering")
             print("   • Using 1.5x SL/TP (optimized for low volatility)")
             print("   • A/B Testing: 50% normal, 50% contrarian")
             print("   • Min eval window: 2-12 hours")
             print("   • Max timeout: 24-72 hours")
-            print("   • Regime-aware Trade Beacon v21.0")
+            print("   • ⭐ Quality scoring: Filters to top signals")
         else:
-            print("💼 WEEKDAY MODE: Live trading with regime detection")
+            print("💼 WEEKDAY MODE: Live trading with quality filtering")
             print("   • Pipeline v6.4.0 normal mode")
             print("   • Using 2x normal SL/TP")
             print("   • Min eval window: 1-6 hours")
             print("   • Max timeout: 12-36 hours")
-            print("   • Trade Beacon v21.0 with full regime detection")
+            print("   • ⭐ Quality filtering: Premium signals only")
         
         print(f"📊 Total cells to execute: {len([c for c in nb.cells if c.cell_type == 'code'])}")
         print(f"⏰ Trigger: Manual or colab_trigger.txt")
@@ -67,8 +67,8 @@ class WeekendContrarianExecutor(ExecutePreprocessor):
             return "🔗 CSV Combiner"
         elif 'pipeline v6.4' in source_lower or 'weekend contrarian' in source_lower:
             return "🧠 Pipeline v6.4.0 Weekend Contrarian"
-        elif 'trade beacon' in source_lower and 'v21' in source_lower:
-            return "🌍 Trade Beacon v21.0 - Regime-Aware"
+        elif 'trade beacon' in source_lower and ('v21' in source_lower or 'quality' in source_lower):
+            return "⭐ Trade Beacon v21.1 - Quality Filtered"
         elif 'learning' in source_lower and 'system' in source_lower:
             return "🎓 Adaptive Learning System"
         elif 'backtest' in source_lower:
@@ -92,7 +92,9 @@ class WeekendContrarianExecutor(ExecutePreprocessor):
             self.stage_timings[new_stage] = {'start': time.time(), 'duration': 0}
             print("="*80)
             print(f"📍 STAGE: {new_stage}")
-            if self.is_weekend and 'Pipeline' in new_stage:
+            if '21.1' in new_stage or 'Quality' in new_stage:
+                print("   ⭐ Quality filtering active - Premium signals only")
+            elif self.is_weekend and 'Pipeline' in new_stage:
                 print("   🏖️  Weekend contrarian mode (1.5x SL/TP)")
             if 'Beacon' in new_stage:
                 print("   🌍 Market regime detection active")
@@ -164,18 +166,18 @@ with open('AI_Forex_Brain_2.ipynb', 'r') as f:
     nb = nbformat.read(f, as_version=4)
 
 print("\n" + "="*80)
-print("🤖 FOREX AI BRAIN - WEEKEND CONTRARIAN v21.0")
+print("🤖 FOREX AI BRAIN - QUALITY FILTERED v21.1")
 print("="*80)
 print(f"📓 Notebook: AI_Forex_Brain_2.ipynb")
-print(f"🔧 Mode: Weekend Contrarian with Regime Detection")
+print(f"🔧 Mode: Weekend Contrarian + Quality Filtering")
 print(f"⚙️  Pipeline: v6.4.0 (Adaptive 1.5x-2.5x SL/TP)")
-print(f"⚙️  Trade Beacon: v21.0 (Market regime awareness)")
+print(f"⚙️  Trade Beacon: v21.1 (Quality filtered signals)")
 print(f"⏰ Trigger: Manual or colab_trigger.txt")
 print("="*80)
 print()
 
 # Execute
-ep = WeekendContrarianExecutor(timeout=2400, kernel_name='python3', allow_errors=True)
+ep = QualityFilteredExecutor(timeout=2400, kernel_name='python3', allow_errors=True)
 start = time.time()
 
 try:
@@ -195,7 +197,13 @@ try:
         print(f"   • Pipeline v6.4.0 contrarian active (adaptive SL/TP)")
         print(f"   • A/B testing 50% normal vs 50% contrarian")
         print(f"   • Faster evaluation with tighter stops")
-        print(f"   • Trade Beacon v21.0 regime detection active")
+        print(f"   • ⭐ Quality filtering: Top signals only")
+    
+    print(f"\n⭐ Quality Filtering:")
+    print(f"   • Self-learning quality scoring")
+    print(f"   • Premium signal filtering (score >80)")
+    print(f"   • Adaptive quality thresholds")
+    print(f"   • Learns optimal weights from outcomes")
     
     if ep.stage_timings:
         print("\n📊 Stage Timings:")
@@ -225,9 +233,10 @@ try:
         'stage_timings': {k: v.get('duration', 0) for k, v in ep.stage_timings.items()},
         'critical_errors': len(ep.critical_errors),
         'status': 'success',
-        'version': 'v21.0',
+        'version': 'v21.1',
         'pipeline_version': 'v6.4.0',
-        'beacon_version': 'v21.0'
+        'beacon_version': 'v21.1',
+        'quality_filtering': 'active'
     }
     
 except Exception as e:
@@ -247,7 +256,7 @@ except Exception as e:
         'cells_executed': ep.cell_count,
         'status': 'error',
         'error': str(e)[:300],
-        'version': 'v21.0'
+        'version': 'v21.1'
     }
 
 # Save report

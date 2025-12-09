@@ -6,13 +6,14 @@ from datetime import datetime, timezone
 
 metrics = {
     'status': 'no_data',
-    'version': 'v21.1',
+    'version': 'v22.0',
     'pipeline_version': 'v6.4.0',
-    'beacon_version': 'v21.1',
+    'beacon_version': 'v22.0',
     'trigger': 'manual_or_colab_trigger',
     'scheduler': 'manual_trigger',
     'is_weekend': datetime.now(timezone.utc).weekday() in [5, 6],
-    'quality_filtering': 'active'
+    'quality_filtering': 'active',
+    'three_layer_defense': 'active'
 }
 
 # Database metrics
@@ -50,6 +51,8 @@ if stats_file.exists():
         metrics['epsilon'] = rl_stats.get('epsilon_history', [0.7])[-1] if rl_stats.get('epsilon_history') else 0.7
         metrics['regime_filtered'] = rl_stats.get('regime_filtered_trades', 0)
         metrics['quality_filtered'] = rl_stats.get('quality_filtered_trades', 0)
+        metrics['layer1_blocks'] = rl_stats.get('layer1_blocks', 0)
+        metrics['layer3_blocks'] = rl_stats.get('layer3_blocks', 0)
     except Exception as e:
         metrics['learning_stats_error'] = str(e)[:100]
 
@@ -64,6 +67,17 @@ if quality_weights_file.exists():
         metrics['quality_last_update'] = quality_data.get('last_updated', 'Never')
     except Exception as e:
         metrics['quality_error'] = str(e)[:100]
+
+# Strategy matrix
+strategy_matrix_file = Path('strategy_matrix/pair_strategy_matrix.json')
+if strategy_matrix_file.exists():
+    try:
+        with open(strategy_matrix_file) as f:
+            strategy_data = json.load(f)
+        metrics['strategy_matrix_pairs'] = len(strategy_data)
+        metrics['strategy_matrix_loaded'] = True
+    except Exception as e:
+        metrics['strategy_error'] = str(e)[:100]
 
 # Learning outcomes with weekend contrarian split
 learning_db = Path('learning_data/learning_outcomes.json')
@@ -155,6 +169,30 @@ if regime_stats_file.exists():
     except Exception as e:
         metrics['regime_error'] = str(e)[:100]
 
+# Three-Layer Defense stats
+omega_signals = Path('outputs/omega_signals.json')
+if omega_signals.exists():
+    try:
+        with open(omega_signals) as f:
+            signals_data = json.load(f)
+        
+        defense_summary = signals_data.get('defense_summary', {})
+        metrics['defense_total_checks'] = defense_summary.get('total_signals_checked', 0)
+        metrics['defense_layer1_blocks'] = defense_summary.get('layer1_blocks', 0)
+        metrics['defense_layer1_overrides'] = defense_summary.get('layer1_overrides', 0)
+        metrics['defense_layer3_blocks'] = defense_summary.get('layer3_blocks', 0)
+        metrics['defense_passed_all'] = defense_summary.get('passed_all_layers', 0)
+        metrics['defense_rejection_rate'] = round(defense_summary.get('total_rejection_rate', 0) * 100, 2)
+        
+        quality_stats = signals_data.get('quality_stats', {})
+        metrics['quality_total_generated'] = quality_stats.get('total_generated', 0)
+        metrics['quality_premium_count'] = quality_stats.get('premium_count', 0)
+        metrics['quality_filtered_out'] = quality_stats.get('filtered_out', 0)
+        metrics['quality_avg_score'] = round(quality_stats.get('avg_score', 0), 1)
+        
+    except Exception as e:
+        metrics['defense_error'] = str(e)[:100]
+
 # Save metrics
 os.makedirs('.github/run_history', exist_ok=True)
 with open('.github/run_history/metrics.json', 'w') as f:
@@ -162,17 +200,32 @@ with open('.github/run_history/metrics.json', 'w') as f:
 
 # Print summary
 print("\n" + "="*70)
-print("📊 EXTRACTED METRICS (QUALITY FILTERED v21.1)")
+print("📊 EXTRACTED METRICS (ULTIMATE SYSTEM v22.0)")
 print("="*70)
 for key, value in metrics.items():
     print(f"{key}: {value}")
 print("="*70)
 
+# Three-Layer Defense summary
+if metrics.get('defense_total_checks', 0) > 0:
+    print("\n🛡️ THREE-LAYER DEFENSE SYSTEM:")
+    print("="*70)
+    print(f"   Total signals checked: {metrics['defense_total_checks']}")
+    print(f"   Layer 1 blocks: {metrics['defense_layer1_blocks']}")
+    print(f"   Layer 1 overrides: {metrics['defense_layer1_overrides']}")
+    print(f"   Layer 3 blocks: {metrics['defense_layer3_blocks']}")
+    print(f"   Passed all layers: {metrics['defense_passed_all']}")
+    print(f"   Rejection rate: {metrics['defense_rejection_rate']}%")
+    print("="*70)
+
 # Quality filtering summary
-if metrics.get('quality_filtered', 0) > 0:
+if metrics.get('quality_total_generated', 0) > 0:
     print("\n⭐ QUALITY FILTERING:")
     print("="*70)
-    print(f"   Signals filtered: {metrics['quality_filtered']}")
+    print(f"   Signals generated: {metrics['quality_total_generated']}")
+    print(f"   Premium signals: {metrics['quality_premium_count']}")
+    print(f"   Filtered out: {metrics['quality_filtered_out']}")
+    print(f"   Average score: {metrics['quality_avg_score']}")
     print(f"   Min threshold: {metrics.get('quality_min_threshold', 80)}")
     print(f"   Learning iterations: {metrics.get('quality_iterations', 0)}")
     print("="*70)

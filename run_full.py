@@ -7,7 +7,7 @@ import re
 from nbconvert.preprocessors import ExecutePreprocessor
 from datetime import datetime, timezone
 
-class QualityFilteredExecutor(ExecutePreprocessor):
+class UltimateExecutor(ExecutePreprocessor):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.cell_count = 0
@@ -21,7 +21,7 @@ class QualityFilteredExecutor(ExecutePreprocessor):
     
     def preprocess(self, nb, resources=None, km=None):
         print("="*80)
-        print("⭐ TRADE BEACON v21.1 - QUALITY FILTERED SIGNALS")
+        print("🛡️ TRADE BEACON v22.0 - ULTIMATE TRADING SYSTEM")
         print("="*80)
         print(f"📅 Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}")
         
@@ -29,19 +29,18 @@ class QualityFilteredExecutor(ExecutePreprocessor):
         print(f"🔧 Alpha Vantage: {'SKIPPED ⏭️' if skip_av else 'ACTIVE ✅ (00:00 UTC)'}")
         
         if self.is_weekend:
-            print("🏖️  WEEKEND MODE: Pipeline v6.4.0 + Quality Filtering")
-            print("   • Using 1.5x SL/TP (optimized for low volatility)")
-            print("   • A/B Testing: 50% normal, 50% contrarian")
-            print("   • Min eval window: 2-12 hours")
-            print("   • Max timeout: 24-72 hours")
-            print("   • ⭐ Quality scoring: Filters to top signals")
+            print("🏖️  WEEKEND MODE: Enhanced Contrarian v6.4.0")
+            print("   • Adaptive volatility multipliers (1.5x-2.5x)")
+            print("   • Momentum filter (don't fade strong trends)")
+            print("   • Statistical confidence intervals")
+            print("   • Performance-based allocation")
+            print("   • 🛡️ Three-Layer Defense: Hard Rules + ML + Momentum")
         else:
-            print("💼 WEEKDAY MODE: Live trading with quality filtering")
+            print("💼 WEEKDAY MODE: Live trading with full protection")
             print("   • Pipeline v6.4.0 normal mode")
-            print("   • Using 2x normal SL/TP")
-            print("   • Min eval window: 1-6 hours")
-            print("   • Max timeout: 12-36 hours")
-            print("   • ⭐ Quality filtering: Premium signals only")
+            print("   • 🛡️ Three-Layer Defense System active")
+            print("   • Quality filtering: Premium signals only")
+            print("   • Trade Beacon v22.0: Ultimate system")
         
         print(f"📊 Total cells to execute: {len([c for c in nb.cells if c.cell_type == 'code'])}")
         print(f"⏰ Trigger: Manual or colab_trigger.txt")
@@ -63,12 +62,16 @@ class QualityFilteredExecutor(ExecutePreprocessor):
             return "📈 Alpha Vantage Fetcher"
         elif 'yfinance' in source_lower and 'fetcher' in source_lower:
             return "📊 YFinance Fetcher"
-        elif 'combiner' in source_lower:
+        elif 'combiner' in source_lower or 'csv combiner' in source_lower:
             return "🔗 CSV Combiner"
         elif 'pipeline v6.4' in source_lower or 'weekend contrarian' in source_lower:
-            return "🧠 Pipeline v6.4.0 Weekend Contrarian"
-        elif 'trade beacon' in source_lower and ('v21' in source_lower or 'quality' in source_lower):
-            return "⭐ Trade Beacon v21.1 - Quality Filtered"
+            return "🧠 Pipeline v6.4.0 Enhanced Contrarian"
+        elif 'trade beacon' in source_lower and ('v22' in source_lower or 'ultimate' in source_lower):
+            return "🛡️ Trade Beacon v22.0 - Ultimate System"
+        elif 'three-layer defense' in source_lower or 'three layer' in source_lower:
+            return "🛡️ Three-Layer Defense Coordinator"
+        elif 'quality scor' in source_lower:
+            return "⭐ Quality Scoring System"
         elif 'learning' in source_lower and 'system' in source_lower:
             return "🎓 Adaptive Learning System"
         elif 'backtest' in source_lower:
@@ -92,12 +95,17 @@ class QualityFilteredExecutor(ExecutePreprocessor):
             self.stage_timings[new_stage] = {'start': time.time(), 'duration': 0}
             print("="*80)
             print(f"📍 STAGE: {new_stage}")
-            if '21.1' in new_stage or 'Quality' in new_stage:
-                print("   ⭐ Quality filtering active - Premium signals only")
-            elif self.is_weekend and 'Pipeline' in new_stage:
-                print("   🏖️  Weekend contrarian mode (1.5x SL/TP)")
-            if 'Beacon' in new_stage:
-                print("   🌍 Market regime detection active")
+            if 'v22' in new_stage or 'Ultimate' in new_stage:
+                print("   🛡️ Three-Layer Defense System active")
+                print("   ⭐ Self-learning quality scoring")
+                print("   📧 Professional email template")
+            elif 'Three-Layer' in new_stage:
+                print("   🛡️ Layer 1: Hard Rules (Empirical)")
+                print("   🧠 Layer 2: ML Learning (Adaptive)")
+                print("   📊 Layer 3: Momentum Filter (Real-time)")
+            elif 'Pipeline' in new_stage:
+                print("   🏖️ Weekend contrarian mode (adaptive SL/TP)")
+                print("   📊 Statistical confidence intervals")
             print("="*80)
         
         elapsed = time.time() - self.start_time
@@ -166,18 +174,18 @@ with open('AI_Forex_Brain_2.ipynb', 'r') as f:
     nb = nbformat.read(f, as_version=4)
 
 print("\n" + "="*80)
-print("🤖 FOREX AI BRAIN - QUALITY FILTERED v21.1")
+print("🛡️ FOREX AI BRAIN - ULTIMATE TRADING SYSTEM v22.0")
 print("="*80)
 print(f"📓 Notebook: AI_Forex_Brain_2.ipynb")
-print(f"🔧 Mode: Weekend Contrarian + Quality Filtering")
-print(f"⚙️  Pipeline: v6.4.0 (Adaptive 1.5x-2.5x SL/TP)")
-print(f"⚙️  Trade Beacon: v21.1 (Quality filtered signals)")
+print(f"🔧 Mode: Three-Layer Defense + Quality Filtering")
+print(f"⚙️  Pipeline: v6.4.0 (Enhanced Weekend Contrarian)")
+print(f"⚙️  Trade Beacon: v22.0 (Ultimate System)")
 print(f"⏰ Trigger: Manual or colab_trigger.txt")
 print("="*80)
 print()
 
 # Execute
-ep = QualityFilteredExecutor(timeout=2400, kernel_name='python3', allow_errors=True)
+ep = UltimateExecutor(timeout=2400, kernel_name='python3', allow_errors=True)
 start = time.time()
 
 try:
@@ -194,10 +202,16 @@ try:
     
     if ep.is_weekend:
         print(f"\n🏖️  Weekend Mode Summary:")
-        print(f"   • Pipeline v6.4.0 contrarian active (adaptive SL/TP)")
-        print(f"   • A/B testing 50% normal vs 50% contrarian")
-        print(f"   • Faster evaluation with tighter stops")
+        print(f"   • Pipeline v6.4.0: Enhanced contrarian (adaptive SL/TP)")
+        print(f"   • Statistical confidence intervals")
+        print(f"   • Performance-based allocation")
+        print(f"   • 🛡️ Three-Layer Defense active")
         print(f"   • ⭐ Quality filtering: Top signals only")
+    
+    print(f"\n🛡️ Three-Layer Defense System:")
+    print(f"   • Layer 1: Hard Rules (Empirical protection)")
+    print(f"   • Layer 2: ML Learning (Adaptive intelligence)")
+    print(f"   • Layer 3: Momentum Filter (Real-time validation)")
     
     print(f"\n⭐ Quality Filtering:")
     print(f"   • Self-learning quality scoring")
@@ -233,10 +247,11 @@ try:
         'stage_timings': {k: v.get('duration', 0) for k, v in ep.stage_timings.items()},
         'critical_errors': len(ep.critical_errors),
         'status': 'success',
-        'version': 'v21.1',
+        'version': 'v22.0',
         'pipeline_version': 'v6.4.0',
-        'beacon_version': 'v21.1',
-        'quality_filtering': 'active'
+        'beacon_version': 'v22.0',
+        'quality_filtering': 'active',
+        'three_layer_defense': 'active'
     }
     
 except Exception as e:
@@ -256,7 +271,7 @@ except Exception as e:
         'cells_executed': ep.cell_count,
         'status': 'error',
         'error': str(e)[:300],
-        'version': 'v21.1'
+        'version': 'v22.0'
     }
 
 # Save report

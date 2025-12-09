@@ -1,69 +1,184 @@
 {
-  "timestamp": "2025-12-08T18:04:33.195643+00:00",
-  "iteration": 161,
-  "version": "v21.1-quality-filtered",
+  "timestamp": "2025-12-09T00:04:50.407072+00:00",
+  "iteration": 162,
+  "version": "v22.0-three-layer-defense",
   "mode": "LIVE_TRADING",
   "signals": {
     "EUR/USD": {
-      "direction": "HOLD",
-      "last_price": 1.163,
-      "SL": 1.163,
-      "TP": 1.163,
-      "confidence": 99.99999987424579,
-      "threshold": 65.0,
-      "rb_epsilon": 0.1,
+      "direction": "SELL",
+      "last_price": 1.164,
+      "SL": 1.1747857142857143,
+      "TP": 1.1505178571428571,
+      "confidence": 0.727785351546731,
+      "ml_confidence": 0.7351367187340716,
+      "q_values": [
+        -0.02135724602766219,
+        0.08711370312394905,
+        -0.003051498929768061
+      ],
       "regimes": {
         "volatility": "NORMAL_VOL",
         "trend": "RANGING",
-        "session": "NY_SESSION",
-        "behavior": "NEUTRAL"
+        "session": "ASIA_SESSION"
       },
-      "sl_multiplier": 2.0,
-      "tp_multiplier": 2.5,
-      "timestamp": "2025-12-08T18:04:33.181992+00:00",
+      "defense_report": {
+        "layer1_check": "PASS",
+        "layer2_check": "PASS",
+        "layer3_check": "PASS",
+        "final_decision": "APPROVED",
+        "blocks": [],
+        "overrides": [],
+        "final_strategy": "NORMAL",
+        "momentum": {
+          "strength": 8.772671077041647,
+          "direction": "up",
+          "is_strong": "False",
+          "rsi": 60.91921346015775,
+          "adx": 10.94864768755792,
+          "macd_hist": 0.0011291597607681787
+        }
+      },
+      "final_strategy": "NORMAL",
       "pair": "EUR/USD",
-      "timeframe": "1h"
-    },
-    "GBP/USD": {
-      "direction": "HOLD",
-      "last_price": 1.332,
-      "skip_reason": "Pair not optimal for NY_SESSION",
-      "regimes": {
-        "volatility": "NORMAL_VOL",
-        "trend": "RANGING",
-        "session": "NY_SESSION",
-        "behavior": "NEUTRAL"
+      "timeframe": "1h",
+      "quality_score": 35.0,
+      "score_components": {
+        "medium_confidence": 10.0,
+        "clean_defense_pass": 15.0,
+        "normal_vol_boost": 10.0
       }
     },
-    "USD/JPY": {
-      "direction": "HOLD",
-      "last_price": 155.75,
-      "SL": 155.75,
-      "TP": 155.75,
-      "confidence": 99.99999987424579,
-      "threshold": 65.0,
-      "rb_epsilon": 0.1,
-      "regimes": {
-        "volatility": "NORMAL_VOL",
-        "trend": "STRONG_UPTREND",
-        "session": "NY_SESSION",
-        "behavior": "NEUTRAL"
-      },
-      "sl_multiplier": 3.0,
-      "tp_multiplier": 5.0,
-      "timestamp": "2025-12-08T18:04:33.192785+00:00",
-      "pair": "USD/JPY",
-      "timeframe": "1h"
-    },
-    "AUD/USD": {
-      "direction": "HOLD",
-      "last_price": 0.6628,
-      "skip_reason": "Pair not optimal for NY_SESSION",
+    "GBP/USD": {
+      "direction": "SELL",
+      "last_price": 1.332,
+      "SL": 1.3478714285714286,
+      "TP": 1.3121607142857146,
+      "confidence": 0.7255751506516752,
+      "ml_confidence": 0.7329041925774497,
+      "q_values": [
+        -0.02740334605989196,
+        0.06775762032978544,
+        -0.0025307930553534353
+      ],
       "regimes": {
         "volatility": "NORMAL_VOL",
         "trend": "WEAK_UPTREND",
-        "session": "NY_SESSION",
-        "behavior": "NEUTRAL"
+        "session": "ASIA_SESSION"
+      },
+      "defense_report": {
+        "layer1_check": "PASS",
+        "layer2_check": "PASS",
+        "layer3_check": "PASS",
+        "final_decision": "APPROVED",
+        "blocks": [],
+        "overrides": [],
+        "final_strategy": "NORMAL",
+        "momentum": {
+          "strength": 18.56170747732553,
+          "direction": "up",
+          "is_strong": "False",
+          "rsi": 67.96695040301748,
+          "adx": 26.233104448323154,
+          "macd_hist": 0.002753506612935557
+        }
+      },
+      "final_strategy": "NORMAL",
+      "pair": "GBP/USD",
+      "timeframe": "1h",
+      "quality_score": 35.0,
+      "score_components": {
+        "medium_confidence": 10.0,
+        "clean_defense_pass": 15.0,
+        "normal_vol_boost": 10.0
+      }
+    },
+    "USD/JPY": {
+      "direction": "SELL",
+      "last_price": 155.82,
+      "SL": 155.96257158551896,
+      "TP": 155.64178551810127,
+      "confidence": 0.7271380490496391,
+      "ml_confidence": 0.7344828778279182,
+      "q_values": [
+        -0.029218498635150553,
+        0.07657443080917771,
+        -0.007767779129906142
+      ],
+      "regimes": {
+        "volatility": "NORMAL_VOL",
+        "trend": "STRONG_UPTREND",
+        "session": "ASIA_SESSION"
+      },
+      "defense_report": {
+        "layer1_check": "PASS",
+        "layer2_check": "PASS",
+        "layer3_check": "PASS",
+        "final_decision": "APPROVED",
+        "blocks": [],
+        "overrides": [],
+        "final_strategy": "NORMAL",
+        "momentum": {
+          "strength": 12.55069983958987,
+          "direction": "down",
+          "is_strong": "False",
+          "rsi": 46.38159717044871,
+          "adx": 22.07125283552535,
+          "macd_hist": -0.021477628648090337
+        }
+      },
+      "final_strategy": "NORMAL",
+      "pair": "USD/JPY",
+      "timeframe": "1h",
+      "quality_score": 43.0,
+      "score_components": {
+        "medium_confidence": 10.0,
+        "clean_defense_pass": 15.0,
+        "normal_vol_boost": 10.0,
+        "strong_trend_boost": 8.0
+      }
+    },
+    "AUD/USD": {
+      "direction": "SELL",
+      "last_price": 0.6625,
+      "SL": 0.6709999999999999,
+      "TP": 0.651875,
+      "confidence": 0.7185470675160132,
+      "ml_confidence": 0.7258051187030434,
+      "q_values": [
+        -0.07371526435043971,
+        0.036886169747134184,
+        0.029729528508124093
+      ],
+      "regimes": {
+        "volatility": "NORMAL_VOL",
+        "trend": "WEAK_UPTREND",
+        "session": "ASIA_SESSION"
+      },
+      "defense_report": {
+        "layer1_check": "PASS",
+        "layer2_check": "PASS",
+        "layer3_check": "PASS",
+        "final_decision": "APPROVED",
+        "blocks": [],
+        "overrides": [],
+        "final_strategy": "NORMAL",
+        "momentum": {
+          "strength": 16.65916736163367,
+          "direction": "up",
+          "is_strong": "False",
+          "rsi": 69.5942654325287,
+          "adx": 21.495537387525633,
+          "macd_hist": 0.0016559519056121895
+        }
+      },
+      "final_strategy": "NORMAL",
+      "pair": "AUD/USD",
+      "timeframe": "1h",
+      "quality_score": 35.0,
+      "score_components": {
+        "medium_confidence": 10.0,
+        "clean_defense_pass": 15.0,
+        "normal_vol_boost": 10.0
       }
     }
   },
@@ -96680,53 +96795,36 @@
         "total": 312,
         "pnl": 2.5454862388117063
       }
+    },
+    "total_decisions": 4
+  },
+  "defense_summary": {
+    "total_signals_checked": 4,
+    "layer1_blocks": 0,
+    "layer1_overrides": 0,
+    "layer3_blocks": 0,
+    "passed_all_layers": 4,
+    "total_rejection_rate": 0.0,
+    "layer1_stats": {
+      "total_checks": 4,
+      "total_blocks": 0,
+      "block_rate": 0.0,
+      "blocks_by_rule": {}
+    },
+    "layer3_stats": {
+      "total_checks": 4,
+      "total_blocks": 0,
+      "block_rate": 0.0,
+      "blocks_by_reason": {}
     }
-  },
-  "active_trades": 0,
-  "pipeline_stats": {
-    "total_trades": 0,
-    "wins": 0,
-    "total_pnl": 0.0,
-    "avg_pnl": 0.0,
-    "win_rate": 0.0,
-    "last_trade": null
-  },
-  "regime_summary": {
-    "EUR/USD_volatility": "NORMAL_VOL",
-    "EUR/USD_trend": "RANGING",
-    "EUR/USD_session": "NY_SESSION",
-    "EUR/USD_behavior": "NEUTRAL",
-    "USD/JPY_volatility": "NORMAL_VOL",
-    "USD/JPY_trend": "STRONG_UPTREND",
-    "USD/JPY_session": "NY_SESSION",
-    "USD/JPY_behavior": "NEUTRAL"
   },
   "quality_stats": {
     "total_generated": 4,
-    "total_scored": 0,
+    "total_scored": 4,
     "premium_count": 0,
-    "filtered_out": 0,
-    "avg_score": 0,
-    "top_score": 0,
+    "filtered_out": 4,
+    "avg_score": 37.0,
+    "top_score": 43.0,
     "min_threshold": 80.0
-  },
-  "quality_scorer_stats": {
-    "min_quality_score": 80.0,
-    "learning_iterations": 11,
-    "last_updated": "2025-12-08T18:04:23.705829+00:00",
-    "key_weights": {
-      "london_boost": 15.0,
-      "contrarian_boost": 12.0,
-      "confidence_weight": 20.0
-    }
-  },
-  "regime_filters_applied": 162,
-  "learning_summary": {
-    "pipeline_v6": 175145,
-    "pipeline_v6_contrarian": 14728,
-    "live_validated": 26,
-    "pipeline_db": 0,
-    "backtest": 46635,
-    "total_this_run": 2600
   }
 }

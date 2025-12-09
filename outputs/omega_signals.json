@@ -1,20 +1,20 @@
 {
-  "timestamp": "2025-12-09T00:04:50.407072+00:00",
-  "iteration": 162,
+  "timestamp": "2025-12-09T02:04:00.369834+00:00",
+  "iteration": 163,
   "version": "v22.0-three-layer-defense",
   "mode": "LIVE_TRADING",
   "signals": {
     "EUR/USD": {
       "direction": "SELL",
       "last_price": 1.164,
-      "SL": 1.1747857142857143,
-      "TP": 1.1505178571428571,
-      "confidence": 0.727785351546731,
-      "ml_confidence": 0.7351367187340716,
+      "SL": 1.164368084226336,
+      "TP": 1.16353989471708,
+      "confidence": 0.7310959060445434,
+      "ml_confidence": 0.7384807131763065,
       "q_values": [
-        -0.02135724602766219,
-        0.08711370312394905,
-        -0.003051498929768061
+        -0.04621000501311011,
+        0.09083087772752703,
+        -0.029141377161164408
       ],
       "regimes": {
         "volatility": "NORMAL_VOL",
@@ -30,12 +30,12 @@
         "overrides": [],
         "final_strategy": "NORMAL",
         "momentum": {
-          "strength": 8.772671077041647,
+          "strength": 15.860430339177737,
           "direction": "up",
           "is_strong": "False",
-          "rsi": 60.91921346015775,
-          "adx": 10.94864768755792,
-          "macd_hist": 0.0011291597607681787
+          "rsi": 66.66825673683226,
+          "adx": 21.71746401340812,
+          "macd_hist": 6.106557119994296e-05
         }
       },
       "final_strategy": "NORMAL",
@@ -50,15 +50,15 @@
     },
     "GBP/USD": {
       "direction": "SELL",
-      "last_price": 1.332,
-      "SL": 1.3478714285714286,
-      "TP": 1.3121607142857146,
-      "confidence": 0.7255751506516752,
-      "ml_confidence": 0.7329041925774497,
+      "last_price": 1.333,
+      "SL": 1.3331548528671264,
+      "TP": 1.3328064339160919,
+      "confidence": 0.7188536538566271,
+      "ml_confidence": 0.7261148018753809,
       "q_values": [
-        -0.02740334605989196,
-        0.06775762032978544,
-        -0.0025307930553534353
+        -0.06286539027535547,
+        0.03731792380436204,
+        0.027408492712216785
       ],
       "regimes": {
         "volatility": "NORMAL_VOL",
@@ -74,12 +74,12 @@
         "overrides": [],
         "final_strategy": "NORMAL",
         "momentum": {
-          "strength": 18.56170747732553,
+          "strength": 31.770374238354766,
           "direction": "up",
           "is_strong": "False",
-          "rsi": 67.96695040301748,
-          "adx": 26.233104448323154,
-          "macd_hist": 0.002753506612935557
+          "rsi": 77.03832902144077,
+          "adx": 47.31668192326924,
+          "macd_hist": 2.6728514395814768e-05
         }
       },
       "final_strategy": "NORMAL",
@@ -94,15 +94,15 @@
     },
     "USD/JPY": {
       "direction": "SELL",
-      "last_price": 155.82,
-      "SL": 155.96257158551896,
-      "TP": 155.64178551810127,
-      "confidence": 0.7271380490496391,
-      "ml_confidence": 0.7344828778279182,
+      "last_price": 155.78,
+      "SL": 155.97686453683036,
+      "TP": 155.53391932896204,
+      "confidence": 0.7312543486847148,
+      "ml_confidence": 0.7386407562471866,
       "q_values": [
-        -0.029218498635150553,
-        0.07657443080917771,
-        -0.007767779129906142
+        -0.04269788457408215,
+        0.07870216185255109,
+        -0.05078842169884334
       ],
       "regimes": {
         "volatility": "NORMAL_VOL",
@@ -118,12 +118,12 @@
         "overrides": [],
         "final_strategy": "NORMAL",
         "momentum": {
-          "strength": 12.55069983958987,
+          "strength": 10.536141452256846,
           "direction": "down",
           "is_strong": "False",
-          "rsi": 46.38159717044871,
-          "adx": 22.07125283552535,
-          "macd_hist": -0.021477628648090337
+          "rsi": 40.77660221229989,
+          "adx": 14.734215483754452,
+          "macd_hist": -0.020100718703479348
         }
       },
       "final_strategy": "NORMAL",
@@ -138,48 +138,8 @@
       }
     },
     "AUD/USD": {
-      "direction": "SELL",
-      "last_price": 0.6625,
-      "SL": 0.6709999999999999,
-      "TP": 0.651875,
-      "confidence": 0.7185470675160132,
-      "ml_confidence": 0.7258051187030434,
-      "q_values": [
-        -0.07371526435043971,
-        0.036886169747134184,
-        0.029729528508124093
-      ],
-      "regimes": {
-        "volatility": "NORMAL_VOL",
-        "trend": "WEAK_UPTREND",
-        "session": "ASIA_SESSION"
-      },
-      "defense_report": {
-        "layer1_check": "PASS",
-        "layer2_check": "PASS",
-        "layer3_check": "PASS",
-        "final_decision": "APPROVED",
-        "blocks": [],
-        "overrides": [],
-        "final_strategy": "NORMAL",
-        "momentum": {
-          "strength": 16.65916736163367,
-          "direction": "up",
-          "is_strong": "False",
-          "rsi": 69.5942654325287,
-          "adx": 21.495537387525633,
-          "macd_hist": 0.0016559519056121895
-        }
-      },
-      "final_strategy": "NORMAL",
-      "pair": "AUD/USD",
-      "timeframe": "1h",
-      "quality_score": 35.0,
-      "score_components": {
-        "medium_confidence": 10.0,
-        "clean_defense_pass": 15.0,
-        "normal_vol_boost": 10.0
-      }
+      "direction": "HOLD",
+      "last_price": 0.6626
     }
   },
   "rl_stats": {
@@ -96796,23 +96756,23 @@
         "pnl": 2.5454862388117063
       }
     },
-    "total_decisions": 4
+    "total_decisions": 8
   },
   "defense_summary": {
-    "total_signals_checked": 4,
+    "total_signals_checked": 3,
     "layer1_blocks": 0,
     "layer1_overrides": 0,
     "layer3_blocks": 0,
-    "passed_all_layers": 4,
+    "passed_all_layers": 3,
     "total_rejection_rate": 0.0,
     "layer1_stats": {
-      "total_checks": 4,
+      "total_checks": 3,
       "total_blocks": 0,
       "block_rate": 0.0,
       "blocks_by_rule": {}
     },
     "layer3_stats": {
-      "total_checks": 4,
+      "total_checks": 3,
       "total_blocks": 0,
       "block_rate": 0.0,
       "blocks_by_reason": {}
@@ -96820,10 +96780,10 @@
   },
   "quality_stats": {
     "total_generated": 4,
-    "total_scored": 4,
+    "total_scored": 3,
     "premium_count": 0,
-    "filtered_out": 4,
-    "avg_score": 37.0,
+    "filtered_out": 3,
+    "avg_score": 37.666666666666664,
     "top_score": 43.0,
     "min_threshold": 80.0
   }

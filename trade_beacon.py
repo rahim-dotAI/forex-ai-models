@@ -25,7 +25,7 @@ os.environ['ALPHA_VANTAGE_KEY'] = ALPHA_VANTAGE_KEY
 os.environ['BROWSERLESS_TOKEN'] = BROWSERLESS_TOKEN
 
 # ======================================================
-# 🌍 SECTION 2: Environment Detection & Setup (ONCE!)
+# 🌍 SECTION 2: Environment Detection & Setup
 # ======================================================
 print("=" * 70)
 print("🚀 AI FOREX BRAIN - INITIALIZING...")
@@ -85,7 +85,7 @@ MEMORY_DIR = DIRECTORIES["memory"]
 STATE_DIR = DIRECTORIES["signal_state"]
 
 # ======================================================
-# 📂 SECTION 3: GitHub Sync (Environment-Aware)
+# 📂 SECTION 3: GitHub Sync
 # ======================================================
 import subprocess
 import shutil
@@ -214,7 +214,6 @@ print("=" * 70)
 # ======================================================
 print("\n📦 Installing dependencies...")
 if IN_COLAB or IN_GHA:
-    import subprocess
     subprocess.run([sys.executable, "-m", "pip", "install", "-q", "requests", "pandas", "numpy", "yfinance", "tqdm"], check=False)
     print("✅ Dependencies installed")
 else:
@@ -970,6 +969,31 @@ class LearningMemory:
         if total < 5:
             return 1.0
 
+        win_rate = perf['wins'] / total
+
+        if win_rate > 0.75:
+            return 1.05
+        elif win_rate < 0.50:
+            return 0.95
+ 
+        return 1.0
+
+    def get_strategy_confidence_modifier(self, strategy: str) -> float:
+        perf = self.memory['strategy_performance'].get(strategy, {'wins': 0, 'losses': 0})
+        total = perf['wins'] + perf['losses']
+
+        if total < 5:
+            return 1.0
+
+        win_rate = perf['wins'] / total
+
+        if win_rate > 0.70:
+            return 1.08
+        elif win_rate < 0.55:
+            return 0.92
+
+        return 1.0
+
 # ============================================================================
 # SIGNAL GENERATION ENGINE
 # ============================================================================
@@ -1363,7 +1387,7 @@ def save_dashboard_state(controller, signal_manager, news_analyzer, calendar, me
         json.dump(state, f, indent=2)
 
 # ============================================================================
-# MAIN SYSTEM LOOP WITH 4.5-HOUR TIMER (FREE TIER OPTIMIZED)
+# MAIN SYSTEM LOOP
 # ============================================================================
 def main():
     """Main system loop - Runs for 4.5 hours then exits"""
@@ -1381,14 +1405,14 @@ def main():
     now = datetime.now(timezone.utc)
     
     # Weekend check
-    if now.weekday() in [5, 6]:  # Saturday=5, Sunday=6
+    if now.weekday() in [5, 6]:
         logger.info("=" * 80)
         logger.info("🏖️  WEEKEND DETECTED - Markets Closed")
         logger.info("⏸️  System will not run. Next cycle: Monday")
         logger.info("=" * 80)
         return
     
-    # Holiday check (major market holidays)
+    # Holiday check
     holidays = [
         (1, 1),   # New Year's Day
         (12, 25), # Christmas
@@ -1404,8 +1428,8 @@ def main():
         logger.info("=" * 80)
         return
 
-    # Set 4.5-hour timer (16200 seconds) - Safe from 6hr GitHub limit
-    RUN_DURATION = 4.5 * 60 * 60  # 4.5 hours in seconds
+    # Set 4.5-hour timer
+    RUN_DURATION = 4.5 * 60 * 60
     start_time = time.time()
     end_time = start_time + RUN_DURATION
 
@@ -1535,28 +1559,3 @@ if __name__ == "__main__":
         print("   Option 2: Use dashboard control")
         print("=" * 70)
         print("\n⏸️  Trade Beacon ready. Run main() to start.")
-
-        win_rate = perf['wins'] / total
-
-        if win_rate > 0.75:
-            return 1.05
-        elif win_rate < 0.50:
-            return 0.95
-
-        return 1.0
-
-    def get_strategy_confidence_modifier(self, strategy: str) -> float:
-        perf = self.memory['strategy_performance'].get(strategy, {'wins': 0, 'losses': 0})
-        total = perf['wins'] + perf['losses']
-
-        if total < 5:
-            return 1.0
-
-        win_rate = perf['wins'] / total
-
-        if win_rate > 0.70:
-            return 1.08
-        elif win_rate < 0.55:
-            return 0.92
-
-        return 1.0

@@ -1,0 +1,372 @@
+name: Trade Beacon - AI Forex Trading System
+
+on:
+  schedule:
+    # 4 optimized cycles per day, Monday-Friday only
+    # Aligned with major forex trading sessions:
+    # 01:00 UTC - Asian session (Tokyo open)
+    # 07:00 UTC - London session open
+    # 13:00 UTC - US session (New York open)
+    # 19:00 UTC - US close / Asian pre-market
+    - cron: '0 1,7,13,19 * * 1-5'
+  
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual run'
+        required: false
+        default: 'Manual test cycle'
+      duration_hours:
+        description: 'Run duration (hours, max 4.5)'
+        required: false
+        default: '4.5'
+
+env:
+  PYTHON_VERSION: '3.10'
+  CYCLE_DURATION_HOURS: 4.5
+  MAX_RUNTIME_MINUTES: 280  # 4h 40m - safe buffer before 6h GitHub limit
+
+jobs:
+  forex-trading-cycle:
+    name: Trading Cycle
+    runs-on: ubuntu-latest
+    timeout-minutes: 280
+    
+    steps:
+    #============================================================================
+    # STEP 1: Pre-flight checks (Weekend/Holiday guard)
+    #============================================================================
+    - name: 🔍 Pre-flight System Check
+      id: preflight
+      run: |
+        echo "========================================"
+        echo "🤖 TRADE BEACON - PRE-FLIGHT CHECK"
+        echo "========================================"
+        
+        # Get current date/time info
+        DOW=$(date +%u)  # 1=Monday, 7=Sunday
+        MONTH=$(date +%-m)
+        DAY=$(date +%-d)
+        CURRENT_TIME=$(date -u +'%Y-%m-%d %H:%M:%S UTC')
+        
+        echo "📅 Current Time: $CURRENT_TIME"
+        echo "📆 Day of Week: $DOW (1=Mon, 7=Sun)"
+        
+        # Weekend check
+        if [ $DOW -eq 6 ] || [ $DOW -eq 7 ]; then
+          echo "🏖️ WEEKEND DETECTED - Markets are closed"
+          echo "⏸️ Skipping this cycle. Next run: Monday"
+          echo "should_run=false" >> $GITHUB_OUTPUT
+          echo "skip_reason=weekend" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+        
+        # Major market holiday checks
+        HOLIDAY_DETECTED=false
+        HOLIDAY_NAME=""
+        
+        # New Year's Day
+        if [ $MONTH -eq 1 ] && [ $DAY -eq 1 ]; then
+          HOLIDAY_DETECTED=true
+          HOLIDAY_NAME="New Year's Day"
+        fi
+        
+        # Christmas
+        if [ $MONTH -eq 12 ] && [ $DAY -eq 25 ]; then
+          HOLIDAY_DETECTED=true
+          HOLIDAY_NAME="Christmas Day"
+        fi
+        
+        # Boxing Day
+        if [ $MONTH -eq 12 ] && [ $DAY -eq 26 ]; then
+          HOLIDAY_DETECTED=true
+          HOLIDAY_NAME="Boxing Day"
+        fi
+        
+        # US Independence Day
+        if [ $MONTH -eq 7 ] && [ $DAY -eq 4 ]; then
+          HOLIDAY_DETECTED=true
+          HOLIDAY_NAME="US Independence Day"
+        fi
+        
+        # Veterans Day
+        if [ $MONTH -eq 11 ] && [ $DAY -eq 11 ]; then
+          HOLIDAY_DETECTED=true
+          HOLIDAY_NAME="Veterans Day"
+        fi
+        
+        # Thanksgiving (4th Thursday of November - approximate)
+        if [ $MONTH -eq 11 ] && [ $DAY -ge 22 ] && [ $DAY -le 28 ] && [ $DOW -eq 4 ]; then
+          HOLIDAY_DETECTED=true
+          HOLIDAY_NAME="Thanksgiving"
+        fi
+        
+        if [ "$HOLIDAY_DETECTED" = true ]; then
+          echo "🎉 HOLIDAY DETECTED: $HOLIDAY_NAME"
+          echo "⏸️ Markets are closed. Skipping this cycle."
+          echo "should_run=false" >> $GITHUB_OUTPUT
+          echo "skip_reason=holiday" >> $GITHUB_OUTPUT
+          echo "holiday_name=$HOLIDAY_NAME" >> $GITHUB_OUTPUT
+          exit 0
+        fi
+        
+        # All checks passed
+        echo "✅ PRE-FLIGHT CHECK PASSED"
+        echo "✅ Weekday confirmed, no holidays detected"
+        echo "🚀 Proceeding with trading cycle..."
+        echo "should_run=true" >> $GITHUB_OUTPUT
+        echo "========================================"
+    
+    #============================================================================
+    # STEP 2: Checkout repository
+    #============================================================================
+    - name: 📥 Checkout Repository
+      if: steps.preflight.outputs.should_run == 'true'
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.FOREX_PAT }}
+        fetch-depth: 1
+        lfs: false  # Disable LFS for speed
+    
+    #============================================================================
+    # STEP 3: Setup Python environment
+    #============================================================================
+    - name: 🐍 Setup Python Environment
+      if: steps.preflight.outputs.should_run == 'true'
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'
+    
+    #============================================================================
+    # STEP 4: Install dependencies
+    #============================================================================
+    - name: 📦 Install Dependencies
+      if: steps.preflight.outputs.should_run == 'true'
+      run: |
+        echo "📦 Installing Python packages..."
+        python -m pip install --upgrade pip
+        pip install requests pandas numpy yfinance tqdm
+        echo "✅ Dependencies installed successfully"
+        
+        # Verify installations
+        python -c "import pandas; print(f'✓ pandas {pandas.__version__}')"
+        python -c "import numpy; print(f'✓ numpy {numpy.__version__}')"
+        python -c "import yfinance; print(f'✓ yfinance {yfinance.__version__}')"
+    
+    #============================================================================
+    # STEP 5: Configure Git
+    #============================================================================
+    - name: ⚙️ Configure Git
+      if: steps.preflight.outputs.should_run == 'true'
+      run: |
+        git config --global user.name "Trade Beacon Bot"
+        git config --global user.email "bot@tradebeacon.ai"
+        git config --global advice.detachedHead false
+        git config --global init.defaultBranch main
+        echo "✅ Git configured"
+    
+    #============================================================================
+    # STEP 6: Run trading system (4.5 hour cycle)
+    #============================================================================
+    - name: 🎯 Run Trading System
+      if: steps.preflight.outputs.should_run == 'true'
+      env:
+        FOREX_PAT: ${{ secrets.FOREX_PAT }}
+        ALPHA_VANTAGE_KEY: ${{ secrets.ALPHA_VANTAGE_KEY }}
+        BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}
+        MARKETAUX_API_KEY: ${{ secrets.MARKETAUX_API_KEY }}
+        GIT_USER_NAME: "Trade Beacon Bot"
+        GIT_USER_EMAIL: "bot@tradebeacon.ai"
+        GITHUB_ACTIONS: "true"
+      run: |
+        echo "========================================"
+        echo "🚀 TRADE BEACON - STARTING CYCLE"
+        echo "========================================"
+        echo "📅 Start Time: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+        echo "⏰ Duration: ${{ env.CYCLE_DURATION_HOURS }} hours"
+        echo "🎯 End Time: $(date -u -d '+270 minutes' +'%H:%M:%S UTC')"
+        echo "📊 Monitoring: 6 currency pairs (EUR/USD, GBP/USD, USD/JPY, AUD/USD, USD/CAD, NZD/USD)"
+        echo "🧠 AI Features: News integration, Economic calendar, Learning system"
+        echo "========================================"
+        
+        # Run the trading system
+        python trade_beacon.py
+        
+        EXIT_CODE=$?
+        
+        if [ $EXIT_CODE -eq 0 ]; then
+          echo "✅ Trading cycle completed successfully"
+        else
+          echo "⚠️ Trading cycle exited with code: $EXIT_CODE"
+        fi
+        
+        echo "========================================"
+        echo "📊 CYCLE COMPLETE"
+        echo "========================================"
+    
+    #============================================================================
+    # STEP 7: Generate summary report
+    #============================================================================
+    - name: 📊 Generate Summary Report
+      if: steps.preflight.outputs.should_run == 'true' && always()
+      id: summary
+      run: |
+        echo "Generating summary report..."
+        
+        # Check if dashboard state exists
+        if [ -f "signal_state/dashboard_state.json" ]; then
+          echo "dashboard_exists=true" >> $GITHUB_OUTPUT
+          
+          # Extract key metrics (with error handling)
+          ACTIVE_SIGNALS=$(python3 -c "import json; data=json.load(open('signal_state/dashboard_state.json')); print(data.get('active_signals', 0))" 2>/dev/null || echo "N/A")
+          WIN_RATE=$(python3 -c "import json; data=json.load(open('signal_state/dashboard_state.json')); print(f\"{data.get('stats', {}).get('win_rate', 0):.1f}%\")" 2>/dev/null || echo "N/A")
+          TOTAL_PIPS=$(python3 -c "import json; data=json.load(open('signal_state/dashboard_state.json')); print(f\"{data.get('stats', {}).get('total_pips', 0):.1f}\")" 2>/dev/null || echo "N/A")
+          
+          echo "active_signals=$ACTIVE_SIGNALS" >> $GITHUB_OUTPUT
+          echo "win_rate=$WIN_RATE" >> $GITHUB_OUTPUT
+          echo "total_pips=$TOTAL_PIPS" >> $GITHUB_OUTPUT
+        else
+          echo "dashboard_exists=false" >> $GITHUB_OUTPUT
+          echo "⚠️ Dashboard state file not found"
+        fi
+    
+    #============================================================================
+    # STEP 8: Commit and push changes
+    #============================================================================
+    - name: 💾 Commit and Push Results
+      if: steps.preflight.outputs.should_run == 'true'
+      run: |
+        echo "Checking for changes to commit..."
+        
+        # Add all changes
+        git add -A
+        
+        # Check if there are changes to commit
+        if git diff --staged --quiet; then
+          echo "📝 No changes detected - nothing to commit"
+        else
+          TIMESTAMP=$(date -u +'%Y-%m-%d %H:%M UTC')
+          COMMIT_MSG="🤖 Trading cycle complete - $TIMESTAMP
+
+          📊 Summary:
+          - Duration: ${{ env.CYCLE_DURATION_HOURS }} hours
+          - Active Signals: ${{ steps.summary.outputs.active_signals }}
+          - Win Rate: ${{ steps.summary.outputs.win_rate }}
+          - Total Pips: ${{ steps.summary.outputs.total_pips }}
+          
+          Automated commit by Trade Beacon Bot"
+          
+          git commit -m "$COMMIT_MSG"
+          git push origin main
+          
+          echo "✅ Changes committed and pushed successfully"
+          echo "📤 Updated: Dashboard state, signals, memory, logs"
+        fi
+    
+    #============================================================================
+    # STEP 9: Upload artifacts (logs, state files)
+    #============================================================================
+    - name: 📤 Upload Trading Artifacts
+      if: always() && steps.preflight.outputs.should_run == 'true'
+      uses: actions/upload-artifact@v3
+      with:
+        name: trade-beacon-cycle-${{ github.run_number }}
+        path: |
+          logs/*.log
+          signal_state/*.json
+          memory/*.json
+        retention-days: 30
+        if-no-files-found: warn
+    
+    #============================================================================
+    # STEP 10: Generate GitHub summary
+    #============================================================================
+    - name: 📋 Generate GitHub Summary
+      if: steps.preflight.outputs.should_run == 'true' && always()
+      run: |
+        echo "# 🤖 Trade Beacon - Cycle Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## 📊 Cycle Information" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+        echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+        echo "| 📅 Date | $(date -u +'%Y-%m-%d') |" >> $GITHUB_STEP_SUMMARY
+        echo "| ⏰ Start Time | $(date -u +'%H:%M UTC') |" >> $GITHUB_STEP_SUMMARY
+        echo "| ⏱️ Duration | ${{ env.CYCLE_DURATION_HOURS }} hours |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🎯 Status | ✅ Completed |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ steps.summary.outputs.dashboard_exists }}" = "true" ]; then
+          echo "## 📈 Trading Performance" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🎯 Active Signals | ${{ steps.summary.outputs.active_signals }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📈 Win Rate | ${{ steps.summary.outputs.win_rate }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 💰 Total Pips | ${{ steps.summary.outputs.total_pips }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Show recent signals if available
+          echo "## 🎯 Recent Activity" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Dashboard state updated successfully. View full details in the [Live Dashboard](https://github.com/${{ github.repository }})." >> $GITHUB_STEP_SUMMARY
+        else
+          echo "## ⚠️ Note" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Dashboard state file not generated. Check logs for details." >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "---" >> $GITHUB_STEP_SUMMARY
+        echo "🚀 **Next Cycle:** Automatically scheduled" >> $GITHUB_STEP_SUMMARY
+        echo "📱 **Live Dashboard:** Check repository for real-time updates" >> $GITHUB_STEP_SUMMARY
+    
+    #============================================================================
+    # STEP 11: Cleanup on error
+    #============================================================================
+    - name: 🧹 Cleanup on Failure
+      if: failure() && steps.preflight.outputs.should_run == 'true'
+      run: |
+        echo "❌ Cycle failed - performing cleanup..."
+        
+        # Log failure details
+        echo "## ❌ Cycle Failed" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "The trading cycle encountered an error. Please check:" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "1. 📋 Workflow logs for error details" >> $GITHUB_STEP_SUMMARY
+        echo "2. 🔑 API keys are properly configured" >> $GITHUB_STEP_SUMMARY
+        echo "3. 📦 All dependencies installed correctly" >> $GITHUB_STEP_SUMMARY
+        echo "4. 📁 File permissions are correct" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Check the uploaded artifacts for detailed logs." >> $GITHUB_STEP_SUMMARY
+    
+    #============================================================================
+    # STEP 12: Skip notification (for weekends/holidays)
+    #============================================================================
+    - name: 📢 Skip Notification
+      if: steps.preflight.outputs.should_run == 'false'
+      run: |
+        echo "# ⏸️ Trading Cycle Skipped" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ steps.preflight.outputs.skip_reason }}" = "weekend" ]; then
+          echo "## 🏖️ Weekend Detected" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Forex markets are closed on weekends." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Next Run:** Monday morning (01:00 UTC)" >> $GITHUB_STEP_SUMMARY
+        elif [ "${{ steps.preflight.outputs.skip_reason }}" = "holiday" ]; then
+          echo "## 🎉 Holiday Detected" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Holiday:** ${{ steps.preflight.outputs.holiday_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Forex markets are closed for this holiday." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Next Run:** Next trading day" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "---" >> $GITHUB_STEP_SUMMARY
+        echo "🤖 Trade Beacon will automatically resume on the next trading day." >> $GITHUB_STEP_SUMMARY

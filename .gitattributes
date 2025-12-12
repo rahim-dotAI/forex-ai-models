@@ -1,3 +1,31 @@
-*.csv filter=lfs diff=lfs merge=lfs -text
+# Git LFS Configuration for Trade Beacon
+# =====================================
+
+# Track large pickle files with Git LFS
 *.pkl filter=lfs diff=lfs merge=lfs -text
-*_combined.csv filter=lfs diff=lfs merge=lfs -text
+
+# For merge conflicts, prefer "ours" strategy for pkl files
+# This prevents LFS pointer conflicts during concurrent pushes
+*.pkl merge=ours
+
+# JSON files - standard text handling
+*.json text eol=lf
+
+# Log files - standard text handling
+*.log text eol=lf
+
+# Python files
+*.py text eol=lf
+
+# Markdown files
+*.md text eol=lf
+
+# YAML files
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Shell scripts
+*.sh text eol=lf
+
+# Ensure consistent line endings across platforms
+* text=auto

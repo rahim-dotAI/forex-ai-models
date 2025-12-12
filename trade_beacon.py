@@ -9,6 +9,7 @@ AI FOREX BRAIN - COMPLETE ELITE TRADING SYSTEM
 ✅ Multi-source price rotation
 ✅ News & economic calendar aware
 ✅ Learning system with memory
+✅ FIXED: Historical data fetching with proper symbol format
 """
 
 # ======================================================
@@ -239,6 +240,7 @@ import pandas as pd
 import numpy as np
 from collections import deque
 import logging
+import traceback
 
 # State files
 SYSTEM_STATE_FILE = STATE_DIR / "system_state.json"
@@ -359,7 +361,7 @@ class PriceSourceRotation:
 price_rotation = PriceSourceRotation()
 
 # ============================================================================
-# MULTI-SOURCE PRICE FETCHER
+# MULTI-SOURCE PRICE FETCHER (LIVE PRICES)
 # ============================================================================
 def fetch_price_yfinance(pair: str) -> Optional[float]:
     """Fetch live price from YFinance"""
@@ -489,6 +491,69 @@ def get_historical_price(pair: str) -> float:
     return defaults.get(pair, 1.0)
 
 # ============================================================================
+# HISTORICAL DATA FETCHER (FIXED)
+# ============================================================================
+def fetch_historical_data(pair: str, period: str = "5y", interval: str = "1d") -> pd.DataFrame:
+    """Fetch or load historical forex data with proper symbol formatting"""
+    pair_name = pair.replace('/', '_')
+    cache_file = PICKLE_FOLDER / f"{pair_name}_{interval}_{period}.pkl"
+
+    # Check cache
+    if cache_file.exists():
+        try:
+            df = pd.read_pickle(cache_file)
+            if len(df) > 0 and (datetime.now() - df.index[-1]).days < 1:
+                logger.debug(f"💾 Loaded cached data for {pair}")
+                return df
+        except Exception as e:
+            logger.debug(f"Cache load failed: {e}")
+
+    # Fetch fresh data
+    try:
+        # CRITICAL FIX: Convert EUR/USD to EURUSD=X format
+        symbol = pair.replace('/', '') + '=X'
+        logger.info(f"📥 Fetching {period} data for {pair} (symbol: {symbol})...")
+        
+        df = yf.download(
+            symbol, 
+            period=period, 
+            interval=interval, 
+            progress=False,
+            auto_adjust=True  # Explicitly set to avoid warning
+        )
+
+        # Check if data was returned
+        if df is None or df.empty:
+            logger.error(f"❌ No data returned for {pair} (symbol: {symbol})")
+            return pd.DataFrame()
+
+        # CRITICAL FIX: Handle MultiIndex columns (yfinance sometimes returns tuples)
+        if isinstance(df.columns, pd.MultiIndex):
+            df.columns = df.columns.get_level_values(0)
+        
+        # Normalize column names to lowercase
+        df.columns = [col.lower() if isinstance(col, str) else str(col).lower() for col in df.columns]
+        
+        # Ensure required columns exist
+        required_cols = ['open', 'high', 'low', 'close', 'volume']
+        missing_cols = [col for col in required_cols if col not in df.columns]
+        
+        if missing_cols:
+            logger.error(f"❌ Missing columns for {pair}: {missing_cols}")
+            logger.error(f"Available columns: {list(df.columns)}")
+            return pd.DataFrame()
+        
+        # Save to cache
+        df.to_pickle(cache_file)
+        logger.info(f"✅ Fetched {len(df)} candles for {pair}")
+        return df
+        
+    except Exception as e:
+        logger.error(f"❌ Failed to fetch data for {pair}: {e}")
+        logger.error(traceback.format_exc())
+        return pd.DataFrame()
+
+# ============================================================================
 # TECHNICAL INDICATORS
 # ============================================================================
 class TechnicalIndicators:
@@ -573,38 +638,6 @@ def calculate_atr(df: pd.DataFrame, period: int = 14) -> float:
         return float(atr_value) if not np.isnan(atr_value) else 0.001
     except:
         return 0.001
-
-# ============================================================================
-# HISTORICAL DATA FETCHER
-# ============================================================================
-def fetch_historical_data(pair: str, period: str = "5y", interval: str = "1d") -> pd.DataFrame:
-    """Fetch or load historical forex data"""
-    pair_name = pair.replace('/', '_')
-    cache_file = PICKLE_FOLDER / f"{pair_name}_{interval}_{period}.pkl"
-
-    if cache_file.exists():
-        try:
-            df = pd.read_pickle(cache_file)
-            if len(df) > 0 and (datetime.now() - df.index[-1]).days < 1:
-                logger.debug(f"💾 Loaded cached data for {pair}")
-                return df
-        except Exception as e:
-            logger.debug(f"Cache load failed: {e}")
-
-    try:
-        symbol = pair.replace('/', '') + '=X'
-        logger.info(f"📥 Fetching {period} data for {pair}...")
-        df = yf.download(symbol, period=period, interval=interval, progress=False)
-
-        if not df.empty:
-            df.columns = [col.lower() for col in df.columns]
-            df.to_pickle(cache_file)
-            logger.info(f"✅ Fetched {len(df)} candles for {pair}")
-            return df
-    except Exception as e:
-        logger.error(f"Failed to fetch data for {pair}: {e}")
-
-    return pd.DataFrame()
 
 # ============================================================================
 # SYSTEM CONTROLLER
@@ -969,33 +1002,8 @@ class LearningMemory:
         if total < 5:
             return 1.0
 
-        win_rate = perf['wins'] / total
-
-        if win_rate > 0.75:
-            return 1.05
-        elif win_rate < 0.50:
-            return 0.95
- 
-        return 1.0
-
-    def get_strategy_confidence_modifier(self, strategy: str) -> float:
-        perf = self.memory['strategy_performance'].get(strategy, {'wins': 0, 'losses': 0})
-        total = perf['wins'] + perf['losses']
-
-        if total < 5:
-            return 1.0
-
-        win_rate = perf['wins'] / total
-
-        if win_rate > 0.70:
-            return 1.08
-        elif win_rate < 0.55:
-            return 0.92
-
-        return 1.0
-
 # ============================================================================
-# SIGNAL GENERATION ENGINE
+# SIGNAL GENERATION ENGINE (IMPROVED)
 # ============================================================================
 def generate_signal(pair: str, news_analyzer: NewsAnalyzer,
                    calendar: EconomicCalendar, memory: LearningMemory) -> Optional[Dict]:
@@ -1015,7 +1023,7 @@ def generate_signal(pair: str, news_analyzer: NewsAnalyzer,
     df = fetch_historical_data(pair, period="5y", interval="1d")
 
     if len(df) < 200:
-        logger.warning(f"Insufficient data for {pair}: {len(df)} candles")
+        logger.warning(f"⚠️ Insufficient data for {pair}: {len(df)} candles")
         return None
 
     try:
@@ -1170,7 +1178,8 @@ def generate_signal(pair: str, news_analyzer: NewsAnalyzer,
         }
 
     except Exception as e:
-        logger.error(f"Error generating signal for {pair}: {e}")
+        logger.error(f"❌ Error generating signal for {pair}: {e}")
+        logger.error(traceback.format_exc())
         return None
 
 # ============================================================================
@@ -1544,6 +1553,7 @@ print(f"🎯 Maximum {MAX_ACTIVE_SIGNALS} concurrent signals")
 print(f"🧠 Learning system enabled")
 print(f"📰 News & calendar integration active")
 print(f"🔄 Multi-source price rotation enabled")
+print(f"🔧 FIXED: Historical data fetching with proper yfinance symbols")
 print("=" * 70)
 
 if __name__ == "__main__":
@@ -1559,3 +1569,28 @@ if __name__ == "__main__":
         print("   Option 2: Use dashboard control")
         print("=" * 70)
         print("\n⏸️  Trade Beacon ready. Run main() to start.")
+
+        win_rate = perf['wins'] / total
+
+        if win_rate > 0.75:
+            return 1.05
+        elif win_rate < 0.50:
+            return 0.95
+ 
+        return 1.0
+
+    def get_strategy_confidence_modifier(self, strategy: str) -> float:
+        perf = self.memory['strategy_performance'].get(strategy, {'wins': 0, 'losses': 0})
+        total = perf['wins'] + perf['losses']
+
+        if total < 5:
+            return 1.0
+
+        win_rate = perf['wins'] / total
+
+        if win_rate > 0.70:
+            return 1.08
+        elif win_rate < 0.55:
+            return 0.92
+
+        return 1.0

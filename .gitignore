@@ -1,12 +1,12 @@
+# Trade Beacon - Git Ignore Configuration
+# =========================================
+
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-env/
-venv/
-ENV/
 build/
 develop-eggs/
 dist/
@@ -22,6 +22,22 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -30,85 +46,57 @@ wheels/
 # Environment variables
 .env
 .env.local
+.env.*.local
 
-# IDEs
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# Logs (keep directory structure but ignore content)
+logs/*.log
+*.log
 
-# MacOS
-.DS_Store
-
-# ======================================================
-# 🚨 CRITICAL: EXCLUDE ALL MODEL PICKLE FILES
-# ======================================================
-# These files get corrupted due to concurrent writes
-# Models should be rebuilt fresh from data each run
-
-# All model files (any location)
-**/*_model.pkl
-**/*_sgd_model.pkl
-**/*_rf_model.pkl
-**/indicator_cache*.pkl
-
-# Specific paths
-data/processed/*_model.pkl
-data/processed/*_sgd_model.pkl
-data/processed/*_rf_model.pkl
-data/processed/indicator_cache*.pkl
-data/processed/corrupted/
-data/processed/.tmp_*
-data/processed/.backup_*
-
-# RL model files
-rl_models/*.pkl
-rl_memory/*.pkl
-rl_memory/experience_replay.pkl
+# Cached data files (regenerated automatically)
+data/processed/*.pkl
+*.pkl
 
 # Temporary files
 *.tmp
-.tmp_*
-.backup_*
+*.temp
+*.cache
 
-# Corrupted files backup
-**/corrupted/
-
-# ======================================================
-# KEEP: Data pickles (these are stable and needed)
-# ======================================================
-# These files should be committed:
-# - EUR_USD_1h.pkl
-# - GBP_USD_5m.pkl
-# - etc.
-# 
-# But NOT the model files that end in _model.pkl
-
-# ======================================================
-# Logs and outputs
-# ======================================================
-logs/
-*.log
-
-# Database files (optional - decide if you want to commit these)
-database/*.db
-database/*.sqlite
-database/*.sqlite3
-
-# Large output files
-outputs/*.csv
-outputs/*.xlsx
-
-# Compiled files
-*.pyc
-*.pyo
-
-# Test files
-tests/__pycache__/
-.pytest_cache/
-.coverage
-htmlcov/
-
-# OS files
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+
+# Coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Database files (keep structure, ignore data)
+*.db
+*.sqlite
+*.sqlite3
+
+# Large files that should use Git LFS or be excluded
+*.csv.gz
+*.zip
+*.tar.gz
+
+# Keep directories but not their contents (if needed)
+# data/raw/.gitkeep will keep the folder
+# But ignore the actual data files

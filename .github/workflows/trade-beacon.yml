@@ -304,27 +304,24 @@ jobs:
         else
           TIMESTAMP=$(date -u +'%Y-%m-%d %H:%M UTC')
           
-          # Create detailed commit message
-          COMMIT_MSG="🤖 Trading cycle complete - $TIMESTAMP
-
-📊 Cycle Summary:
-├─ Duration: ${{ env.CYCLE_DURATION_HOURS }} hours
-├─ Active Signals: ${{ steps.summary.outputs.active_signals }}
-├─ Win Rate: ${{ steps.summary.outputs.win_rate }}
-├─ Total Pips: ${{ steps.summary.outputs.total_pips }}
-└─ Total Trades: ${{ steps.summary.outputs.total_trades }}
-
-📁 Files Updated:
-├─ Dashboard state (signal_state/dashboard_state.json)
-├─ Active signals (signal_state/active_signals.json)
-├─ Learning memory (memory/learning_memory.json)
-├─ Trade history (memory/trade_history.json)
-└─ System logs (logs/pipeline.log)
-
-🤖 Automated commit by Trade Beacon Bot
-🔄 Next cycle: Scheduled automatically"
-          
-          git commit -m "$COMMIT_MSG"
+          # Create commit message
+          git commit -m "🤖 Trading cycle complete - $TIMESTAMP" \
+                     -m "" \
+                     -m "📊 Cycle Summary:" \
+                     -m "Duration: ${{ env.CYCLE_DURATION_HOURS }} hours" \
+                     -m "Active Signals: ${{ steps.summary.outputs.active_signals }}" \
+                     -m "Win Rate: ${{ steps.summary.outputs.win_rate }}" \
+                     -m "Total Pips: ${{ steps.summary.outputs.total_pips }}" \
+                     -m "Total Trades: ${{ steps.summary.outputs.total_trades }}" \
+                     -m "" \
+                     -m "📁 Files Updated:" \
+                     -m "- Dashboard state (signal_state/dashboard_state.json)" \
+                     -m "- Active signals (signal_state/active_signals.json)" \
+                     -m "- Learning memory (memory/learning_memory.json)" \
+                     -m "- Trade history (memory/trade_history.json)" \
+                     -m "- System logs (logs/pipeline.log)" \
+                     -m "" \
+                     -m "🤖 Automated commit by Trade Beacon Bot"
           
           # Push with retry logic
           MAX_RETRIES=3

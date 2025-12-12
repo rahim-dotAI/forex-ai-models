@@ -10,6 +10,7 @@ AI FOREX BRAIN - COMPLETE ELITE TRADING SYSTEM
 ✅ News & economic calendar aware
 ✅ Learning system with memory
 ✅ FIXED: Historical data fetching with proper symbol format
+✅ FIXED: Syntax errors removed
 """
 
 # ======================================================
@@ -519,7 +520,7 @@ def fetch_historical_data(pair: str, period: str = "5y", interval: str = "1d") -
             period=period, 
             interval=interval, 
             progress=False,
-            auto_adjust=True  # Explicitly set to avoid warning
+            auto_adjust=True
         )
 
         # Check if data was returned
@@ -527,7 +528,7 @@ def fetch_historical_data(pair: str, period: str = "5y", interval: str = "1d") -
             logger.error(f"❌ No data returned for {pair} (symbol: {symbol})")
             return pd.DataFrame()
 
-        # CRITICAL FIX: Handle MultiIndex columns (yfinance sometimes returns tuples)
+        # CRITICAL FIX: Handle MultiIndex columns
         if isinstance(df.columns, pd.MultiIndex):
             df.columns = df.columns.get_level_values(0)
         
@@ -1002,12 +1003,33 @@ class LearningMemory:
         if total < 5:
             return 1.0
 
-# ============================================================================
-# SIGNAL GENERATION ENGINE (IMPROVED)
-# ============================================================================
+        win_rate = perf['wins'] / total
+
+        if win_rate > 0.75:
+            return 1.05
+        elif win_rate < 0.50:
+            return 0.95
+ 
+        return 1.0
+
+    def get_strategy_confidence_modifier(self, strategy: str) -> float:
+        perf = self.memory['strategy_performance'].get(strategy, {'wins': 0, 'losses': 0})
+        total = perf['wins'] + perf['losses']
+
+        if total < 5:
+            return 1.0
+
+        win_rate = perf['wins'] / total
+
+        if win_rate > 0.70:
+            return 1.08
+        elif win_rate < 0.55:
+            return 0.92
+
+        return 1.0
 
 # ============================================================================
-# SIGNAL GENERATION ENGINE (IMPROVED)
+# SIGNAL GENERATION ENGINE
 # ============================================================================
 def generate_signal(pair: str, news_analyzer: NewsAnalyzer,
                    calendar: EconomicCalendar, memory: LearningMemory) -> Optional[Dict]:
@@ -1573,28 +1595,3 @@ if __name__ == "__main__":
         print("   Option 2: Use dashboard control")
         print("=" * 70)
         print("\n⏸️  Trade Beacon ready. Run main() to start.")
-
-        win_rate = perf['wins'] / total
-
-        if win_rate > 0.75:
-            return 1.05
-        elif win_rate < 0.50:
-            return 0.95
- 
-        return 1.0
-
-    def get_strategy_confidence_modifier(self, strategy: str) -> float:
-        perf = self.memory['strategy_performance'].get(strategy, {'wins': 0, 'losses': 0})
-        total = perf['wins'] + perf['losses']
-
-        if total < 5:
-            return 1.0
-
-        win_rate = perf['wins'] / total
-
-        if win_rate > 0.70:
-            return 1.08
-        elif win_rate < 0.55:
-            return 0.92
-
-        return 1.0

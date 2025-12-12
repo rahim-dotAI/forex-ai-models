@@ -1290,8 +1290,13 @@ class SignalManager:
         self.active_signals.append(signal)
         self.save_state()
 
-        risk_pips = abs(signal.entry_price - signal.sl) * 10000
-        reward_pips = abs(signal.tp - signal.entry_price) * 10000
+        # Calculate pips correctly based on pair type
+        # JPY pairs: 1 pip = 0.01 (2 decimal places) -> multiply by 100
+        # Other pairs: 1 pip = 0.0001 (4 decimal places) -> multiply by 10000
+        pip_multiplier = 100 if 'JPY' in signal.pair else 10000
+        
+        risk_pips = abs(signal.entry_price - signal.sl) * pip_multiplier
+        reward_pips = abs(signal.tp - signal.entry_price) * pip_multiplier
         rr = reward_pips / risk_pips if risk_pips > 0 else 0
 
         logger.info(f"🎯 SIGNAL: {signal.direction} {signal.pair} @ {signal.entry_price:.5f}")
@@ -1317,12 +1322,15 @@ class SignalManager:
 
             try:
                 current_price = fetch_live_price(signal.pair)
+                
+                # Calculate pips correctly based on pair type
+                pip_multiplier = 100 if 'JPY' in signal.pair else 10000
 
                 if signal.direction == 'BUY':
                     if current_price >= signal.tp:
                         signal.status = 'TP_HIT'
                         signal.outcome = 'TP_HIT'
-                        signal.outcome_pips = (current_price - signal.entry_price) * 10000
+                        signal.outcome_pips = (current_price - signal.entry_price) * pip_multiplier
                         signal.outcome_time = now.isoformat()
                         archived.append(signal)
                         memory.record_trade(signal.to_dict(), 'TP_HIT', signal.outcome_pips)
@@ -1330,7 +1338,7 @@ class SignalManager:
                     elif current_price <= signal.sl:
                         signal.status = 'SL_HIT'
                         signal.outcome = 'SL_HIT'
-                        signal.outcome_pips = (current_price - signal.entry_price) * 10000
+                        signal.outcome_pips = (current_price - signal.entry_price) * pip_multiplier
                         signal.outcome_time = now.isoformat()
                         archived.append(signal)
                         memory.record_trade(signal.to_dict(), 'SL_HIT', signal.outcome_pips)
@@ -1339,7 +1347,7 @@ class SignalManager:
                     if current_price <= signal.tp:
                         signal.status = 'TP_HIT'
                         signal.outcome = 'TP_HIT'
-                        signal.outcome_pips = (signal.entry_price - current_price) * 10000
+                        signal.outcome_pips = (signal.entry_price - current_price) * pip_multiplier
                         signal.outcome_time = now.isoformat()
                         archived.append(signal)
                         memory.record_trade(signal.to_dict(), 'TP_HIT', signal.outcome_pips)
@@ -1347,7 +1355,7 @@ class SignalManager:
                     elif current_price >= signal.sl:
                         signal.status = 'SL_HIT'
                         signal.outcome = 'SL_HIT'
-                        signal.outcome_pips = (signal.entry_price - current_price) * 10000
+                        signal.outcome_pips = (signal.entry_price - current_price) * pip_multiplier
                         signal.outcome_time = now.isoformat()
                         archived.append(signal)
                         memory.record_trade(signal.to_dict(), 'SL_HIT', signal.outcome_pips)

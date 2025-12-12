@@ -1005,6 +1005,10 @@ class LearningMemory:
 # ============================================================================
 # SIGNAL GENERATION ENGINE (IMPROVED)
 # ============================================================================
+
+# ============================================================================
+# SIGNAL GENERATION ENGINE (IMPROVED)
+# ============================================================================
 def generate_signal(pair: str, news_analyzer: NewsAnalyzer,
                    calendar: EconomicCalendar, memory: LearningMemory) -> Optional[Dict]:
     """Generate trading signal with FULL technical analysis"""

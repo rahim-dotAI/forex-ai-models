@@ -254,8 +254,10 @@ PRICE_SOURCE_STATE_FILE = STATE_DIR / "price_source_rotation.json"
 # Currency pairs
 PAIRS = ["EUR/USD", "GBP/USD", "USD/JPY", "AUD/USD", "USD/CAD", "NZD/USD"]
 
-# API Keys
-MARKETAUX_API_KEY = "SBdJQhOsx9kjUF9ShEOrjQLXHfvZdKm6YAwc4nlR"
+# API Keys - Load from environment variables
+MARKETAUX_API_KEY = os.environ.get('MARKETAUX_API_KEY', '')
+if not MARKETAUX_API_KEY:
+    logger.warning("⚠️ MARKETAUX_API_KEY not set - news features will be limited")
 
 # Signal parameters
 MAX_ACTIVE_SIGNALS = 5
@@ -263,8 +265,13 @@ ATR_SL_MULT = 2.0
 ATR_TP_MULT = 3.0
 MIN_CONFIDENCE = 0.72
 SIGNAL_CHECK_INTERVAL = 15
-NEWS_CHECK_INTERVAL = 300
-CALENDAR_CHECK_INTERVAL = 3600
+
+# API Rate Limiting - Marketaux Free Tier: 100 requests/day
+NEWS_CHECK_INTERVAL = 900  # 15 minutes (96 calls/day max)
+CALENDAR_CHECK_INTERVAL = 3600  # 1 hour (24 calls/day max)
+MAX_NEWS_CALLS_PER_DAY = 90  # Leave buffer for calendar calls
+NEWS_CALL_COUNTER_FILE = STATE_DIR / "news_api_calls.json"
+
 PRICE_CACHE_DURATION = 60
 
 # Setup logging
@@ -703,17 +710,87 @@ class SystemController:
         return True, "Running normally"
 
 # ============================================================================
-# NEWS & SENTIMENT ANALYZER
+# NEWS & SENTIMENT ANALYZER (WITH API RATE LIMITING)
 # ============================================================================
 class NewsAnalyzer:
-    """Fetches and analyzes financial news + sentiment"""
+    """Fetches and analyzes financial news + sentiment with API rate limiting"""
 
     def __init__(self):
         self.last_news_check = 0
         self.news_cache = []
         self.high_impact_events = []
+        self.api_calls_today = 0
+        self.last_reset_date = None
+        self.load_call_counter()
+
+    def load_call_counter(self):
+        """Load API call counter from file"""
+        if NEWS_CALL_COUNTER_FILE.exists():
+            try:
+                with open(NEWS_CALL_COUNTER_FILE, 'r') as f:
+                    data = json.load(f)
+                    last_date = data.get('date')
+                    today = datetime.now(timezone.utc).date().isoformat()
+                    
+                    if last_date == today:
+                        self.api_calls_today = data.get('calls', 0)
+                        self.last_reset_date = last_date
+                    else:
+                        # New day, reset counter
+                        self.api_calls_today = 0
+                        self.last_reset_date = today
+                        self.save_call_counter()
+            except:
+                self.reset_counter()
+        else:
+            self.reset_counter()
+
+    def save_call_counter(self):
+        """Save API call counter to file"""
+        with open(NEWS_CALL_COUNTER_FILE, 'w') as f:
+            json.dump({
+                'date': datetime.now(timezone.utc).date().isoformat(),
+                'calls': self.api_calls_today,
+                'last_updated': datetime.now(timezone.utc).isoformat()
+            }, f, indent=2)
+
+    def reset_counter(self):
+        """Reset daily counter"""
+        self.api_calls_today = 0
+        self.last_reset_date = datetime.now(timezone.utc).date().isoformat()
+        self.save_call_counter()
+
+    def can_make_api_call(self) -> bool:
+        """Check if we can make an API call within daily limit"""
+        today = datetime.now(timezone.utc).date().isoformat()
+        
+        # Reset counter if new day
+        if self.last_reset_date != today:
+            self.reset_counter()
+        
+        # Check if under limit
+        if self.api_calls_today >= MAX_NEWS_CALLS_PER_DAY:
+            logger.warning(f"⚠️ Marketaux API daily limit reached ({self.api_calls_today}/{MAX_NEWS_CALLS_PER_DAY})")
+            return False
+        
+        return True
+
+    def increment_call_counter(self):
+        """Increment API call counter"""
+        self.api_calls_today += 1
+        self.save_call_counter()
+        logger.debug(f"📊 Marketaux API calls today: {self.api_calls_today}/{MAX_NEWS_CALLS_PER_DAY}")
 
     def fetch_news(self) -> List[Dict]:
+        """Fetch news with rate limiting"""
+        if not MARKETAUX_API_KEY:
+            logger.warning("⚠️ Marketaux API key not configured")
+            return []
+
+        if not self.can_make_api_call():
+            logger.info(f"📰 Using cached news (API limit: {self.api_calls_today}/{MAX_NEWS_CALLS_PER_DAY})")
+            return self.news_cache
+
         try:
             url = "https://api.marketaux.com/v1/news/all"
             params = {
@@ -721,22 +798,31 @@ class NewsAnalyzer:
                 'symbols': 'EUR,USD,GBP,JPY,AUD,CAD,NZD',
                 'filter_entities': 'true',
                 'language': 'en',
-                'limit': 50
+                'limit': 3  # Free tier: 3 articles per request
             }
 
             response = requests.get(url, params=params, timeout=10)
+            
             if response.status_code == 200:
                 data = response.json()
                 self.news_cache = data.get('data', [])
+                self.increment_call_counter()
                 self.last_news_check = time.time()
-                logger.info(f"📰 Fetched {len(self.news_cache)} news articles")
+                logger.info(f"📰 Fetched {len(self.news_cache)} news articles (API call {self.api_calls_today}/{MAX_NEWS_CALLS_PER_DAY})")
                 return self.news_cache
+            elif response.status_code == 429:
+                logger.warning("⚠️ Marketaux API rate limit hit - using cached data")
+                return self.news_cache
+            else:
+                logger.warning(f"⚠️ Marketaux API returned status {response.status_code}")
+                return self.news_cache
+                
         except Exception as e:
             logger.error(f"News fetch error: {e}")
-
-        return []
+            return self.news_cache
 
     def analyze_sentiment(self, pair: str) -> Dict:
+        """Analyze sentiment with cached data awareness"""
         if time.time() - self.last_news_check > NEWS_CHECK_INTERVAL:
             self.fetch_news()
 
@@ -772,8 +858,9 @@ class NewsAnalyzer:
             'score': sentiment_score,
             'positive_count': positive_count,
             'negative_count': negative_count,
-            'relevant_news': relevant_news[:5],
-            'total_news': len(self.news_cache)
+            'relevant_news': relevant_news[:3],  # Free tier: limit to 3 articles
+            'total_news': len(self.news_cache),
+            'api_calls_used': f"{self.api_calls_today}/{MAX_NEWS_CALLS_PER_DAY}"
         }
 
     def check_high_impact_news(self) -> List[Dict]:
@@ -811,16 +898,30 @@ class NewsAnalyzer:
         return high_impact
 
 # ============================================================================
-# ECONOMIC CALENDAR
+# ECONOMIC CALENDAR (WITH API RATE LIMITING)
 # ============================================================================
 class EconomicCalendar:
-    """Tracks economic events and their impact"""
+    """Tracks economic events and their impact with API rate limiting"""
 
     def __init__(self):
         self.events = []
         self.last_check = 0
+        self.api_calls_today = 0
 
-    def fetch_calendar(self) -> List[Dict]:
+    def can_make_api_call(self, news_analyzer: NewsAnalyzer) -> bool:
+        """Check combined API limit with news analyzer"""
+        return news_analyzer.can_make_api_call()
+
+    def fetch_calendar(self, news_analyzer: NewsAnalyzer) -> List[Dict]:
+        """Fetch calendar with rate limiting"""
+        if not MARKETAUX_API_KEY:
+            logger.warning("⚠️ Marketaux API key not configured")
+            return []
+
+        if not self.can_make_api_call(news_analyzer):
+            logger.info(f"📅 Using cached events (API limit: {news_analyzer.api_calls_today}/{MAX_NEWS_CALLS_PER_DAY})")
+            return self.events
+
         try:
             url = "https://api.marketaux.com/v1/news/all"
             params = {
@@ -828,11 +929,12 @@ class EconomicCalendar:
                 'symbols': 'USD,EUR,GBP,JPY',
                 'filter_entities': 'true',
                 'language': 'en',
-                'limit': 30,
-                'search': 'economic OR data OR report OR announcement'
+                'limit': 3,  # Free tier: 3 articles per request
+                'search': 'economic OR data OR report'
             }
 
             response = requests.get(url, params=params, timeout=10)
+            
             if response.status_code == 200:
                 data = response.json()
                 articles = data.get('data', [])
@@ -850,12 +952,19 @@ class EconomicCalendar:
 
                 self.events = events
                 self.last_check = time.time()
-                logger.info(f"📅 Fetched {len(events)} economic events")
+                news_analyzer.increment_call_counter()
+                logger.info(f"📅 Fetched {len(events)} economic events (API call {news_analyzer.api_calls_today}/{MAX_NEWS_CALLS_PER_DAY})")
                 return events
+            elif response.status_code == 429:
+                logger.warning("⚠️ Marketaux API rate limit hit - using cached events")
+                return self.events
+            else:
+                logger.warning(f"⚠️ Marketaux API returned status {response.status_code}")
+                return self.events
+                
         except Exception as e:
             logger.error(f"Calendar fetch error: {e}")
-
-        return []
+            return self.events
 
     def get_upcoming_events(self, hours_ahead: int = 2) -> List[Dict]:
         if time.time() - self.last_check > CALENDAR_CHECK_INTERVAL:
@@ -1555,7 +1664,7 @@ def main():
             news_analyzer.fetch_news()
 
         if time.time() % CALENDAR_CHECK_INTERVAL < 10:
-            calendar.fetch_calendar()
+            calendar.fetch_calendar(news_analyzer)
 
         if (current_time - last_signal_check) >= SIGNAL_CHECK_INTERVAL:
             if signal_manager.can_broadcast_new_signal():

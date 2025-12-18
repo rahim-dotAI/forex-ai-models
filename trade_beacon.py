@@ -10,7 +10,7 @@ AI FOREX BRAIN - COMPLETE ELITE TRADING SYSTEM
 ✅ News & economic calendar aware
 ✅ Learning system with memory
 ✅ FIXED: Historical data fetching with proper symbol format
-✅ FIXED: Syntax errors removed
+✅ FIXED: EconomicCalendar.get_upcoming_events() method signature
 """
 
 # ======================================================
@@ -256,8 +256,6 @@ PAIRS = ["EUR/USD", "GBP/USD", "USD/JPY", "AUD/USD", "USD/CAD", "NZD/USD"]
 
 # API Keys - Load from environment variables
 MARKETAUX_API_KEY = os.environ.get('MARKETAUX_API_KEY', '')
-if not MARKETAUX_API_KEY:
-    logger.warning("⚠️ MARKETAUX_API_KEY not set - news features will be limited")
 
 # Signal parameters
 MAX_ACTIVE_SIGNALS = 5
@@ -284,6 +282,9 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+
+if not MARKETAUX_API_KEY:
+    logger.warning("⚠️ MARKETAUX_API_KEY not set - news features will be limited")
 
 # ============================================================================
 # PRICE SOURCE ROTATION MANAGER
@@ -798,7 +799,7 @@ class NewsAnalyzer:
                 'symbols': 'EUR,USD,GBP,JPY,AUD,CAD,NZD',
                 'filter_entities': 'true',
                 'language': 'en',
-                'limit': 3  # Free tier: 3 articles per request
+                'limit': 3
             }
 
             response = requests.get(url, params=params, timeout=10)
@@ -858,7 +859,7 @@ class NewsAnalyzer:
             'score': sentiment_score,
             'positive_count': positive_count,
             'negative_count': negative_count,
-            'relevant_news': relevant_news[:3],  # Free tier: limit to 3 articles
+            'relevant_news': relevant_news[:3],
             'total_news': len(self.news_cache),
             'api_calls_used': f"{self.api_calls_today}/{MAX_NEWS_CALLS_PER_DAY}"
         }
@@ -898,7 +899,7 @@ class NewsAnalyzer:
         return high_impact
 
 # ============================================================================
-# ECONOMIC CALENDAR (WITH API RATE LIMITING)
+# ECONOMIC CALENDAR (WITH API RATE LIMITING) - FIXED
 # ============================================================================
 class EconomicCalendar:
     """Tracks economic events and their impact with API rate limiting"""
@@ -929,7 +930,7 @@ class EconomicCalendar:
                 'symbols': 'USD,EUR,GBP,JPY',
                 'filter_entities': 'true',
                 'language': 'en',
-                'limit': 3,  # Free tier: 3 articles per request
+                'limit': 3,
                 'search': 'economic OR data OR report'
             }
 
@@ -966,9 +967,10 @@ class EconomicCalendar:
             logger.error(f"Calendar fetch error: {e}")
             return self.events
 
-    def get_upcoming_events(self, hours_ahead: int = 2) -> List[Dict]:
-        if time.time() - self.last_check > CALENDAR_CHECK_INTERVAL:
-            self.fetch_calendar()
+    def get_upcoming_events(self, news_analyzer: NewsAnalyzer = None, hours_ahead: int = 2) -> List[Dict]:
+        """FIXED: Now accepts news_analyzer parameter"""
+        if news_analyzer and time.time() - self.last_check > CALENDAR_CHECK_INTERVAL:
+            self.fetch_calendar(news_analyzer)
 
         now = datetime.now(timezone.utc)
         upcoming = []
@@ -1399,9 +1401,6 @@ class SignalManager:
         self.active_signals.append(signal)
         self.save_state()
 
-        # Calculate pips correctly based on pair type
-        # JPY pairs: 1 pip = 0.01 (2 decimal places) -> multiply by 100
-        # Other pairs: 1 pip = 0.0001 (4 decimal places) -> multiply by 10000
         pip_multiplier = 100 if 'JPY' in signal.pair else 10000
         
         risk_pips = abs(signal.entry_price - signal.sl) * pip_multiplier
@@ -1432,7 +1431,6 @@ class SignalManager:
             try:
                 current_price = fetch_live_price(signal.pair)
                 
-                # Calculate pips correctly based on pair type
                 pip_multiplier = 100 if 'JPY' in signal.pair else 10000
 
                 if signal.direction == 'BUY':
@@ -1504,7 +1502,7 @@ class SignalManager:
         }
 
 # ============================================================================
-# DASHBOARD STATE MANAGER
+# DASHBOARD STATE MANAGER - FIXED
 # ============================================================================
 def save_dashboard_state(controller, signal_manager, news_analyzer, calendar, memory):
     """Save complete state for dashboard"""
@@ -1519,11 +1517,11 @@ def save_dashboard_state(controller, signal_manager, news_analyzer, calendar, me
         'system_running': controller.is_running,
         'uptime_hours': uptime_hours,
         'news_count': len(news_analyzer.news_cache),
-        'upcoming_events': len(calendar.get_upcoming_events()),
+        'upcoming_events': len(calendar.get_upcoming_events(news_analyzer)),  # FIXED: Pass news_analyzer
         'high_impact_news': len(news_analyzer.high_impact_events),
         'active_signals': len(signal_manager.active_signals),
         'recent_news': news_analyzer.news_cache[:10],
-        'upcoming_events_detail': calendar.get_upcoming_events(),
+        'upcoming_events_detail': calendar.get_upcoming_events(news_analyzer),  # FIXED: Pass news_analyzer
         'signals': [s.to_dict() for s in signal_manager.active_signals],
         'learning_stats': {
             'total_trades': len(memory.trade_history),
@@ -1553,10 +1551,8 @@ def main():
     logger.info(f"📅 Active: Monday-Friday only")
     logger.info("=" * 80)
 
-    # Check if today is weekend or holiday
     now = datetime.now(timezone.utc)
     
-    # Weekend check
     if now.weekday() in [5, 6]:
         logger.info("=" * 80)
         logger.info("🏖️  WEEKEND DETECTED - Markets Closed")
@@ -1564,13 +1560,8 @@ def main():
         logger.info("=" * 80)
         return
     
-    # Holiday check
     holidays = [
-        (1, 1),   # New Year's Day
-        (12, 25), # Christmas
-        (12, 26), # Boxing Day
-        (7, 4),   # US Independence Day
-        (11, 11), # Veterans Day
+        (1, 1), (12, 25), (12, 26), (7, 4), (11, 11),
     ]
     
     if (now.month, now.day) in holidays:
@@ -1580,7 +1571,6 @@ def main():
         logger.info("=" * 80)
         return
 
-    # Set 4.5-hour timer
     RUN_DURATION = 4.5 * 60 * 60
     start_time = time.time()
     end_time = start_time + RUN_DURATION
@@ -1591,7 +1581,6 @@ def main():
     memory = LearningMemory()
     signal_manager = SignalManager()
 
-    # Auto-start in GitHub Actions
     if IN_GHA:
         controller.start()
         logger.info("✅ System AUTO-STARTED in GitHub Actions")
@@ -1607,7 +1596,6 @@ def main():
     cycle_count = 0
 
     while True:
-        # Check if 4.5 hours have passed
         current_time = time.time()
         elapsed_hours = (current_time - start_time) / 3600
         remaining_minutes = (end_time - current_time) / 60
@@ -1623,12 +1611,10 @@ def main():
             logger.info("🛑 Exiting... Next cycle starts in ~1.5 hours")
             logger.info("=" * 80)
             
-            # Save final state
             controller.stop()
             save_dashboard_state(controller, signal_manager, news_analyzer, calendar, memory)
             break
 
-        # Log progress every hour
         if int(elapsed_hours) > int((current_time - 300 - start_time) / 3600):
             logger.info(f"⏰ Running for {elapsed_hours:.1f}hrs | {remaining_minutes:.0f}min remaining | Signals: {len(signal_manager.active_signals)}")
 
@@ -1640,7 +1626,6 @@ def main():
             time.sleep(5)
             continue
 
-        # Additional runtime weekend/holiday check
         now = datetime.now(timezone.utc)
         if now.weekday() in [5, 6]:
             logger.info("=" * 80)
@@ -1697,10 +1682,10 @@ print(f"🧠 Learning system enabled")
 print(f"📰 News & calendar integration active")
 print(f"🔄 Multi-source price rotation enabled")
 print(f"🔧 FIXED: Historical data fetching with proper yfinance symbols")
+print(f"🔧 FIXED: EconomicCalendar.get_upcoming_events() method signature")
 print("=" * 70)
 
 if __name__ == "__main__":
-    # Auto-start in automated environments only
     if IN_COLAB or IN_GHA:
         print("\n🚀 AUTO-STARTING in automated environment...")
         print("📱 Dashboard will be updated at: signal_state/dashboard_state.json")

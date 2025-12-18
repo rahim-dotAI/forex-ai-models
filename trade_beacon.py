@@ -785,11 +785,11 @@ class NewsAnalyzer:
     def fetch_news(self) -> List[Dict]:
         """Fetch news with rate limiting"""
         if not MARKETAUX_API_KEY:
-            logger.warning("⚠️ Marketaux API key not configured")
-            return []
+            # No API key - silently return empty cache
+            return self.news_cache
 
         if not self.can_make_api_call():
-            logger.info(f"📰 Using cached news (API limit: {self.api_calls_today}/{MAX_NEWS_CALLS_PER_DAY})")
+            # Daily limit reached - use cache silently
             return self.news_cache
 
         try:
@@ -811,15 +811,24 @@ class NewsAnalyzer:
                 self.last_news_check = time.time()
                 logger.info(f"📰 Fetched {len(self.news_cache)} news articles (API call {self.api_calls_today}/{MAX_NEWS_CALLS_PER_DAY})")
                 return self.news_cache
+            elif response.status_code == 402:
+                # Payment required - disable further attempts
+                logger.warning("⚠️ Marketaux API requires payment - disabling news features")
+                self.api_calls_today = MAX_NEWS_CALLS_PER_DAY  # Max out counter to stop calls
+                self.last_news_check = time.time()
+                return self.news_cache
             elif response.status_code == 429:
-                logger.warning("⚠️ Marketaux API rate limit hit - using cached data")
+                # Rate limit - stop calling for now
+                self.last_news_check = time.time()
                 return self.news_cache
             else:
-                logger.warning(f"⚠️ Marketaux API returned status {response.status_code}")
+                # Other error - stop calling for now
+                self.last_news_check = time.time()
                 return self.news_cache
                 
         except Exception as e:
-            logger.error(f"News fetch error: {e}")
+            logger.debug(f"News fetch error: {e}")
+            self.last_news_check = time.time()
             return self.news_cache
 
     def analyze_sentiment(self, pair: str) -> Dict:
@@ -916,11 +925,11 @@ class EconomicCalendar:
     def fetch_calendar(self, news_analyzer: NewsAnalyzer) -> List[Dict]:
         """Fetch calendar with rate limiting"""
         if not MARKETAUX_API_KEY:
-            logger.warning("⚠️ Marketaux API key not configured")
-            return []
+            # No API key - silently return empty cache
+            return self.events
 
         if not self.can_make_api_call(news_analyzer):
-            logger.info(f"📅 Using cached events (API limit: {news_analyzer.api_calls_today}/{MAX_NEWS_CALLS_PER_DAY})")
+            # Daily limit reached - use cache silently
             return self.events
 
         try:
@@ -956,15 +965,24 @@ class EconomicCalendar:
                 news_analyzer.increment_call_counter()
                 logger.info(f"📅 Fetched {len(events)} economic events (API call {news_analyzer.api_calls_today}/{MAX_NEWS_CALLS_PER_DAY})")
                 return events
+            elif response.status_code == 402:
+                # Payment required - disable further attempts
+                logger.warning("⚠️ Marketaux API requires payment - disabling calendar features")
+                news_analyzer.api_calls_today = MAX_NEWS_CALLS_PER_DAY  # Max out counter
+                self.last_check = time.time()
+                return self.events
             elif response.status_code == 429:
-                logger.warning("⚠️ Marketaux API rate limit hit - using cached events")
+                # Rate limit - stop calling
+                self.last_check = time.time()
                 return self.events
             else:
-                logger.warning(f"⚠️ Marketaux API returned status {response.status_code}")
+                # Other error - stop calling
+                self.last_check = time.time()
                 return self.events
                 
         except Exception as e:
-            logger.error(f"Calendar fetch error: {e}")
+            logger.debug(f"Calendar fetch error: {e}")
+            self.last_check = time.time()
             return self.events
 
     def get_upcoming_events(self, news_analyzer: NewsAnalyzer = None, hours_ahead: int = 2) -> List[Dict]:
@@ -1645,11 +1663,17 @@ def main():
 
         signal_manager.update_signal_outcomes(memory)
 
-        if time.time() % NEWS_CHECK_INTERVAL < 10:
-            news_analyzer.fetch_news()
+        # FIXED: Only check news/calendar at proper intervals, not every loop iteration
+        current_time_mod_news = int(current_time) % NEWS_CHECK_INTERVAL
+        current_time_mod_calendar = int(current_time) % CALENDAR_CHECK_INTERVAL
+        
+        if current_time_mod_news < 5:  # Within 5 seconds of interval
+            if time.time() - news_analyzer.last_news_check > NEWS_CHECK_INTERVAL:
+                news_analyzer.fetch_news()
 
-        if time.time() % CALENDAR_CHECK_INTERVAL < 10:
-            calendar.fetch_calendar(news_analyzer)
+        if current_time_mod_calendar < 5:  # Within 5 seconds of interval
+            if time.time() - calendar.last_check > CALENDAR_CHECK_INTERVAL:
+                calendar.fetch_calendar(news_analyzer)
 
         if (current_time - last_signal_check) >= SIGNAL_CHECK_INTERVAL:
             if signal_manager.can_broadcast_new_signal():

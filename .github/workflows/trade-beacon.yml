@@ -288,7 +288,7 @@ jobs:
         fi
     
     #============================================================================
-    # STEP 8: Commit and push changes (with conflict resolution)
+    # STEP 8: Commit and push changes (FIXED - handles missing files)
     #============================================================================
     - name: 💾 Commit and Push Results
       if: steps.preflight.outputs.should_run == 'true'
@@ -301,11 +301,14 @@ jobs:
         # Add gitattributes for pkl files if not exists
         if [ ! -f .gitattributes ]; then
           echo "*.pkl merge=ours" > .gitattributes
-          git add .gitattributes
+          git add .gitattributes 2>/dev/null || true
         fi
         
-        # Add all relevant files (excluding large pkl files for now)
-        git add signal_state/*.json memory/*.json logs/*.log
+        # FIXED: Add files with error suppression for missing files
+        # This prevents fatal errors when directories are empty
+        git add signal_state/*.json 2>/dev/null || true
+        git add memory/*.json 2>/dev/null || true
+        git add logs/*.log 2>/dev/null || true
         
         # Only add pkl files if they're new or significantly changed
         # This reduces conflicts with LFS
@@ -317,7 +320,7 @@ jobs:
               echo "Skipping existing pkl: $file"
             else
               # New file, add it
-              git add "$file"
+              git add "$file" 2>/dev/null || true
               echo "Added new pkl: $file"
             fi
           fi
@@ -393,8 +396,10 @@ jobs:
                       fi
                     done
                     
-                    # Re-add our changes
-                    git add signal_state/*.json memory/*.json logs/*.log
+                    # Re-add our changes (with error suppression)
+                    git add signal_state/*.json 2>/dev/null || true
+                    git add memory/*.json 2>/dev/null || true
+                    git add logs/*.log 2>/dev/null || true
                     git commit --amend --no-edit
                   }
                 }

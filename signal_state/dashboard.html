@@ -1,964 +1,283 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trade Beacon - Neural Command Center (LIVE)</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trade Beacon — Neural Command Center</title>
 
-        body {
-            font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #0a0a0f;
-            color: #fff;
-            overflow-x: hidden;
-            position: relative;
-        }
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-        .bg-canvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            opacity: 0.4;
-        }
+<style>
+:root{
+    --violet:#8b5cf6;
+    --pink:#ec4899;
+    --cyan:#06b6d4;
+    --green:#10b981;
+    --red:#ef4444;
+    --amber:#f59e0b;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+    font-family:'Space Grotesk',sans-serif;
+    background:#07070d;
+    color:#fff;
+    overflow-x:hidden;
+}
+canvas{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    opacity:.35;
+}
+.container{
+    position:relative;
+    z-index:1;
+    max-width:1900px;
+    margin:auto;
+    padding:36px;
+}
+.glass{
+    background:linear-gradient(135deg,rgba(139,92,246,.08),rgba(236,72,153,.05));
+    backdrop-filter:blur(28px);
+    border:1px solid rgba(139,92,246,.25);
+    border-radius:30px;
+}
+.header{
+    padding:44px;
+    margin-bottom:32px;
+}
+.header h1{
+    font-size:3.8rem;
+    background:linear-gradient(135deg,var(--violet),var(--pink),var(--cyan));
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+}
+.sub{
+    opacity:.75;
+    margin-top:10px;
+}
+.live{
+    margin-top:18px;
+    display:inline-flex;
+    align-items:center;
+    gap:12px;
+    padding:10px 22px;
+    border-radius:22px;
+    background:rgba(16,185,129,.15);
+    border:1px solid rgba(16,185,129,.4);
+}
+.dot{
+    width:10px;height:10px;border-radius:50%;
+    background:var(--green);
+    animation:pulse 1.4s infinite;
+}
+@keyframes pulse{50%{opacity:.3}}
 
-        .container {
-            position: relative;
-            z-index: 1;
-            max-width: 1800px;
-            margin: 0 auto;
-            padding: 30px;
-        }
-
-        .neural-header {
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1));
-            backdrop-filter: blur(30px);
-            border-radius: 32px;
-            padding: 40px;
-            margin-bottom: 30px;
-            border: 1px solid rgba(139, 92, 246, 0.2);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 40px;
-            flex-wrap: wrap;
-            position: relative;
-            z-index: 2;
-        }
-
-        .logo-section h1 {
-            font-size: 3.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #8b5cf6, #ec4899, #06b6d4);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 12px;
-            letter-spacing: -0.02em;
-        }
-
-        .logo-section p {
-            font-size: 1.1rem;
-            color: #a78bfa;
-            margin-bottom: 12px;
-        }
-
-        /* 3D Power Button */
-        .control-center {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .power-button-container {
-            position: relative;
-            width: 200px;
-            height: 200px;
-            perspective: 1200px;
-        }
-
-        .power-button {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            border: none;
-            cursor: pointer;
-            position: relative;
-            transform-style: preserve-3d;
-            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 
-                0 30px 80px rgba(0, 0, 0, 0.6),
-                inset 0 -10px 30px rgba(0, 0, 0, 0.3),
-                inset 0 10px 30px rgba(255, 255, 255, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 5rem;
-            transform: translateZ(0) rotateX(0deg);
-        }
-
-        .power-button.stopped {
-            background: linear-gradient(145deg, #10b981, #059669);
-            animation: pulse-green 2s infinite;
-        }
-
-        .power-button.running {
-            background: linear-gradient(145deg, #8b5cf6, #6d28d9);
-            animation: pulse-purple 1.5s infinite;
-        }
-
-        .power-button:hover {
-            transform: translateZ(30px) rotateX(5deg) scale(1.05);
-            box-shadow: 
-                0 40px 100px rgba(139, 92, 246, 0.8),
-                inset 0 -10px 30px rgba(0, 0, 0, 0.4),
-                inset 0 10px 40px rgba(255, 255, 255, 0.2);
-        }
-
-        .power-button:active {
-            transform: translateZ(10px) rotateX(-5deg) scale(0.95);
-            box-shadow: 
-                0 20px 50px rgba(139, 92, 246, 0.5),
-                inset 0 -5px 20px rgba(0, 0, 0, 0.5),
-                inset 0 5px 20px rgba(255, 255, 255, 0.15);
-            transition: all 0.1s ease;
-        }
-
-        .power-button.starting {
-            animation: startup-sequence 2s ease-out forwards;
-        }
-
-        @keyframes startup-sequence {
-            0% {
-                transform: translateZ(0) rotateX(0deg) scale(1);
-                box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
-            }
-            25% {
-                transform: translateZ(50px) rotateX(15deg) scale(1.1);
-                box-shadow: 0 50px 120px rgba(16, 185, 129, 0.9);
-            }
-            50% {
-                transform: translateZ(40px) rotateX(10deg) rotateY(180deg) scale(1.05);
-                box-shadow: 0 40px 100px rgba(139, 92, 246, 0.9);
-            }
-            75% {
-                transform: translateZ(30px) rotateX(5deg) rotateY(360deg) scale(1.02);
-                box-shadow: 0 35px 90px rgba(139, 92, 246, 0.8);
-            }
-            100% {
-                transform: translateZ(0) rotateX(0deg) rotateY(360deg) scale(1);
-                box-shadow: 0 30px 80px rgba(139, 92, 246, 0.6);
-            }
-        }
-
-        @keyframes pulse-green {
-            0%, 100% { 
-                box-shadow: 0 0 40px rgba(16, 185, 129, 0.6),
-                           0 0 80px rgba(16, 185, 129, 0.3),
-                           0 30px 80px rgba(0, 0, 0, 0.6),
-                           inset 0 -10px 30px rgba(0, 0, 0, 0.3),
-                           inset 0 10px 30px rgba(255, 255, 255, 0.1);
-            }
-            50% { 
-                box-shadow: 0 0 60px rgba(16, 185, 129, 0.8),
-                           0 0 120px rgba(16, 185, 129, 0.5),
-                           0 35px 90px rgba(0, 0, 0, 0.7),
-                           inset 0 -10px 35px rgba(0, 0, 0, 0.4),
-                           inset 0 10px 35px rgba(255, 255, 255, 0.15);
-            }
-        }
-
-        @keyframes pulse-purple {
-            0%, 100% { 
-                box-shadow: 0 0 40px rgba(139, 92, 246, 0.6),
-                           0 0 80px rgba(139, 92, 246, 0.3),
-                           0 30px 80px rgba(0, 0, 0, 0.6),
-                           inset 0 -10px 30px rgba(0, 0, 0, 0.3),
-                           inset 0 10px 30px rgba(255, 255, 255, 0.1);
-            }
-            50% { 
-                box-shadow: 0 0 60px rgba(139, 92, 246, 0.8),
-                           0 0 120px rgba(139, 92, 246, 0.5),
-                           0 35px 90px rgba(0, 0, 0, 0.7),
-                           inset 0 -10px 35px rgba(0, 0, 0, 0.4),
-                           inset 0 10px 35px rgba(255, 255, 255, 0.15);
-            }
-        }
-
-        .power-icon-3d {
-            filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.6));
-            position: relative;
-            z-index: 10;
-            transition: all 0.3s ease;
-        }
-
-        .power-button:hover .power-icon-3d {
-            filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.8));
-            transform: scale(1.1);
-        }
-
-        .power-button:active .power-icon-3d {
-            transform: scale(0.9);
-        }
-
-        .button-glow-ring {
-            position: absolute;
-            top: -20px;
-            left: -20px;
-            right: -20px;
-            bottom: -20px;
-            border-radius: 50%;
-            border: 3px solid;
-            opacity: 0;
-            animation: ring-pulse 2s infinite;
-            pointer-events: none;
-        }
-
-        .button-glow-ring.active {
-            border-color: rgba(139, 92, 246, 0.6);
-        }
-
-        .button-glow-ring.inactive {
-            border-color: rgba(16, 185, 129, 0.6);
-        }
-
-        @keyframes ring-pulse {
-            0% {
-                transform: scale(1);
-                opacity: 0.8;
-            }
-            50% {
-                transform: scale(1.1);
-                opacity: 0.4;
-            }
-            100% {
-                transform: scale(1.2);
-                opacity: 0;
-            }
-        }
-
-        .button-label {
-            font-size: 1.3rem;
-            font-weight: 700;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            text-align: center;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-        }
-
-        .live-indicator {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background: rgba(16, 185, 129, 0.2);
-            border-radius: 20px;
-            font-size: 0.9rem;
-            color: #6ee7b7;
-            font-weight: 600;
-            border: 1px solid rgba(16, 185, 129, 0.3);
-        }
-
-        .live-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #10b981;
-            animation: blink 1.5s infinite;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; box-shadow: 0 0 10px #10b981; }
-            50% { opacity: 0.3; box-shadow: 0 0 5px #10b981; }
-        }
-
-        .neural-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(236, 72, 153, 0.05));
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 28px;
-            border: 1px solid rgba(139, 92, 246, 0.15);
-            transition: all 0.4s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-6px);
-            border-color: rgba(139, 92, 246, 0.4);
-            box-shadow: 0 12px 40px rgba(139, 92, 246, 0.25);
-        }
-
-        .stat-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .stat-label {
-            font-size: 0.9rem;
-            color: #a78bfa;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            font-weight: 600;
-        }
-
-        .stat-value {
-            font-size: 3rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #fff, #a78bfa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        /* Error Messages */
-        .error-container {
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(185, 28, 28, 0.1));
-            border: 2px solid rgba(239, 68, 68, 0.4);
-            border-radius: 20px;
-            padding: 40px;
-            text-align: center;
-            margin: 40px 0;
-            backdrop-filter: blur(20px);
-        }
-
-        .error-icon {
-            font-size: 6rem;
-            margin-bottom: 20px;
-            animation: shake 0.5s ease-in-out;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-
-        .error-title {
-            font-size: 2rem;
-            color: #fca5a5;
-            margin-bottom: 16px;
-            font-weight: 700;
-        }
-
-        .error-description {
-            font-size: 1.1rem;
-            color: #fca5a5;
-            margin-bottom: 24px;
-            line-height: 1.6;
-        }
-
-        .error-help {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 12px;
-            padding: 20px;
-            margin: 20px 0;
-            text-align: left;
-        }
-
-        .error-help h4 {
-            color: #fbbf24;
-            margin-bottom: 12px;
-            font-size: 1.1rem;
-        }
-
-        .error-help ol, .error-help ul {
-            color: #d1d5db;
-            margin-left: 20px;
-        }
-
-        .error-help li {
-            margin: 8px 0;
-            line-height: 1.5;
-        }
-
-        .retry-button {
-            padding: 16px 40px;
-            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-            border: none;
-            border-radius: 16px;
-            color: white;
-            font-weight: 700;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
-            margin-top: 20px;
-        }
-
-        .retry-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 32px rgba(139, 92, 246, 0.6);
-        }
-
-        .retry-button:active {
-            transform: translateY(0);
-        }
-
-        .loading {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-        }
-
-        .spinner {
-            border: 4px solid rgba(139, 92, 246, 0.1);
-            border-radius: 50%;
-            border-top: 4px solid #8b5cf6;
-            width: 80px;
-            height: 80px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .signal-card {
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(0, 0, 0, 0.1));
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 32px;
-            border: 2px solid rgba(139, 92, 246, 0.3);
-            margin-bottom: 24px;
-            transition: all 0.3s ease;
-        }
-
-        .signal-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(139, 92, 246, 0.5);
-            box-shadow: 0 12px 40px rgba(139, 92, 246, 0.3);
-        }
-
-        .price-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin: 20px 0;
-        }
-
-        .price-box {
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 12px;
-            padding: 16px;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-
-        .price-box:hover {
-            background: rgba(255, 255, 255, 0.05);
-            transform: translateY(-2px);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            opacity: 0.6;
-        }
-
-        .section-header {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            margin-bottom: 32px;
-        }
-
-        .section-header h2 {
-            font-size: 2.2rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #06b6d4, #8b5cf6);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 20px;
-            }
-            
-            .logo-section h1 {
-                font-size: 2.5rem;
-            }
-            
-            .power-button-container {
-                width: 160px;
-                height: 160px;
-            }
-
-            .power-button {
-                font-size: 4rem;
-            }
-        }
-    </style>
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:24px;
+    margin-bottom:34px;
+}
+.card{
+    padding:30px;
+    border-radius:24px;
+    background:linear-gradient(135deg,rgba(255,255,255,.04),rgba(0,0,0,.2));
+    border:1px solid rgba(139,92,246,.25);
+}
+.card span{
+    font-size:.85rem;
+    opacity:.7;
+}
+.card h2{
+    font-size:3rem;
+    margin-top:10px;
+}
+.section{
+    padding:40px;
+    margin-bottom:34px;
+}
+.section h2{
+    font-size:2.2rem;
+    margin-bottom:24px;
+}
+.signal{
+    border:2px solid rgba(139,92,246,.35);
+    border-radius:24px;
+    padding:34px;
+    margin-bottom:24px;
+    transition:.3s;
+}
+.signal:hover{
+    transform:translateY(-4px);
+    box-shadow:0 20px 60px rgba(139,92,246,.35);
+}
+.signal-head{
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:20px;
+}
+.badge{
+    padding:6px 14px;
+    border-radius:999px;
+    font-weight:700;
+}
+.buy{background:var(--green)}
+.sell{background:var(--red)}
+.grid-3{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:16px;
+    margin-top:24px;
+}
+.box{
+    padding:18px;
+    border-radius:16px;
+    background:rgba(255,255,255,.04);
+    text-align:center;
+}
+.api{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:20px;
+}
+.bar{
+    height:10px;
+    border-radius:10px;
+    background:rgba(255,255,255,.1);
+    overflow:hidden;
+    margin-top:12px;
+}
+.fill{
+    height:100%;
+}
+footer{
+    text-align:center;
+    opacity:.6;
+    padding:40px;
+}
+</style>
 </head>
+
 <body>
-    <canvas class="bg-canvas" id="bgCanvas"></canvas>
 
-    <div class="container" id="app">
-        <div class="loading">
-            <div class="spinner"></div>
-            <h2 style="font-size: 1.8rem; background: linear-gradient(135deg, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                Connecting to Neural Network...
-            </h2>
-            <p style="color: #9ca3af; margin-top: 12px;">Establishing secure connection...</p>
-        </div>
-    </div>
+<canvas id="bg"></canvas>
+<div class="container" id="app"></div>
 
-    <script>
-        // Animated Background
-        const canvas = document.getElementById('bgCanvas');
-        const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+<script>
+/* ================= CONFIG ================= */
+const CONFIG = JSON.parse(localStorage.getItem("trade_beacon_config"));
+const BASE = `https://raw.githubusercontent.com/${CONFIG.username}/${CONFIG.repo}/${CONFIG.branch}/signal_state/`;
 
-        class Particle {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 2;
-                this.speedX = Math.random() * 0.5 - 0.25;
-                this.speedY = Math.random() * 0.5 - 0.25;
-            }
+/* ================= BACKGROUND ================= */
+const c=document.getElementById("bg"),x=c.getContext("2d");
+c.width=innerWidth;c.height=innerHeight;
+class P{constructor(){this.x=Math.random()*c.width;this.y=Math.random()*c.height;this.vx=Math.random()-.5;this.vy=Math.random()-.5;this.r=Math.random()*2}}
+const ps=[...Array(140)].map(()=>new P());
+function anim(){
+    x.clearRect(0,0,c.width,c.height);
+    ps.forEach(p=>{
+        p.x+=p.vx;p.y+=p.vy;
+        if(p.x<0)p.x=c.width;if(p.x>c.width)p.x=0;
+        if(p.y<0)p.y=c.height;if(p.y>c.height)p.y=0;
+        x.fillStyle="rgba(139,92,246,.6)";
+        x.beginPath();x.arc(p.x,p.y,p.r,0,Math.PI*2);x.fill();
+    });
+    requestAnimationFrame(anim);
+}
+anim();
 
-            update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                if (this.x > canvas.width) this.x = 0;
-                if (this.x < 0) this.x = canvas.width;
-                if (this.y > canvas.height) this.y = 0;
-                if (this.y < 0) this.y = canvas.height;
-            }
+/* ================= LOAD ALL STATE ================= */
+async function loadState(){
+    const [
+        system,
+        dashboard,
+        signals,
+        news,
+        price
+    ] = await Promise.all([
+        fetch(BASE+"system_state.json").then(r=>r.json()),
+        fetch(BASE+"dashboard_state.json").then(r=>r.json()),
+        fetch(BASE+"active_signals.json").then(r=>r.json()),
+        fetch(BASE+"news_api_calls.json").then(r=>r.json()),
+        fetch(BASE+"price_source_rotation.json").then(r=>r.json())
+    ]);
+    return {system,dashboard,signals,news,price};
+}
 
-            draw() {
-                ctx.fillStyle = 'rgba(139, 92, 246, 0.5)';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
+/* ================= RENDER ================= */
+function render(s){
+document.getElementById("app").innerHTML=`
+<div class="glass header">
+<h1>⚡ TRADE BEACON</h1>
+<div class="sub">${CONFIG.username}/${CONFIG.repo}</div>
+<div class="live"><div class="dot"></div>LIVE • Neural Sync</div>
+</div>
 
-        const particles = [];
-        for (let i = 0; i < 100; i++) {
-            particles.push(new Particle());
-        }
+<div class="grid">
+<div class="card"><span>SYSTEM</span><h2>${s.system.running?"LIVE":"HALTED"}</h2></div>
+<div class="card"><span>MODE</span><h2>${s.system.mode}</h2></div>
+<div class="card"><span>WIN RATE</span><h2>${s.dashboard.stats.win_rate.toFixed(1)}%</h2></div>
+<div class="card"><span>TOTAL PIPS</span><h2>${s.dashboard.stats.total_pips.toFixed(1)}</h2></div>
+</div>
 
-        function animateParticles() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(particle => {
-                particle.update();
-                particle.draw();
-            });
-            requestAnimationFrame(animateParticles);
-        }
-        animateParticles();
+<div class="glass section">
+<h2>🎯 Active Signals</h2>
+${s.signals.map(sig=>`
+<div class="signal">
+<div class="signal-head">
+<div>
+<h3>${sig.pair}</h3>
+<div class="badge ${sig.direction==="BUY"?"buy":"sell"}">${sig.direction}</div>
+<p>${sig.strategy} • ${(sig.confidence*100).toFixed(0)}%</p>
+</div>
+</div>
+<div class="grid-3">
+<div class="box">ENTRY<br><b>${sig.entry_price.toFixed(5)}</b></div>
+<div class="box">SL<br><b>${sig.sl.toFixed(5)}</b></div>
+<div class="box">TP<br><b>${sig.tp.toFixed(5)}</b></div>
+</div>
+</div>
+`).join("")}
+</div>
 
-        // LIVE DATA FETCHING
-        let dashboardData = null;
-        let systemRunning = false;
-        let isStarting = false;
+<div class="glass section">
+<h2>🔌 News API Load</h2>
+<div class="api">
+${Object.entries(s.news).map(([k,v])=>`
+<div class="card">
+<b>${k.toUpperCase()}</b>
+<div class="bar">
+<div class="fill" style="width:${(v.calls/v.limit)*100}%;background:${(v.calls/v.limit)>0.8?"var(--red)":"var(--green)"}"></div>
+</div>
+<p>${v.calls}/${v.limit} calls</p>
+</div>
+`).join("")}
+</div>
+</div>
 
-        async function fetchDashboardState() {
-            try {
-                const response = await fetch('signal_state/dashboard_state.json?t=' + Date.now());
-                
-                if (!response.ok) {
-                    throw new Error(`Connection failed (HTTP ${response.status})`);
-                }
-                
-                dashboardData = await response.json();
-                systemRunning = dashboardData.system_running || false;
-                return dashboardData;
-            } catch (error) {
-                console.error('Dashboard fetch error:', error);
-                
-                return {
-                    error: true,
-                    errorType: error.message.includes('HTTP 404') ? 'not_found' : 'connection',
-                    errorMessage: error.message,
-                    timestamp: new Date().toISOString(),
-                    system_running: false,
-                    active_signals: 0
-                };
-            }
-        }
+<div class="glass section">
+<h2>🌐 Price Source Rotation</h2>
+<p>Active Provider: <b>${s.price.active_provider}</b></p>
+<p>Queue: ${s.price.rotation_queue.join(" → ")}</p>
+</div>
 
-        async function toggleSystem() {
-            if (isStarting) return;
-            
-            const button = document.querySelector('.power-button');
-            if (!button) return;
+<footer>
+🚀 Trade Beacon Neural Engine — State-Driven Intelligence
+</footer>
+`;
+}
 
-            // Add starting animation
-            isStarting = true;
-            button.classList.add('starting');
-            
-            // Simulate startup sequence
-            setTimeout(() => {
-                button.classList.remove('starting');
-                isStarting = false;
-                
-                // Show instructional message
-                const modal = document.createElement('div');
-                modal.style.cssText = `
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0, 0, 0, 0.8);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 9999;
-                    backdrop-filter: blur(10px);
-                `;
-                
-                modal.innerHTML = `
-                    <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2)); backdrop-filter: blur(30px); border-radius: 24px; padding: 48px; max-width: 600px; border: 2px solid rgba(139, 92, 246, 0.4); text-align: center;">
-                        <div style="font-size: 5rem; margin-bottom: 24px;">⚙️</div>
-                        <h2 style="font-size: 2rem; margin-bottom: 20px; background: linear-gradient(135deg, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                            System Control Instructions
-                        </h2>
-                        <p style="color: #d1d5db; font-size: 1.1rem; margin-bottom: 24px; line-height: 1.6;">
-                            This dashboard is read-only and displays live data from your trading system.
-                        </p>
-                        <div style="background: rgba(0, 0, 0, 0.3); border-radius: 12px; padding: 24px; margin-bottom: 24px; text-align: left;">
-                            <h3 style="color: #fbbf24; margin-bottom: 16px; font-size: 1.2rem;">🎮 To Control the System:</h3>
-                            <ul style="color: #d1d5db; margin-left: 20px;">
-                                <li style="margin: 12px 0;"><strong>Option 1:</strong> Run the Python script directly on your machine</li>
-                                <li style="margin: 12px 0;"><strong>Option 2:</strong> Deploy with a backend API that handles system control</li>
-                                <li style="margin: 12px 0;"><strong>Option 3:</strong> Use GitHub Actions to automate trading cycles</li>
-                            </ul>
-                        </div>
-                        <p style="color: #9ca3af; font-size: 0.95rem; margin-bottom: 24px;">
-                            The system automatically updates this dashboard every 5 seconds with real-time data.
-                        </p>
-                        <button onclick="this.parentElement.parentElement.remove()" style="padding: 16px 40px; background: linear-gradient(135deg, #8b5cf6, #6d28d9); border: none; border-radius: 16px; color: white; font-weight: 700; font-size: 1.1rem; cursor: pointer; box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);">
-                            Got It! 👍
-                        </button>
-                    </div>
-                `;
-                
-                document.body.appendChild(modal);
-                modal.addEventListener('click', (e) => {
-                    if (e.target === modal) modal.remove();
-                });
-            }, 2000);
-        }
+/* ================= START ================= */
+(async()=>{
+    const state=await loadState();
+    render(state);
+    setInterval(async()=>{
+        render(await loadState());
+    },10000);
+})();
+</script>
 
-        function formatTime(dateString) {
-            if (!dateString) return 'N/A';
-            const date = new Date(dateString);
-            const now = new Date();
-            const diffMs = Math.abs(now - date);
-            const diffMins = Math.floor(diffMs / (1000 * 60));
-            const diffHours = Math.floor(diffMins / 60);
-            const diffDays = Math.floor(diffHours / 24);
-            
-            if (diffDays > 0) return `${diffDays}d ago`;
-            if (diffHours > 0) return `${diffHours}h ago`;
-            if (diffMins > 0) return `${diffMins}m ago`;
-            return 'Just now';
-        }
-
-        function renderDashboard(data) {
-            if (!data) {
-                document.getElementById('app').innerHTML = '<div class="loading"><div class="spinner"></div><h2>Loading data...</h2></div>';
-                return;
-            }
-
-            if (data.error) {
-                const isNotFound = data.errorType === 'not_found';
-                
-                document.getElementById('app').innerHTML = `
-                    <div class="neural-header">
-                        <div class="error-container">
-                            <div class="error-icon">${isNotFound ? '📂' : '⚠️'}</div>
-                            <h2 class="error-title">
-                                ${isNotFound ? 'Trading System Not Detected' : 'Connection Error'}
-                            </h2>
-                            <p class="error-description">
-                                ${isNotFound 
-                                    ? 'The trading system is not currently running or the dashboard data file is missing.' 
-                                    : `Unable to connect to the trading system: ${data.errorMessage}`
-                                }
-                            </p>
-                            
-                            <div class="error-help">
-                                <h4>🔧 Quick Setup Guide:</h4>
-                                <ol>
-                                    <li><strong>Run the Trading System:</strong> Execute <code>python trade_beacon.py</code> in your terminal</li>
-                                    <li><strong>Verify File Location:</strong> Ensure the system creates <code>signal_state/dashboard_state.json</code></li>
-                                    <li><strong>Check Configuration:</strong> Make sure all API keys are properly set in your environment</li>
-                                    <li><strong>Wait for Initialization:</strong> The system needs 30-60 seconds to start and generate the first data file</li>
-                                </ol>
-                            </div>
-
-                            <div class="error-help">
-                                <h4>📋 Troubleshooting Checklist:</h4>
-                                <ul>
-                                    <li>✓ Python script is running in the correct directory</li>
-                                    <li>✓ All required dependencies are installed (<code>pip install -r requirements.txt</code>)</li>
-                                    <li>✓ API keys are configured (Alpha Vantage, Browserless, Marketaux)</li>
-                                    <li>✓ File permissions allow creating the signal_state directory</li>
-                                    <li>✓ Your browser allows loading local JSON files (use a local server if needed)</li>
-                                </ul>
-                            </div>
-
-                            <p style="color: #9ca3af; font-size: 0.95rem; margin: 24px 0;">
-                                Need help? Check the <strong>README.md</strong> file or review the system logs in the <code>logs/</code> directory.
-                            </p>
-
-                            <button class="retry-button" onclick="location.reload()">
-                                🔄 Retry Connection
-                            </button>
-                        </div>
-                    </div>
-                `;
-                return;
-            }
-
-            const stats = data.stats || {};
-            const signals = data.signals || [];
-            const news = data.recent_news || [];
-            const events = data.upcoming_events_detail || [];
-            const learning = data.learning_stats || {};
-            const priceStats = data.price_rotation_stats || {};
-
-            const html = `
-                <!-- Neural Header -->
-                <div class="neural-header">
-                    <div class="header-content">
-                        <div class="logo-section">
-                            <h1>⚡ TRADE BEACON</h1>
-                            <p>Neural Command Center • AI-Powered Market Intelligence</p>
-                            <div class="live-indicator">
-                                <div class="live-dot"></div>
-                                LIVE SYSTEM • Auto-refresh: 5s
-                            </div>
-                        </div>
-                        
-                        <div class="control-center">
-                            <div class="power-button-container">
-                                <div class="button-glow-ring ${data.system_running ? 'active' : 'inactive'}"></div>
-                                <button class="power-button ${data.system_running ? 'running' : 'stopped'}" 
-                                        onclick="toggleSystem()"
-                                        title="Click for system control instructions">
-                                    <span class="power-icon-3d">
-                                        ${data.system_running ? '⏸' : '▶'}
-                                    </span>
-                                </button>
-                            </div>
-                            <div class="button-label" style="color: ${data.system_running ? '#8b5cf6' : '#10b981'}">
-                                ${data.system_running ? 'SYSTEM ACTIVE' : 'SYSTEM IDLE'}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Neural Stats -->
-                <div class="neural-stats">
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <div class="stat-label">System Status</div>
-                            <div style="font-size: 1.8rem;">🔮</div>
-                        </div>
-                        <div class="stat-value" style="color: ${data.system_running ? '#8b5cf6' : '#6b7280'}">
-                            ${data.system_running ? 'LIVE' : 'IDLE'}
-                        </div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <div class="stat-label">Uptime</div>
-                            <div style="font-size: 1.8rem;">⚡</div>
-                        </div>
-                        <div class="stat-value" style="color: #06b6d4;">
-                            ${(data.uptime_hours || 0).toFixed(1)}h
-                        </div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <div class="stat-label">Active Signals</div>
-                            <div style="font-size: 1.8rem;">🎯</div>
-                        </div>
-                        <div class="stat-value" style="color: #10b981;">
-                            ${data.active_signals}/5
-                        </div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <div class="stat-label">Win Rate</div>
-                            <div style="font-size: 1.8rem;">📈</div>
-                        </div>
-                        <div class="stat-value" style="color: #ec4899;">
-                            ${(stats.win_rate || 0).toFixed(1)}%
-                        </div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <div class="stat-label">Total Pips</div>
-                            <div style="font-size: 1.8rem;">💰</div>
-                        </div>
-                        <div class="stat-value" style="color: ${(stats.total_pips || 0) >= 0 ? '#10b981' : '#ef4444'}">
-                            ${(stats.total_pips || 0).toFixed(1)}
-                        </div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="stat-header">
-                            <div class="stat-label">News Feed</div>
-                            <div style="font-size: 1.8rem;">📰</div>
-                        </div>
-                        <div class="stat-value" style="color: #f59e0b;">
-                            ${data.news_count || 0}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Active Signals -->
-                <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(236, 72, 153, 0.05)); backdrop-filter: blur(30px); border-radius: 28px; padding: 40px; margin-bottom: 30px; border: 1px solid rgba(139, 92, 246, 0.2);">
-                    <div class="section-header">
-                        <span style="font-size: 2.5rem;">🎯</span>
-                        <h2>Active Trading Signals (${signals.length})</h2>
-                    </div>
-
-                    ${signals.length === 0 ? `
-                        <div class="empty-state">
-                            <div style="font-size: 5rem; margin-bottom: 20px;">🔍</div>
-                            <p style="color: #a78bfa; font-size: 1.3rem; margin-bottom: 12px; font-weight: 600;">
-                                Scanning Markets for High-Probability Setups
-                            </p>
-                            <p style="color: #9ca3af; font-size: 1rem;">
-                                The neural engine is analyzing technical indicators, news sentiment, and economic events across ${data.learning_stats?.pair_performance ? Object.keys(data.learning_stats.pair_performance).length : 6} currency pairs...
-                            </p>
-                        </div>
-                    ` : signals.map(signal => `
-                        <div class="signal-card">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 20px;">
-                                <div style="display: flex; align-items: center; gap: 16px;">
-                                    <div style="font-size: 3rem;">${signal.direction === 'BUY' ? '📈' : '📉'}</div>
-                                    <div>
-                                        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                                            <h3 style="font-size: 2rem; font-weight: 700;">${signal.pair}</h3>
-                                            <span style="padding: 6px 16px; background: ${signal.direction === 'BUY' ? '#10b981' : '#ef4444'}; border-radius: 8px; font-weight: 700; font-size: 0.9rem;">
-                                                ${signal.direction}
-                                            </span>
-                                            <span style="padding: 6px 12px; background: rgba(139, 92, 246, 0.2); border-radius: 8px; font-size: 0.85rem; color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.4);">
-                                                ${signal.strategy}
-                                            </span>
-                                        </div>
-                                        <div style="color: #9ca3af; font-size: 0.9rem; margin-top: 8px;">
-                                            Created: ${formatTime(signal.created_at)} • Status: <strong style="color: ${signal.status === 'ACTIVE' ? '#10b981' : '#f59e0b'}">${signal.status}</strong>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div style="text-align: center; background: linear-gradient(135deg, #8b5cf6, #6d28d9); padding: 12px 20px; border-radius: 12px; box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);">
-                                    <div style="font-size: 0.75rem; color: #c4b5fd; text-transform: uppercase;">Confidence</div>
-                                    <div style="font-size: 1.8rem; font-weight: 800;">${(signal.confidence * 100).toFixed(0)}%</div>
-                                </div>
-                            </div>
-
-                            <div class="price-grid">
-                                <div class="price-box" style="border: 2px solid rgba(59, 130, 246, 0.3);">
-                                    <div style="font-size: 0.75rem; color: #60a5fa; margin-bottom: 6px; text-transform: uppercase; font-weight: 600;">Entry Price</div>
-                                    <div style="font-size: 1.5rem; font-weight: 700; color: #3b82f6;">${signal.entry_price.toFixed(5)}</div>
-                                </div>
-                                <div class="price-box" style="border: 2px solid rgba(239, 68, 68, 0.3);">
-                                    <div style="font-size: 0.75rem; color: #fca5a5; margin-bottom: 6px; text-transform: uppercase; font-weight: 600;">Stop Loss</div>
-                                    <div style="font-size: 1.5rem; font-weight: 700; color: #ef4444;">${signal.sl.toFixed(5)}</div>
-                                    <div style="font-size: 0.85rem; color: #fca5a5; margin-top: 4px;">-${Math.abs(signal.entry_price - signal.sl).toFixed(5)} pips</div>
-                                </div>
-                                <div class="price-box" style="border: 2px solid rgba(16, 185, 129, 0.3);">
-                                    <div style="font-size: 0.75rem; color: #6ee7b7; margin-bottom: 6px; text-transform: uppercase; font-weight: 600;">Take Profit</div>
-                                    <div style="font-size: 1.5rem; font-weight: 700; color: #10b981;">${signal.tp.toFixed(5)}</div>
-                                    <div style="font-size: 0.85rem; color: #6ee7b7; margin-top: 4px;">+${Math.abs(signal.tp - signal.entry_price).toFixed(5)} pips</div>
-                                </div>
-                            </div>
-
-                            ${signal.confidence_factors && signal.confidence_factors.length > 0 ? `
-                                <div style="margin-top: 20px; background: rgba(16, 185, 129, 0.05); border-left: 4px solid #10b981; padding: 16px; border-radius: 8px;">
-                                    <div style="font-weight: 600; color: #6ee7b7; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
-                                        <span>✓</span> Key Confirmation Factors
-                                    </div>
-                                    ${signal.confidence_factors.slice(0, 5).map(factor => `
-                                        <div style="color: #d1d5db; font-size: 0.9rem; margin: 6px 0; display: flex; align-items: start; gap: 8px;">
-                                            <span style="color: #10b981; font-size: 1.1rem;">•</span>
-                                            <span>${factor}</span>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            ` : ''}
-                        </div>
-                    `).join('')}
-                </div>
-
-                <!-- Footer -->
-                <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(236, 72, 153, 0.05)); backdrop-filter: blur(30px); border-radius: 24px; padding: 32px; text-align: center; border: 1px solid rgba(139, 92, 246, 0.15);">
-                    <div style="font-size: 2.5rem; margin-bottom: 12px;">🚀</div>
-                    <h3 style="font-size: 1.6rem; margin-bottom: 8px; background: linear-gradient(135deg, #8b5cf6, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                        Powered by Trade Beacon Neural Engine
-                    </h3>
-                    <p style="color: #a78bfa; font-size: 0.95rem; margin: 8px 0;">
-                        AI-Driven • News-Aware • Calendar-Integrated • Self-Learning
-                    </p>
-                    <p style="color: #6b7280; font-size: 0.85rem; margin-top: 12px;">
-                        Last Sync: ${new Date(data.timestamp).toLocaleString()} • Total Trades: ${learning.total_trades || 0}
-                    </p>
-                    ${priceStats.total_calls > 0 ? `
-                        <p style="color: #6b7280; font-size: 0.85rem; margin-top: 8px;">
-                            Price API Calls: ${priceStats.total_calls} • Multi-Source Rotation Active
-                        </p>
-                    ` : ''}
-                </div>
-            `;
-
-            document.getElementById('app').innerHTML = html;
-        }
-
-        // Auto-refresh every 5 seconds
-        async function autoRefresh() {
-            const data = await fetchDashboardState();
-            renderDashboard(data);
-        }
-
-        // Initialize
-        window.addEventListener('DOMContentLoaded', () => {
-            autoRefresh();
-            setInterval(autoRefresh, 5000);
-        });
-
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        });
-    </script>
 </body>
 </html>

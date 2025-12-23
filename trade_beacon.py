@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-AI FOREX BRAIN - COMPLETE ELITE TRADING SYSTEM
-==============================================
+AI FOREX BRAIN - COMPLETE ELITE TRADING SYSTEM WITH STRICT API LIMITS
+======================================================================
 ✅ Single-file, production-ready
 ✅ Environment-aware (Colab/GHA/Local)
 ✅ Dashboard-controlled
@@ -11,6 +11,11 @@ AI FOREX BRAIN - COMPLETE ELITE TRADING SYSTEM
 ✅ Learning system with memory
 ✅ FIXED: Historical data fetching with proper symbol format
 ✅ FIXED: EconomicCalendar.get_upcoming_events() method signature
+✅ NEW: Strict API rate limiting for all services
+✅ NEW: Browserless resumes Jan 19th with 5 calls/day limit
+✅ NEW: Alpha Vantage 25 calls/day limit (Free tier: 500/day but conservative)
+✅ NEW: YFinance 100 calls/day limit (prevent abuse)
+✅ NEW: Marketaux 90 calls/day limit (Free tier: 100/day)
 """
 
 # ======================================================
@@ -226,7 +231,7 @@ else:
 # 🎯 SECTION 5: TRADE BEACON - Complete Trading System
 # ======================================================
 print("\n" + "=" * 70)
-print("🎯 LOADING TRADE BEACON SYSTEM...")
+print("🎯 LOADING TRADE BEACON SYSTEM WITH STRICT API LIMITS...")
 print("=" * 70)
 
 import json
@@ -250,6 +255,7 @@ DASHBOARD_STATE_FILE = STATE_DIR / "dashboard_state.json"
 LEARNING_MEMORY_FILE = MEMORY_DIR / "learning_memory.json"
 TRADE_HISTORY_FILE = MEMORY_DIR / "trade_history.json"
 PRICE_SOURCE_STATE_FILE = STATE_DIR / "price_source_rotation.json"
+API_RATE_LIMIT_FILE = STATE_DIR / "api_rate_limits.json"
 
 # Currency pairs
 PAIRS = ["EUR/USD", "GBP/USD", "USD/JPY", "AUD/USD", "USD/CAD", "NZD/USD"]
@@ -264,12 +270,35 @@ ATR_TP_MULT = 3.0
 MIN_CONFIDENCE = 0.72
 SIGNAL_CHECK_INTERVAL = 15
 
-# API Rate Limiting - Marketaux Free Tier: 100 requests/day
-NEWS_CHECK_INTERVAL = 900  # 15 minutes (96 calls/day max)
-CALENDAR_CHECK_INTERVAL = 3600  # 1 hour (24 calls/day max)
-MAX_NEWS_CALLS_PER_DAY = 90  # Leave buffer for calendar calls
-NEWS_CALL_COUNTER_FILE = STATE_DIR / "news_api_calls.json"
+# ============================================================================
+# STRICT API RATE LIMITING CONFIGURATION
+# ============================================================================
+API_LIMITS = {
+    'yfinance': {
+        'daily_limit': 100,
+        'description': 'YFinance (prevent abuse)',
+        'enabled': True
+    },
+    'alpha_vantage': {
+        'daily_limit': 25,
+        'description': 'Alpha Vantage (Free tier: 500/day, using 25 for safety)',
+        'enabled': True
+    },
+    'browserless': {
+        'daily_limit': 5,
+        'description': 'Browserless (5 calls/day after Jan 19)',
+        'enabled': False,  # Will be enabled on Jan 19, 2025
+        'enable_date': datetime(2025, 1, 19, 0, 0, 0, tzinfo=timezone.utc)
+    },
+    'marketaux': {
+        'daily_limit': 90,
+        'description': 'Marketaux (Free tier: 100/day, using 90 for safety)',
+        'enabled': True
+    }
+}
 
+NEWS_CHECK_INTERVAL = 900  # 15 minutes
+CALENDAR_CHECK_INTERVAL = 3600  # 1 hour
 PRICE_CACHE_DURATION = 60
 
 # Setup logging
@@ -287,16 +316,162 @@ if not MARKETAUX_API_KEY:
     logger.warning("⚠️ MARKETAUX_API_KEY not set - news features will be limited")
 
 # ============================================================================
-# PRICE SOURCE ROTATION MANAGER
+# CENTRALIZED API RATE LIMITER
+# ============================================================================
+class APIRateLimiter:
+    """Centralized API rate limiting for all services"""
+    
+    def __init__(self):
+        self.limits = API_LIMITS.copy()
+        self.calls = {}
+        self.last_reset_date = None
+        self.load_state()
+        self.check_browserless_enable()
+        
+    def load_state(self):
+        """Load API call counters from file"""
+        if API_RATE_LIMIT_FILE.exists():
+            try:
+                with open(API_RATE_LIMIT_FILE, 'r') as f:
+                    data = json.load(f)
+                    last_date = data.get('date')
+                    today = datetime.now(timezone.utc).date().isoformat()
+                    
+                    if last_date == today:
+                        self.calls = data.get('calls', {})
+                        self.last_reset_date = last_date
+                    else:
+                        # New day, reset counters
+                        self.reset_counters()
+            except:
+                self.reset_counters()
+        else:
+            self.reset_counters()
+    
+    def save_state(self):
+        """Save API call counters to file"""
+        with open(API_RATE_LIMIT_FILE, 'w') as f:
+            json.dump({
+                'date': datetime.now(timezone.utc).date().isoformat(),
+                'calls': self.calls,
+                'limits': self.limits,
+                'last_updated': datetime.now(timezone.utc).isoformat()
+            }, f, indent=2)
+    
+    def reset_counters(self):
+        """Reset daily counters"""
+        self.calls = {api: 0 for api in self.limits.keys()}
+        self.last_reset_date = datetime.now(timezone.utc).date().isoformat()
+        self.save_state()
+        logger.info("🔄 API rate limit counters reset for new day")
+    
+    def check_browserless_enable(self):
+        """Check if Browserless should be enabled on Jan 19, 2025"""
+        now = datetime.now(timezone.utc)
+        enable_date = self.limits['browserless']['enable_date']
+        
+        if now >= enable_date and not self.limits['browserless']['enabled']:
+            self.limits['browserless']['enabled'] = True
+            logger.info("✅ BROWSERLESS API ENABLED (Jan 19, 2025 reached)")
+            self.save_state()
+        elif now < enable_date:
+            logger.info(f"⏰ Browserless will be enabled on: {enable_date.strftime('%Y-%m-%d %H:%M UTC')}")
+    
+    def can_make_call(self, api_name: str) -> Tuple[bool, str]:
+        """Check if API call is allowed within limits"""
+        today = datetime.now(timezone.utc).date().isoformat()
+        
+        # Reset if new day
+        if self.last_reset_date != today:
+            self.reset_counters()
+        
+        # Check if API exists
+        if api_name not in self.limits:
+            return False, f"Unknown API: {api_name}"
+        
+        # Check if API is enabled
+        if not self.limits[api_name]['enabled']:
+            enable_date = self.limits[api_name].get('enable_date')
+            if enable_date:
+                return False, f"{api_name} disabled until {enable_date.strftime('%Y-%m-%d')}"
+            return False, f"{api_name} is disabled"
+        
+        # Check daily limit
+        current_calls = self.calls.get(api_name, 0)
+        limit = self.limits[api_name]['daily_limit']
+        
+        if current_calls >= limit:
+            return False, f"{api_name} daily limit reached ({current_calls}/{limit})"
+        
+        return True, f"OK ({current_calls}/{limit})"
+    
+    def record_call(self, api_name: str, success: bool = True):
+        """Record an API call"""
+        if api_name not in self.calls:
+            self.calls[api_name] = 0
+        
+        self.calls[api_name] += 1
+        self.save_state()
+        
+        current = self.calls[api_name]
+        limit = self.limits[api_name]['daily_limit']
+        percentage = (current / limit) * 100
+        
+        if success:
+            logger.debug(f"✅ {api_name}: {current}/{limit} ({percentage:.0f}%)")
+        else:
+            logger.debug(f"❌ {api_name} call failed: {current}/{limit} ({percentage:.0f}%)")
+        
+        # Warning when approaching limit
+        if percentage >= 80:
+            logger.warning(f"⚠️ {api_name} at {percentage:.0f}% of daily limit!")
+    
+    def get_stats(self) -> Dict:
+        """Get comprehensive API usage statistics"""
+        stats = {}
+        for api_name, config in self.limits.items():
+            current = self.calls.get(api_name, 0)
+            limit = config['daily_limit']
+            stats[api_name] = {
+                'enabled': config['enabled'],
+                'calls': current,
+                'limit': limit,
+                'remaining': limit - current,
+                'percentage': (current / limit * 100) if limit > 0 else 0,
+                'description': config['description']
+            }
+            if 'enable_date' in config and not config['enabled']:
+                stats[api_name]['enable_date'] = config['enable_date'].isoformat()
+        
+        return stats
+    
+    def get_summary(self) -> str:
+        """Get human-readable summary"""
+        lines = ["📊 API Usage Summary:"]
+        for api_name, stats in self.get_stats().items():
+            status = "✅" if stats['enabled'] else "❌"
+            lines.append(
+                f"{status} {api_name}: {stats['calls']}/{stats['limit']} "
+                f"({stats['percentage']:.0f}%) - {stats['description']}"
+            )
+            if 'enable_date' in stats:
+                lines.append(f"   ⏰ Enables: {stats['enable_date']}")
+        return "\n".join(lines)
+
+# Initialize global rate limiter
+api_limiter = APIRateLimiter()
+
+# ============================================================================
+# PRICE SOURCE ROTATION MANAGER (WITH STRICT LIMITS)
 # ============================================================================
 class PriceSourceRotation:
-    """Intelligent price source rotation"""
+    """Intelligent price source rotation with strict API limits"""
 
     def __init__(self):
         self.sources = {
-            'yfinance': {'weight': 10, 'calls': 0, 'failures': 0},
-            'alpha_vantage': {'weight': 20, 'calls': 0, 'failures': 0},
-            'browserless': {'weight': 5, 'calls': 0, 'failures': 0}
+            'yfinance': {'weight': 10, 'calls': 0, 'failures': 0, 'blocked': 0},
+            'alpha_vantage': {'weight': 20, 'calls': 0, 'failures': 0, 'blocked': 0},
+            'browserless': {'weight': 5, 'calls': 0, 'failures': 0, 'blocked': 0}
         }
         self.total_weight = 35
         self.cache = {}
@@ -320,21 +495,40 @@ class PriceSourceRotation:
                 'last_updated': datetime.now(timezone.utc).isoformat()
             }, f, indent=2)
 
-    def get_next_source(self) -> str:
-        total_calls = sum(s['calls'] for s in self.sources.values())
-
-        for source, stats in self.sources.items():
-            expected_calls = (stats['weight'] / self.total_weight) * total_calls if total_calls > 0 else 0
-            if stats['calls'] < expected_calls or total_calls == 0:
+    def get_next_source(self) -> Optional[str]:
+        """Get next available source respecting API limits"""
+        available_sources = []
+        
+        for source in ['yfinance', 'alpha_vantage', 'browserless']:
+            can_call, reason = api_limiter.can_make_call(source)
+            if can_call:
+                available_sources.append(source)
+            else:
+                logger.debug(f"⚠️ {source} unavailable: {reason}")
+        
+        if not available_sources:
+            logger.warning("❌ All API sources exhausted for today!")
+            return None
+        
+        # Weighted selection from available sources
+        total_calls = sum(self.sources[s]['calls'] for s in available_sources)
+        total_weight = sum(self.sources[s]['weight'] for s in available_sources)
+        
+        for source in available_sources:
+            expected_calls = (self.sources[source]['weight'] / total_weight) * total_calls if total_calls > 0 else 0
+            if self.sources[source]['calls'] < expected_calls or total_calls == 0:
                 return source
+        
+        return available_sources[0]
 
-        return 'yfinance'
-
-    def record_call(self, source: str, success: bool):
+    def record_call(self, source: str, success: bool, blocked: bool = False):
+        """Record call with blocking status"""
         if source in self.sources:
             self.sources[source]['calls'] += 1
             if not success:
                 self.sources[source]['failures'] += 1
+            if blocked:
+                self.sources[source]['blocked'] += 1
             self.save_state()
 
     def get_cached_price(self, pair: str) -> Optional[float]:
@@ -360,6 +554,7 @@ class PriceSourceRotation:
                     'calls': stats['calls'],
                     'percentage': (stats['calls'] / total_calls * 100) if total_calls > 0 else 0,
                     'failures': stats['failures'],
+                    'blocked': stats['blocked'],
                     'success_rate': ((stats['calls'] - stats['failures']) / stats['calls'] * 100)
                                    if stats['calls'] > 0 else 0
                 }
@@ -370,10 +565,16 @@ class PriceSourceRotation:
 price_rotation = PriceSourceRotation()
 
 # ============================================================================
-# MULTI-SOURCE PRICE FETCHER (LIVE PRICES)
+# MULTI-SOURCE PRICE FETCHER (WITH STRICT LIMITS)
 # ============================================================================
 def fetch_price_yfinance(pair: str) -> Optional[float]:
-    """Fetch live price from YFinance"""
+    """Fetch live price from YFinance with rate limiting"""
+    can_call, reason = api_limiter.can_make_call('yfinance')
+    if not can_call:
+        logger.debug(f"YFinance blocked: {reason}")
+        price_rotation.record_call('yfinance', False, blocked=True)
+        return None
+    
     try:
         symbol = pair.replace('/', '') + '=X'
         ticker = yf.Ticker(symbol)
@@ -381,15 +582,25 @@ def fetch_price_yfinance(pair: str) -> Optional[float]:
 
         if not data.empty:
             price = float(data['Close'].iloc[-1])
+            api_limiter.record_call('yfinance', True)
             logger.debug(f"📊 YFinance: {pair} = {price:.5f}")
             return price
+        else:
+            api_limiter.record_call('yfinance', False)
     except Exception as e:
+        api_limiter.record_call('yfinance', False)
         logger.debug(f"YFinance error for {pair}: {e}")
     return None
 
 def fetch_price_alpha_vantage(pair: str) -> Optional[float]:
-    """Fetch live price from Alpha Vantage"""
+    """Fetch live price from Alpha Vantage with rate limiting"""
     if not ALPHA_VANTAGE_KEY:
+        return None
+    
+    can_call, reason = api_limiter.can_make_call('alpha_vantage')
+    if not can_call:
+        logger.debug(f"Alpha Vantage blocked: {reason}")
+        price_rotation.record_call('alpha_vantage', False, blocked=True)
         return None
 
     try:
@@ -407,15 +618,25 @@ def fetch_price_alpha_vantage(pair: str) -> Optional[float]:
 
         if 'Realtime Currency Exchange Rate' in data:
             price = float(data['Realtime Currency Exchange Rate']['5. Exchange Rate'])
+            api_limiter.record_call('alpha_vantage', True)
             logger.debug(f"🔑 Alpha Vantage: {pair} = {price:.5f}")
             return price
+        else:
+            api_limiter.record_call('alpha_vantage', False)
     except Exception as e:
+        api_limiter.record_call('alpha_vantage', False)
         logger.debug(f"Alpha Vantage error for {pair}: {e}")
     return None
 
 def fetch_price_browserless(pair: str) -> Optional[float]:
-    """Fetch live price from X-Rates via Browserless"""
+    """Fetch live price from X-Rates via Browserless with rate limiting"""
     if not BROWSERLESS_TOKEN:
+        return None
+    
+    can_call, reason = api_limiter.can_make_call('browserless')
+    if not can_call:
+        logger.debug(f"Browserless blocked: {reason}")
+        price_rotation.record_call('browserless', False, blocked=True)
         return None
 
     try:
@@ -433,19 +654,29 @@ def fetch_price_browserless(pair: str) -> Optional[float]:
             match = re.search(r'ccOutputRslt[^>]*>([\d,.]+)', response.text)
             if match:
                 price = float(match.group(1).replace(",", ""))
+                api_limiter.record_call('browserless', True)
                 logger.debug(f"🌐 Browserless: {pair} = {price:.5f}")
                 return price
+            else:
+                api_limiter.record_call('browserless', False)
+        else:
+            api_limiter.record_call('browserless', False)
     except Exception as e:
+        api_limiter.record_call('browserless', False)
         logger.debug(f"Browserless error for {pair}: {e}")
     return None
 
 def fetch_live_price(pair: str) -> float:
-    """Fetch live price with intelligent source rotation"""
+    """Fetch live price with intelligent source rotation and strict limits"""
     cached_price = price_rotation.get_cached_price(pair)
     if cached_price:
         return cached_price
 
     source = price_rotation.get_next_source()
+    
+    if not source:
+        logger.warning(f"⚠️ All API sources exhausted, using historical data for {pair}")
+        return get_historical_price(pair)
 
     price = None
     if source == 'yfinance':
@@ -465,6 +696,10 @@ def fetch_live_price(pair: str) -> float:
     fallback_sources = [s for s in ['yfinance', 'alpha_vantage', 'browserless'] if s != source]
 
     for fallback in fallback_sources:
+        can_call, _ = api_limiter.can_make_call(fallback)
+        if not can_call:
+            continue
+            
         if fallback == 'yfinance':
             price = fetch_price_yfinance(pair)
         elif fallback == 'alpha_vantage':
@@ -519,7 +754,6 @@ def fetch_historical_data(pair: str, period: str = "5y", interval: str = "1d") -
 
     # Fetch fresh data
     try:
-        # CRITICAL FIX: Convert EUR/USD to EURUSD=X format
         symbol = pair.replace('/', '') + '=X'
         logger.info(f"📥 Fetching {period} data for {pair} (symbol: {symbol})...")
         
@@ -531,19 +765,15 @@ def fetch_historical_data(pair: str, period: str = "5y", interval: str = "1d") -
             auto_adjust=True
         )
 
-        # Check if data was returned
         if df is None or df.empty:
             logger.error(f"❌ No data returned for {pair} (symbol: {symbol})")
             return pd.DataFrame()
 
-        # CRITICAL FIX: Handle MultiIndex columns
         if isinstance(df.columns, pd.MultiIndex):
             df.columns = df.columns.get_level_values(0)
         
-        # Normalize column names to lowercase
         df.columns = [col.lower() if isinstance(col, str) else str(col).lower() for col in df.columns]
         
-        # Ensure required columns exist
         required_cols = ['open', 'high', 'low', 'close', 'volume']
         missing_cols = [col for col in required_cols if col not in df.columns]
         
@@ -552,7 +782,6 @@ def fetch_historical_data(pair: str, period: str = "5y", interval: str = "1d") -
             logger.error(f"Available columns: {list(df.columns)}")
             return pd.DataFrame()
         
-        # Save to cache
         df.to_pickle(cache_file)
         logger.info(f"✅ Fetched {len(df)} candles for {pair}")
         return df
@@ -711,85 +940,24 @@ class SystemController:
         return True, "Running normally"
 
 # ============================================================================
-# NEWS & SENTIMENT ANALYZER (WITH API RATE LIMITING)
+# NEWS & SENTIMENT ANALYZER (WITH STRICT API RATE LIMITING)
 # ============================================================================
 class NewsAnalyzer:
-    """Fetches and analyzes financial news + sentiment with API rate limiting"""
+    """Fetches and analyzes financial news + sentiment with strict API rate limiting"""
 
     def __init__(self):
         self.last_news_check = 0
         self.news_cache = []
         self.high_impact_events = []
-        self.api_calls_today = 0
-        self.last_reset_date = None
-        self.load_call_counter()
-
-    def load_call_counter(self):
-        """Load API call counter from file"""
-        if NEWS_CALL_COUNTER_FILE.exists():
-            try:
-                with open(NEWS_CALL_COUNTER_FILE, 'r') as f:
-                    data = json.load(f)
-                    last_date = data.get('date')
-                    today = datetime.now(timezone.utc).date().isoformat()
-                    
-                    if last_date == today:
-                        self.api_calls_today = data.get('calls', 0)
-                        self.last_reset_date = last_date
-                    else:
-                        # New day, reset counter
-                        self.api_calls_today = 0
-                        self.last_reset_date = today
-                        self.save_call_counter()
-            except:
-                self.reset_counter()
-        else:
-            self.reset_counter()
-
-    def save_call_counter(self):
-        """Save API call counter to file"""
-        with open(NEWS_CALL_COUNTER_FILE, 'w') as f:
-            json.dump({
-                'date': datetime.now(timezone.utc).date().isoformat(),
-                'calls': self.api_calls_today,
-                'last_updated': datetime.now(timezone.utc).isoformat()
-            }, f, indent=2)
-
-    def reset_counter(self):
-        """Reset daily counter"""
-        self.api_calls_today = 0
-        self.last_reset_date = datetime.now(timezone.utc).date().isoformat()
-        self.save_call_counter()
-
-    def can_make_api_call(self) -> bool:
-        """Check if we can make an API call within daily limit"""
-        today = datetime.now(timezone.utc).date().isoformat()
-        
-        # Reset counter if new day
-        if self.last_reset_date != today:
-            self.reset_counter()
-        
-        # Check if under limit
-        if self.api_calls_today >= MAX_NEWS_CALLS_PER_DAY:
-            logger.warning(f"⚠️ Marketaux API daily limit reached ({self.api_calls_today}/{MAX_NEWS_CALLS_PER_DAY})")
-            return False
-        
-        return True
-
-    def increment_call_counter(self):
-        """Increment API call counter"""
-        self.api_calls_today += 1
-        self.save_call_counter()
-        logger.debug(f"📊 Marketaux API calls today: {self.api_calls_today}/{MAX_NEWS_CALLS_PER_DAY}")
 
     def fetch_news(self) -> List[Dict]:
-        """Fetch news with rate limiting"""
+        """Fetch news with strict rate limiting"""
         if not MARKETAUX_API_KEY:
-            # No API key - silently return empty cache
             return self.news_cache
 
-        if not self.can_make_api_call():
-            # Daily limit reached - use cache silently
+        can_call, reason = api_limiter.can_make_call('marketaux')
+        if not can_call:
+            logger.debug(f"Marketaux blocked: {reason}")
             return self.news_cache
 
         try:
@@ -807,22 +975,17 @@ class NewsAnalyzer:
             if response.status_code == 200:
                 data = response.json()
                 self.news_cache = data.get('data', [])
-                self.increment_call_counter()
+                api_limiter.record_call('marketaux', True)
                 self.last_news_check = time.time()
-                logger.info(f"📰 Fetched {len(self.news_cache)} news articles (API call {self.api_calls_today}/{MAX_NEWS_CALLS_PER_DAY})")
+                logger.info(f"📰 Fetched {len(self.news_cache)} news articles")
                 return self.news_cache
-            elif response.status_code == 402:
-                # Payment required - disable further attempts
-                logger.warning("⚠️ Marketaux API requires payment - disabling news features")
-                self.api_calls_today = MAX_NEWS_CALLS_PER_DAY  # Max out counter to stop calls
-                self.last_news_check = time.time()
-                return self.news_cache
-            elif response.status_code == 429:
-                # Rate limit - stop calling for now
+            elif response.status_code in [402, 429]:
+                api_limiter.record_call('marketaux', False)
+                logger.warning(f"⚠️ Marketaux API error: {response.status_code}")
                 self.last_news_check = time.time()
                 return self.news_cache
             else:
-                # Other error - stop calling for now
+                api_limiter.record_call('marketaux', False)
                 self.last_news_check = time.time()
                 return self.news_cache
                 
@@ -869,8 +1032,7 @@ class NewsAnalyzer:
             'positive_count': positive_count,
             'negative_count': negative_count,
             'relevant_news': relevant_news[:3],
-            'total_news': len(self.news_cache),
-            'api_calls_used': f"{self.api_calls_today}/{MAX_NEWS_CALLS_PER_DAY}"
+            'total_news': len(self.news_cache)
         }
 
     def check_high_impact_news(self) -> List[Dict]:
@@ -908,28 +1070,23 @@ class NewsAnalyzer:
         return high_impact
 
 # ============================================================================
-# ECONOMIC CALENDAR (WITH API RATE LIMITING) - FIXED
+# ECONOMIC CALENDAR (WITH STRICT API RATE LIMITING) - FIXED
 # ============================================================================
 class EconomicCalendar:
-    """Tracks economic events and their impact with API rate limiting"""
+    """Tracks economic events and their impact with strict API rate limiting"""
 
     def __init__(self):
         self.events = []
         self.last_check = 0
-        self.api_calls_today = 0
-
-    def can_make_api_call(self, news_analyzer: NewsAnalyzer) -> bool:
-        """Check combined API limit with news analyzer"""
-        return news_analyzer.can_make_api_call()
 
     def fetch_calendar(self, news_analyzer: NewsAnalyzer) -> List[Dict]:
-        """Fetch calendar with rate limiting"""
+        """Fetch calendar with strict rate limiting"""
         if not MARKETAUX_API_KEY:
-            # No API key - silently return empty cache
             return self.events
 
-        if not self.can_make_api_call(news_analyzer):
-            # Daily limit reached - use cache silently
+        can_call, reason = api_limiter.can_make_call('marketaux')
+        if not can_call:
+            logger.debug(f"Marketaux calendar blocked: {reason}")
             return self.events
 
         try:
@@ -962,21 +1119,15 @@ class EconomicCalendar:
 
                 self.events = events
                 self.last_check = time.time()
-                news_analyzer.increment_call_counter()
-                logger.info(f"📅 Fetched {len(events)} economic events (API call {news_analyzer.api_calls_today}/{MAX_NEWS_CALLS_PER_DAY})")
+                api_limiter.record_call('marketaux', True)
+                logger.info(f"📅 Fetched {len(events)} economic events")
                 return events
-            elif response.status_code == 402:
-                # Payment required - disable further attempts
-                logger.warning("⚠️ Marketaux API requires payment - disabling calendar features")
-                news_analyzer.api_calls_today = MAX_NEWS_CALLS_PER_DAY  # Max out counter
-                self.last_check = time.time()
-                return self.events
-            elif response.status_code == 429:
-                # Rate limit - stop calling
+            elif response.status_code in [402, 429]:
+                api_limiter.record_call('marketaux', False)
                 self.last_check = time.time()
                 return self.events
             else:
-                # Other error - stop calling
+                api_limiter.record_call('marketaux', False)
                 self.last_check = time.time()
                 return self.events
                 
@@ -1535,11 +1686,11 @@ def save_dashboard_state(controller, signal_manager, news_analyzer, calendar, me
         'system_running': controller.is_running,
         'uptime_hours': uptime_hours,
         'news_count': len(news_analyzer.news_cache),
-        'upcoming_events': len(calendar.get_upcoming_events(news_analyzer)),  # FIXED: Pass news_analyzer
+        'upcoming_events': len(calendar.get_upcoming_events(news_analyzer)),
         'high_impact_news': len(news_analyzer.high_impact_events),
         'active_signals': len(signal_manager.active_signals),
         'recent_news': news_analyzer.news_cache[:10],
-        'upcoming_events_detail': calendar.get_upcoming_events(news_analyzer),  # FIXED: Pass news_analyzer
+        'upcoming_events_detail': calendar.get_upcoming_events(news_analyzer),
         'signals': [s.to_dict() for s in signal_manager.active_signals],
         'learning_stats': {
             'total_trades': len(memory.trade_history),
@@ -1548,7 +1699,8 @@ def save_dashboard_state(controller, signal_manager, news_analyzer, calendar, me
             'learned_params': memory.memory['learned_adjustments']
         },
         'stats': signal_manager.get_stats(),
-        'price_rotation_stats': price_rotation.get_stats()
+        'price_rotation_stats': price_rotation.get_stats(),
+        'api_usage': api_limiter.get_stats()
     }
 
     with open(DASHBOARD_STATE_FILE, 'w') as f:
@@ -1560,13 +1712,15 @@ def save_dashboard_state(controller, signal_manager, news_analyzer, calendar, me
 def main():
     """Main system loop - Runs for 4.5 hours then exits"""
     logger.info("=" * 80)
-    logger.info("🎯 TRADE BEACON - 4.5 HOUR CYCLE MODE (FREE TIER OPTIMIZED)")
+    logger.info("🎯 TRADE BEACON - STRICT API LIMITS MODE")
     logger.info("=" * 80)
     logger.info(f"📊 Pairs: {', '.join(PAIRS)}")
     logger.info(f"🎯 Max signals: {MAX_ACTIVE_SIGNALS}")
     logger.info(f"📈 Min confidence: {MIN_CONFIDENCE*100:.0f}%")
     logger.info(f"⏰ Run Duration: 4.5 hours")
     logger.info(f"📅 Active: Monday-Friday only")
+    logger.info("=" * 80)
+    logger.info(api_limiter.get_summary())
     logger.info("=" * 80)
 
     now = datetime.now(timezone.utc)
@@ -1578,9 +1732,7 @@ def main():
         logger.info("=" * 80)
         return
     
-    holidays = [
-        (1, 1), (12, 25), (12, 26), (7, 4), (11, 11),
-    ]
+    holidays = [(1, 1), (12, 25), (12, 26), (7, 4), (11, 11)]
     
     if (now.month, now.day) in holidays:
         logger.info("=" * 80)
@@ -1606,12 +1758,12 @@ def main():
         logger.info("✅ System initialized - waiting for dashboard START")
 
     logger.info(f"⏰ Will run until: {datetime.fromtimestamp(end_time, timezone.utc).strftime('%H:%M UTC')}")
-    logger.info(f"📊 Monthly usage: ~360 hours (well within 2,000 min free tier)")
     logger.info("📱 Dashboard: signal_state/dashboard_state.json")
 
     last_signal_check = time.time()
     signal_pair_index = 0
     cycle_count = 0
+    last_api_stats_display = time.time()
 
     while True:
         current_time = time.time()
@@ -1626,12 +1778,22 @@ def main():
             stats = signal_manager.get_stats()
             logger.info(f"📈 Win Rate: {stats['win_rate']:.1f}% | Total Pips: {stats['total_pips']:.1f}")
             logger.info(f"🏆 Wins: {stats['wins']} | Losses: {stats['losses']}")
+            logger.info("=" * 80)
+            logger.info(api_limiter.get_summary())
+            logger.info("=" * 80)
             logger.info("🛑 Exiting... Next cycle starts in ~1.5 hours")
             logger.info("=" * 80)
             
             controller.stop()
             save_dashboard_state(controller, signal_manager, news_analyzer, calendar, memory)
             break
+
+        # Display API stats every 30 minutes
+        if current_time - last_api_stats_display >= 1800:
+            logger.info("\n" + "=" * 70)
+            logger.info(api_limiter.get_summary())
+            logger.info("=" * 70)
+            last_api_stats_display = current_time
 
         if int(elapsed_hours) > int((current_time - 300 - start_time) / 3600):
             logger.info(f"⏰ Running for {elapsed_hours:.1f}hrs | {remaining_minutes:.0f}min remaining | Signals: {len(signal_manager.active_signals)}")
@@ -1663,15 +1825,14 @@ def main():
 
         signal_manager.update_signal_outcomes(memory)
 
-        # FIXED: Only check news/calendar at proper intervals, not every loop iteration
         current_time_mod_news = int(current_time) % NEWS_CHECK_INTERVAL
         current_time_mod_calendar = int(current_time) % CALENDAR_CHECK_INTERVAL
         
-        if current_time_mod_news < 5:  # Within 5 seconds of interval
+        if current_time_mod_news < 5:
             if time.time() - news_analyzer.last_news_check > NEWS_CHECK_INTERVAL:
                 news_analyzer.fetch_news()
 
-        if current_time_mod_calendar < 5:  # Within 5 seconds of interval
+        if current_time_mod_calendar < 5:
             if time.time() - calendar.last_check > CALENDAR_CHECK_INTERVAL:
                 calendar.fetch_calendar(news_analyzer)
 
@@ -1698,15 +1859,21 @@ def main():
 # 🚀 STARTUP CONTROL
 # ======================================================
 print("\n" + "=" * 70)
-print("✅ TRADE BEACON LOADED SUCCESSFULLY")
+print("✅ TRADE BEACON LOADED SUCCESSFULLY - STRICT API LIMITS")
 print("=" * 70)
 print(f"📊 Monitoring {len(PAIRS)} currency pairs")
 print(f"🎯 Maximum {MAX_ACTIVE_SIGNALS} concurrent signals")
 print(f"🧠 Learning system enabled")
 print(f"📰 News & calendar integration active")
 print(f"🔄 Multi-source price rotation enabled")
-print(f"🔧 FIXED: Historical data fetching with proper yfinance symbols")
-print(f"🔧 FIXED: EconomicCalendar.get_upcoming_events() method signature")
+print("=" * 70)
+print("🔒 STRICT API RATE LIMITS ENFORCED:")
+print(f"   • YFinance: {API_LIMITS['yfinance']['daily_limit']} calls/day")
+print(f"   • Alpha Vantage: {API_LIMITS['alpha_vantage']['daily_limit']} calls/day")
+print(f"   • Browserless: {API_LIMITS['browserless']['daily_limit']} calls/day (from Jan 19, 2025)")
+print(f"   • Marketaux: {API_LIMITS['marketaux']['daily_limit']} calls/day")
+print("=" * 70)
+print(api_limiter.get_summary())
 print("=" * 70)
 
 if __name__ == "__main__":

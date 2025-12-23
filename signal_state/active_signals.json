@@ -1,38 +1,37 @@
 [
   {
-    "id": "USD/CAD_1766165417",
+    "id": "USD/CAD_1766459979",
     "pair": "USD/CAD",
     "direction": "SELL",
-    "entry_price": 1.3784,
-    "sl": 1.3900314036505563,
-    "tp": 1.3609528945241656,
-    "created_at": "2025-12-19T17:30:17.361632+00:00",
-    "expires_at": "2025-12-19T21:30:17.361632+00:00",
+    "entry_price": 1.3735500574111938,
+    "sl": 1.385547161102295,
+    "tp": 1.3555544018745422,
+    "created_at": "2025-12-23T03:19:39.294945+00:00",
+    "expires_at": "2025-12-23T07:19:39.294945+00:00",
     "status": "ACTIVE",
-    "confidence": 0.8866666666666666,
+    "confidence": 0.95,
     "strategy": "MEAN_REVERSION",
     "indicators": {
-      "rsi": 24.109146897979457,
-      "adx": 55.007536479475064,
-      "macd_histogram": -0.00137153500276967,
-      "stochastic_k": 20.267749092375958,
-      "bb_position": 0.25891883282094424,
-      "ema12": 1.3827541399529422,
-      "ema26": 1.389430754041482,
-      "ema200": 1.3911030043433943
+      "rsi": 17.566830372147294,
+      "adx": 63.12992395822395,
+      "macd_histogram": -0.000936722498569114,
+      "stochastic_k": 2.1606438193728983,
+      "bb_position": 0.19667690241042435,
+      "ema12": 1.3807354633633335,
+      "ema26": 1.3874730943151052,
+      "ema200": 1.3907989960323166
     },
     "patterns": [],
     "confidence_factors": [
       "Strong downtrend (EMA 12<26<50)",
       "Below 200 EMA (long-term bear)",
-      "Stochastic bullish crossover",
       "Price near lower Bollinger (reversal)",
-      "ADX trend strength (55.0)"
+      "ADX trend strength (63.1)"
     ],
     "scores": {
-      "bullish": 30,
+      "bullish": 20,
       "bearish": 55,
-      "edge": 25
+      "edge": 35
     },
     "sentiment": {
       "score": 0.0,
@@ -58,8 +57,7 @@
           "source": "seekingalpha.com"
         }
       ],
-      "total_news": 3,
-      "api_calls_used": "38/90"
+      "total_news": 3
     },
     "news_context": {
       "relevant_news_count": 3,
@@ -70,33 +68,33 @@
     "outcome_pips": 0.0
   },
   {
-    "id": "EUR/USD_1766165479",
+    "id": "EUR/USD_1766460009",
     "pair": "EUR/USD",
     "direction": "BUY",
-    "entry_price": 1.1721,
-    "sl": 1.161430530166626,
-    "tp": 1.188104204750061,
-    "created_at": "2025-12-19T17:31:19.742602+00:00",
-    "expires_at": "2025-12-19T21:31:19.742602+00:00",
+    "entry_price": 1.085,
+    "sl": 1.07383090700422,
+    "tp": 1.1017536394936698,
+    "created_at": "2025-12-23T03:20:09.369293+00:00",
+    "expires_at": "2025-12-23T07:20:09.369293+00:00",
     "status": "ACTIVE",
     "confidence": 0.95,
     "strategy": "MEAN_REVERSION",
     "indicators": {
-      "rsi": 70.95616146527925,
-      "adx": 37.55494762449304,
-      "macd_histogram": 0.0010467052745682646,
-      "stochastic_k": 58.319444131624586,
-      "bb_position": 0.722769871365421,
-      "ema12": 1.1698694491749186,
-      "ema26": 1.1659346798749022,
-      "ema200": 1.1460326177592564
+      "rsi": 73.052617696658,
+      "adx": 42.46124041298681,
+      "macd_histogram": 0.0008273533341559463,
+      "stochastic_k": 86.07622264836239,
+      "bb_position": 0.9056793574279679,
+      "ema12": 1.171321955416204,
+      "ema26": 1.1672105668867445,
+      "ema200": 1.1466023251127313
     },
     "patterns": [],
     "confidence_factors": [
       "Strong uptrend (EMA 12>26>50)",
       "Above 200 EMA (long-term bull)",
       "Price near upper Bollinger (reversal)",
-      "ADX trend strength (37.6)"
+      "ADX trend strength (42.5)"
     ],
     "scores": {
       "bullish": 55,
@@ -127,8 +125,7 @@
           "source": "seekingalpha.com"
         }
       ],
-      "total_news": 3,
-      "api_calls_used": "38/90"
+      "total_news": 3
     },
     "news_context": {
       "relevant_news_count": 3,
@@ -139,172 +136,33 @@
     "outcome_pips": 0.0
   },
   {
-    "id": "AUD/USD_1766165525",
-    "pair": "AUD/USD",
+    "id": "GBP/USD_1766460024",
+    "pair": "GBP/USD",
     "direction": "BUY",
-    "entry_price": 0.6616,
-    "sl": 0.6537115636825561,
-    "tp": 0.6734326544761657,
-    "created_at": "2025-12-19T17:32:05.083226+00:00",
-    "expires_at": "2025-12-19T21:32:05.083226+00:00",
-    "status": "ACTIVE",
-    "confidence": 0.9199999999999999,
-    "strategy": "TREND_FOLLOWING",
-    "indicators": {
-      "rsi": 62.15446117989683,
-      "adx": 56.12967752529626,
-      "macd_histogram": -3.427259585960093e-05,
-      "stochastic_k": 49.14666450542372,
-      "bb_position": 0.5836498723754492,
-      "ema12": 0.6615654301636957,
-      "ema26": 0.6587933026287743,
-      "ema200": 0.6517163819190983
-    },
-    "patterns": [],
-    "confidence_factors": [
-      "Strong uptrend (EMA 12>26>50)",
-      "Above 200 EMA (long-term bull)",
-      "RSI bearish zone (62.2)",
-      "ADX trend strength (56.1)"
-    ],
-    "scores": {
-      "bullish": 50,
-      "bearish": 20,
-      "edge": 30
-    },
-    "sentiment": {
-      "score": 0.0,
-      "positive_count": 0,
-      "negative_count": 0,
-      "relevant_news": [
-        {
-          "title": "USD: Amplified Exposure To The Semiconductor Industry (NYSEARCA:USD)",
-          "sentiment": "neutral",
-          "published": "2025-11-17T21:24:15.000000Z",
-          "source": "seekingalpha.com"
-        },
-        {
-          "title": "Is ProShares Ultra Semiconductors (USD) the Best Performing ETF of the Last 5 Years?",
-          "sentiment": "neutral",
-          "published": "2025-02-23T03:55:49.000000Z",
-          "source": "insidermonkey.com"
-        },
-        {
-          "title": "USD: Capitalizing On AI And Semiconductor Growth With 2x Leverage (NYSEARCA:USD)",
-          "sentiment": "neutral",
-          "published": "2025-02-01T12:43:33.000000Z",
-          "source": "seekingalpha.com"
-        }
-      ],
-      "total_news": 3,
-      "api_calls_used": "38/90"
-    },
-    "news_context": {
-      "relevant_news_count": 3,
-      "sentiment_score": 0.0
-    },
-    "outcome": null,
-    "outcome_time": null,
-    "outcome_pips": 0.0
-  },
-  {
-    "id": "USD/CAD_1766165540",
-    "pair": "USD/CAD",
-    "direction": "SELL",
-    "entry_price": 1.3782999515533447,
-    "sl": 1.389931355203901,
-    "tp": 1.3608528460775102,
-    "created_at": "2025-12-19T17:32:20.211639+00:00",
-    "expires_at": "2025-12-19T21:32:20.211639+00:00",
-    "status": "ACTIVE",
-    "confidence": 0.8866666666666666,
-    "strategy": "MEAN_REVERSION",
-    "indicators": {
-      "rsi": 24.109146897979457,
-      "adx": 55.007536479475064,
-      "macd_histogram": -0.00137153500276967,
-      "stochastic_k": 20.267749092375958,
-      "bb_position": 0.25891883282094424,
-      "ema12": 1.3827541399529422,
-      "ema26": 1.389430754041482,
-      "ema200": 1.3911030043433943
-    },
-    "patterns": [],
-    "confidence_factors": [
-      "Strong downtrend (EMA 12<26<50)",
-      "Below 200 EMA (long-term bear)",
-      "Stochastic bullish crossover",
-      "Price near lower Bollinger (reversal)",
-      "ADX trend strength (55.0)"
-    ],
-    "scores": {
-      "bullish": 30,
-      "bearish": 55,
-      "edge": 25
-    },
-    "sentiment": {
-      "score": 0.0,
-      "positive_count": 0,
-      "negative_count": 0,
-      "relevant_news": [
-        {
-          "title": "USD: Amplified Exposure To The Semiconductor Industry (NYSEARCA:USD)",
-          "sentiment": "neutral",
-          "published": "2025-11-17T21:24:15.000000Z",
-          "source": "seekingalpha.com"
-        },
-        {
-          "title": "Is ProShares Ultra Semiconductors (USD) the Best Performing ETF of the Last 5 Years?",
-          "sentiment": "neutral",
-          "published": "2025-02-23T03:55:49.000000Z",
-          "source": "insidermonkey.com"
-        },
-        {
-          "title": "USD: Capitalizing On AI And Semiconductor Growth With 2x Leverage (NYSEARCA:USD)",
-          "sentiment": "neutral",
-          "published": "2025-02-01T12:43:33.000000Z",
-          "source": "seekingalpha.com"
-        }
-      ],
-      "total_news": 3,
-      "api_calls_used": "38/90"
-    },
-    "news_context": {
-      "relevant_news_count": 3,
-      "sentiment_score": 0.0
-    },
-    "outcome": null,
-    "outcome_time": null,
-    "outcome_pips": 0.0
-  },
-  {
-    "id": "EUR/USD_1766165570",
-    "pair": "EUR/USD",
-    "direction": "BUY",
-    "entry_price": 1.1721,
-    "sl": 1.161430530166626,
-    "tp": 1.188104204750061,
-    "created_at": "2025-12-19T17:32:50.395978+00:00",
-    "expires_at": "2025-12-19T21:32:50.395978+00:00",
+    "entry_price": 1.265,
+    "sl": 1.24886778150286,
+    "tp": 1.28919832774571,
+    "created_at": "2025-12-23T03:20:24.409623+00:00",
+    "expires_at": "2025-12-23T07:20:24.409623+00:00",
     "status": "ACTIVE",
     "confidence": 0.95,
     "strategy": "MEAN_REVERSION",
     "indicators": {
-      "rsi": 70.95616146527925,
-      "adx": 37.55494762449304,
-      "macd_histogram": 0.0010467052745682646,
-      "stochastic_k": 58.319444131624586,
-      "bb_position": 0.722769871365421,
-      "ema12": 1.1698694491749186,
-      "ema26": 1.1659346798749022,
-      "ema200": 1.1460326177592564
+      "rsi": 74.98472423342753,
+      "adx": 56.61239962063114,
+      "macd_histogram": 0.0012348061035972017,
+      "stochastic_k": 99.62356832543443,
+      "bb_position": 0.9736004817982046,
+      "ema12": 1.3373279552513577,
+      "ema26": 1.3319037646639802,
+      "ema200": 1.3264971173566593
     },
     "patterns": [],
     "confidence_factors": [
       "Strong uptrend (EMA 12>26>50)",
       "Above 200 EMA (long-term bull)",
       "Price near upper Bollinger (reversal)",
-      "ADX trend strength (37.6)"
+      "ADX trend strength (56.6)"
     ],
     "scores": {
       "bullish": 55,
@@ -335,8 +193,143 @@
           "source": "seekingalpha.com"
         }
       ],
-      "total_news": 3,
-      "api_calls_used": "38/90"
+      "total_news": 3
+    },
+    "news_context": {
+      "relevant_news_count": 3,
+      "sentiment_score": 0.0
+    },
+    "outcome": null,
+    "outcome_time": null,
+    "outcome_pips": 0.0
+  },
+  {
+    "id": "USD/CAD_1766460069",
+    "pair": "USD/CAD",
+    "direction": "SELL",
+    "entry_price": 1.3735500574111938,
+    "sl": 1.385547161102295,
+    "tp": 1.3555544018745422,
+    "created_at": "2025-12-23T03:21:09.530229+00:00",
+    "expires_at": "2025-12-23T07:21:09.530229+00:00",
+    "status": "ACTIVE",
+    "confidence": 0.95,
+    "strategy": "MEAN_REVERSION",
+    "indicators": {
+      "rsi": 17.566830372147294,
+      "adx": 63.12992395822395,
+      "macd_histogram": -0.000936722498569114,
+      "stochastic_k": 2.1606438193728983,
+      "bb_position": 0.19667690241042435,
+      "ema12": 1.3807354633633335,
+      "ema26": 1.3874730943151052,
+      "ema200": 1.3907989960323166
+    },
+    "patterns": [],
+    "confidence_factors": [
+      "Strong downtrend (EMA 12<26<50)",
+      "Below 200 EMA (long-term bear)",
+      "Price near lower Bollinger (reversal)",
+      "ADX trend strength (63.1)"
+    ],
+    "scores": {
+      "bullish": 20,
+      "bearish": 55,
+      "edge": 35
+    },
+    "sentiment": {
+      "score": 0.0,
+      "positive_count": 0,
+      "negative_count": 0,
+      "relevant_news": [
+        {
+          "title": "USD: Amplified Exposure To The Semiconductor Industry (NYSEARCA:USD)",
+          "sentiment": "neutral",
+          "published": "2025-11-17T21:24:15.000000Z",
+          "source": "seekingalpha.com"
+        },
+        {
+          "title": "Is ProShares Ultra Semiconductors (USD) the Best Performing ETF of the Last 5 Years?",
+          "sentiment": "neutral",
+          "published": "2025-02-23T03:55:49.000000Z",
+          "source": "insidermonkey.com"
+        },
+        {
+          "title": "USD: Capitalizing On AI And Semiconductor Growth With 2x Leverage (NYSEARCA:USD)",
+          "sentiment": "neutral",
+          "published": "2025-02-01T12:43:33.000000Z",
+          "source": "seekingalpha.com"
+        }
+      ],
+      "total_news": 3
+    },
+    "news_context": {
+      "relevant_news_count": 3,
+      "sentiment_score": 0.0
+    },
+    "outcome": null,
+    "outcome_time": null,
+    "outcome_pips": 0.0
+  },
+  {
+    "id": "EUR/USD_1766471872",
+    "pair": "EUR/USD",
+    "direction": "BUY",
+    "entry_price": 1.085,
+    "sl": 1.07383090700422,
+    "tp": 1.1017536394936698,
+    "created_at": "2025-12-23T06:37:52.592886+00:00",
+    "expires_at": "2025-12-23T10:37:52.592886+00:00",
+    "status": "ACTIVE",
+    "confidence": 0.95,
+    "strategy": "MEAN_REVERSION",
+    "indicators": {
+      "rsi": 73.052617696658,
+      "adx": 42.46124041298681,
+      "macd_histogram": 0.0008273533341559463,
+      "stochastic_k": 86.07622264836239,
+      "bb_position": 0.9056793574279679,
+      "ema12": 1.171321955416204,
+      "ema26": 1.1672105668867445,
+      "ema200": 1.1466023251127313
+    },
+    "patterns": [],
+    "confidence_factors": [
+      "Strong uptrend (EMA 12>26>50)",
+      "Above 200 EMA (long-term bull)",
+      "Price near upper Bollinger (reversal)",
+      "ADX trend strength (42.5)"
+    ],
+    "scores": {
+      "bullish": 55,
+      "bearish": 20,
+      "edge": 35
+    },
+    "sentiment": {
+      "score": 0.0,
+      "positive_count": 0,
+      "negative_count": 0,
+      "relevant_news": [
+        {
+          "title": "USD: Amplified Exposure To The Semiconductor Industry (NYSEARCA:USD)",
+          "sentiment": "neutral",
+          "published": "2025-11-17T21:24:15.000000Z",
+          "source": "seekingalpha.com"
+        },
+        {
+          "title": "Is ProShares Ultra Semiconductors (USD) the Best Performing ETF of the Last 5 Years?",
+          "sentiment": "neutral",
+          "published": "2025-02-23T03:55:49.000000Z",
+          "source": "insidermonkey.com"
+        },
+        {
+          "title": "USD: Capitalizing On AI And Semiconductor Growth With 2x Leverage (NYSEARCA:USD)",
+          "sentiment": "neutral",
+          "published": "2025-02-01T12:43:33.000000Z",
+          "source": "seekingalpha.com"
+        }
+      ],
+      "total_news": 3
     },
     "news_context": {
       "relevant_news_count": 3,

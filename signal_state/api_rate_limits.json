@@ -1,0 +1,33 @@
+{
+  "date": "2025-12-23",
+  "calls": {
+    "yfinance": 100,
+    "alpha_vantage": 25,
+    "browserless": 5,
+    "marketaux": 14
+  },
+  "limits": {
+    "yfinance": {
+      "daily_limit": 100,
+      "description": "YFinance (prevent abuse)",
+      "enabled": true
+    },
+    "alpha_vantage": {
+      "daily_limit": 25,
+      "description": "Alpha Vantage (Free tier: 500/day, using 25 for safety)",
+      "enabled": true
+    },
+    "browserless": {
+      "daily_limit": 5,
+      "description": "Browserless (5 calls/day after Jan 19)",
+      "enabled": true,
+      "enable_date": "2025-01-19T00:00:00+00:00"
+    },
+    "marketaux": {
+      "daily_limit": 90,
+      "description": "Marketaux (Free tier: 100/day, using 90 for safety)",
+      "enabled": true
+    }
+  },
+  "last_updated": "2025-12-23T06:37:37.546139+00:00"
+}

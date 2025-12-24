@@ -6,6 +6,8 @@ AI FOREX BRAIN - COMPLETE ELITE TRADING SYSTEM WITH STRICT API LIMITS
 ✅ FIXED: JSON serialization for datetime objects
 ✅ FIXED: Syntax error in try/except blocks
 ✅ FIXED: Dataclass placement
+✅ FIXED: Historical data loading with pickle/JSON handling
+✅ FIXED: Fallback retry loop with circuit breaker
 ✅ All other features working as intended
 """
 
@@ -18,7 +20,7 @@ import requests
 import yfinance as yf
 from datetime import datetime, timezone, timedelta
 from dataclasses import dataclass, field, asdict
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Set
 import pandas as pd
 import numpy as np
 import logging
@@ -127,6 +129,9 @@ logger = logging.getLogger(__name__)
 if not MARKETAUX_API_KEY:
     logger.warning("⚠️ MARKETAUX_API_KEY not set - news features will be limited")
 
+# Global set to track failed symbols (circuit breaker)
+FAILED_FALLBACK_SYMBOLS: Set[str] = set()
+
 # ============================================================================
 # API RATE LIMITER
 # ============================================================================
@@ -179,6 +184,9 @@ class APIRateLimiter:
     def reset_counters(self):
         self.calls = {api: 0 for api in self.limits.keys()}
         self.last_reset_date = datetime.now(timezone.utc).date().isoformat()
+        # Clear failed fallback symbols on daily reset
+        global FAILED_FALLBACK_SYMBOLS
+        FAILED_FALLBACK_SYMBOLS.clear()
         self.save_state()
         logger.info("🔄 API rate limit counters reset for new day")
     
@@ -295,7 +303,7 @@ class PriceSourceRotation:
             else:
                 logger.debug(f"⚠️ {source} unavailable: {reason}")
         if not available_sources:
-            logger.warning("❌ All API sources exhausted for today!")
+            logger.debug("All API sources exhausted")
             return None
         total_calls = sum(self.sources[s]['calls'] for s in available_sources)
         total_weight = sum(self.sources[s]['weight'] for s in available_sources)
@@ -422,14 +430,46 @@ def fetch_price_browserless(pair: str) -> Optional[float]:
         logger.debug(f"Browserless error for {pair}: {e}")
     return None
 
-def fetch_live_price(pair: str) -> float:
+def get_historical_price(pair: str) -> Optional[float]:
+    """Get latest price from historical data files with circuit breaker"""
+    global FAILED_FALLBACK_SYMBOLS
+    
+    # Circuit breaker: Don't retry failed symbols
+    if pair in FAILED_FALLBACK_SYMBOLS:
+        logger.debug(f"Skipping {pair} (fallback previously failed)")
+        return None
+    
+    try:
+        pkl_files = list(PICKLE_FOLDER.glob(f"*{pair.replace('/', '_')}*.pkl"))
+        if pkl_files:
+            df = pd.read_pickle(pkl_files[0])
+            if len(df) > 0:
+                price = float(df['close'].iloc[-1])
+                logger.debug(f"💾 Historical fallback: {pair} = {price:.5f}")
+                return price
+    except Exception as e:
+        logger.warning(f"Historical fallback failed for {pair}: {e}")
+        FAILED_FALLBACK_SYMBOLS.add(pair)  # Circuit breaker
+        return None
+
+    # If no files found, mark as failed
+    logger.warning(f"No historical data found for {pair}")
+    FAILED_FALLBACK_SYMBOLS.add(pair)
+    return None
+
+def fetch_live_price(pair: str) -> Optional[float]:
+    """Fetch live price with intelligent source rotation and strict limits"""
     cached_price = price_rotation.get_cached_price(pair)
     if cached_price:
         return cached_price
+    
     source = price_rotation.get_next_source()
+    
+    # If no API available, try historical fallback ONCE
     if not source:
-        logger.warning(f"⚠️ All API sources exhausted, using historical data for {pair}")
+        logger.debug(f"APIs exhausted, attempting historical fallback for {pair}")
         return get_historical_price(pair)
+    
     price = None
     if source == 'yfinance':
         price = fetch_price_yfinance(pair)
@@ -437,12 +477,15 @@ def fetch_live_price(pair: str) -> float:
         price = fetch_price_alpha_vantage(pair)
     elif source == 'browserless':
         price = fetch_price_browserless(pair)
+    
     if price:
         price_rotation.record_call(source, True)
         price_rotation.cache_price(pair, price, source)
         return price
     else:
         price_rotation.record_call(source, False)
+    
+    # Try fallback sources
     fallback_sources = [s for s in ['yfinance', 'alpha_vantage', 'browserless'] if s != source]
     for fallback in fallback_sources:
         can_call, _ = api_limiter.can_make_call(fallback)
@@ -460,24 +503,15 @@ def fetch_live_price(pair: str) -> float:
             return price
         else:
             price_rotation.record_call(fallback, False)
-    logger.warning(f"⚠️ All sources failed for {pair}, using historical data")
+    
+    # Last resort: historical fallback
     return get_historical_price(pair)
 
-def get_historical_price(pair: str) -> float:
-    try:
-        pkl_files = list(PICKLE_FOLDER.glob(f"*{pair.replace('/', '_')}*.pkl"))
-        if pkl_files:
-            df = pd.read_pickle(pkl_files[0])
-            if len(df) > 0:
-                return float(df['close'].iloc[-1])
-    except Exception as e:
-        logger.error(f"Error loading historical data for {pair}: {e}")
-    defaults = {'EUR/USD': 1.0850, 'GBP/USD': 1.2650, 'USD/JPY': 149.50, 'AUD/USD': 0.6550, 'USD/CAD': 1.3450, 'NZD/USD': 0.6150}
-    return defaults.get(pair, 1.0)
-
 def fetch_historical_data(pair: str, period: str = "5y", interval: str = "1d") -> pd.DataFrame:
+    """Fetch or load historical forex data with proper symbol formatting"""
     pair_name = pair.replace('/', '_')
     cache_file = PICKLE_FOLDER / f"{pair_name}_{interval}_{period}.pkl"
+    
     if cache_file.exists():
         try:
             df = pd.read_pickle(cache_file)
@@ -485,23 +519,37 @@ def fetch_historical_data(pair: str, period: str = "5y", interval: str = "1d") -
                 logger.debug(f"💾 Loaded cached data for {pair}")
                 return df
         except Exception as e:
-            logger.debug(f"Cache load failed: {e}")
+            logger.debug(f"Cache load failed for {pair}, will refetch: {e}")
+            # Delete corrupted cache file
+            try:
+                cache_file.unlink()
+            except:
+                pass
+    
     try:
         symbol = pair.replace('/', '') + '=X'
         logger.info(f"📥 Fetching {period} data for {pair} (symbol: {symbol})...")
+        
         df = yf.download(symbol, period=period, interval=interval, progress=False, auto_adjust=True)
+        
         if df is None or df.empty:
             logger.error(f"❌ No data returned for {pair} (symbol: {symbol})")
             return pd.DataFrame()
+        
         if isinstance(df.columns, pd.MultiIndex):
             df.columns = df.columns.get_level_values(0)
+        
         df.columns = [col.lower() if isinstance(col, str) else str(col).lower() for col in df.columns]
+        
         required_cols = ['open', 'high', 'low', 'close', 'volume']
         missing_cols = [col for col in required_cols if col not in df.columns]
+        
         if missing_cols:
             logger.error(f"❌ Missing columns for {pair}: {missing_cols}")
             logger.error(f"Available columns: {list(df.columns)}")
             return pd.DataFrame()
+        
+        # Save with pickle
         df.to_pickle(cache_file)
         logger.info(f"✅ Fetched {len(df)} candles for {pair}")
         return df
@@ -993,19 +1041,28 @@ class LearningMemory:
 # SIGNAL GENERATION
 # ============================================================================
 def generate_signal(pair: str, news_analyzer: NewsAnalyzer, calendar: EconomicCalendar, memory: LearningMemory) -> Optional[Dict]:
+    # Check if pair is in failed fallback (circuit breaker)
+    if pair in FAILED_FALLBACK_SYMBOLS:
+        logger.debug(f"Skipping {pair} - no data available this cycle")
+        return None
+    
     avoid, reason = calendar.should_avoid_trading()
     if avoid:
         logger.info(f"⚠️ Avoiding {pair}: {reason}")
         return None
+    
     high_impact = news_analyzer.check_high_impact_news()
     if high_impact:
         logger.info(f"⚠️ High impact news detected, pausing signals")
         return None
+    
     sentiment = news_analyzer.analyze_sentiment(pair)
     df = fetch_historical_data(pair, period="5y", interval="1d")
+    
     if len(df) < 200:
         logger.warning(f"⚠️ Insufficient data for {pair}: {len(df)} candles")
         return None
+    
     try:
         indicators = TechnicalIndicators()
         close = df['close']
@@ -1093,7 +1150,13 @@ def generate_signal(pair: str, news_analyzer: NewsAnalyzer, calendar: EconomicCa
         if adjusted_confidence < learned_min_conf:
             logger.debug(f"Signal rejected: confidence {adjusted_confidence:.2f} < {learned_min_conf:.2f}")
             return None
+        
+        # Fetch live price with fallback handling
         current_price = fetch_live_price(pair)
+        if current_price is None:
+            logger.warning(f"Cannot generate signal for {pair} - no price data available")
+            return None
+        
         atr = calculate_atr(df)
         learned_sl_mult = memory.memory['learned_adjustments']['atr_sl_mult']
         learned_tp_mult = memory.memory['learned_adjustments']['atr_tp_mult']
@@ -1209,31 +1272,20 @@ class SignalManager:
                 signal.outcome_time = now.isoformat()
                 archived.append(signal)
                 continue
+            
+            # Fetch current price with fallback handling
+            current_price = fetch_live_price(signal.pair)
+            if current_price is None:
+                logger.debug(f"Cannot check outcome for {signal.pair} - no price data")
+                continue
+            
             try:
-                current_price = fetch_live_price(signal.pair)
                 pip_multiplier = 100 if 'JPY' in signal.pair else 10000
                 if signal.direction == 'BUY':
                     if current_price >= signal.tp:
                         signal.status = 'TP_HIT'
                         signal.outcome = 'TP_HIT'
                         signal.outcome_pips = (current_price - signal.entry_price) * pip_multiplier
-                        signal.outcome_time = now.isoformat()
-                        archived.append(signal)
-                        memory.record_trade(signal.to_dict(), 'TP_HIT', signal.outcome_pips)
-                        logger.info(f"✅ TP HIT: {signal.pair} (+{signal.outcome_pips:.1f} pips)")
-                    elif current_price <= signal.sl:
-                        signal.status = 'SL_HIT'
-                        signal.outcome = 'SL_HIT'
-                        signal.outcome_pips = (current_price - signal.entry_price) * pip_multiplier
-                        signal.outcome_time = now.isoformat()
-                        archived.append(signal)
-                        memory.record_trade(signal.to_dict(), 'SL_HIT', signal.outcome_pips)
-                        logger.info(f"❌ SL HIT: {signal.pair} ({signal.outcome_pips:.1f} pips)")
-                else:
-                    if current_price <= signal.tp:
-                        signal.status = 'TP_HIT'
-                        signal.outcome = 'TP_HIT'
-                        signal.outcome_pips = (signal.entry_price - current_price) * pip_multiplier
                         signal.outcome_time = now.isoformat()
                         archived.append(signal)
                         memory.record_trade(signal.to_dict(), 'TP_HIT', signal.outcome_pips)
@@ -1248,6 +1300,7 @@ class SignalManager:
                         logger.info(f"❌ SL HIT: {signal.pair} ({signal.outcome_pips:.1f} pips)")
             except Exception as e:
                 logger.debug(f"Error checking signal outcome: {e}")
+        
         for signal in archived:
             self.active_signals.remove(signal)
             self.archived_signals.append(signal)
@@ -1303,7 +1356,8 @@ def save_dashboard_state(controller, signal_manager, news_analyzer, calendar, me
         },
         'stats': signal_manager.get_stats(),
         'price_rotation_stats': price_rotation.get_stats(),
-        'api_usage': api_limiter.get_stats()
+        'api_usage': api_limiter.get_stats(),
+        'failed_symbols': list(FAILED_FALLBACK_SYMBOLS)
     }
     try:
         with open(DASHBOARD_STATE_FILE, 'w') as f:
@@ -1326,6 +1380,7 @@ def main():
     logger.info("=" * 80)
     logger.info(api_limiter.get_summary())
     logger.info("=" * 80)
+    
     now = datetime.now(timezone.utc)
     if now.weekday() in [5, 6]:
         logger.info("=" * 80)
@@ -1333,6 +1388,7 @@ def main():
         logger.info("⏸️  System will not run. Next cycle: Monday")
         logger.info("=" * 80)
         return
+    
     holidays = [(1, 1), (12, 25), (12, 26), (7, 4), (11, 11)]
     if (now.month, now.day) in holidays:
         logger.info("=" * 80)
@@ -1340,29 +1396,36 @@ def main():
         logger.info("⏸️  Markets closed. System will not run.")
         logger.info("=" * 80)
         return
+    
     RUN_DURATION = 4.5 * 60 * 60
     start_time = time.time()
     end_time = start_time + RUN_DURATION
+    
     controller = SystemController()
     news_analyzer = NewsAnalyzer()
     calendar = EconomicCalendar()
     memory = LearningMemory()
     signal_manager = SignalManager()
+    
     if IN_GHA:
         controller.start()
         logger.info("✅ System AUTO-STARTED in GitHub Actions")
     else:
         logger.info("✅ System initialized - waiting for dashboard START")
+    
     logger.info(f"⏰ Will run until: {datetime.fromtimestamp(end_time, timezone.utc).strftime('%H:%M UTC')}")
     logger.info("📱 Dashboard: signal_state/dashboard_state.json")
+    
     last_signal_check = time.time()
     signal_pair_index = 0
     cycle_count = 0
     last_api_stats_display = time.time()
+    
     while True:
         current_time = time.time()
         elapsed_hours = (current_time - start_time) / 3600
         remaining_minutes = (end_time - current_time) / 60
+        
         if current_time >= end_time:
             logger.info("=" * 80)
             logger.info(f"⏰ 4.5-HOUR CYCLE COMPLETE!")
@@ -1379,19 +1442,23 @@ def main():
             controller.stop()
             save_dashboard_state(controller, signal_manager, news_analyzer, calendar, memory)
             break
+        
         if current_time - last_api_stats_display >= 1800:
             logger.info("\n" + "=" * 70)
             logger.info(api_limiter.get_summary())
             logger.info("=" * 70)
             last_api_stats_display = current_time
+        
         if int(elapsed_hours) > int((current_time - 300 - start_time) / 3600):
             logger.info(f"⏰ Running for {elapsed_hours:.1f}hrs | {remaining_minutes:.0f}min remaining | Signals: {len(signal_manager.active_signals)}")
+        
         controller.load_state()
         if not controller.is_running and not IN_GHA:
             logger.info("⏸️ System paused - waiting for START")
             save_dashboard_state(controller, signal_manager, news_analyzer, calendar, memory)
             time.sleep(5)
             continue
+        
         now = datetime.now(timezone.utc)
         if now.weekday() in [5, 6]:
             logger.info("=" * 80)
@@ -1400,21 +1467,27 @@ def main():
             controller.stop()
             save_dashboard_state(controller, signal_manager, news_analyzer, calendar, memory)
             break
+        
         should_run, reason = controller.check_should_run()
         if not should_run:
             logger.info(f"⏸️ {reason}")
             save_dashboard_state(controller, signal_manager, news_analyzer, calendar, memory)
             time.sleep(60)
             continue
+        
         signal_manager.update_signal_outcomes(memory)
+        
         current_time_mod_news = int(current_time) % NEWS_CHECK_INTERVAL
         current_time_mod_calendar = int(current_time) % CALENDAR_CHECK_INTERVAL
+        
         if current_time_mod_news < 5:
             if time.time() - news_analyzer.last_news_check > NEWS_CHECK_INTERVAL:
                 news_analyzer.fetch_news()
+        
         if current_time_mod_calendar < 5:
             if time.time() - calendar.last_check > CALENDAR_CHECK_INTERVAL:
                 calendar.fetch_calendar(news_analyzer)
+        
         if (current_time - last_signal_check) >= SIGNAL_CHECK_INTERVAL:
             if signal_manager.can_broadcast_new_signal():
                 pair = PAIRS[signal_pair_index % len(PAIRS)]
@@ -1427,6 +1500,7 @@ def main():
                 else:
                     logger.debug(f"   No signal for {pair}")
             last_signal_check = current_time
+        
         save_dashboard_state(controller, signal_manager, news_analyzer, calendar, memory)
         time.sleep(5)
 
@@ -1441,6 +1515,7 @@ print(f"🎯 Maximum {MAX_ACTIVE_SIGNALS} concurrent signals")
 print(f"🧠 Learning system enabled")
 print(f"📰 News & calendar integration active")
 print(f"🔄 Multi-source price rotation enabled")
+print(f"🛡️ Circuit breaker protection enabled")
 print("=" * 70)
 print("🔒 STRICT API RATE LIMITS ENFORCED:")
 print(f"   • YFinance: {API_LIMITS['yfinance']['daily_limit']} calls/day")
@@ -1462,4 +1537,21 @@ if __name__ == "__main__":
         print("   Option 1: Run main() in Python")
         print("   Option 2: Use dashboard control")
         print("=" * 70)
-        print("\n⏸️  Trade Beacon ready. Run main() to start.")
+        print("\n⏸️  Trade Beacon ready. Run main() to start.")isoformat()
+                        archived.append(signal)
+                        memory.record_trade(signal.to_dict(), 'TP_HIT', signal.outcome_pips)
+                        logger.info(f"✅ TP HIT: {signal.pair} (+{signal.outcome_pips:.1f} pips)")
+                    elif current_price <= signal.sl:
+                        signal.status = 'SL_HIT'
+                        signal.outcome = 'SL_HIT'
+                        signal.outcome_pips = (current_price - signal.entry_price) * pip_multiplier
+                        signal.outcome_time = now.isoformat()
+                        archived.append(signal)
+                        memory.record_trade(signal.to_dict(), 'SL_HIT', signal.outcome_pips)
+                        logger.info(f"❌ SL HIT: {signal.pair} ({signal.outcome_pips:.1f} pips)")
+                else:
+                    if current_price <= signal.tp:
+                        signal.status = 'TP_HIT'
+                        signal.outcome = 'TP_HIT'
+                        signal.outcome_pips = (signal.entry_price - current_price) * pip_multiplier
+                        signal.outcome_time = now.

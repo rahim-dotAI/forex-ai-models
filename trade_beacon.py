@@ -8,6 +8,7 @@ AI FOREX BRAIN - COMPLETE ELITE TRADING SYSTEM WITH STRICT API LIMITS
 ✅ FIXED: Dataclass placement
 ✅ FIXED: Historical data loading with pickle/JSON handling
 ✅ FIXED: Fallback retry loop with circuit breaker
+✅ FIXED: End of file syntax error
 ✅ All other features working as intended
 """
 
@@ -1290,6 +1291,23 @@ class SignalManager:
                         archived.append(signal)
                         memory.record_trade(signal.to_dict(), 'TP_HIT', signal.outcome_pips)
                         logger.info(f"✅ TP HIT: {signal.pair} (+{signal.outcome_pips:.1f} pips)")
+                    elif current_price <= signal.sl:
+                        signal.status = 'SL_HIT'
+                        signal.outcome = 'SL_HIT'
+                        signal.outcome_pips = (current_price - signal.entry_price) * pip_multiplier
+                        signal.outcome_time = now.isoformat()
+                        archived.append(signal)
+                        memory.record_trade(signal.to_dict(), 'SL_HIT', signal.outcome_pips)
+                        logger.info(f"❌ SL HIT: {signal.pair} ({signal.outcome_pips:.1f} pips)")
+                else:
+                    if current_price <= signal.tp:
+                        signal.status = 'TP_HIT'
+                        signal.outcome = 'TP_HIT'
+                        signal.outcome_pips = (signal.entry_price - current_price) * pip_multiplier
+                        signal.outcome_time = now.isoformat()
+                        archived.append(signal)
+                        memory.record_trade(signal.to_dict(), 'TP_HIT', signal.outcome_pips)
+                        logger.info(f"✅ TP HIT: {signal.pair} (+{signal.outcome_pips:.1f} pips)")
                     elif current_price >= signal.sl:
                         signal.status = 'SL_HIT'
                         signal.outcome = 'SL_HIT'
@@ -1443,31 +1461,6 @@ def main():
             save_dashboard_state(controller, signal_manager, news_analyzer, calendar, memory)
             break
         
-        if current_time - last_api_stats_display >= 1800:
-            logger.info("\n" + "=" * 70)
-            logger.info(api_limiter.get_summary())
-            logger.info("=" * 70)
-            last_api_stats_display = current_time
-        
-        if int(elapsed_hours) > int((current_time - 300 - start_time) / 3600):
-            logger.info(f"⏰ Running for {elapsed_hours:.1f}hrs | {remaining_minutes:.0f}min remaining | Signals: {len(signal_manager.active_signals)}")
-        
-        controller.load_state()
-        if not controller.is_running and not IN_GHA:
-            logger.info("⏸️ System paused - waiting for START")
-            save_dashboard_state(controller, signal_manager, news_analyzer, calendar, memory)
-            time.sleep(5)
-            continue
-        
-        now = datetime.now(timezone.utc)
-        if now.weekday() in [5, 6]:
-            logger.info("=" * 80)
-            logger.info("🏖️  Weekend started during runtime - Stopping gracefully")
-            logger.info("=" * 80)
-            controller.stop()
-            save_dashboard_state(controller, signal_manager, news_analyzer, calendar, memory)
-            break
-        
         should_run, reason = controller.check_should_run()
         if not should_run:
             logger.info(f"⏸️ {reason}")
@@ -1537,21 +1530,29 @@ if __name__ == "__main__":
         print("   Option 1: Run main() in Python")
         print("   Option 2: Use dashboard control")
         print("=" * 70)
-        print("\n⏸️  Trade Beacon ready. Run main() to start.")isoformat()
-                        archived.append(signal)
-                        memory.record_trade(signal.to_dict(), 'TP_HIT', signal.outcome_pips)
-                        logger.info(f"✅ TP HIT: {signal.pair} (+{signal.outcome_pips:.1f} pips)")
-                    elif current_price <= signal.sl:
-                        signal.status = 'SL_HIT'
-                        signal.outcome = 'SL_HIT'
-                        signal.outcome_pips = (current_price - signal.entry_price) * pip_multiplier
-                        signal.outcome_time = now.isoformat()
-                        archived.append(signal)
-                        memory.record_trade(signal.to_dict(), 'SL_HIT', signal.outcome_pips)
-                        logger.info(f"❌ SL HIT: {signal.pair} ({signal.outcome_pips:.1f} pips)")
-                else:
-                    if current_price <= signal.tp:
-                        signal.status = 'TP_HIT'
-                        signal.outcome = 'TP_HIT'
-                        signal.outcome_pips = (signal.entry_price - current_price) * pip_multiplier
-                        signal.outcome_time = now.
+        print("\n⏸️  Trade Beacon ready. Run main() to start."), signal_manager, news_analyzer, calendar, memory)
+            break
+        
+        if current_time - last_api_stats_display >= 1800:
+            logger.info("\n" + "=" * 70)
+            logger.info(api_limiter.get_summary())
+            logger.info("=" * 70)
+            last_api_stats_display = current_time
+        
+        if int(elapsed_hours) > int((current_time - 300 - start_time) / 3600):
+            logger.info(f"⏰ Running for {elapsed_hours:.1f}hrs | {remaining_minutes:.0f}min remaining | Signals: {len(signal_manager.active_signals)}")
+        
+        controller.load_state()
+        if not controller.is_running and not IN_GHA:
+            logger.info("⏸️ System paused - waiting for START")
+            save_dashboard_state(controller, signal_manager, news_analyzer, calendar, memory)
+            time.sleep(5)
+            continue
+        
+        now = datetime.now(timezone.utc)
+        if now.weekday() in [5, 6]:
+            logger.info("=" * 80)
+            logger.info("🏖️  Weekend started during runtime - Stopping gracefully")
+            logger.info("=" * 80)
+            controller.stop()
+            save_dashboard_state(controller

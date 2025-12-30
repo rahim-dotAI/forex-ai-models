@@ -103,7 +103,7 @@ jobs:
         if: steps.check_day.outputs.weekend == 'false' || github.event.inputs.force_run == 'true'
         run: |
           echo "🎯 Starting 10-minute trading cycle..."
-          python forex_system.py
+          python trade_beacon.py
         timeout-minutes: 8  # Kill if it runs longer than 8 minutes
       
       - name: 📊 Display execution summary

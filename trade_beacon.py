@@ -248,6 +248,17 @@ class APIRateLimiter:
                 'percentage': (current / limit * 100) if limit > 0 else 0
             }
         return stats
+    
+    def get_summary(self) -> str:
+        """Generate API usage summary string"""
+        lines = ["📊 API Usage Summary:"]
+        for api_name, stats in self.get_stats().items():
+            status = "✅" if stats['enabled'] else "❌"
+            lines.append(
+                f"{status} {api_name}: {stats['calls']}/{stats['limit']} "
+                f"({stats['percentage']:.0f}%) - {self.limits[api_name]['description']}"
+            )
+        return "\n".join(lines)
 
 api_limiter = APIRateLimiter()
 

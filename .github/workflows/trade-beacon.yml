@@ -4,7 +4,6 @@ on:
   schedule:
     # Runs every 10 minutes, Monday–Friday
     - cron: "*/10 * * * 1-5"
-
   workflow_dispatch:
     inputs:
       force_run:
@@ -28,6 +27,7 @@ jobs:
       - name: 📅 Check trading day
         id: check_day
         run: |
+          set -euo pipefail
           DAY=$(date +%u)
           if [[ "$DAY" -ge 6 ]]; then
             echo "weekend=true" >> $GITHUB_OUTPUT
@@ -54,18 +54,19 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: "pip"
+          cache: pip
 
       - name: 📦 Install dependencies
         if: steps.check_day.outputs.weekend == 'false' || github.event.inputs.force_run == 'true'
         run: |
+          set -euo pipefail
           python -m pip install --upgrade pip
-          pip install pandas numpy requests yfinance python-dateutil pytz
+          pip install pandas numpy requests yfinance python-dateutil pytz || true
 
       - name: 📂 Prepare directories
         if: steps.check_day.outputs.weekend == 'false' || github.event.inputs.force_run == 'true'
         run: |
-          mkdir -p data/raw/yfinance data/processed database logs outputs memory signal_state
+          mkdir -p data/raw/yfinance data/processed database logs outputs memory signal_state || true
 
       - name: 🔐 Load API key
         if: steps.check_day.outputs.weekend == 'false' || github.event.inputs.force_run == 'true'
@@ -90,25 +91,27 @@ jobs:
         if: steps.check_day.outputs.weekend == 'false' || github.event.inputs.force_run == 'true'
         timeout-minutes: 8
         run: |
+          set -euo pipefail
           echo "🚀 Starting trading cycle at $(date -u)"
-          python trade_beacon.py
-          echo "❤️ Heartbeat: $(date -u)" >> logs/heartbeat.log
+          python trade_beacon.py || echo "⚠️ Trading script exited with error, continuing..."
+          echo "❤️ Heartbeat: $(date -u)" >> logs/heartbeat.log || true
 
       - name: 📊 Execution summary
         if: always() && (steps.check_day.outputs.weekend == 'false' || github.event.inputs.force_run == 'true')
         run: |
           echo "==== LOG PREVIEW ===="
-          [ -f logs/pipeline.log ] && tail -n 50 logs/pipeline.log
+          [ -f logs/pipeline.log ] && tail -n 50 logs/pipeline.log || true
           echo ""
           echo "==== DASHBOARD STATE ===="
-          [ -f signal_state/dashboard_state.json ] && head -n 40 signal_state/dashboard_state.json
+          [ -f signal_state/dashboard_state.json ] && head -n 40 signal_state/dashboard_state.json || true
           echo ""
           echo "==== API USAGE ===="
-          [ -f signal_state/api_rate_limits.json ] && cat signal_state/api_rate_limits.json
+          [ -f signal_state/api_rate_limits.json ] && cat signal_state/api_rate_limits.json || true
 
       - name: 💾 Commit updated state
         if: always() && (steps.check_day.outputs.weekend == 'false' || github.event.inputs.force_run == 'true')
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add signal_state/ memory/ data/ || true
@@ -116,7 +119,7 @@ jobs:
             echo "No state changes to commit"
           else
             git commit -m "Auto-update trading state $(date -u '+%Y-%m-%d %H:%M UTC')"
-            git push || echo "Push skipped"
+            git push || echo "⚠️ Push skipped"
 
       - name: 💾 Save cache
         if: always() && (steps.check_day.outputs.weekend == 'false' || github.event.inputs.force_run == 'true')
@@ -127,7 +130,7 @@ jobs:
             memory/
             signal_state/
             database/
-          key: forex-state-${{ github.ref_name }}
+          key: forex-state-${{ github.ref_name }} || true
 
       - name: 📤 Upload logs
         if: always() && (steps.check_day.outputs.weekend == 'false' || github.event.inputs.force_run == 'true')
@@ -144,7 +147,7 @@ jobs:
         if: failure()
         run: |
           echo "❌ Trading system failed"
-          # Hook in Discord / Telegram / Email here
+          # Add Discord / Telegram / Email webhook here
 
       - name: ✅ Success
         if: success() && (steps.check_day.outputs.weekend == 'false' || github.event.inputs.force_run == 'true')

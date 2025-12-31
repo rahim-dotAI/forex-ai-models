@@ -1,119 +1,64 @@
-name: AI Forex Trading System
+name: x-trading
 
 on:
   schedule:
-    # Runs every 10 minutes, Monday–Friday
-    - cron: "*/10 * * * 1-5"
-
+    - cron: '*/10 * * * *' # every 10 minutes
   workflow_dispatch:
-    inputs:
-      force_run:
-        description: "Force run even on weekends"
-        required: false
-        default: "false"
-
-env:
-  PYTHON_VERSION: "3.10"
-  TZ: "UTC"
 
 jobs:
   forex-trading:
     runs-on: ubuntu-latest
 
-    concurrency:
-      group: forex-trading
-      cancel-in-progress: false
+    env:
+      FOREX_PAT: ${{ secrets.FOREX_PAT }}
 
     steps:
-      - name: 📅 Check trading day
-        id: check_day
-        run: |
-          DAY=$(date +%u)
-          if [[ "$DAY" -ge 6 ]]; then
-            echo "weekend=true" >> $GITHUB_OUTPUT
-            echo "🏖️ Weekend detected"
-          else
-            echo "weekend=false" >> $GITHUB_OUTPUT
-            echo "✅ Trading day"
-          fi
-
-      - name: ⏭️ Skip weekend runs
-        if: steps.check_day.outputs.weekend == 'true' && github.event.inputs.force_run != 'true'
-        run: |
-          echo "⏸️ Market closed — skipping execution"
-          exit 0
-
-      - name: 🔄 Checkout repository
-        if: steps.check_day.outputs.weekend == 'false' || github.event.inputs.force_run == 'true'
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
 
-      - name: 🐍 Setup Python
-        if: steps.check_day.outputs.weekend == 'false' || github.event.inputs.force_run == 'true'
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: "pip"
+          python-version: '3.10'
 
-      - name: 📦 Install dependencies
-        if: steps.check_day.outputs.weekend == 'false' || github.event.inputs.force_run == 'true'
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: setup-python-${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pandas numpy requests yfinance python-dateutil pytz
+          pip install pandas numpy requests yfinance
 
-      - name: 📂 Prepare directories
-        if: steps.check_day.outputs.weekend == 'false' || github.event.inputs.force_run == 'true'
-        run: |
-          mkdir -p data/raw/yfinance data/processed database logs outputs memory signal_state
+      - name: Set FOREX_PAT environment
+        run: echo "FOREX_PAT=${FOREX_PAT}" >> $GITHUB_ENV
 
-      - name: 🔐 Load API key
-        if: steps.check_day.outputs.weekend == 'false' || github.event.inputs.force_run == 'true'
-        env:
-          FOREX_PAT: ${{ secrets.FOREX_PAT }}
-        run: |
-          echo "FOREX_PAT=${FOREX_PAT}" >> $GITHUB_ENV
-
-      - name: 📥 Restore cached state
-        if: steps.check_day.outputs.weekend == 'false' || github.event.inputs.force_run == 'true'
+      - name: Restore trading state cache
         uses: actions/cache@v4
         with:
           path: |
-            data/
-            memory/
             signal_state/
-            database/
-          key: forex-state-${{ github.ref_name }}
-          restore-keys: forex-state-
+            memory/
+            data/
+          key: forex-state-main
 
-      - name: 🚀 Run trading engine
-        if: steps.check_day.outputs.weekend == 'false' || github.event.inputs.force_run == 'true'
-        timeout-minutes: 8
+      - name: 🚀 Run trading script
         run: |
-          echo "🚀 Starting trading cycle at $(date -u)"
-          python trade_beacon.py || echo "⚠️ Trade script failed, continuing..."
-          echo "❤️ Heartbeat: $(date -u)" >> logs/heartbeat.log || true
+          echo "Starting trading cycle at $(date -u)"
+          python main.py
 
-      - name: 📊 Execution summary
-        if: always() && (steps.check_day.outputs.weekend == 'false' || github.event.inputs.force_run == 'true')
-        run: |
-          echo "==== LOG PREVIEW ===="
-          if [ -f logs/pipeline.log ]; then
-            tail -n 50 logs/pipeline.log || true
-          fi
-          echo ""
-          echo "==== DASHBOARD STATE ===="
-          if [ -f signal_state/dashboard_state.json ]; then
-            head -n 40 signal_state/dashboard_state.json || true
-          fi
-          echo ""
-          echo "==== API USAGE ===="
-          if [ -f signal_state/api_rate_limits.json ]; then
-            cat signal_state/api_rate_limits.json || true
-          fi
+      - name: Save trading state cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            signal_state/
+            memory/
+            data/
+          key: forex-state-main
 
-      - name: 💾 Commit updated state
-        if: always() && (steps.check_day.outputs.weekend == 'false' || github.event.inputs.force_run == 'true')
+      - name: 💾 Commit updated state if any
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -122,38 +67,10 @@ jobs:
             echo "No state changes to commit"
           else
             git commit -m "Auto-update trading state $(date -u '+%Y-%m-%d %H:%M UTC')"
-            git push || echo "Push skipped"
+            git push || echo "Push skipped due to permissions"
 
-      - name: 💾 Save cache
-        if: always() && (steps.check_day.outputs.weekend == 'false' || github.event.inputs.force_run == 'true')
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            data/
-            memory/
-            signal_state/
-            database/
-          key: forex-state-${{ github.ref_name }}
-
-      - name: 📤 Upload logs
-        if: always() && (steps.check_day.outputs.weekend == 'false' || github.event.inputs.force_run == 'true')
+      - name: Upload logs
         uses: actions/upload-artifact@v4
         with:
-          name: forex-logs-${{ github.run_number }}
-          path: |
-            logs/
-            signal_state/
-            outputs/
-          retention-days: 7
-
-      - name: 🚨 Failure notification
-        if: failure()
-        run: |
-          echo "❌ Trading system failed"
-          # Hook in Discord / Telegram / Email here
-
-      - name: ✅ Success
-        if: success() && (steps.check_day.outputs.weekend == 'false' || github.event.inputs.force_run == 'true')
-        run: |
-          echo "✅ Trading cycle completed successfully"
-          echo "⏱ Next run in ~10 minutes"
+          name: forex-logs-${{ github.run_id }}
+          path: logs/

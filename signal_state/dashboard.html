@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trade Beacon | Professional Trading Platform</title>
+<title>Trade Beacon | Live Trading Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -18,7 +18,6 @@
 --success:#10b981;
 --danger:#ef4444;
 --warning:#f59e0b;
---accent:#8b5cf6;
 }
 body{
 font-family:'Inter',sans-serif;
@@ -26,11 +25,6 @@ background:var(--bg);
 color:var(--text);
 line-height:1.6;
 -webkit-font-smoothing:antialiased;
-}
-.container{
-max-width:1600px;
-margin:0 auto;
-padding:24px;
 }
 .navbar{
 display:flex;
@@ -85,6 +79,11 @@ animation:pulse 2s ease-in-out infinite;
 0%,100%{opacity:1}
 50%{opacity:0.3}
 }
+.container{
+max-width:1600px;
+margin:0 auto;
+padding:24px;
+}
 .grid{
 display:grid;
 gap:24px;
@@ -92,10 +91,8 @@ margin-top:24px;
 }
 .grid-4{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
 .grid-2{grid-template-columns:2fr 1fr}
-.grid-3{grid-template-columns:repeat(3,1fr)}
 @media(max-width:1200px){
 .grid-2{grid-template-columns:1fr}
-.grid-3{grid-template-columns:1fr}
 }
 .card{
 background:var(--surface);
@@ -231,120 +228,6 @@ margin-bottom:4px;
 font-size:16px;
 font-weight:700;
 }
-.progress-bar{
-height:8px;
-background:rgba(255,255,255,0.05);
-border-radius:4px;
-overflow:hidden;
-margin-top:8px;
-}
-.progress-fill{
-height:100%;
-transition:width 0.3s ease;
-border-radius:4px;
-}
-.chart-placeholder{
-height:280px;
-background:rgba(255,255,255,0.02);
-border-radius:12px;
-display:flex;
-align-items:center;
-justify-content:center;
-color:var(--text-dim);
-font-size:14px;
-}
-.stat-row{
-display:flex;
-justify-content:space-between;
-padding:16px 0;
-border-bottom:1px solid var(--border);
-}
-.stat-row:last-child{border-bottom:none}
-.stat-label{
-font-size:14px;
-color:var(--text-dim);
-}
-.stat-value{
-font-size:16px;
-font-weight:600;
-}
-.pair-performance{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
-gap:12px;
-}
-.pair-item{
-background:rgba(255,255,255,0.03);
-padding:16px;
-border-radius:10px;
-text-align:center;
-border:1px solid transparent;
-transition:all 0.3s ease;
-}
-.pair-item:hover{
-border-color:var(--primary);
-transform:translateY(-2px);
-}
-.pair-name{
-font-size:13px;
-font-weight:600;
-margin-bottom:8px;
-}
-.pair-wr{
-font-size:24px;
-font-weight:700;
-}
-.pair-stats{
-font-size:11px;
-color:var(--text-dim);
-margin-top:4px;
-}
-.api-grid{
-display:grid;
-gap:16px;
-}
-.api-item{
-background:rgba(255,255,255,0.02);
-padding:16px;
-border-radius:10px;
-border:1px solid var(--border);
-}
-.api-header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:12px;
-}
-.api-name{
-font-weight:600;
-font-size:14px;
-}
-.api-usage{
-font-size:13px;
-font-weight:600;
-}
-.news-item{
-padding:16px;
-border-radius:10px;
-background:rgba(255,255,255,0.02);
-margin-bottom:12px;
-border-left:3px solid var(--primary);
-transition:all 0.3s ease;
-}
-.news-item:hover{
-background:rgba(59,130,246,0.05);
-transform:translateX(4px);
-}
-.news-title{
-font-size:14px;
-font-weight:600;
-margin-bottom:6px;
-line-height:1.4;
-}
-.news-meta{
-font-size:12px;
-color:var(--text-dim);
-}
 .empty-state{
 padding:80px 20px;
 text-align:center;
@@ -363,6 +246,69 @@ margin-bottom:8px;
 .empty-text{
 color:var(--text-dim);
 font-size:14px;
+}
+.refresh-indicator{
+position:fixed;
+bottom:24px;
+right:24px;
+padding:12px 20px;
+background:var(--surface);
+border:1px solid var(--border);
+border-radius:30px;
+font-size:13px;
+font-weight:600;
+box-shadow:0 8px 24px rgba(0,0,0,0.3);
+z-index:1000;
+display:flex;
+align-items:center;
+gap:8px;
+}
+.spinner{
+width:12px;
+height:12px;
+border:2px solid var(--border);
+border-top-color:var(--primary);
+border-radius:50%;
+animation:spin 1s linear infinite;
+}
+@keyframes spin{
+to{transform:rotate(360deg)}
+}
+.stat-row{
+display:flex;
+justify-content:space-between;
+padding:16px 0;
+border-bottom:1px solid var(--border);
+}
+.stat-row:last-child{border-bottom:none}
+.stat-label{
+font-size:14px;
+color:var(--text-dim);
+}
+.stat-value{
+font-size:16px;
+font-weight:600;
+}
+.loading-overlay{
+position:fixed;
+inset:0;
+background:rgba(10,14,26,0.95);
+display:flex;
+align-items:center;
+justify-content:center;
+z-index:9999;
+}
+.loading-content{
+text-align:center;
+}
+.loading-spinner{
+width:48px;
+height:48px;
+border:4px solid var(--border);
+border-top-color:var(--primary);
+border-radius:50%;
+animation:spin 1s linear infinite;
+margin:0 auto 16px;
 }
 .session-indicator{
 display:inline-flex;
@@ -388,30 +334,17 @@ background:rgba(16,185,129,0.15);
 color:var(--success);
 border:1px solid rgba(16,185,129,0.3);
 }
-.footer{
-margin-top:48px;
-padding:24px;
-text-align:center;
-border-top:1px solid var(--border);
-color:var(--text-dim);
-font-size:13px;
-}
-.refresh-indicator{
-position:fixed;
-bottom:24px;
-right:24px;
-padding:12px 20px;
-background:var(--surface);
-border:1px solid var(--border);
-border-radius:30px;
-font-size:13px;
-font-weight:600;
-box-shadow:0 8px 24px rgba(0,0,0,0.3);
-z-index:1000;
-}
 </style>
 </head>
 <body>
+
+<div class="loading-overlay" id="loadingOverlay">
+<div class="loading-content">
+<div class="loading-spinner"></div>
+<h2>Loading Trade Beacon...</h2>
+<p style="color:var(--text-dim);margin-top:8px">Fetching live trading data</p>
+</div>
+</div>
 
 <nav class="navbar">
 <div class="logo">Trade<span>Beacon</span></div>
@@ -419,7 +352,7 @@ z-index:1000;
 <span class="session-indicator" id="session"></span>
 <div class="status-pill status-live" id="status">
 <span class="pulse"></span>
-<span id="statusText">LIVE</span>
+<span id="statusText">CONNECTING</span>
 </div>
 </div>
 </nav>
@@ -428,24 +361,24 @@ z-index:1000;
 <div class="grid grid-4">
 <div class="metric-card">
 <div class="metric-label">Active Signals</div>
-<div class="metric-value" id="activeSignals">0</div>
+<div class="metric-value" id="activeSignals">-</div>
 <div class="metric-change neutral">Max 5 concurrent</div>
 </div>
 <div class="metric-card">
 <div class="metric-label">Win Rate</div>
-<div class="metric-value" id="winRate">0.0%</div>
+<div class="metric-value" id="winRate">-</div>
 <div class="metric-change" id="winRateChange">
-<span id="wins">0</span>W / <span id="losses">0</span>L
+<span id="wins">-</span>W / <span id="losses">-</span>L
 </div>
 </div>
 <div class="metric-card">
 <div class="metric-label">Total P&L</div>
-<div class="metric-value" id="totalPips">+0.0</div>
+<div class="metric-value" id="totalPips">-</div>
 <div class="metric-change positive">All-time pips</div>
 </div>
 <div class="metric-card">
 <div class="metric-label">Today's P&L</div>
-<div class="metric-value" id="dailyPips">+0.0</div>
+<div class="metric-value" id="dailyPips">-</div>
 <div class="metric-change" id="dailyChange">Since 00:00 UTC</div>
 </div>
 </div>
@@ -453,98 +386,83 @@ z-index:1000;
 <div class="grid grid-2" style="margin-top:24px">
 <div class="card">
 <div class="card-header">
+<h2 class="card-title">Active Signals</h2>
+<span id="signalCount">- signals</span>
+</div>
+<div id="signalsContainer"></div>
+</div>
+
+<div class="card">
+<div class="card-header">
 <h2 class="card-title">Performance</h2>
 </div>
 <div class="stat-row">
 <span class="stat-label">Profit Factor</span>
-<span class="stat-value" id="profitFactor">0.00</span>
+<span class="stat-value" id="profitFactor">-</span>
 </div>
 <div class="stat-row">
 <span class="stat-label">Avg Win</span>
-<span class="stat-value positive" id="avgWin">+0.0</span>
+<span class="stat-value positive" id="avgWin">-</span>
 </div>
 <div class="stat-row">
 <span class="stat-label">Avg Loss</span>
-<span class="stat-value negative" id="avgLoss">-0.0</span>
+<span class="stat-value negative" id="avgLoss">-</span>
 </div>
 <div class="stat-row">
 <span class="stat-label">Total Trades</span>
-<span class="stat-value" id="totalTrades">0</span>
-</div>
-</div>
-
-<div class="card">
-<div class="card-header">
-<h2 class="card-title">Risk Management</h2>
+<span class="stat-value" id="totalTrades">-</span>
 </div>
 <div class="stat-row">
-<span class="stat-label">Daily Loss Limit</span>
-<span class="stat-value" id="lossLimit">-500</span>
-</div>
-<div class="stat-row">
-<span class="stat-label">Max Correlated</span>
-<span class="stat-value" id="maxCorr">2</span>
-</div>
-<div class="stat-row">
-<span class="stat-label">Min Confidence</span>
-<span class="stat-value" id="minConf">72%</span>
-</div>
-<div class="stat-row">
-<span class="stat-label">R:R Ratio</span>
-<span class="stat-value" id="rrRatio">1:1.5</span>
+<span class="stat-label">Last Update</span>
+<span class="stat-value" id="lastUpdate">-</span>
 </div>
 </div>
-</div>
-</div>
-
-<div class="grid grid-3" style="margin-top:24px">
-<div class="card">
-<div class="card-header">
-<h2 class="card-title">Pair Performance</h2>
-</div>
-<div class="pair-performance" id="pairPerformance"></div>
-</div>
-
-<div class="card">
-<div class="card-header">
-<h2 class="card-title">API Usage</h2>
-</div>
-<div class="api-grid" id="apiGrid"></div>
-</div>
-
-<div class="card">
-<div class="card-header">
-<h2 class="card-title">Latest News</h2>
-</div>
-<div id="newsContainer"></div>
-</div>
-</div>
-
-<div class="footer">
-<div style="margin-bottom:8px">Trade Beacon Professional Trading Platform</div>
-<div>Algorithmic Trading • Risk Management • Real-time Analytics</div>
 </div>
 </div>
 
 <div class="refresh-indicator" id="refresh">
-<span id="countdown">10</span>s
+<div class="spinner"></div>
+<span id="refreshText">Refreshing...</span>
 </div>
 
 <script>
-const CONFIG = JSON.parse(localStorage.getItem("trade_beacon_config")) || {
-username: prompt("GitHub Username:"),
-repo: prompt("Repository Name:"),
-branch: "main"
-};
-if(CONFIG.username && CONFIG.repo){
+// Configuration
+let CONFIG = JSON.parse(localStorage.getItem("trade_beacon_config"));
+
+if(!CONFIG){
+const username = prompt("Enter your GitHub username:", "rahim-dotAI");
+const repo = prompt("Enter your repository name:", "forex-ai-models");
+const branch = prompt("Enter branch (default: main):", "main");
+
+if(username && repo){
+CONFIG = {username, repo, branch: branch || "main"};
 localStorage.setItem("trade_beacon_config", JSON.stringify(CONFIG));
+}else{
+alert("Configuration required!");
+location.reload();
+}
 }
 
+// Use raw.githubusercontent.com for real-time data
 const BASE = `https://raw.githubusercontent.com/${CONFIG.username}/${CONFIG.repo}/${CONFIG.branch}/signal_state/`;
 
+// Add cache busting
+function fetchWithCacheBust(url){
+return fetch(`${url}?t=${Date.now()}`, {
+cache: 'no-cache',
+headers: {'Cache-Control': 'no-cache'}
+});
+}
+
 function formatTime(iso){
-if(!iso)return'N/A';
+if(!iso)return'-';
 const d=new Date(iso);
+const now=new Date();
+const diff=(now-d)/1000;
+
+if(diff<60)return'Just now';
+if(diff<3600)return`${Math.floor(diff/60)}m ago`;
+if(diff<86400)return`${Math.floor(diff/3600)}h ago`;
 return d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
 }
 
@@ -557,41 +475,54 @@ return{name:'US',class:'session-us'};
 
 async function loadState(){
 try{
-const dashboard=await fetch(BASE+"dashboard_state.json").then(r=>r.json());
+const [dashboardRes, signalsRes] = await Promise.all([
+fetchWithCacheBust(BASE+"dashboard_state.json"),
+fetchWithCacheBust(BASE+"active_signals.json")
+]);
+
+let dashboard = {};
+let signals = [];
+
+if(dashboardRes.ok){
+dashboard = await dashboardRes.json();
+}
+
+if(signalsRes.ok){
+signals = await signalsRes.json();
+}
+
+// Use signals from either source
+if(!signals.length && dashboard.signals){
+signals = dashboard.signals;
+}
+
 return{
-signals:dashboard.signals||[],
-stats:dashboard.stats||{win_rate:0,total_pips:0,wins:0,losses:0,active_signals:0,profit_factor:0,avg_win:0,avg_loss:0},
-api_usage:dashboard.api_usage||{},
-learning_stats:dashboard.learning_stats||{total_trades:0,pair_performance:{},learned_params:{}},
-risk_management:dashboard.risk_management||{daily_pips:0,max_daily_loss:500,max_correlated_pairs:2},
-recent_news:dashboard.recent_news||[],
-timestamp:dashboard.timestamp
+signals: signals,
+stats: dashboard.stats || {win_rate:0,total_pips:0,wins:0,losses:0,active_signals:signals.length,profit_factor:0,avg_win:0,avg_loss:0},
+learning_stats: dashboard.learning_stats || {total_trades:0},
+risk_management: dashboard.risk_management || {daily_pips:0},
+timestamp: dashboard.timestamp || new Date().toISOString()
 };
 }catch(e){
-console.error(e);
-return{
-signals:[],
-stats:{win_rate:0,total_pips:0,wins:0,losses:0,active_signals:0,profit_factor:0,avg_win:0,avg_loss:0},
-api_usage:{},
-learning_stats:{total_trades:0,pair_performance:{},learned_params:{}},
-risk_management:{daily_pips:0,max_daily_loss:500,max_correlated_pairs:2},
-recent_news:[],
-timestamp:null
-};
+console.error('Load error:',e);
+throw e;
 }
 }
 
 function render(data){
+// Hide loading overlay
+document.getElementById('loadingOverlay').style.display='none';
+
 const session=getSessionInfo();
 document.getElementById('session').className=`session-indicator ${session.class}`;
 document.getElementById('session').textContent=session.name;
 
-const isLive=data.timestamp&&((Date.now()-new Date(data.timestamp))/1000<600);
+const isLive=data.timestamp&&((Date.now()-new Date(data.timestamp))/1000<900);
 const statusEl=document.getElementById('status');
 statusEl.className=`status-pill ${isLive?'status-live':'status-offline'}`;
 document.getElementById('statusText').textContent=isLive?'LIVE':'OFFLINE';
 
-document.getElementById('activeSignals').textContent=data.stats.active_signals||0;
+document.getElementById('activeSignals').textContent=data.signals.length||0;
 
 const wr=data.stats.win_rate||0;
 const wrEl=document.getElementById('winRate');
@@ -612,7 +543,6 @@ const dailyPips=data.risk_management?.daily_pips||0;
 const dpEl=document.getElementById('dailyPips');
 dpEl.textContent=(dailyPips>=0?'+':'')+dailyPips.toFixed(1);
 dpEl.style.color=dailyPips>=0?'var(--success)':'var(--danger)';
-document.getElementById('dailyChange').className=`metric-change ${dailyPips>=0?'positive':'negative'}`;
 
 document.getElementById('signalCount').textContent=`${data.signals.length} signal${data.signals.length!==1?'s':''}`;
 
@@ -664,84 +594,79 @@ document.getElementById('profitFactor').textContent=(data.stats.profit_factor||0
 document.getElementById('avgWin').textContent='+'+(data.stats.avg_win||0).toFixed(1);
 document.getElementById('avgLoss').textContent='-'+(data.stats.avg_loss||0).toFixed(1);
 document.getElementById('totalTrades').textContent=data.learning_stats?.total_trades||0;
-
-document.getElementById('lossLimit').textContent='-'+(data.risk_management?.max_daily_loss||500);
-document.getElementById('maxCorr').textContent=data.risk_management?.max_correlated_pairs||2;
-const minConf=((data.learning_stats?.learned_params?.min_confidence||0.72)*100).toFixed(0);
-document.getElementById('minConf').textContent=minConf+'%';
-const slMult=data.learning_stats?.learned_params?.atr_sl_mult||2;
-const tpMult=data.learning_stats?.learned_params?.atr_tp_mult||3;
-document.getElementById('rrRatio').textContent=`1:${(tpMult/slMult).toFixed(1)}`;
-
-const pairPerf=data.learning_stats?.pair_performance||{};
-const pairHTML=Object.entries(pairPerf).map(([pair,perf])=>{
-const total=perf.wins+perf.losses;
-const wr=total>0?(perf.wins/total*100):0;
-const color=wr>=70?'var(--success)':wr>=60?'var(--warning)':'var(--danger)';
-return`
-<div class="pair-item">
-<div class="pair-name">${pair}</div>
-<div class="pair-wr" style="color:${color}">${wr.toFixed(0)}%</div>
-<div class="pair-stats">${perf.wins}W / ${perf.losses}L</div>
-</div>
-`;
-}).join('');
-document.getElementById('pairPerformance').innerHTML=pairHTML||'<div style="color:var(--text-dim);text-align:center;padding:20px">No data yet</div>';
-
-const apiHTML=Object.entries(data.api_usage).slice(0,4).map(([name,api])=>{
-const pct=(api.calls/api.limit)*100;
-const color=pct>90?'var(--danger)':pct>70?'var(--warning)':'var(--success)';
-return`
-<div class="api-item">
-<div class="api-header">
-<span class="api-name">${name.replace(/_/g,' ').toUpperCase()}</span>
-<span class="api-usage" style="color:${color}">${pct.toFixed(0)}%</span>
-</div>
-<div class="progress-bar">
-<div class="progress-fill" style="width:${pct}%;background:${color}"></div>
-</div>
-<div style="font-size:12px;color:var(--text-dim);margin-top:8px">
-${api.calls}/${api.limit} calls • ${api.remaining} left
-</div>
-</div>
-`;
-}).join('');
-document.getElementById('apiGrid').innerHTML=apiHTML||'<div style="color:var(--text-dim);padding:20px">No API data</div>';
-
-const newsHTML=data.recent_news.slice(0,5).map(n=>`
-<div class="news-item">
-<div class="news-title">${n.title||'News Update'}</div>
-<div class="news-meta">${n.source||'Unknown'} • ${formatTime(n.published_at)}</div>
-</div>
-`).join('');
-document.getElementById('newsContainer').innerHTML=newsHTML||`
-<div class="empty-state" style="padding:40px 20px">
-<div class="empty-text">No recent news</div>
-</div>
-`;
+document.getElementById('lastUpdate').textContent=formatTime(data.timestamp);
 }
 
-let countdown=10;
+let isLoading = false;
+let countdown = 5;
+
+async function refresh(){
+if(isLoading) return;
+isLoading = true;
+
+document.getElementById('refreshText').textContent='Refreshing...';
+
+try{
+const data = await loadState();
+render(data);
+document.getElementById('refreshText').textContent='Updated';
+setTimeout(()=>{
+document.getElementById('refreshText').textContent=`Next: ${countdown}s`;
+}, 1000);
+}catch(e){
+console.error('Refresh error:', e);
+document.getElementById('refreshText').textContent='Error - Retrying...';
+}finally{
+isLoading = false;
+}
+}
+
+// Countdown timer
 setInterval(()=>{
 countdown--;
-document.getElementById('countdown').textContent=countdown;
-if(countdown<=0){
-countdown=10;
-loadState().then(render);
+if(!isLoading){
+document.getElementById('refreshText').textContent=`Next: ${countdown}s`;
 }
-},1000);
+if(countdown<=0){
+countdown=5;
+refresh();
+}
+}, 1000);
 
-loadState().then(render);
-setInterval(()=>loadState().then(render),10000);
+// Initial load
+refresh();
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e)=>{
+if(e.key==='r' && (e.ctrlKey || e.metaKey)){
+e.preventDefault();
+countdown=0;
+refresh();
+}
+if(e.key==='c' && (e.ctrlKey || e.metaKey) && e.shiftKey){
+e.preventDefault();
+localStorage.removeItem('trade_beacon_config');
+alert('Configuration cleared. Reload to reconfigure.');
+}
+});
+
+// Add reset config button (hidden, activated by Ctrl+Shift+R)
+document.addEventListener('keydown', (e)=>{
+if(e.key==='R' && e.ctrlKey && e.shiftKey){
+e.preventDefault();
+if(confirm('Reset configuration and reload?')){
+localStorage.removeItem('trade_beacon_config');
+location.reload();
+}
+}
+});
+
+console.log('%c🚀 Trade Beacon Dashboard', 'font-size:20px;font-weight:bold;color:#3b82f6');
+console.log('%cKeyboard Shortcuts:', 'font-size:14px;font-weight:bold;margin-top:8px');
+console.log('Ctrl/Cmd + R: Force refresh');
+console.log('Ctrl + Shift + R: Reset configuration');
+console.log('%cFetching from:', 'font-size:12px;margin-top:8px', BASE);
 </script>
+
 </body>
 </html>
-<h2 class="card-title">Active Signals</h2>
-<span id="signalCount">0 signals</span>
-</div>
-<div id="signalsContainer"></div>
-</div>
-
-<div style="display:grid;gap:24px">
-<div class="card">
-<div class="card-header">

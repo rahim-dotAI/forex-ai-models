@@ -1,14 +1,25 @@
-# Trade Beacon - Git Ignore Configuration
-# =========================================
-
-# Python
+# ======================================
+# PYTHON
+# ======================================
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+
+# ======================================
+# VIRTUAL ENVIRONMENTS
+# ======================================
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# ======================================
+# BUILD / DISTRIBUTION
+# ======================================
 build/
-develop-eggs/
 dist/
 downloads/
 eggs/
@@ -17,21 +28,14 @@ lib/
 lib64/
 parts/
 sdist/
-var/
 wheels/
 *.egg-info/
 .installed.cfg
-*.egg
 MANIFEST
 
-# Virtual Environment
-venv/
-env/
-ENV/
-env.bak/
-venv.bak/
-
-# IDEs
+# ======================================
+# IDE / EDITOR FILES
+# ======================================
 .vscode/
 .idea/
 *.swp
@@ -39,29 +43,56 @@ venv.bak/
 *~
 .DS_Store
 
-# Jupyter Notebook
-.ipynb_checkpoints
+# ======================================
+# NOTEBOOKS
+# ======================================
+.ipynb_checkpoints/
 *.ipynb
 
-# Environment variables
+# ======================================
+# ENVIRONMENT VARIABLES
+# ======================================
 .env
+.env.*
 .env.local
-.env.*.local
 
-# Logs (keep directory structure but ignore content)
-logs/*.log
+# ======================================
+# LOG FILES (IGNORE CONTENT)
+# ======================================
+logs/
 *.log
 
-# Cached data files (regenerated automatically)
-data/processed/*.pkl
+# ======================================
+# DATA / CACHE FILES
+# ======================================
+data/cache/
+data/tmp/
 *.pkl
-
-# Temporary files
+*.pickle
 *.tmp
-*.temp
 *.cache
 
-# OS generated files
+# ======================================
+# DATABASE FILES
+# ======================================
+*.db
+*.sqlite
+*.sqlite3
+
+# ======================================
+# TEST / COVERAGE
+# ======================================
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.pytest_cache/
+nosetests.xml
+
+# ======================================
+# OS GENERATED FILES
+# ======================================
 .DS_Store
 .DS_Store?
 ._*
@@ -70,33 +101,26 @@ data/processed/*.pkl
 ehthumbs.db
 Thumbs.db
 
-# Coverage reports
-htmlcov/
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-.hypothesis/
-.pytest_cache/
-
-# MyPy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Database files (keep structure, ignore data)
-*.db
-*.sqlite
-*.sqlite3
-
-# Large files that should use Git LFS or be excluded
-*.csv.gz
+# ======================================
+# LARGE / ARCHIVE FILES
+# ======================================
 *.zip
+*.tar
 *.tar.gz
+*.tgz
+*.7z
+*.rar
+*.csv.gz
 
-# Keep directories but not their contents (if needed)
-# data/raw/.gitkeep will keep the folder
-# But ignore the actual data files
+# ======================================
+# GITHUB ACTIONS CACHE (DO NOT COMMIT)
+# ======================================
+.cache/
+
+# ======================================
+# ALLOW THESE FILES (IMPORTANT)
+# ======================================
+!status/
+!status/heartbeat.txt
+!logs/.gitkeep
+!data/.gitkeep

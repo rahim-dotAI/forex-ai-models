@@ -126,6 +126,23 @@ jobs:
             cat signal_state/api_rate_limits.json
           fi
       
+      - name: 💾 Commit updated state files
+        if: always() && (steps.check_day.outputs.weekend == 'false' || github.event.inputs.force_run == 'true')
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
+          # Add all state files
+          git add signal_state/ memory/ data/ || true
+          
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update trading state - $(date -u '+%Y-%m-%d %H:%M UTC')" || true
+            git push || echo "Push failed, continuing anyway"
+          fi
+      
       - name: 💾 Save state for next run
         if: always() && (steps.check_day.outputs.weekend == 'false' || github.event.inputs.force_run == 'true')
         uses: actions/cache/save@v4

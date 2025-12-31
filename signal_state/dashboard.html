@@ -3,281 +3,745 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trade Beacon — Neural Command Center</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
+<title>Trade Beacon | Professional Trading Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{
-    --violet:#8b5cf6;
-    --pink:#ec4899;
-    --cyan:#06b6d4;
-    --green:#10b981;
-    --red:#ef4444;
-    --amber:#f59e0b;
-}
 *{margin:0;padding:0;box-sizing:border-box}
-body{
-    font-family:'Space Grotesk',sans-serif;
-    background:#07070d;
-    color:#fff;
-    overflow-x:hidden;
+:root{
+--bg:#0a0e1a;
+--surface:#111827;
+--surface-light:#1f2937;
+--border:#374151;
+--text:#f9fafb;
+--text-dim:#9ca3af;
+--primary:#3b82f6;
+--success:#10b981;
+--danger:#ef4444;
+--warning:#f59e0b;
+--accent:#8b5cf6;
 }
-canvas{
-    position:fixed;
-    inset:0;
-    z-index:0;
-    opacity:.35;
+body{
+font-family:'Inter',sans-serif;
+background:var(--bg);
+color:var(--text);
+line-height:1.6;
+-webkit-font-smoothing:antialiased;
 }
 .container{
-    position:relative;
-    z-index:1;
-    max-width:1900px;
-    margin:auto;
-    padding:36px;
+max-width:1600px;
+margin:0 auto;
+padding:24px;
 }
-.glass{
-    background:linear-gradient(135deg,rgba(139,92,246,.08),rgba(236,72,153,.05));
-    backdrop-filter:blur(28px);
-    border:1px solid rgba(139,92,246,.25);
-    border-radius:30px;
+.navbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:16px 32px;
+background:var(--surface);
+border-bottom:1px solid var(--border);
+position:sticky;
+top:0;
+z-index:100;
+backdrop-filter:blur(10px);
 }
-.header{
-    padding:44px;
-    margin-bottom:32px;
+.logo{
+font-size:24px;
+font-weight:800;
+letter-spacing:-0.5px;
 }
-.header h1{
-    font-size:3.8rem;
-    background:linear-gradient(135deg,var(--violet),var(--pink),var(--cyan));
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
+.logo span{color:var(--primary)}
+.nav-right{
+display:flex;
+gap:24px;
+align-items:center;
 }
-.sub{
-    opacity:.75;
-    margin-top:10px;
+.status-pill{
+padding:6px 14px;
+border-radius:20px;
+font-size:13px;
+font-weight:600;
+display:flex;
+align-items:center;
+gap:6px;
 }
-.live{
-    margin-top:18px;
-    display:inline-flex;
-    align-items:center;
-    gap:12px;
-    padding:10px 22px;
-    border-radius:22px;
-    background:rgba(16,185,129,.15);
-    border:1px solid rgba(16,185,129,.4);
+.status-live{
+background:rgba(16,185,129,0.15);
+color:var(--success);
+border:1px solid rgba(16,185,129,0.3);
 }
-.dot{
-    width:10px;height:10px;border-radius:50%;
-    background:var(--green);
-    animation:pulse 1.4s infinite;
+.status-offline{
+background:rgba(239,68,68,0.15);
+color:var(--danger);
+border:1px solid rgba(239,68,68,0.3);
 }
-@keyframes pulse{50%{opacity:.3}}
-
+.pulse{
+width:6px;
+height:6px;
+border-radius:50%;
+background:currentColor;
+animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{
+0%,100%{opacity:1}
+50%{opacity:0.3}
+}
 .grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-    gap:24px;
-    margin-bottom:34px;
+display:grid;
+gap:24px;
+margin-top:24px;
+}
+.grid-4{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.grid-2{grid-template-columns:2fr 1fr}
+.grid-3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:1200px){
+.grid-2{grid-template-columns:1fr}
+.grid-3{grid-template-columns:1fr}
 }
 .card{
-    padding:30px;
-    border-radius:24px;
-    background:linear-gradient(135deg,rgba(255,255,255,.04),rgba(0,0,0,.2));
-    border:1px solid rgba(139,92,246,.25);
+background:var(--surface);
+border:1px solid var(--border);
+border-radius:16px;
+padding:24px;
 }
-.card span{
-    font-size:.85rem;
-    opacity:.7;
+.card-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
 }
-.card h2{
-    font-size:3rem;
-    margin-top:10px;
+.card-title{
+font-size:16px;
+font-weight:600;
+color:var(--text-dim);
+text-transform:uppercase;
+letter-spacing:0.5px;
 }
-.section{
-    padding:40px;
-    margin-bottom:34px;
+.metric-card{
+background:linear-gradient(135deg,var(--surface) 0%,var(--surface-light) 100%);
+border:1px solid var(--border);
+border-radius:16px;
+padding:28px;
+transition:all 0.3s ease;
 }
-.section h2{
-    font-size:2.2rem;
-    margin-bottom:24px;
+.metric-card:hover{
+transform:translateY(-4px);
+box-shadow:0 12px 24px rgba(0,0,0,0.4);
+border-color:var(--primary);
 }
-.signal{
-    border:2px solid rgba(139,92,246,.35);
-    border-radius:24px;
-    padding:34px;
-    margin-bottom:24px;
-    transition:.3s;
+.metric-label{
+font-size:13px;
+font-weight:500;
+color:var(--text-dim);
+text-transform:uppercase;
+letter-spacing:0.8px;
+margin-bottom:8px;
 }
-.signal:hover{
-    transform:translateY(-4px);
-    box-shadow:0 20px 60px rgba(139,92,246,.35);
+.metric-value{
+font-size:42px;
+font-weight:700;
+line-height:1;
+margin-bottom:8px;
 }
-.signal-head{
-    display:flex;
-    justify-content:space-between;
-    flex-wrap:wrap;
-    gap:20px;
+.metric-change{
+font-size:13px;
+font-weight:600;
+display:flex;
+align-items:center;
+gap:4px;
+}
+.positive{color:var(--success)}
+.negative{color:var(--danger)}
+.neutral{color:var(--text-dim)}
+.signal-card{
+background:var(--surface-light);
+border:1px solid var(--border);
+border-radius:12px;
+padding:20px;
+margin-bottom:16px;
+transition:all 0.3s ease;
+position:relative;
+overflow:hidden;
+}
+.signal-card::before{
+content:'';
+position:absolute;
+left:0;
+top:0;
+bottom:0;
+width:4px;
+}
+.signal-card.buy::before{background:var(--success)}
+.signal-card.sell::before{background:var(--danger)}
+.signal-card:hover{
+transform:translateX(4px);
+border-color:var(--primary);
+}
+.signal-header{
+display:flex;
+justify-content:space-between;
+align-items:flex-start;
+margin-bottom:16px;
+}
+.signal-pair{
+font-size:20px;
+font-weight:700;
+letter-spacing:-0.5px;
 }
 .badge{
-    padding:6px 14px;
-    border-radius:999px;
-    font-weight:700;
+padding:4px 12px;
+border-radius:6px;
+font-size:11px;
+font-weight:700;
+text-transform:uppercase;
+letter-spacing:0.5px;
 }
-.buy{background:var(--green)}
-.sell{background:var(--red)}
-.grid-3{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-    gap:16px;
-    margin-top:24px;
+.badge-buy{
+background:var(--success);
+color:#000;
 }
-.box{
-    padding:18px;
-    border-radius:16px;
-    background:rgba(255,255,255,.04);
-    text-align:center;
+.badge-sell{
+background:var(--danger);
+color:#fff;
 }
-.api{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-    gap:20px;
+.badge-trailing{
+background:var(--warning);
+color:#000;
+margin-left:6px;
 }
-.bar{
-    height:10px;
-    border-radius:10px;
-    background:rgba(255,255,255,.1);
-    overflow:hidden;
-    margin-top:12px;
+.signal-meta{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:12px;
+margin-top:16px;
 }
-.fill{
-    height:100%;
+.signal-meta-item{
+background:rgba(255,255,255,0.03);
+padding:12px;
+border-radius:8px;
+text-align:center;
 }
-footer{
-    text-align:center;
-    opacity:.6;
-    padding:40px;
+.signal-meta-label{
+font-size:11px;
+color:var(--text-dim);
+text-transform:uppercase;
+letter-spacing:0.5px;
+margin-bottom:4px;
+}
+.signal-meta-value{
+font-size:16px;
+font-weight:700;
+}
+.progress-bar{
+height:8px;
+background:rgba(255,255,255,0.05);
+border-radius:4px;
+overflow:hidden;
+margin-top:8px;
+}
+.progress-fill{
+height:100%;
+transition:width 0.3s ease;
+border-radius:4px;
+}
+.chart-placeholder{
+height:280px;
+background:rgba(255,255,255,0.02);
+border-radius:12px;
+display:flex;
+align-items:center;
+justify-content:center;
+color:var(--text-dim);
+font-size:14px;
+}
+.stat-row{
+display:flex;
+justify-content:space-between;
+padding:16px 0;
+border-bottom:1px solid var(--border);
+}
+.stat-row:last-child{border-bottom:none}
+.stat-label{
+font-size:14px;
+color:var(--text-dim);
+}
+.stat-value{
+font-size:16px;
+font-weight:600;
+}
+.pair-performance{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+gap:12px;
+}
+.pair-item{
+background:rgba(255,255,255,0.03);
+padding:16px;
+border-radius:10px;
+text-align:center;
+border:1px solid transparent;
+transition:all 0.3s ease;
+}
+.pair-item:hover{
+border-color:var(--primary);
+transform:translateY(-2px);
+}
+.pair-name{
+font-size:13px;
+font-weight:600;
+margin-bottom:8px;
+}
+.pair-wr{
+font-size:24px;
+font-weight:700;
+}
+.pair-stats{
+font-size:11px;
+color:var(--text-dim);
+margin-top:4px;
+}
+.api-grid{
+display:grid;
+gap:16px;
+}
+.api-item{
+background:rgba(255,255,255,0.02);
+padding:16px;
+border-radius:10px;
+border:1px solid var(--border);
+}
+.api-header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:12px;
+}
+.api-name{
+font-weight:600;
+font-size:14px;
+}
+.api-usage{
+font-size:13px;
+font-weight:600;
+}
+.news-item{
+padding:16px;
+border-radius:10px;
+background:rgba(255,255,255,0.02);
+margin-bottom:12px;
+border-left:3px solid var(--primary);
+transition:all 0.3s ease;
+}
+.news-item:hover{
+background:rgba(59,130,246,0.05);
+transform:translateX(4px);
+}
+.news-title{
+font-size:14px;
+font-weight:600;
+margin-bottom:6px;
+line-height:1.4;
+}
+.news-meta{
+font-size:12px;
+color:var(--text-dim);
+}
+.empty-state{
+padding:80px 20px;
+text-align:center;
+}
+.empty-icon{
+width:64px;
+height:64px;
+margin:0 auto 16px;
+opacity:0.3;
+}
+.empty-title{
+font-size:18px;
+font-weight:600;
+margin-bottom:8px;
+}
+.empty-text{
+color:var(--text-dim);
+font-size:14px;
+}
+.session-indicator{
+display:inline-flex;
+align-items:center;
+gap:8px;
+padding:6px 14px;
+border-radius:20px;
+font-size:13px;
+font-weight:600;
+}
+.session-asian{
+background:rgba(245,158,11,0.15);
+color:var(--warning);
+border:1px solid rgba(245,158,11,0.3);
+}
+.session-european{
+background:rgba(59,130,246,0.15);
+color:var(--primary);
+border:1px solid rgba(59,130,246,0.3);
+}
+.session-us{
+background:rgba(16,185,129,0.15);
+color:var(--success);
+border:1px solid rgba(16,185,129,0.3);
+}
+.footer{
+margin-top:48px;
+padding:24px;
+text-align:center;
+border-top:1px solid var(--border);
+color:var(--text-dim);
+font-size:13px;
+}
+.refresh-indicator{
+position:fixed;
+bottom:24px;
+right:24px;
+padding:12px 20px;
+background:var(--surface);
+border:1px solid var(--border);
+border-radius:30px;
+font-size:13px;
+font-weight:600;
+box-shadow:0 8px 24px rgba(0,0,0,0.3);
+z-index:1000;
 }
 </style>
 </head>
-
 <body>
 
-<canvas id="bg"></canvas>
-<div class="container" id="app"></div>
+<nav class="navbar">
+<div class="logo">Trade<span>Beacon</span></div>
+<div class="nav-right">
+<span class="session-indicator" id="session"></span>
+<div class="status-pill status-live" id="status">
+<span class="pulse"></span>
+<span id="statusText">LIVE</span>
+</div>
+</div>
+</nav>
+
+<div class="container">
+<div class="grid grid-4">
+<div class="metric-card">
+<div class="metric-label">Active Signals</div>
+<div class="metric-value" id="activeSignals">0</div>
+<div class="metric-change neutral">Max 5 concurrent</div>
+</div>
+<div class="metric-card">
+<div class="metric-label">Win Rate</div>
+<div class="metric-value" id="winRate">0.0%</div>
+<div class="metric-change" id="winRateChange">
+<span id="wins">0</span>W / <span id="losses">0</span>L
+</div>
+</div>
+<div class="metric-card">
+<div class="metric-label">Total P&L</div>
+<div class="metric-value" id="totalPips">+0.0</div>
+<div class="metric-change positive">All-time pips</div>
+</div>
+<div class="metric-card">
+<div class="metric-label">Today's P&L</div>
+<div class="metric-value" id="dailyPips">+0.0</div>
+<div class="metric-change" id="dailyChange">Since 00:00 UTC</div>
+</div>
+</div>
+
+<div class="grid grid-2" style="margin-top:24px">
+<div class="card">
+<div class="card-header">
+<h2 class="card-title">Performance</h2>
+</div>
+<div class="stat-row">
+<span class="stat-label">Profit Factor</span>
+<span class="stat-value" id="profitFactor">0.00</span>
+</div>
+<div class="stat-row">
+<span class="stat-label">Avg Win</span>
+<span class="stat-value positive" id="avgWin">+0.0</span>
+</div>
+<div class="stat-row">
+<span class="stat-label">Avg Loss</span>
+<span class="stat-value negative" id="avgLoss">-0.0</span>
+</div>
+<div class="stat-row">
+<span class="stat-label">Total Trades</span>
+<span class="stat-value" id="totalTrades">0</span>
+</div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<h2 class="card-title">Risk Management</h2>
+</div>
+<div class="stat-row">
+<span class="stat-label">Daily Loss Limit</span>
+<span class="stat-value" id="lossLimit">-500</span>
+</div>
+<div class="stat-row">
+<span class="stat-label">Max Correlated</span>
+<span class="stat-value" id="maxCorr">2</span>
+</div>
+<div class="stat-row">
+<span class="stat-label">Min Confidence</span>
+<span class="stat-value" id="minConf">72%</span>
+</div>
+<div class="stat-row">
+<span class="stat-label">R:R Ratio</span>
+<span class="stat-value" id="rrRatio">1:1.5</span>
+</div>
+</div>
+</div>
+</div>
+
+<div class="grid grid-3" style="margin-top:24px">
+<div class="card">
+<div class="card-header">
+<h2 class="card-title">Pair Performance</h2>
+</div>
+<div class="pair-performance" id="pairPerformance"></div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<h2 class="card-title">API Usage</h2>
+</div>
+<div class="api-grid" id="apiGrid"></div>
+</div>
+
+<div class="card">
+<div class="card-header">
+<h2 class="card-title">Latest News</h2>
+</div>
+<div id="newsContainer"></div>
+</div>
+</div>
+
+<div class="footer">
+<div style="margin-bottom:8px">Trade Beacon Professional Trading Platform</div>
+<div>Algorithmic Trading • Risk Management • Real-time Analytics</div>
+</div>
+</div>
+
+<div class="refresh-indicator" id="refresh">
+<span id="countdown">10</span>s
+</div>
 
 <script>
-/* ================= CONFIG ================= */
-const CONFIG = JSON.parse(localStorage.getItem("trade_beacon_config"));
+const CONFIG = JSON.parse(localStorage.getItem("trade_beacon_config")) || {
+username: prompt("GitHub Username:"),
+repo: prompt("Repository Name:"),
+branch: "main"
+};
+if(CONFIG.username && CONFIG.repo){
+localStorage.setItem("trade_beacon_config", JSON.stringify(CONFIG));
+}
+
 const BASE = `https://raw.githubusercontent.com/${CONFIG.username}/${CONFIG.repo}/${CONFIG.branch}/signal_state/`;
 
-/* ================= BACKGROUND ================= */
-const c=document.getElementById("bg"),x=c.getContext("2d");
-c.width=innerWidth;c.height=innerHeight;
-class P{constructor(){this.x=Math.random()*c.width;this.y=Math.random()*c.height;this.vx=Math.random()-.5;this.vy=Math.random()-.5;this.r=Math.random()*2}}
-const ps=[...Array(140)].map(()=>new P());
-function anim(){
-    x.clearRect(0,0,c.width,c.height);
-    ps.forEach(p=>{
-        p.x+=p.vx;p.y+=p.vy;
-        if(p.x<0)p.x=c.width;if(p.x>c.width)p.x=0;
-        if(p.y<0)p.y=c.height;if(p.y>c.height)p.y=0;
-        x.fillStyle="rgba(139,92,246,.6)";
-        x.beginPath();x.arc(p.x,p.y,p.r,0,Math.PI*2);x.fill();
-    });
-    requestAnimationFrame(anim);
+function formatTime(iso){
+if(!iso)return'N/A';
+const d=new Date(iso);
+return d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
 }
-anim();
 
-/* ================= LOAD ALL STATE ================= */
+function getSessionInfo(){
+const hour=new Date().getUTCHours();
+if(hour>=0&&hour<8)return{name:'ASIAN',class:'session-asian'};
+if(hour>=8&&hour<16)return{name:'EUROPEAN',class:'session-european'};
+return{name:'US',class:'session-us'};
+}
+
 async function loadState(){
-    const [
-        system,
-        dashboard,
-        signals,
-        news,
-        price
-    ] = await Promise.all([
-        fetch(BASE+"system_state.json").then(r=>r.json()),
-        fetch(BASE+"dashboard_state.json").then(r=>r.json()),
-        fetch(BASE+"active_signals.json").then(r=>r.json()),
-        fetch(BASE+"news_api_calls.json").then(r=>r.json()),
-        fetch(BASE+"price_source_rotation.json").then(r=>r.json())
-    ]);
-    return {system,dashboard,signals,news,price};
+try{
+const dashboard=await fetch(BASE+"dashboard_state.json").then(r=>r.json());
+return{
+signals:dashboard.signals||[],
+stats:dashboard.stats||{win_rate:0,total_pips:0,wins:0,losses:0,active_signals:0,profit_factor:0,avg_win:0,avg_loss:0},
+api_usage:dashboard.api_usage||{},
+learning_stats:dashboard.learning_stats||{total_trades:0,pair_performance:{},learned_params:{}},
+risk_management:dashboard.risk_management||{daily_pips:0,max_daily_loss:500,max_correlated_pairs:2},
+recent_news:dashboard.recent_news||[],
+timestamp:dashboard.timestamp
+};
+}catch(e){
+console.error(e);
+return{
+signals:[],
+stats:{win_rate:0,total_pips:0,wins:0,losses:0,active_signals:0,profit_factor:0,avg_win:0,avg_loss:0},
+api_usage:{},
+learning_stats:{total_trades:0,pair_performance:{},learned_params:{}},
+risk_management:{daily_pips:0,max_daily_loss:500,max_correlated_pairs:2},
+recent_news:[],
+timestamp:null
+};
+}
 }
 
-/* ================= RENDER ================= */
-function render(s){
-document.getElementById("app").innerHTML=`
-<div class="glass header">
-<h1>⚡ TRADE BEACON</h1>
-<div class="sub">${CONFIG.username}/${CONFIG.repo}</div>
-<div class="live"><div class="dot"></div>LIVE • Neural Sync</div>
-</div>
+function render(data){
+const session=getSessionInfo();
+document.getElementById('session').className=`session-indicator ${session.class}`;
+document.getElementById('session').textContent=session.name;
 
-<div class="grid">
-<div class="card"><span>SYSTEM</span><h2>${s.system.running?"LIVE":"HALTED"}</h2></div>
-<div class="card"><span>MODE</span><h2>${s.system.mode}</h2></div>
-<div class="card"><span>WIN RATE</span><h2>${s.dashboard.stats.win_rate.toFixed(1)}%</h2></div>
-<div class="card"><span>TOTAL PIPS</span><h2>${s.dashboard.stats.total_pips.toFixed(1)}</h2></div>
-</div>
+const isLive=data.timestamp&&((Date.now()-new Date(data.timestamp))/1000<600);
+const statusEl=document.getElementById('status');
+statusEl.className=`status-pill ${isLive?'status-live':'status-offline'}`;
+document.getElementById('statusText').textContent=isLive?'LIVE':'OFFLINE';
 
-<div class="glass section">
-<h2>🎯 Active Signals</h2>
-${s.signals.map(sig=>`
-<div class="signal">
-<div class="signal-head">
+document.getElementById('activeSignals').textContent=data.stats.active_signals||0;
+
+const wr=data.stats.win_rate||0;
+const wrEl=document.getElementById('winRate');
+wrEl.textContent=wr.toFixed(1)+'%';
+wrEl.style.color=wr>=70?'var(--success)':wr>=60?'var(--warning)':'var(--danger)';
+
+const wrChange=document.getElementById('winRateChange');
+wrChange.className=`metric-change ${wr>=60?'positive':'negative'}`;
+document.getElementById('wins').textContent=data.stats.wins||0;
+document.getElementById('losses').textContent=data.stats.losses||0;
+
+const totalPips=data.stats.total_pips||0;
+const tpEl=document.getElementById('totalPips');
+tpEl.textContent=(totalPips>=0?'+':'')+totalPips.toFixed(1);
+tpEl.style.color=totalPips>=0?'var(--success)':'var(--danger)';
+
+const dailyPips=data.risk_management?.daily_pips||0;
+const dpEl=document.getElementById('dailyPips');
+dpEl.textContent=(dailyPips>=0?'+':'')+dailyPips.toFixed(1);
+dpEl.style.color=dailyPips>=0?'var(--success)':'var(--danger)';
+document.getElementById('dailyChange').className=`metric-change ${dailyPips>=0?'positive':'negative'}`;
+
+document.getElementById('signalCount').textContent=`${data.signals.length} signal${data.signals.length!==1?'s':''}`;
+
+const signalsHTML=data.signals.length>0?data.signals.map(s=>`
+<div class="signal-card ${s.direction.toLowerCase()}">
+<div class="signal-header">
 <div>
-<h3>${sig.pair}</h3>
-<div class="badge ${sig.direction==="BUY"?"buy":"sell"}">${sig.direction}</div>
-<p>${sig.strategy} • ${(sig.confidence*100).toFixed(0)}%</p>
+<div class="signal-pair">${s.pair}</div>
+<div style="margin-top:8px">
+<span class="badge badge-${s.direction.toLowerCase()}">${s.direction}</span>
+${s.trailing_stop_activated?'<span class="badge badge-trailing">TRAILING</span>':''}
+</div>
+<div style="font-size:13px;color:var(--text-dim);margin-top:8px">
+${s.strategy} • ${(s.confidence*100).toFixed(0)}% confidence
 </div>
 </div>
-<div class="grid-3">
-<div class="box">ENTRY<br><b>${sig.entry_price.toFixed(5)}</b></div>
-<div class="box">SL<br><b>${sig.sl.toFixed(5)}</b></div>
-<div class="box">TP<br><b>${sig.tp.toFixed(5)}</b></div>
+<div style="text-align:right;font-size:13px;color:var(--text-dim)">
+<div>${formatTime(s.created_at)}</div>
+<div>Exp: ${formatTime(s.expires_at)}</div>
 </div>
 </div>
-`).join("")}
+<div class="signal-meta">
+<div class="signal-meta-item">
+<div class="signal-meta-label">Entry</div>
+<div class="signal-meta-value">${s.entry_price.toFixed(5)}</div>
 </div>
+<div class="signal-meta-item">
+<div class="signal-meta-label">Stop Loss</div>
+<div class="signal-meta-value" style="color:var(--danger)">${s.sl.toFixed(5)}</div>
+</div>
+<div class="signal-meta-item">
+<div class="signal-meta-label">Take Profit</div>
+<div class="signal-meta-value" style="color:var(--success)">${s.tp.toFixed(5)}</div>
+</div>
+</div>
+</div>
+`).join(''):`
+<div class="empty-state">
+<svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+</svg>
+<div class="empty-title">No Active Signals</div>
+<div class="empty-text">System scanning every 10 minutes</div>
+</div>
+`;
+document.getElementById('signalsContainer').innerHTML=signalsHTML;
 
-<div class="glass section">
-<h2>🔌 News API Load</h2>
-<div class="api">
-${Object.entries(s.news).map(([k,v])=>`
-<div class="card">
-<b>${k.toUpperCase()}</b>
-<div class="bar">
-<div class="fill" style="width:${(v.calls/v.limit)*100}%;background:${(v.calls/v.limit)>0.8?"var(--red)":"var(--green)"}"></div>
-</div>
-<p>${v.calls}/${v.limit} calls</p>
-</div>
-`).join("")}
-</div>
-</div>
+document.getElementById('profitFactor').textContent=(data.stats.profit_factor||0).toFixed(2);
+document.getElementById('avgWin').textContent='+'+(data.stats.avg_win||0).toFixed(1);
+document.getElementById('avgLoss').textContent='-'+(data.stats.avg_loss||0).toFixed(1);
+document.getElementById('totalTrades').textContent=data.learning_stats?.total_trades||0;
 
-<div class="glass section">
-<h2>🌐 Price Source Rotation</h2>
-<p>Active Provider: <b>${s.price.active_provider}</b></p>
-<p>Queue: ${s.price.rotation_queue.join(" → ")}</p>
-</div>
+document.getElementById('lossLimit').textContent='-'+(data.risk_management?.max_daily_loss||500);
+document.getElementById('maxCorr').textContent=data.risk_management?.max_correlated_pairs||2;
+const minConf=((data.learning_stats?.learned_params?.min_confidence||0.72)*100).toFixed(0);
+document.getElementById('minConf').textContent=minConf+'%';
+const slMult=data.learning_stats?.learned_params?.atr_sl_mult||2;
+const tpMult=data.learning_stats?.learned_params?.atr_tp_mult||3;
+document.getElementById('rrRatio').textContent=`1:${(tpMult/slMult).toFixed(1)}`;
 
-<footer>
-🚀 Trade Beacon Neural Engine — State-Driven Intelligence
-</footer>
+const pairPerf=data.learning_stats?.pair_performance||{};
+const pairHTML=Object.entries(pairPerf).map(([pair,perf])=>{
+const total=perf.wins+perf.losses;
+const wr=total>0?(perf.wins/total*100):0;
+const color=wr>=70?'var(--success)':wr>=60?'var(--warning)':'var(--danger)';
+return`
+<div class="pair-item">
+<div class="pair-name">${pair}</div>
+<div class="pair-wr" style="color:${color}">${wr.toFixed(0)}%</div>
+<div class="pair-stats">${perf.wins}W / ${perf.losses}L</div>
+</div>
+`;
+}).join('');
+document.getElementById('pairPerformance').innerHTML=pairHTML||'<div style="color:var(--text-dim);text-align:center;padding:20px">No data yet</div>';
+
+const apiHTML=Object.entries(data.api_usage).slice(0,4).map(([name,api])=>{
+const pct=(api.calls/api.limit)*100;
+const color=pct>90?'var(--danger)':pct>70?'var(--warning)':'var(--success)';
+return`
+<div class="api-item">
+<div class="api-header">
+<span class="api-name">${name.replace(/_/g,' ').toUpperCase()}</span>
+<span class="api-usage" style="color:${color}">${pct.toFixed(0)}%</span>
+</div>
+<div class="progress-bar">
+<div class="progress-fill" style="width:${pct}%;background:${color}"></div>
+</div>
+<div style="font-size:12px;color:var(--text-dim);margin-top:8px">
+${api.calls}/${api.limit} calls • ${api.remaining} left
+</div>
+</div>
+`;
+}).join('');
+document.getElementById('apiGrid').innerHTML=apiHTML||'<div style="color:var(--text-dim);padding:20px">No API data</div>';
+
+const newsHTML=data.recent_news.slice(0,5).map(n=>`
+<div class="news-item">
+<div class="news-title">${n.title||'News Update'}</div>
+<div class="news-meta">${n.source||'Unknown'} • ${formatTime(n.published_at)}</div>
+</div>
+`).join('');
+document.getElementById('newsContainer').innerHTML=newsHTML||`
+<div class="empty-state" style="padding:40px 20px">
+<div class="empty-text">No recent news</div>
+</div>
 `;
 }
 
-/* ================= START ================= */
-(async()=>{
-    const state=await loadState();
-    render(state);
-    setInterval(async()=>{
-        render(await loadState());
-    },10000);
-})();
-</script>
+let countdown=10;
+setInterval(()=>{
+countdown--;
+document.getElementById('countdown').textContent=countdown;
+if(countdown<=0){
+countdown=10;
+loadState().then(render);
+}
+},1000);
 
+loadState().then(render);
+setInterval(()=>loadState().then(render),10000);
+</script>
 </body>
 </html>
+<h2 class="card-title">Active Signals</h2>
+<span id="signalCount">0 signals</span>
+</div>
+<div id="signalsContainer"></div>
+</div>
+
+<div style="display:grid;gap:24px">
+<div class="card">
+<div class="card-header">

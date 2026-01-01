@@ -32,22 +32,32 @@ jobs:
         id: check_market
         run: |
           python << 'EOF'
-          import datetime, holidays, sys
+          import datetime, holidays, sys, os
+          
           today = datetime.date.today()
           us = holidays.US()
           
+          # Get GitHub output file path
+          github_output = os.environ.get('GITHUB_OUTPUT', '')
+          
           if today.weekday() >= 5:
               print("🚫 Weekend – skipping trading")
-              print("skip=true" >> "$GITHUB_OUTPUT")
+              if github_output:
+                  with open(github_output, 'a') as f:
+                      f.write("skip=true\n")
               sys.exit(0)
           
           if today in us:
               print(f"🚫 Market holiday: {us[today]} – skipping trading")
-              print("skip=true" >> "$GITHUB_OUTPUT")
+              if github_output:
+                  with open(github_output, 'a') as f:
+                      f.write("skip=true\n")
               sys.exit(0)
           
           print("✅ Market open – proceeding with trading")
-          print("skip=false" >> "$GITHUB_OUTPUT")
+          if github_output:
+              with open(github_output, 'a') as f:
+                  f.write("skip=false\n")
           EOF
           
       - name: 🚀 Run Trading Bot

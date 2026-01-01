@@ -2,7 +2,7 @@ name: AI Forex Trading System
 
 on:
   schedule:
-    - cron: "*/10 * * * 1-5"
+    - cron: "*/10 * * * 1-5"  # Every 10 minutes, Mon-Fri
   workflow_dispatch:
 
 env:
@@ -12,43 +12,48 @@ env:
 jobs:
   forex-trading:
     runs-on: ubuntu-latest
-
+    
     steps:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
-
+        
       - name: 🐍 Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-
+          
       - name: 📦 Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install holidays
-
+          
       - name: 📅 Check trading day
+        id: check_market
         run: |
           python << 'EOF'
           import datetime, holidays, sys
           today = datetime.date.today()
           us = holidays.US()
-
+          
           if today.weekday() >= 5:
-              print("🚫 Weekend – skipping run")
-              sys.exit(1)
-
+              print("🚫 Weekend – skipping trading")
+              print("skip=true" >> "$GITHUB_OUTPUT")
+              sys.exit(0)
+          
           if today in us:
-              print(f"🚫 Market holiday: {us[today]}")
-              sys.exit(1)
-
-          print("✅ Market open – continuing")
+              print(f"🚫 Market holiday: {us[today]} – skipping trading")
+              print("skip=true" >> "$GITHUB_OUTPUT")
+              sys.exit(0)
+          
+          print("✅ Market open – proceeding with trading")
+          print("skip=false" >> "$GITHUB_OUTPUT")
           EOF
-
+          
       - name: 🚀 Run Trading Bot
-        run: python trade_beacon.py
-
+        if: steps.check_market.outputs.skip != 'true'
+        run: python ${{ env.ENTRY_SCRIPT }}
+        
       - name: 📦 Upload logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -56,6 +61,8 @@ jobs:
           name: trading-logs
           path: |
             logs/
+            outputs/
+            signal_state/
             *.log
+          retention-days: 7
           if-no-files-found: ignore
-

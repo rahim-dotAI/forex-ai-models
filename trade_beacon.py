@@ -7,6 +7,7 @@ AI FOREX BRAIN - OPTIMIZED SCHEDULED SYSTEM (10-MINUTE INTERVALS)
 ✅ Week 1 improvements: Signal duplication fix, trailing stops, increased cache
 ✅ Week 2 improvements: Market session awareness, multi-timeframe confirmation
 ✅ Week 3 improvements: Portfolio risk manager, performance analytics, volatility sizing
+✅ Holiday detection: Automatically skips US market holidays
 ✅ Efficient API usage with smart caching
 """
 
@@ -24,6 +25,46 @@ import pandas as pd
 import numpy as np
 import logging
 import traceback
+import holidays
+
+# ======================================================
+# HOLIDAY & WEEKEND CHECK - MUST RUN FIRST
+# ======================================================
+def check_market_status():
+    """Check if markets are open (weekends and US holidays)"""
+    today = datetime.now(timezone.utc).date()
+    
+    # Check weekend
+    if today.weekday() >= 5:
+        print("=" * 70)
+        print("🚫 WEEKEND — Markets are closed")
+        print("=" * 70)
+        print(f"📅 Today is {today.strftime('%A, %B %d, %Y')}")
+        print("⏰ Markets reopen Monday")
+        print("=" * 70)
+        sys.exit(0)
+    
+    # Check US holidays
+    us_holidays = holidays.US()
+    if today in us_holidays:
+        holiday_name = us_holidays[today]
+        print("=" * 70)
+        print(f"🚫 MARKET HOLIDAY: {holiday_name}")
+        print("=" * 70)
+        print(f"📅 Date: {today.strftime('%A, %B %d, %Y')}")
+        print("⏰ Markets resume on next trading day")
+        print("=" * 70)
+        sys.exit(0)
+    
+    # Markets are open
+    print("=" * 70)
+    print("✅ MARKET OPEN — Proceeding with trading")
+    print("=" * 70)
+    print(f"📅 {today.strftime('%A, %B %d, %Y')}")
+    print("=" * 70)
+
+# Run market status check immediately
+check_market_status()
 
 # ======================================================
 # CONFIGURATION - OPTIMIZED FOR 10-MINUTE RUNS
@@ -1228,12 +1269,6 @@ def main():
     
     start_time = time.time()
     
-    # Check if markets are open
-    now = datetime.now(timezone.utc)
-    if now.weekday() in [5, 6]:
-        logger.info("🏖️ WEEKEND - Markets closed")
-        return
-    
     # Get current market session
     session, active_pairs = get_market_session()
     logger.info(f"📊 Session: {session}")
@@ -1309,6 +1344,7 @@ if __name__ == "__main__":
     print("   ✅ Week 1: Signal duplication fix, trailing stops, increased cache")
     print("   ✅ Week 2: Market session awareness, multi-timeframe confirmation")
     print("   ✅ Week 3: Portfolio risk manager, performance analytics, volatility sizing")
+    print("   ✅ Holiday Detection: Automatic skip on US market holidays")
     print("=" * 70)
     print(api_limiter.get_summary())
     print("=" * 70)

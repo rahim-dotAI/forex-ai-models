@@ -1,11 +1,196 @@
 {
-  "timestamp": "2025-12-23T18:01:20.842304+00:00",
-  "system_running": false,
-  "uptime_hours": 0,
-  "news_count": 3,
-  "upcoming_events": 0,
-  "high_impact_news": 0,
-  "active_signals": 5,
+  "timestamp": "2026-01-02T21:53:21.661313+00:00",
+  "next_run": "2026-01-02T22:03:21.661322+00:00",
+  "run_interval_minutes": 10,
+  "current_session": "US",
+  "active_signals": 3,
+  "signals": [
+    {
+      "id": "EUR/USD_1767390799",
+      "pair": "EUR/USD",
+      "direction": "BUY",
+      "entry_price": 1.172333002090454,
+      "sl": 1.16483017376491,
+      "tp": 1.184837715966361,
+      "created_at": "2026-01-02T21:53:19.740549+00:00",
+      "expires_at": "2026-01-03T01:53:19.740549+00:00",
+      "status": "ACTIVE",
+      "confidence": 0.95,
+      "strategy": "TREND_FOLLOWING",
+      "indicators": {
+        "rsi": 54.193484177322155,
+        "adx": 49.01886546036845,
+        "ema12": 1.1741798500941039,
+        "ema200": 1.1483362382001143
+      },
+      "patterns": [],
+      "confidence_factors": [
+        "Strong uptrend (EMA alignment)",
+        "Above 200 EMA",
+        "RSI bearish (54.2)",
+        "Strong trend (ADX 49.0)"
+      ],
+      "scores": {
+        "bullish": 50,
+        "bearish": 15
+      },
+      "outcome": null,
+      "outcome_time": null,
+      "outcome_pips": 0.0,
+      "trailing_stop_activated": false,
+      "original_sl": 1.16483017376491
+    },
+    {
+      "id": "GBP/USD_1767390800",
+      "pair": "GBP/USD",
+      "direction": "BUY",
+      "entry_price": 1.3461124897003174,
+      "sl": 1.334474972316197,
+      "tp": 1.3655083520071847,
+      "created_at": "2026-01-02T21:53:20.724564+00:00",
+      "expires_at": "2026-01-03T01:53:20.724564+00:00",
+      "status": "ACTIVE",
+      "confidence": 0.95,
+      "strategy": "TREND_FOLLOWING",
+      "indicators": {
+        "rsi": 59.88751921322645,
+        "adx": 54.11653152330219,
+        "ema12": 1.3445086504547177,
+        "ema200": 1.327812407955209
+      },
+      "patterns": [],
+      "confidence_factors": [
+        "Strong uptrend (EMA alignment)",
+        "Above 200 EMA",
+        "RSI bearish (59.9)",
+        "Strong trend (ADX 54.1)",
+        "Daily uptrend confirmation"
+      ],
+      "scores": {
+        "bullish": 65,
+        "bearish": 15
+      },
+      "outcome": null,
+      "outcome_time": null,
+      "outcome_pips": 0.0,
+      "trailing_stop_activated": false,
+      "original_sl": 1.334474972316197
+    },
+    {
+      "id": "USD/CAD_1767390801",
+      "pair": "USD/CAD",
+      "direction": "SELL",
+      "entry_price": 1.372939944267273,
+      "sl": 1.3805684787886483,
+      "tp": 1.3602257200649805,
+      "created_at": "2026-01-02T21:53:21.660547+00:00",
+      "expires_at": "2026-01-03T01:53:21.660547+00:00",
+      "status": "ACTIVE",
+      "confidence": 0.95,
+      "strategy": "TREND_FOLLOWING",
+      "indicators": {
+        "rsi": 38.76387234569682,
+        "adx": 65.30495016446812,
+        "ema12": 1.3736439902669362,
+        "ema200": 1.3895405242539227
+      },
+      "patterns": [],
+      "confidence_factors": [
+        "Strong downtrend (EMA alignment)",
+        "Below 200 EMA",
+        "RSI bullish (38.8)",
+        "Strong trend (ADX 65.3)",
+        "Daily downtrend confirmation"
+      ],
+      "scores": {
+        "bullish": 15,
+        "bearish": 65
+      },
+      "outcome": null,
+      "outcome_time": null,
+      "outcome_pips": 0.0,
+      "trailing_stop_activated": false,
+      "original_sl": 1.3805684787886483
+    }
+  ],
+  "stats": {
+    "total_signals": 0,
+    "wins": 0,
+    "losses": 0,
+    "win_rate": 0,
+    "total_pips": 0,
+    "active_signals": 3
+  },
+  "api_usage": {
+    "yfinance": {
+      "enabled": true,
+      "calls": 3,
+      "limit": 100,
+      "remaining": 97,
+      "percentage": 3.0
+    },
+    "alpha_vantage": {
+      "enabled": true,
+      "calls": 0,
+      "limit": 25,
+      "remaining": 25,
+      "percentage": 0.0
+    },
+    "browserless": {
+      "enabled": true,
+      "calls": 0,
+      "limit": 5,
+      "remaining": 5,
+      "percentage": 0.0
+    },
+    "marketaux": {
+      "enabled": true,
+      "calls": 1,
+      "limit": 90,
+      "remaining": 89,
+      "percentage": 1.1111111111111112
+    }
+  },
+  "learning_stats": {
+    "total_trades": 8,
+    "pair_performance": {
+      "EUR/USD": {
+        "wins": 0,
+        "losses": 2
+      },
+      "GBP/USD": {
+        "wins": 0,
+        "losses": 2
+      },
+      "USD/JPY": {
+        "wins": 0,
+        "losses": 0
+      },
+      "AUD/USD": {
+        "wins": 0,
+        "losses": 0
+      },
+      "USD/CAD": {
+        "wins": 4,
+        "losses": 0
+      },
+      "NZD/USD": {
+        "wins": 0,
+        "losses": 0
+      }
+    },
+    "learned_params": {
+      "atr_sl_mult": 2.0,
+      "atr_tp_mult": 3.0,
+      "min_confidence": 0.72
+    }
+  },
+  "risk_management": {
+    "daily_pips": 0,
+    "max_daily_loss": 500,
+    "max_correlated_pairs": 2
+  },
+  "best_trading_hours": [],
   "recent_news": [
     {
       "uuid": "33476455-54a1-4ec4-bec2-6c742c29e808",
@@ -60,6 +245,52 @@
       "relevance_score": null,
       "entities": [
         {
+          "symbol": "QCOM",
+          "name": "QUALCOMM Incorporated",
+          "exchange": null,
+          "exchange_long": null,
+          "country": "us",
+          "type": "equity",
+          "industry": "Technology",
+          "match_score": 36.785137,
+          "sentiment_score": 0.10115,
+          "highlights": [
+            {
+              "highlight": "<em>QUALCOMM</em> <em>Incorporated</em> [+311 characters]",
+              "sentiment": 0.2023,
+              "highlighted_in": "main_text"
+            },
+            {
+              "highlight": "<em>QUALCOMM</em> <em>Incorporated</em> [+297 characters]",
+              "sentiment": 0,
+              "highlighted_in": "main_text"
+            }
+          ]
+        },
+        {
+          "symbol": "QCOM34.SA",
+          "name": "QUALCOMM Incorporated",
+          "exchange": null,
+          "exchange_long": null,
+          "country": "br",
+          "type": "equity",
+          "industry": "Technology",
+          "match_score": 25.866632,
+          "sentiment_score": 0.10115,
+          "highlights": [
+            {
+              "highlight": "<em>QUALCOMM</em> <em>Incorporated</em> [+302 characters]",
+              "sentiment": 0.2023,
+              "highlighted_in": "main_text"
+            },
+            {
+              "highlight": "<em>QUALCOMM</em> <em>Incorporated</em> [+288 characters]",
+              "sentiment": 0,
+              "highlighted_in": "main_text"
+            }
+          ]
+        },
+        {
           "symbol": "USD",
           "name": "ProShares Ultra Semiconductors",
           "exchange": null,
@@ -89,6 +320,98 @@
               "highlight": "Is <em>ProShares</em> <em>Ultra</em> <em>Semiconductors</em> (USD) the Best Performing ETF of the Last 5 Years?",
               "sentiment": 0.6369,
               "highlighted_in": "title"
+            }
+          ]
+        },
+        {
+          "symbol": "QCOM.BA",
+          "name": "QUALCOMM Incorporated",
+          "exchange": null,
+          "exchange_long": null,
+          "country": "ar",
+          "type": "equity",
+          "industry": "Technology",
+          "match_score": 25.866917,
+          "sentiment_score": 0.10115,
+          "highlights": [
+            {
+              "highlight": "<em>QUALCOMM</em> <em>Incorporated</em> [+302 characters]",
+              "sentiment": 0.2023,
+              "highlighted_in": "main_text"
+            },
+            {
+              "highlight": "<em>QUALCOMM</em> <em>Incorporated</em> [+288 characters]",
+              "sentiment": 0,
+              "highlighted_in": "main_text"
+            }
+          ]
+        },
+        {
+          "symbol": "QCOM.SN",
+          "name": "QUALCOMM Incorporated",
+          "exchange": null,
+          "exchange_long": null,
+          "country": "cl",
+          "type": "equity",
+          "industry": "Technology",
+          "match_score": 25.866863,
+          "sentiment_score": 0.10115,
+          "highlights": [
+            {
+              "highlight": "<em>QUALCOMM</em> <em>Incorporated</em> [+302 characters]",
+              "sentiment": 0.2023,
+              "highlighted_in": "main_text"
+            },
+            {
+              "highlight": "<em>QUALCOMM</em> <em>Incorporated</em> [+288 characters]",
+              "sentiment": 0,
+              "highlighted_in": "main_text"
+            }
+          ]
+        },
+        {
+          "symbol": "QCI.DE",
+          "name": "QUALCOMM Incorporated",
+          "exchange": null,
+          "exchange_long": null,
+          "country": "de",
+          "type": "equity",
+          "industry": "Technology",
+          "match_score": 25.86773,
+          "sentiment_score": 0.10115,
+          "highlights": [
+            {
+              "highlight": "<em>QUALCOMM</em> <em>Incorporated</em> [+302 characters]",
+              "sentiment": 0.2023,
+              "highlighted_in": "main_text"
+            },
+            {
+              "highlight": "<em>QUALCOMM</em> <em>Incorporated</em> [+288 characters]",
+              "sentiment": 0,
+              "highlighted_in": "main_text"
+            }
+          ]
+        },
+        {
+          "symbol": "QCOM.MX",
+          "name": "QUALCOMM Incorporated",
+          "exchange": null,
+          "exchange_long": null,
+          "country": "mx",
+          "type": "equity",
+          "industry": "Technology",
+          "match_score": 25.86823,
+          "sentiment_score": 0.10115,
+          "highlights": [
+            {
+              "highlight": "<em>QUALCOMM</em> <em>Incorporated</em> [+302 characters]",
+              "sentiment": 0.2023,
+              "highlighted_in": "main_text"
+            },
+            {
+              "highlight": "<em>QUALCOMM</em> <em>Incorporated</em> [+288 characters]",
+              "sentiment": 0,
+              "highlighted_in": "main_text"
             }
           ]
         }
@@ -134,460 +457,5 @@
       ],
       "similar": []
     }
-  ],
-  "upcoming_events_detail": [],
-  "signals": [
-    {
-      "id": "USD/CAD_1766500710",
-      "pair": "USD/CAD",
-      "direction": "SELL",
-      "entry_price": 1.3713099956512451,
-      "sl": 1.3839785371507918,
-      "tp": 1.3523071834019251,
-      "created_at": "2025-12-23T14:38:30.596093+00:00",
-      "expires_at": "2025-12-23T18:38:30.596093+00:00",
-      "status": "ACTIVE",
-      "confidence": 0.8770666666666668,
-      "strategy": "MEAN_REVERSION",
-      "indicators": {
-        "rsi": 16.540188241764994,
-        "adx": 63.40045192054184,
-        "macd_histogram": -0.0010796780068962836,
-        "stochastic_k": 9.982905843093633,
-        "bb_position": 0.15489741684385414,
-        "ema12": 1.3803908384771875,
-        "ema26": 1.3873071638143681,
-        "ema200": 1.3907767068605759
-      },
-      "patterns": [],
-      "confidence_factors": [
-        "Strong downtrend (EMA 12<26<50)",
-        "Below 200 EMA (long-term bear)",
-        "Price near lower Bollinger (reversal)",
-        "ADX trend strength (63.4)"
-      ],
-      "scores": {
-        "bullish": 20,
-        "bearish": 55,
-        "edge": 35
-      },
-      "sentiment": {
-        "score": 0.0,
-        "positive_count": 0,
-        "negative_count": 0,
-        "relevant_news": [
-          {
-            "title": "USD: Amplified Exposure To The Semiconductor Industry (NYSEARCA:USD)",
-            "sentiment": "neutral",
-            "published": "2025-11-17T21:24:15.000000Z",
-            "source": "seekingalpha.com"
-          },
-          {
-            "title": "Is ProShares Ultra Semiconductors (USD) the Best Performing ETF of the Last 5 Years?",
-            "sentiment": "neutral",
-            "published": "2025-02-23T03:55:49.000000Z",
-            "source": "insidermonkey.com"
-          },
-          {
-            "title": "USD: Capitalizing On AI And Semiconductor Growth With 2x Leverage (NYSEARCA:USD)",
-            "sentiment": "neutral",
-            "published": "2025-02-01T12:43:33.000000Z",
-            "source": "seekingalpha.com"
-          }
-        ],
-        "total_news": 3
-      },
-      "news_context": {
-        "relevant_news_count": 3,
-        "sentiment_score": 0.0
-      },
-      "outcome": null,
-      "outcome_time": null,
-      "outcome_pips": 0.0
-    },
-    {
-      "id": "EUR/USD_1766503235",
-      "pair": "EUR/USD",
-      "direction": "BUY",
-      "entry_price": 1.085,
-      "sl": 1.0734733131953649,
-      "tp": 1.1022900302069527,
-      "created_at": "2025-12-23T15:20:35.894183+00:00",
-      "expires_at": "2025-12-23T19:20:35.894183+00:00",
-      "status": "ACTIVE",
-      "confidence": 0.8770666666666668,
-      "strategy": "MEAN_REVERSION",
-      "indicators": {
-        "rsi": 73.61306284868726,
-        "adx": 42.784137233371425,
-        "macd_histogram": 0.000871645121154176,
-        "stochastic_k": 89.64043647246052,
-        "bb_position": 0.9270293740649015,
-        "ema12": 1.1714287302598603,
-        "ema26": 1.167261976996653,
-        "ema200": 1.1466092309483906
-      },
-      "patterns": [],
-      "confidence_factors": [
-        "Strong uptrend (EMA 12>26>50)",
-        "Above 200 EMA (long-term bull)",
-        "Price near upper Bollinger (reversal)",
-        "ADX trend strength (42.8)"
-      ],
-      "scores": {
-        "bullish": 55,
-        "bearish": 20,
-        "edge": 35
-      },
-      "sentiment": {
-        "score": 0.0,
-        "positive_count": 0,
-        "negative_count": 0,
-        "relevant_news": [
-          {
-            "title": "USD: Amplified Exposure To The Semiconductor Industry (NYSEARCA:USD)",
-            "sentiment": "neutral",
-            "published": "2025-11-17T21:24:15.000000Z",
-            "source": "seekingalpha.com"
-          },
-          {
-            "title": "Is ProShares Ultra Semiconductors (USD) the Best Performing ETF of the Last 5 Years?",
-            "sentiment": "neutral",
-            "published": "2025-02-23T03:55:49.000000Z",
-            "source": "insidermonkey.com"
-          },
-          {
-            "title": "USD: Capitalizing On AI And Semiconductor Growth With 2x Leverage (NYSEARCA:USD)",
-            "sentiment": "neutral",
-            "published": "2025-02-01T12:43:33.000000Z",
-            "source": "seekingalpha.com"
-          }
-        ],
-        "total_news": 3
-      },
-      "news_context": {
-        "relevant_news_count": 3,
-        "sentiment_score": 0.0
-      },
-      "outcome": null,
-      "outcome_time": null,
-      "outcome_pips": 0.0
-    },
-    {
-      "id": "GBP/USD_1766503265",
-      "pair": "GBP/USD",
-      "direction": "BUY",
-      "entry_price": 1.265,
-      "sl": 1.2483573784146988,
-      "tp": 1.2899639323779515,
-      "created_at": "2025-12-23T15:21:05.964254+00:00",
-      "expires_at": "2025-12-23T19:21:05.964254+00:00",
-      "status": "ACTIVE",
-      "confidence": 0.8770666666666668,
-      "strategy": "MEAN_REVERSION",
-      "indicators": {
-        "rsi": 75.76342669842006,
-        "adx": 56.8732192663705,
-        "macd_histogram": 0.0013428272447146778,
-        "stochastic_k": 91.46855259114983,
-        "bb_position": 1.0112358208890346,
-        "ema12": 1.3375883633594088,
-        "ema26": 1.3320291463456344,
-        "ema200": 1.3265139596721054
-      },
-      "patterns": [],
-      "confidence_factors": [
-        "Strong uptrend (EMA 12>26>50)",
-        "Above 200 EMA (long-term bull)",
-        "Price near upper Bollinger (reversal)",
-        "ADX trend strength (56.9)"
-      ],
-      "scores": {
-        "bullish": 55,
-        "bearish": 20,
-        "edge": 35
-      },
-      "sentiment": {
-        "score": 0.0,
-        "positive_count": 0,
-        "negative_count": 0,
-        "relevant_news": [
-          {
-            "title": "USD: Amplified Exposure To The Semiconductor Industry (NYSEARCA:USD)",
-            "sentiment": "neutral",
-            "published": "2025-11-17T21:24:15.000000Z",
-            "source": "seekingalpha.com"
-          },
-          {
-            "title": "Is ProShares Ultra Semiconductors (USD) the Best Performing ETF of the Last 5 Years?",
-            "sentiment": "neutral",
-            "published": "2025-02-23T03:55:49.000000Z",
-            "source": "insidermonkey.com"
-          },
-          {
-            "title": "USD: Capitalizing On AI And Semiconductor Growth With 2x Leverage (NYSEARCA:USD)",
-            "sentiment": "neutral",
-            "published": "2025-02-01T12:43:33.000000Z",
-            "source": "seekingalpha.com"
-          }
-        ],
-        "total_news": 3
-      },
-      "news_context": {
-        "relevant_news_count": 3,
-        "sentiment_score": 0.0
-      },
-      "outcome": null,
-      "outcome_time": null,
-      "outcome_pips": 0.0
-    },
-    {
-      "id": "USD/CAD_1766511131",
-      "pair": "USD/CAD",
-      "direction": "SELL",
-      "entry_price": 1.3713099956512451,
-      "sl": 1.3839785371507918,
-      "tp": 1.3523071834019251,
-      "created_at": "2025-12-23T17:32:11.979350+00:00",
-      "expires_at": "2025-12-23T21:32:11.979350+00:00",
-      "status": "ACTIVE",
-      "confidence": 0.8770666666666668,
-      "strategy": "MEAN_REVERSION",
-      "indicators": {
-        "rsi": 16.540188241764994,
-        "adx": 63.40045192054184,
-        "macd_histogram": -0.0010796780068962836,
-        "stochastic_k": 9.982905843093633,
-        "bb_position": 0.15489741684385414,
-        "ema12": 1.3803908384771875,
-        "ema26": 1.3873071638143681,
-        "ema200": 1.3907767068605759
-      },
-      "patterns": [],
-      "confidence_factors": [
-        "Strong downtrend (EMA 12<26<50)",
-        "Below 200 EMA (long-term bear)",
-        "Price near lower Bollinger (reversal)",
-        "ADX trend strength (63.4)"
-      ],
-      "scores": {
-        "bullish": 20,
-        "bearish": 55,
-        "edge": 35
-      },
-      "sentiment": {
-        "score": 0.0,
-        "positive_count": 0,
-        "negative_count": 0,
-        "relevant_news": [
-          {
-            "title": "USD: Amplified Exposure To The Semiconductor Industry (NYSEARCA:USD)",
-            "sentiment": "neutral",
-            "published": "2025-11-17T21:24:15.000000Z",
-            "source": "seekingalpha.com"
-          },
-          {
-            "title": "Is ProShares Ultra Semiconductors (USD) the Best Performing ETF of the Last 5 Years?",
-            "sentiment": "neutral",
-            "published": "2025-02-23T03:55:49.000000Z",
-            "source": "insidermonkey.com"
-          },
-          {
-            "title": "USD: Capitalizing On AI And Semiconductor Growth With 2x Leverage (NYSEARCA:USD)",
-            "sentiment": "neutral",
-            "published": "2025-02-01T12:43:33.000000Z",
-            "source": "seekingalpha.com"
-          }
-        ],
-        "total_news": 3
-      },
-      "news_context": {
-        "relevant_news_count": 3,
-        "sentiment_score": 0.0
-      },
-      "outcome": null,
-      "outcome_time": null,
-      "outcome_pips": 0.0
-    },
-    {
-      "id": "EUR/USD_1766511162",
-      "pair": "EUR/USD",
-      "direction": "BUY",
-      "entry_price": 1.085,
-      "sl": 1.0734733131953649,
-      "tp": 1.1022900302069527,
-      "created_at": "2025-12-23T17:32:42.053174+00:00",
-      "expires_at": "2025-12-23T21:32:42.053174+00:00",
-      "status": "ACTIVE",
-      "confidence": 0.8770666666666668,
-      "strategy": "MEAN_REVERSION",
-      "indicators": {
-        "rsi": 73.61306284868726,
-        "adx": 42.784137233371425,
-        "macd_histogram": 0.000871645121154176,
-        "stochastic_k": 89.64043647246052,
-        "bb_position": 0.9270293740649015,
-        "ema12": 1.1714287302598603,
-        "ema26": 1.167261976996653,
-        "ema200": 1.1466092309483906
-      },
-      "patterns": [],
-      "confidence_factors": [
-        "Strong uptrend (EMA 12>26>50)",
-        "Above 200 EMA (long-term bull)",
-        "Price near upper Bollinger (reversal)",
-        "ADX trend strength (42.8)"
-      ],
-      "scores": {
-        "bullish": 55,
-        "bearish": 20,
-        "edge": 35
-      },
-      "sentiment": {
-        "score": 0.0,
-        "positive_count": 0,
-        "negative_count": 0,
-        "relevant_news": [
-          {
-            "title": "USD: Amplified Exposure To The Semiconductor Industry (NYSEARCA:USD)",
-            "sentiment": "neutral",
-            "published": "2025-11-17T21:24:15.000000Z",
-            "source": "seekingalpha.com"
-          },
-          {
-            "title": "Is ProShares Ultra Semiconductors (USD) the Best Performing ETF of the Last 5 Years?",
-            "sentiment": "neutral",
-            "published": "2025-02-23T03:55:49.000000Z",
-            "source": "insidermonkey.com"
-          },
-          {
-            "title": "USD: Capitalizing On AI And Semiconductor Growth With 2x Leverage (NYSEARCA:USD)",
-            "sentiment": "neutral",
-            "published": "2025-02-01T12:43:33.000000Z",
-            "source": "seekingalpha.com"
-          }
-        ],
-        "total_news": 3
-      },
-      "news_context": {
-        "relevant_news_count": 3,
-        "sentiment_score": 0.0
-      },
-      "outcome": null,
-      "outcome_time": null,
-      "outcome_pips": 0.0
-    }
-  ],
-  "learning_stats": {
-    "total_trades": 8,
-    "pair_performance": {
-      "EUR/USD": {
-        "wins": 0,
-        "losses": 2
-      },
-      "GBP/USD": {
-        "wins": 0,
-        "losses": 2
-      },
-      "USD/JPY": {
-        "wins": 0,
-        "losses": 0
-      },
-      "AUD/USD": {
-        "wins": 0,
-        "losses": 0
-      },
-      "USD/CAD": {
-        "wins": 4,
-        "losses": 0
-      },
-      "NZD/USD": {
-        "wins": 0,
-        "losses": 0
-      }
-    },
-    "strategy_performance": {
-      "MEAN_REVERSION": {
-        "wins": 4,
-        "losses": 4,
-        "total_pips": -2380.161447525026
-      }
-    },
-    "learned_params": {
-      "atr_sl_mult": 2.0,
-      "atr_tp_mult": 3.0,
-      "min_confidence": 0.72
-    }
-  },
-  "stats": {
-    "total_signals": 2,
-    "wins": 2,
-    "losses": 0,
-    "win_rate": 100.0,
-    "total_pips": 572.4006652832037,
-    "avg_win": 286.20033264160185,
-    "avg_loss": 0,
-    "profit_factor": 0,
-    "active_signals": 5
-  },
-  "price_rotation_stats": {
-    "total_calls": 6722,
-    "by_source": {
-      "yfinance": {
-        "calls": 1984,
-        "percentage": 29.515025290092233,
-        "failures": 0,
-        "blocked": 0,
-        "success_rate": 100.0
-      },
-      "alpha_vantage": {
-        "calls": 3791,
-        "percentage": 56.39690568283249,
-        "failures": 1197,
-        "blocked": 0,
-        "success_rate": 68.42521762068056
-      },
-      "browserless": {
-        "calls": 947,
-        "percentage": 14.088069027075276,
-        "failures": 192,
-        "blocked": 0,
-        "success_rate": 79.72544878563886
-      }
-    }
-  },
-  "api_usage": {
-    "yfinance": {
-      "enabled": true,
-      "calls": 100,
-      "limit": 100,
-      "remaining": 0,
-      "percentage": 100.0,
-      "description": "YFinance (prevent abuse)"
-    },
-    "alpha_vantage": {
-      "enabled": true,
-      "calls": 25,
-      "limit": 25,
-      "remaining": 0,
-      "percentage": 100.0,
-      "description": "Alpha Vantage (Free tier: 500/day, using 25 for safety)"
-    },
-    "browserless": {
-      "enabled": true,
-      "calls": 5,
-      "limit": 5,
-      "remaining": 0,
-      "percentage": 100.0,
-      "description": "Browserless (5 calls/day after Jan 19)"
-    },
-    "marketaux": {
-      "enabled": true,
-      "calls": 39,
-      "limit": 90,
-      "remaining": 51,
-      "percentage": 43.333333333333336,
-      "description": "Marketaux (Free tier: 100/day, using 90 for safety)"
-    }
-  }
+  ]
 }

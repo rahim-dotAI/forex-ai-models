@@ -1,8 +1,13 @@
 name: AI Forex Trading System
+
 on:
-  schedule:
-    - cron: "*/10 * * * 1-5"  # Every 10 minutes, Mon-Fri
+  # Trigger workflow manually
   workflow_dispatch:
+  # Trigger workflow when the trigger file changes
+  push:
+    paths:
+      - 'colab_trigger.txt'
+
 env:
   PYTHON_VERSION: "3.10"
   ENTRY_SCRIPT: "trade_beacon.py"
@@ -12,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     
     permissions:
-      contents: write  # 🔥 CRITICAL: Allow workflow to commit files
+      contents: write  # 🔥 Allow workflow to commit files
     
     steps:
       - name: 📥 Checkout repository
@@ -71,7 +76,6 @@ jobs:
           MARKETAUX_API_KEY: ${{ secrets.MARKETAUX_API_KEY }}
         run: python ${{ env.ENTRY_SCRIPT }}
       
-      # 🔥 NEW STEP: Commit signal files immediately after generation
       - name: 💾 Commit live trading data
         if: steps.check_market.outputs.skip != 'true'
         run: |
@@ -92,14 +96,12 @@ jobs:
             echo "ℹ️ No changes to commit"
           fi
       
-      # 🔥 NEW STEP: Push changes to make them publicly accessible
       - name: 🚀 Push live data to repository
         if: steps.check_market.outputs.skip != 'true'
         run: |
           git push
           echo "✅ Live data pushed to repository"
         
-      # Optional: Keep artifact backup
       - name: 📦 Upload logs (backup)
         if: always()
         uses: actions/upload-artifact@v4

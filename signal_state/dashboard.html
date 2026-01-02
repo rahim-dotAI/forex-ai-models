@@ -5,288 +5,184 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Trade Beacon | Live Trading Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0a0e1a;--surface:#111827;--surface-light:#1f2937;--border:#374151;--text:#f9fafb;--text-dim:#9ca3af;--primary:#3b82f6;--success:#10b981;--danger:#ef4444;--warning:#f59e0b}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
-.navbar{display:flex;justify-content:space-between;align-items:center;padding:16px 32px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;backdrop-filter:blur(10px)}
-.logo{font-size:24px;font-weight:800;letter-spacing:-0.5px}
+:root{
+--bg:#0a0e1a;--surface:#111827;--surface-light:#1f2937;--border:#374151;
+--text:#f9fafb;--text-dim:#9ca3af;--primary:#3b82f6;
+--success:#10b981;--danger:#ef4444;--warning:#f59e0b
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text)}
+.navbar{display:flex;justify-content:space-between;align-items:center;
+padding:16px 32px;background:var(--surface);border-bottom:1px solid var(--border)}
+.logo{font-size:24px;font-weight:800}
 .logo span{color:var(--primary)}
-.nav-right{display:flex;gap:24px;align-items:center}
-.status-pill{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
-.status-live{background:rgba(16,185,129,0.15);color:var(--success);border:1px solid rgba(16,185,129,0.3)}
-.status-offline{background:rgba(239,68,68,0.15);color:var(--danger);border:1px solid rgba(239,68,68,0.3)}
-.pulse{width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 2s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
-.container{max-width:1600px;margin:0 auto;padding:24px}
-.grid{display:grid;gap:24px;margin-top:24px}
-.grid-4{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.nav-right{display:flex;gap:16px;align-items:center}
+
+.status-pill{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;
+display:flex;align-items:center;gap:6px}
+.status-live{background:rgba(16,185,129,.15);color:var(--success)}
+.status-stale{background:rgba(245,158,11,.15);color:var(--warning)}
+.status-offline{background:rgba(239,68,68,.15);color:var(--danger)}
+.pulse{width:6px;height:6px;border-radius:50%;background:currentColor;
+animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.3}}
+
+.container{max-width:1600px;margin:auto;padding:24px}
+.grid{display:grid;gap:24px}
+.grid-4{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
 .grid-2{grid-template-columns:2fr 1fr}
 @media(max-width:1200px){.grid-2{grid-template-columns:1fr}}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px}
-.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
-.card-title{font-size:16px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px}
-.metric-card{background:linear-gradient(135deg,var(--surface) 0%,var(--surface-light) 100%);border:1px solid var(--border);border-radius:16px;padding:28px;transition:all 0.3s ease}
-.metric-card:hover{transform:translateY(-4px);box-shadow:0 12px 24px rgba(0,0,0,0.4);border-color:var(--primary)}
-.metric-label{font-size:13px;font-weight:500;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px}
-.metric-value{font-size:42px;font-weight:700;line-height:1;margin-bottom:8px}
-.metric-change{font-size:13px;font-weight:600;display:flex;align-items:center;gap:4px}
-.positive{color:var(--success)}
-.negative{color:var(--danger)}
-.neutral{color:var(--text-dim)}
-.signal-card{background:var(--surface-light);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;transition:all 0.3s ease;position:relative;overflow:hidden}
-.signal-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px}
-.signal-card.buy::before{background:var(--success)}
-.signal-card.sell::before{background:var(--danger)}
-.signal-card:hover{transform:translateX(4px);border-color:var(--primary)}
-.signal-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
-.signal-pair{font-size:20px;font-weight:700;letter-spacing:-0.5px}
-.badge{padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
-.badge-buy{background:var(--success);color:#000}
-.badge-sell{background:var(--danger);color:#fff}
-.badge-trailing{background:var(--warning);color:#000;margin-left:6px}
-.signal-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
-.signal-meta-item{background:rgba(255,255,255,0.03);padding:12px;border-radius:8px;text-align:center}
-.signal-meta-label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
-.signal-meta-value{font-size:16px;font-weight:700}
-.empty-state{padding:80px 20px;text-align:center}
-.empty-icon{width:64px;height:64px;margin:0 auto 16px;opacity:0.3}
-.empty-title{font-size:18px;font-weight:600;margin-bottom:8px}
-.empty-text{color:var(--text-dim);font-size:14px}
-.loading-overlay{position:fixed;inset:0;background:rgba(10,14,26,0.95);display:flex;align-items:center;justify-content:center;z-index:9999}
-.loading-content{text-align:center}
-.loading-spinner{width:48px;height:48px;border:4px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px}
+
+.card,.metric-card{background:var(--surface);border:1px solid var(--border);
+border-radius:16px;padding:24px}
+.metric-label{font-size:12px;color:var(--text-dim)}
+.metric-value{font-size:36px;font-weight:700}
+
+.signal-card{background:var(--surface-light);border-radius:12px;
+padding:16px;margin-bottom:12px;border-left:4px solid}
+.signal-card.buy{border-color:var(--success)}
+.signal-card.sell{border-color:var(--danger)}
+
+.loading-overlay{position:fixed;inset:0;background:rgba(10,14,26,.95);
+display:flex;align-items:center;justify-content:center;z-index:9999}
+.loading-spinner{width:48px;height:48px;border:4px solid var(--border);
+border-top-color:var(--primary);border-radius:50%;
+animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.session-indicator{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600}
-.session-asian{background:rgba(245,158,11,0.15);color:var(--warning);border:1px solid rgba(245,158,11,0.3)}
-.session-european{background:rgba(59,130,246,0.15);color:var(--primary);border:1px solid rgba(59,130,246,0.3)}
-.session-us{background:rgba(16,185,129,0.15);color:var(--success);border:1px solid rgba(16,185,129,0.3)}
-.stat-row{display:flex;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--border)}
-.stat-row:last-child{border-bottom:none}
-.stat-label{font-size:14px;color:var(--text-dim)}
-.stat-value{font-size:16px;font-weight:600}
 </style>
 </head>
+
 <body>
 
 <div class="loading-overlay" id="loadingOverlay">
-<div class="loading-content">
+<div>
 <div class="loading-spinner"></div>
-<h2>Loading Trade Beacon...</h2>
-<p style="color:var(--text-dim);margin-top:8px">Fetching live trading data</p>
+<p style="margin-top:12px;color:var(--text-dim)">Loading Trade Beacon…</p>
 </div>
 </div>
 
 <nav class="navbar">
 <div class="logo">Trade<span>Beacon</span></div>
 <div class="nav-right">
-<span class="session-indicator" id="session"></span>
-<div class="status-pill status-live" id="status">
+<div class="status-pill status-live" id="health">
 <span class="pulse"></span>
-<span id="statusText">LIVE</span>
+<span id="healthText">LIVE</span>
 </div>
 </div>
 </nav>
 
 <div class="container">
+
 <div class="grid grid-4">
 <div class="metric-card">
 <div class="metric-label">Active Signals</div>
 <div class="metric-value" id="activeSignals">-</div>
-<div class="metric-change neutral">Max 5 concurrent</div>
 </div>
 <div class="metric-card">
 <div class="metric-label">Win Rate</div>
 <div class="metric-value" id="winRate">-</div>
-<div class="metric-change" id="winRateChange">
-<span id="wins">-</span>W / <span id="losses">-</span>L
-</div>
 </div>
 <div class="metric-card">
-<div class="metric-label">Total P&L</div>
+<div class="metric-label">Total Pips</div>
 <div class="metric-value" id="totalPips">-</div>
-<div class="metric-change positive">All-time pips</div>
 </div>
 <div class="metric-card">
-<div class="metric-label">Today's P&L</div>
+<div class="metric-label">Today</div>
 <div class="metric-value" id="dailyPips">-</div>
-<div class="metric-change" id="dailyChange">Since 00:00 UTC</div>
 </div>
 </div>
 
 <div class="grid grid-2" style="margin-top:24px">
 <div class="card">
-<div class="card-header">
-<h2 class="card-title">Active Signals</h2>
-<span id="signalCount">- signals</span>
-</div>
+<h3>Active Signals</h3>
 <div id="signalsContainer"></div>
 </div>
 
 <div class="card">
-<div class="card-header">
-<h2 class="card-title">Performance</h2>
-</div>
-<div class="stat-row">
-<span class="stat-label">Total Trades</span>
-<span class="stat-value" id="totalTrades">-</span>
-</div>
-<div class="stat-row">
-<span class="stat-label">API Calls (YFinance)</span>
-<span class="stat-value" id="apiCalls">-</span>
-</div>
-<div class="stat-row">
-<span class="stat-label">Last Update</span>
-<span class="stat-value" id="lastUpdate">-</span>
-</div>
-<div class="stat-row">
-<span class="stat-label">Next Run</span>
-<span class="stat-value" id="nextRun">-</span>
+<h3>System</h3>
+<p>Last Update: <span id="lastUpdate">-</span></p>
+<p>Next Run: <span id="nextRun">-</span></p>
+<p>YFinance Calls: <span id="apiCalls">-</span></p>
 </div>
 </div>
-</div>
+
 </div>
 
 <script>
-// 🔥 HARDCODED - NO CONFIG NEEDED
-const API_URL = 'https://raw.githubusercontent.com/rahim-dotAI/forex-ai-models/main/signal_state/dashboard_state.json';
+// ✅ FIXED URL (case-sensitive)
+const API_URL =
+'https://raw.githubusercontent.com/rahim-dotai/forex-ai-models/main/signal_state/dashboard_state.json';
 
-function formatTime(iso){
-if(!iso)return'-';
-const d=new Date(iso);
-return d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+let lastSuccessTs = null;
+
+// Safari-safe date
+function parseTime(iso){
+if(!iso) return '-';
+return new Date(iso.replace('+00:00','Z'))
+.toLocaleString();
 }
 
-function getSessionInfo(){
-const hour=new Date().getUTCHours();
-if(hour>=0&&hour<8)return{name:'ASIAN',class:'session-asian'};
-if(hour>=8&&hour<16)return{name:'EUROPEAN',class:'session-european'};
-return{name:'US',class:'session-us'};
+// Health logic
+function setHealth(state){
+const el=document.getElementById('health');
+const text=document.getElementById('healthText');
+el.className='status-pill status-'+state;
+text.textContent=state.toUpperCase();
 }
 
 async function loadState(){
-try{
-console.log('🔄 Fetching from:', API_URL);
-
-const response = await fetch(API_URL + '?t=' + Date.now(), {
-cache: 'no-cache',
-headers: {'Cache-Control': 'no-cache'}
-});
-
-if(!response.ok){
-throw new Error(`HTTP ${response.status}`);
-}
-
-const data = await response.json();
-console.log('✅ Data loaded:', data);
-
-return data;
-}catch(e){
-console.error('❌ Load error:',e);
-throw e;
-}
+const res=await fetch(API_URL+'?t='+Date.now(),{cache:'no-store'});
+if(!res.ok) throw new Error('HTTP '+res.status);
+return res.json();
 }
 
 function render(data){
-// Hide loading
 document.getElementById('loadingOverlay').style.display='none';
 
-const session=getSessionInfo();
-document.getElementById('session').className=`session-indicator ${session.class}`;
-document.getElementById('session').textContent=session.name;
+lastSuccessTs=Date.now();
+setHealth('live');
 
-document.getElementById('activeSignals').textContent=data.active_signals||0;
+document.getElementById('activeSignals').textContent=data.active_signals;
+document.getElementById('winRate').textContent=data.stats.win_rate.toFixed(1)+'%';
+document.getElementById('totalPips').textContent=data.stats.total_pips.toFixed(1);
+document.getElementById('dailyPips').textContent=data.risk_management.daily_pips.toFixed(1);
 
-const wr=data.stats?.win_rate||0;
-const wrEl=document.getElementById('winRate');
-wrEl.textContent=wr.toFixed(1)+'%';
+document.getElementById('lastUpdate').textContent=parseTime(data.timestamp);
+document.getElementById('nextRun').textContent=parseTime(data.next_run);
+document.getElementById('apiCalls').textContent=data.api_usage.yfinance.calls+'/100';
 
-document.getElementById('wins').textContent=data.stats?.wins||0;
-document.getElementById('losses').textContent=data.stats?.losses||0;
-
-const totalPips=data.stats?.total_pips||0;
-const tpEl=document.getElementById('totalPips');
-tpEl.textContent=(totalPips>=0?'+':'')+totalPips.toFixed(1);
-tpEl.style.color=totalPips>=0?'var(--success)':'var(--danger)';
-
-const dailyPips=data.risk_management?.daily_pips||0;
-const dpEl=document.getElementById('dailyPips');
-dpEl.textContent=(dailyPips>=0?'+':'')+dailyPips.toFixed(1);
-dpEl.style.color=dailyPips>=0?'var(--success)':'var(--danger)';
-
-document.getElementById('signalCount').textContent=`${data.signals?.length||0} signal${data.signals?.length!==1?'s':''}`;
-
-const signals=data.signals||[];
-
-const signalsHTML=signals.length>0?signals.map(s=>`
+const html=data.signals.map(s=>`
 <div class="signal-card ${s.direction.toLowerCase()}">
-<div class="signal-header">
-<div>
-<div class="signal-pair">${s.pair}</div>
-<div style="margin-top:8px">
-<span class="badge badge-${s.direction.toLowerCase()}">${s.direction}</span>
-${s.trailing_stop_activated?'<span class="badge badge-trailing">TRAILING</span>':''}
-</div>
-<div style="font-size:13px;color:var(--text-dim);margin-top:8px">
-${s.strategy.replace(/_/g,' ')} • ${(s.confidence*100).toFixed(0)}% confidence
-</div>
-</div>
-<div style="text-align:right;font-size:13px;color:var(--text-dim)">
-<div>${formatTime(s.created_at)}</div>
-</div>
-</div>
-<div class="signal-meta">
-<div class="signal-meta-item">
-<div class="signal-meta-label">Entry</div>
-<div class="signal-meta-value">${s.entry_price.toFixed(5)}</div>
-</div>
-<div class="signal-meta-item">
-<div class="signal-meta-label">Stop Loss</div>
-<div class="signal-meta-value" style="color:var(--danger)">${s.sl.toFixed(5)}</div>
-</div>
-<div class="signal-meta-item">
-<div class="signal-meta-label">Take Profit</div>
-<div class="signal-meta-value" style="color:var(--success)">${s.tp.toFixed(5)}</div>
-</div>
-</div>
-</div>
-`).join(''):`
-<div class="empty-state">
-<svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-</svg>
-<div class="empty-title">No Active Signals</div>
-<div class="empty-text">System scanning every 10 minutes</div>
-</div>
-`;
-document.getElementById('signalsContainer').innerHTML=signalsHTML;
+<b>${s.pair}</b> • ${s.direction}<br>
+Entry: ${s.entry_price.toFixed(5)}<br>
+SL: ${s.sl.toFixed(5)} | TP: ${s.tp.toFixed(5)}
+</div>`).join('');
 
-document.getElementById('totalTrades').textContent=data.learning_stats?.total_trades||0;
-document.getElementById('apiCalls').textContent=`${data.api_usage?.yfinance?.calls||0}/100`;
-document.getElementById('lastUpdate').textContent=formatTime(data.timestamp);
-document.getElementById('nextRun').textContent=formatTime(data.next_run);
+document.getElementById('signalsContainer').innerHTML=html||'No active signals';
 }
 
 async function refresh(){
 try{
-const data = await loadState();
+const data=await loadState();
 render(data);
-console.log('✅ Dashboard updated');
 }catch(e){
-console.error('❌ Refresh error:', e);
-document.getElementById('statusText').textContent='ERROR';
-document.getElementById('status').className='status-pill status-offline';
+console.error(e);
+document.getElementById('loadingOverlay').style.display='none';
+setHealth('offline');
 }
 }
 
-// Initial load
+// Health staleness check
+setInterval(()=>{
+if(!lastSuccessTs) return;
+const mins=(Date.now()-lastSuccessTs)/60000;
+if(mins>15) setHealth('stale');
+},60000);
+
 refresh();
-
-// Auto-refresh every 30 seconds
-setInterval(refresh, 30000);
-
-console.log('%c🚀 Trade Beacon Dashboard', 'font-size:20px;font-weight:bold;color:#3b82f6');
-console.log('Fetching from:', API_URL);
+setInterval(refresh,30000);
 </script>
 
 </body>

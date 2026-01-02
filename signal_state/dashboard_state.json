@@ -1,298 +1,195 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trade Beacon | Live Trading Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0a0e1a;--surface:#111827;--surface-light:#1f2937;--border:#374151;--text:#f9fafb;--text-dim:#9ca3af;--primary:#3b82f6;--success:#10b981;--danger:#ef4444;--warning:#f59e0b}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
-.navbar{display:flex;justify-content:space-between;align-items:center;padding:16px 32px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;backdrop-filter:blur(10px)}
-.logo{font-size:24px;font-weight:800;letter-spacing:-0.5px}
-.logo span{color:var(--primary)}
-.nav-right{display:flex;gap:16px;align-items:center}
-.status-pill{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
-.status-live{background:rgba(16,185,129,0.15);color:var(--success);border:1px solid rgba(16,185,129,0.3)}
-.status-offline{background:rgba(239,68,68,0.15);color:var(--danger);border:1px solid rgba(239,68,68,0.3)}
-.status-warning{background:rgba(245,158,11,0.15);color:var(--warning);border:1px solid rgba(245,158,11,0.3)}
-.pulse{width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 2s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
-.container{max-width:1600px;margin:0 auto;padding:24px}
-.grid{display:grid;gap:24px;margin-top:24px}
-.grid-4{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
-.grid-2{grid-template-columns:2fr 1fr}
-@media(max-width:1200px){.grid-2{grid-template-columns:1fr}}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px}
-.card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
-.card-title{font-size:16px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px}
-.metric-card{background:linear-gradient(135deg,var(--surface) 0%,var(--surface-light) 100%);border:1px solid var(--border);border-radius:16px;padding:28px;transition:all 0.3s ease;position:relative}
-.metric-card:hover{transform:translateY(-4px);box-shadow:0 12px 24px rgba(0,0,0,0.4);border-color:var(--primary)}
-.metric-label{font-size:13px;font-weight:500;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px}
-.metric-value{font-size:42px;font-weight:700;line-height:1;margin-bottom:8px}
-.metric-change{font-size:13px;font-weight:600;display:flex;align-items:center;gap:4px}
-.positive{color:var(--success)}
-.negative{color:var(--danger)}
-.neutral{color:var(--text-dim)}
-.signal-card{background:var(--surface-light);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;transition:all 0.3s ease;position:relative;overflow:hidden}
-.signal-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px}
-.signal-card.buy::before{background:var(--success)}
-.signal-card.sell::before{background:var(--danger)}
-.signal-card:hover{transform:translateX(4px);border-color:var(--primary)}
-.signal-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
-.signal-pair{font-size:20px;font-weight:700;letter-spacing:-0.5px}
-.badge{padding:4px 12px;border-radius:6px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
-.badge-buy{background:var(--success);color:#000}
-.badge-sell{background:var(--danger);color:#fff}
-.badge-trailing{background:var(--warning);color:#000;margin-left:6px}
-.signal-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
-.signal-meta-item{background:rgba(255,255,255,0.03);padding:12px;border-radius:8px;text-align:center}
-.signal-meta-label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px}
-.signal-meta-value{font-size:16px;font-weight:700}
-.empty-state{padding:80px 20px;text-align:center}
-.empty-icon{width:64px;height:64px;margin:0 auto 16px;opacity:0.3}
-.empty-title{font-size:18px;font-weight:600;margin-bottom:8px}
-.empty-text{color:var(--text-dim);font-size:14px}
-.loading-overlay{position:fixed;inset:0;background:rgba(10,14,26,0.95);display:flex;align-items:center;justify-content:center;z-index:9999}
-.loading-content{text-align:center}
-.loading-spinner{width:48px;height:48px;border:4px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px}
-@keyframes spin{to{transform:rotate(360deg)}}
-.session-indicator{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600}
-.session-asian{background:rgba(245,158,11,0.15);color:var(--warning);border:1px solid rgba(245,158,11,0.3)}
-.session-european{background:rgba(59,130,246,0.15);color:var(--primary);border:1px solid rgba(59,130,246,0.3)}
-.session-us{background:rgba(16,185,129,0.15);color:var(--success);border:1px solid rgba(16,185,129,0.3)}
-.stat-row{display:flex;justify-content:space-between;padding:16px 0;border-bottom:1px solid var(--border)}
-.stat-row:last-child{border-bottom:none}
-.stat-label{font-size:14px;color:var(--text-dim)}
-.stat-value{font-size:16px;font-weight:600}
-.health-indicator{display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px}
-.health-dot{width:12px;height:12px;border-radius:50%;background:var(--success)}
-.health-dot.warning{background:var(--warning)}
-.health-dot.danger{background:var(--danger)}
-</style>
-</head>
-<body>
-
-<div class="loading-overlay" id="loadingOverlay">
-<div class="loading-content">
-<div class="loading-spinner"></div>
-<h2>Loading Trade Beacon...</h2>
-<p style="color:var(--text-dim);margin-top:8px">Fetching live trading data</p>
-</div>
-</div>
-
-<nav class="navbar">
-<div class="logo">Trade<span>Beacon</span></div>
-<div class="nav-right">
-<div class="health-indicator" id="health">
-<span class="health-dot"></span>
-<span id="healthText">Healthy</span>
-</div>
-<span class="session-indicator" id="session"></span>
-<div class="status-pill status-live" id="status">
-<span class="pulse"></span>
-<span id="statusText">LIVE</span>
-</div>
-</div>
-</nav>
-
-<div class="container">
-<div class="grid grid-4">
-<div class="metric-card">
-<div class="metric-label">Active Signals</div>
-<div class="metric-value" id="activeSignals">-</div>
-<div class="metric-change neutral">Max 5 concurrent</div>
-</div>
-<div class="metric-card">
-<div class="metric-label">Win Rate</div>
-<div class="metric-value" id="winRate">-</div>
-<div class="metric-change" id="winRateChange">
-<span id="wins">-</span>W / <span id="losses">-</span>L
-</div>
-</div>
-<div class="metric-card">
-<div class="metric-label">Total P&L</div>
-<div class="metric-value" id="totalPips">-</div>
-<div class="metric-change positive" id="totalPipsChange">All-time pips</div>
-</div>
-<div class="metric-card">
-<div class="metric-label">Today's P&L</div>
-<div class="metric-value" id="dailyPips">-</div>
-<div class="metric-change positive" id="dailyChange">Since 00:00 UTC</div>
-</div>
-</div>
-
-<div class="grid grid-2" style="margin-top:24px">
-<div class="card">
-<div class="card-header">
-<h2 class="card-title">Active Signals</h2>
-<span id="signalCount">- signals</span>
-</div>
-<div id="signalsContainer"></div>
-</div>
-
-<div class="card">
-<div class="card-header">
-<h2 class="card-title">System / API Usage</h2>
-</div>
-<div class="stat-row">
-<span class="stat-label">Last Update</span>
-<span class="stat-value" id="lastUpdate">-</span>
-</div>
-<div class="stat-row">
-<span class="stat-label">Next Run</span>
-<span class="stat-value" id="nextRun">-</span>
-</div>
-<div class="stat-row">
-<span class="stat-label">YFinance Calls</span>
-<span class="stat-value" id="yfinanceCalls">-</span>
-</div>
-<div class="stat-row">
-<span class="stat-label">Other APIs Usage</span>
-<span class="stat-value" id="otherApiCalls">-</span>
-</div>
-</div>
-</div>
-</div>
-
-<script>
-// 🔥 HARDCODED - NO CONFIG NEEDED
-const API_URL = 'https://raw.githubusercontent.com/rahim-dotAI/forex-ai-models/main/signal_state/dashboard_state.json';
-
-function formatTime(iso){
-  if(!iso) return '-';
-  const d = new Date(iso);
-  const utc = d.toUTCString();
-  const local = d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:true});
-  return `${local} (UTC: ${utc})`;
+{
+  "timestamp": "2026-01-02T22:27:09.631324+00:00",
+  "next_run": "2026-01-02T22:37:09.631333+00:00",
+  "run_interval_minutes": 10,
+  "current_session": "US",
+  "active_signals": 3,
+  "signals": [
+    {
+      "id": "EUR/USD_1767390799",
+      "pair": "EUR/USD",
+      "direction": "BUY",
+      "entry_price": 1.172333002090454,
+      "sl": 1.16483017376491,
+      "tp": 1.184837715966361,
+      "created_at": "2026-01-02T21:53:19.740549+00:00",
+      "expires_at": "2026-01-03T01:53:19.740549+00:00",
+      "status": "ACTIVE",
+      "confidence": 0.95,
+      "strategy": "TREND_FOLLOWING",
+      "indicators": {
+        "rsi": 54.193484177322155,
+        "adx": 49.01886546036845,
+        "ema12": 1.1741798500941039,
+        "ema200": 1.1483362382001143
+      },
+      "patterns": [],
+      "confidence_factors": [
+        "Strong uptrend (EMA alignment)",
+        "Above 200 EMA",
+        "RSI bearish (54.2)",
+        "Strong trend (ADX 49.0)"
+      ],
+      "scores": {
+        "bullish": 50,
+        "bearish": 15
+      },
+      "outcome": null,
+      "outcome_time": null,
+      "outcome_pips": 0.0,
+      "trailing_stop_activated": false,
+      "original_sl": 1.16483017376491
+    },
+    {
+      "id": "GBP/USD_1767390800",
+      "pair": "GBP/USD",
+      "direction": "BUY",
+      "entry_price": 1.3461124897003174,
+      "sl": 1.334474972316197,
+      "tp": 1.3655083520071847,
+      "created_at": "2026-01-02T21:53:20.724564+00:00",
+      "expires_at": "2026-01-03T01:53:20.724564+00:00",
+      "status": "ACTIVE",
+      "confidence": 0.95,
+      "strategy": "TREND_FOLLOWING",
+      "indicators": {
+        "rsi": 59.88751921322645,
+        "adx": 54.11653152330219,
+        "ema12": 1.3445086504547177,
+        "ema200": 1.327812407955209
+      },
+      "patterns": [],
+      "confidence_factors": [
+        "Strong uptrend (EMA alignment)",
+        "Above 200 EMA",
+        "RSI bearish (59.9)",
+        "Strong trend (ADX 54.1)",
+        "Daily uptrend confirmation"
+      ],
+      "scores": {
+        "bullish": 65,
+        "bearish": 15
+      },
+      "outcome": null,
+      "outcome_time": null,
+      "outcome_pips": 0.0,
+      "trailing_stop_activated": false,
+      "original_sl": 1.334474972316197
+    },
+    {
+      "id": "USD/CAD_1767390801",
+      "pair": "USD/CAD",
+      "direction": "SELL",
+      "entry_price": 1.372939944267273,
+      "sl": 1.3805684787886483,
+      "tp": 1.3602257200649805,
+      "created_at": "2026-01-02T21:53:21.660547+00:00",
+      "expires_at": "2026-01-03T01:53:21.660547+00:00",
+      "status": "ACTIVE",
+      "confidence": 0.95,
+      "strategy": "TREND_FOLLOWING",
+      "indicators": {
+        "rsi": 38.76387234569682,
+        "adx": 65.30495016446812,
+        "ema12": 1.3736439902669362,
+        "ema200": 1.3895405242539227
+      },
+      "patterns": [],
+      "confidence_factors": [
+        "Strong downtrend (EMA alignment)",
+        "Below 200 EMA",
+        "RSI bullish (38.8)",
+        "Strong trend (ADX 65.3)",
+        "Daily downtrend confirmation"
+      ],
+      "scores": {
+        "bullish": 15,
+        "bearish": 65
+      },
+      "outcome": null,
+      "outcome_time": null,
+      "outcome_pips": 0.0,
+      "trailing_stop_activated": false,
+      "original_sl": 1.3805684787886483
+    }
+  ],
+  "stats": {
+    "total_signals": 0,
+    "wins": 0,
+    "losses": 0,
+    "win_rate": 0,
+    "total_pips": 0,
+    "active_signals": 3
+  },
+  "api_usage": {
+    "yfinance": {
+      "enabled": true,
+      "calls": 12,
+      "limit": 100,
+      "remaining": 88,
+      "percentage": 12.0
+    },
+    "alpha_vantage": {
+      "enabled": true,
+      "calls": 0,
+      "limit": 25,
+      "remaining": 25,
+      "percentage": 0.0
+    },
+    "browserless": {
+      "enabled": true,
+      "calls": 0,
+      "limit": 5,
+      "remaining": 5,
+      "percentage": 0.0
+    },
+    "marketaux": {
+      "enabled": true,
+      "calls": 1,
+      "limit": 90,
+      "remaining": 89,
+      "percentage": 1.1111111111111112
+    }
+  },
+  "learning_stats": {
+    "total_trades": 8,
+    "pair_performance": {
+      "EUR/USD": {
+        "wins": 0,
+        "losses": 2
+      },
+      "GBP/USD": {
+        "wins": 0,
+        "losses": 2
+      },
+      "USD/JPY": {
+        "wins": 0,
+        "losses": 0
+      },
+      "AUD/USD": {
+        "wins": 0,
+        "losses": 0
+      },
+      "USD/CAD": {
+        "wins": 4,
+        "losses": 0
+      },
+      "NZD/USD": {
+        "wins": 0,
+        "losses": 0
+      }
+    },
+    "learned_params": {
+      "atr_sl_mult": 2.0,
+      "atr_tp_mult": 3.0,
+      "min_confidence": 0.72
+    }
+  },
+  "risk_management": {
+    "daily_pips": 0,
+    "max_daily_loss": 500,
+    "max_correlated_pairs": 2
+  },
+  "best_trading_hours": [],
+  "recent_news": []
 }
-
-function getSessionInfo(){
-  const hour = new Date().getUTCHours();
-  if(hour>=0&&hour<8) return {name:'ASIAN',class:'session-asian'};
-  if(hour>=8&&hour<16) return {name:'EUROPEAN',class:'session-european'};
-  return {name:'US',class:'session-us'};
-}
-
-async function loadState(){
-  try{
-    console.log('🔄 Fetching from:', API_URL);
-    const response = await fetch(API_URL + '?t=' + Date.now(), {cache:'no-cache',headers:{'Cache-Control':'no-cache'}});
-    if(!response.ok) throw new Error(`HTTP ${response.status}`);
-    const data = await response.json();
-    console.log('✅ Data loaded:', data);
-    return data;
-  }catch(e){ console.error('❌ Load error:',e); throw e; }
-}
-
-function updateHealth(data){
-  const healthEl = document.getElementById('health');
-  const dot = healthEl.querySelector('.health-dot');
-  let status = 'Healthy', cls='success';
-  if(!data.signals || data.signals.length === 0) { status='Warning'; dot.className='health-dot warning'; }
-  else if(data.stats?.win_rate < 30) { status='Critical'; dot.className='health-dot danger'; }
-  else { status='Healthy'; dot.className='health-dot'; }
-  document.getElementById('healthText').textContent=status;
-}
-
-function render(data){
-  document.getElementById('loadingOverlay').style.display='none';
-
-  const session = getSessionInfo();
-  document.getElementById('session').className=`session-indicator ${session.class}`;
-  document.getElementById('session').textContent=session.name;
-
-  document.getElementById('activeSignals').textContent = data.active_signals || 0;
-  const wr = data.stats?.win_rate || 0;
-  document.getElementById('winRate').textContent = wr.toFixed(1)+'%';
-  document.getElementById('wins').textContent = data.stats?.wins || 0;
-  document.getElementById('losses').textContent = data.stats?.losses || 0;
-
-  const totalPips = data.stats?.total_pips || 0;
-  const tpEl = document.getElementById('totalPips');
-  tpEl.textContent = (totalPips>=0?'+':'')+totalPips.toFixed(1);
-  tpEl.style.color = totalPips>=0?'var(--success)':'var(--danger)';
-
-  const dailyPips = data.risk_management?.daily_pips || 0;
-  const dpEl = document.getElementById('dailyPips');
-  dpEl.textContent = (dailyPips>=0?'+':'')+dailyPips.toFixed(1);
-  dpEl.style.color = dailyPips>=0?'var(--success)':'var(--danger)';
-
-  document.getElementById('signalCount').textContent=`${data.signals?.length||0} signal${data.signals?.length!==1?'s':''}`;
-
-  // Signals
-  const signals = data.signals || [];
-  const signalsHTML = signals.length>0?signals.map(s=>`
-    <div class="signal-card ${s.direction.toLowerCase()}">
-      <div class="signal-header">
-        <div>
-          <div class="signal-pair">${s.pair}</div>
-          <div style="margin-top:8px">
-            <span class="badge badge-${s.direction.toLowerCase()}">${s.direction}</span>
-            ${s.trailing_stop_activated?'<span class="badge badge-trailing">TRAILING</span>':''}
-          </div>
-          <div style="font-size:13px;color:var(--text-dim);margin-top:8px">
-            ${s.strategy.replace(/_/g,' ')} • ${(s.confidence*100).toFixed(0)}% confidence
-          </div>
-        </div>
-        <div style="text-align:right;font-size:13px;color:var(--text-dim)">
-          <div>${new Date(s.created_at).toLocaleString()}</div>
-        </div>
-      </div>
-      <div class="signal-meta">
-        <div class="signal-meta-item">
-          <div class="signal-meta-label">Entry</div>
-          <div class="signal-meta-value">${s.entry_price.toFixed(5)}</div>
-        </div>
-        <div class="signal-meta-item">
-          <div class="signal-meta-label">Stop Loss</div>
-          <div class="signal-meta-value" style="color:var(--danger)">${s.sl.toFixed(5)}</div>
-        </div>
-        <div class="signal-meta-item">
-          <div class="signal-meta-label">Take Profit</div>
-          <div class="signal-meta-value" style="color:var(--success)">${s.tp.toFixed(5)}</div>
-        </div>
-      </div>
-    </div>
-  `).join(''):`
-  <div class="empty-state">
-    <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-    </svg>
-    <div class="empty-title">No Active Signals</div>
-    <div class="empty-text">System scanning every 10 minutes</div>
-  </div>
-  `;
-  document.getElementById('signalsContainer').innerHTML = signalsHTML;
-
-  // System Stats / API Usage
-  document.getElementById('totalTrades').textContent = data.learning_stats?.total_trades || 0;
-  document.getElementById('yfinanceCalls').textContent = `${data.api_usage?.yfinance||0}/${data.api_limits?.yfinance||0} (${((data.api_usage?.yfinance||0)/(data.api_limits?.yfinance||1)*100).toFixed(0)}%)`;
-  document.getElementById('otherApiCalls').textContent = `
-    Alpha Vantage: ${data.api_usage?.alpha_vantage||0}/${data.api_limits?.alpha_vantage||0} |
-    Browserless: ${data.api_usage?.browserless||0}/${data.api_limits?.browserless||0} |
-    Marketaux: ${data.api_usage?.marketaux||0}/${data.api_limits?.marketaux||0}
-  `;
-
-  document.getElementById('lastUpdate').textContent = formatTime(data.last_update);
-  document.getElementById('nextRun').textContent = formatTime(data.next_run);
-
-  updateHealth(data);
-}
-
-// Auto-refresh every 15s for live P&L
-async function refresh(){
-  try{
-    const state = await loadState();
-    render(state);
-  }catch(e){console.error('Refresh error',e);}
-}
-
-// Initial load
-refresh();
-setInterval(refresh,15000);
-
-</script>
-</body>
-</html>

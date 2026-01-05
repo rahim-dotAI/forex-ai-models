@@ -3,7 +3,7 @@
 
 """
 AI FOREX BRAIN — PRODUCTION SIGNAL ENGINE
-Fully shape-safe, scalar-safe, GitHub Actions stable
+Dashboard-compatible, scalar-safe, GitHub Actions stable
 """
 
 # =======================
@@ -39,10 +39,14 @@ HIST_CACHE_SECONDS = 3600
 BASE = Path.cwd()
 STATE = BASE / "state"
 DATA = BASE / "data"
+SIGNAL_STATE = BASE / "signal_state"
+
 STATE.mkdir(exist_ok=True)
 DATA.mkdir(exist_ok=True)
+SIGNAL_STATE.mkdir(exist_ok=True)
 
 ACTIVE_FILE = STATE / "active_signals.json"
+DASHBOARD_FILE = SIGNAL_STATE / "dashboard_state.json"
 
 # =======================
 # LOGGING
@@ -60,6 +64,7 @@ def check_market_open():
     today = datetime.now(timezone.utc).date()
 
     if today.weekday() >= 5:
+        log.info("Weekend – market closed")
         sys.exit(0)
 
     us = holidays.US()
@@ -69,6 +74,7 @@ def check_market_open():
         "Thanksgiving",
         "Christmas Day",
     }:
+        log.info(f"Market holiday: {us[today]}")
         sys.exit(0)
 
 check_market_open()
@@ -88,7 +94,7 @@ def market_session():
     return "NEW_YORK", ["EUR/USD", "USD/CAD"]
 
 # =======================
-# PRICE FETCH
+# PRICE FETCH (CACHE SAFE)
 # =======================
 PRICE_CACHE = {}
 
@@ -111,7 +117,7 @@ def fetch_price(pair: str) -> Optional[float]:
     return price
 
 # =======================
-# INDICATORS (SAFE)
+# INDICATORS (SCALAR SAFE)
 # =======================
 def ema(series: pd.Series, period: int) -> pd.Series:
     return series.ewm(span=period, adjust=False).mean()
@@ -128,9 +134,9 @@ def rsi(series: pd.Series, period: int = 14) -> pd.Series:
     return 100 - (100 / (1 + rs))
 
 def atr(df: pd.DataFrame, period: int = 14) -> pd.Series:
-    h = df["High"].squeeze().astype(float)
-    l = df["Low"].squeeze().astype(float)
-    c = df["Close"].squeeze().astype(float)
+    h = df["High"].astype(float)
+    l = df["Low"].astype(float)
+    c = df["Close"].astype(float)
 
     tr = pd.concat([
         h - l,
@@ -141,9 +147,9 @@ def atr(df: pd.DataFrame, period: int = 14) -> pd.Series:
     return tr.ewm(alpha=1/period, adjust=False).mean()
 
 def adx(df: pd.DataFrame, period: int = 14) -> pd.Series:
-    h = df["High"].squeeze().astype(float)
-    l = df["Low"].squeeze().astype(float)
-    c = df["Close"].squeeze().astype(float)
+    h = df["High"].astype(float)
+    l = df["Low"].astype(float)
+    c = df["Close"].astype(float)
 
     up = h.diff()
     down = l.diff().abs()
@@ -162,11 +168,11 @@ def adx(df: pd.DataFrame, period: int = 14) -> pd.Series:
     plus_di = 100 * pd.Series(plus_dm, index=df.index).ewm(alpha=1/period, adjust=False).mean() / atr_val
     minus_di = 100 * pd.Series(minus_dm, index=df.index).ewm(alpha=1/period, adjust=False).mean() / atr_val
 
-    dx = (abs(plus_di - minus_di) / (plus_di + minus_di)) * 100
+    dx = (abs(plus_di - minus_di) / (plus_di + minus_di + 1e-9)) * 100
     return dx.ewm(alpha=1/period, adjust=False).mean()
 
 # =======================
-# DATA
+# DATA LOADER
 # =======================
 def load_history(pair: str) -> pd.DataFrame:
     f = DATA / f"{pair.replace('/', '_')}.pkl"
@@ -176,13 +182,12 @@ def load_history(pair: str) -> pd.DataFrame:
 
     symbol = pair.replace("/", "") + "=X"
     df = yf.download(symbol, period="5y", progress=False)
-
     df = df[["High", "Low", "Close"]].astype(float)
     df.to_pickle(f)
     return df
 
 # =======================
-# SIGNAL
+# SIGNAL MODEL
 # =======================
 @dataclass
 class Signal:
@@ -208,7 +213,6 @@ def generate_signal(pair: str, active: List[Signal]) -> Optional[Signal]:
 
     close = df["Close"]
 
-    # --- SCALAR-SAFE --- #
     ema12 = ema(close, 12).iloc[-1].item()
     ema26 = ema(close, 26).iloc[-1].item()
     ema200 = ema(close, 200).iloc[-1].item()
@@ -282,5 +286,40 @@ def main():
 
     ACTIVE_FILE.write_text(json.dumps([asdict(s) for s in active], indent=2))
 
+    # =======================
+    # DASHBOARD EXPORT (FIX)
+    # =======================
+    dashboard = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "next_run": None,
+        "active_signals": len(active),
+        "signals": [
+            {
+                "pair": s.pair,
+                "direction": s.side,
+                "entry_price": s.entry,
+                "sl": s.sl,
+                "tp": s.tp,
+            }
+            for s in active
+        ],
+        "stats": {
+            "win_rate": 0.0,
+            "total_pips": 0.0,
+        },
+        "risk_management": {
+            "daily_pips": 0.0,
+        },
+        "api_usage": {
+            "yfinance": {
+                "calls": 0
+            }
+        }
+    }
+
+    DASHBOARD_FILE.write_text(json.dumps(dashboard, indent=2))
+    log.info("Dashboard state updated")
+
 if __name__ == "__main__":
     main()
+

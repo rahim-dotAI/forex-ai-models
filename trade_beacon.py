@@ -98,7 +98,12 @@ def fetch_price(pair: str) -> Optional[float]:
     if df.empty:
         return None
 
-    price = float(df["Close"].iloc[-1])
+    price = df["Close"].iloc[-1]
+    if isinstance(price, pd.Series):
+        price = price.item()
+    else:
+        price = float(price)
+    
     PRICE_CACHE[pair] = (price, now)
     return price
 
@@ -153,11 +158,24 @@ def adx(df: pd.DataFrame, period: int = 14) -> pd.Series:
     plus_dm = up.where((up > down) & (up > 0), 0.0)
     minus_dm = down.where((down > up) & (down > 0), 0.0)
 
-    plus_di = 100 * plus_dm.ewm(alpha=1/period, adjust=False).mean() / atr_val
-    minus_di = 100 * minus_dm.ewm(alpha=1/period, adjust=False).mean() / atr_val
+    plus_di = 100 * plus_dm.ewm(alpha=1/period, adjust=False).mean() / (atr_val + 1e-9)
+    minus_di = 100 * minus_dm.ewm(alpha=1/period, adjust=False).mean() / (atr_val + 1e-9)
 
     dx = (plus_di - minus_di).abs() / (plus_di + minus_di + 1e-9) * 100
     return dx.ewm(alpha=1/period, adjust=False).mean()
+
+# =======================
+# SAFE SCALAR EXTRACTION
+# =======================
+def to_scalar(val) -> float:
+    """Safely convert pandas scalar/Series to Python float"""
+    if isinstance(val, pd.Series):
+        if len(val) == 0:
+            return 0.0
+        val = val.iloc[-1]
+    if pd.isna(val):
+        return 0.0
+    return float(val)
 
 # =======================
 # DATA
@@ -200,12 +218,12 @@ def generate_signal(pair: str, active: List[Signal]) -> Optional[Signal]:
 
     close = df["Close"]
 
-    # Extract scalar values properly
-    e12 = float(ema(close, 12).iloc[-1])
-    e26 = float(ema(close, 26).iloc[-1])
-    e200 = float(ema(close, 200).iloc[-1])
-    r = float(rsi(close).iloc[-1])
-    a = float(adx(df).iloc[-1])
+    # Extract scalar values safely
+    e12 = to_scalar(ema(close, 12).iloc[-1])
+    e26 = to_scalar(ema(close, 26).iloc[-1])
+    e200 = to_scalar(ema(close, 200).iloc[-1])
+    r = to_scalar(rsi(close).iloc[-1])
+    a = to_scalar(adx(df).iloc[-1])
 
     bull = bear = 0
 
@@ -233,7 +251,7 @@ def generate_signal(pair: str, active: List[Signal]) -> Optional[Signal]:
     if price is None:
         return None
 
-    atr_val = float(atr(df).iloc[-1])
+    atr_val = to_scalar(atr(df).iloc[-1])
     sl = price - atr_val * ATR_SL_MULT if side == "BUY" else price + atr_val * ATR_SL_MULT
     tp = price + atr_val * ATR_TP_MULT if side == "BUY" else price - atr_val * ATR_TP_MULT
 

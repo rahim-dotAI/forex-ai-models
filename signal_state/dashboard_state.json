@@ -1,69 +1,34 @@
 {
-  "timestamp": "2026-01-02T22:54:36.037299+00:00",
-  "next_run": "2026-01-02T23:04:36.037305+00:00",
+  "timestamp": "2026-01-05T04:26:57.096674+00:00",
+  "next_run": "2026-01-05T04:36:57.096681+00:00",
   "run_interval_minutes": 10,
-  "current_session": "US",
-  "active_signals": 3,
+  "current_session": "ASIAN",
+  "active_signals": 1,
   "signals": [
     {
-      "id": "EUR/USD_1767390799",
-      "pair": "EUR/USD",
+      "id": "AUD/USD_1767587216",
+      "pair": "AUD/USD",
       "direction": "BUY",
-      "entry_price": 1.172333002090454,
-      "sl": 1.16483017376491,
-      "tp": 1.184837715966361,
-      "created_at": "2026-01-02T21:53:19.740549+00:00",
-      "expires_at": "2026-01-03T01:53:19.740549+00:00",
+      "entry_price": 0.6671558618545532,
+      "sl": 0.6610454065459115,
+      "tp": 0.6773399540356227,
+      "created_at": "2026-01-05T04:26:56.758579+00:00",
+      "expires_at": "2026-01-05T08:26:56.758579+00:00",
       "status": "ACTIVE",
       "confidence": 0.95,
       "strategy": "TREND_FOLLOWING",
       "indicators": {
-        "rsi": 54.193484177322155,
-        "adx": 49.01886546036845,
-        "ema12": 1.1741798500941039,
-        "ema200": 1.1483362382001143
+        "rsi": 51.420526982014266,
+        "adx": 45.870967053166964,
+        "ema12": 0.6669576488151602,
+        "ema200": 0.653138782756131
       },
       "patterns": [],
       "confidence_factors": [
         "Strong uptrend (EMA alignment)",
         "Above 200 EMA",
-        "RSI bearish (54.2)",
-        "Strong trend (ADX 49.0)"
-      ],
-      "scores": {
-        "bullish": 50,
-        "bearish": 15
-      },
-      "outcome": null,
-      "outcome_time": null,
-      "outcome_pips": 0.0,
-      "trailing_stop_activated": false,
-      "original_sl": 1.16483017376491
-    },
-    {
-      "id": "GBP/USD_1767390800",
-      "pair": "GBP/USD",
-      "direction": "BUY",
-      "entry_price": 1.3461124897003174,
-      "sl": 1.334474972316197,
-      "tp": 1.3655083520071847,
-      "created_at": "2026-01-02T21:53:20.724564+00:00",
-      "expires_at": "2026-01-03T01:53:20.724564+00:00",
-      "status": "ACTIVE",
-      "confidence": 0.95,
-      "strategy": "TREND_FOLLOWING",
-      "indicators": {
-        "rsi": 59.88751921322645,
-        "adx": 54.11653152330219,
-        "ema12": 1.3445086504547177,
-        "ema200": 1.327812407955209
-      },
-      "patterns": [],
-      "confidence_factors": [
-        "Strong uptrend (EMA alignment)",
-        "Above 200 EMA",
-        "RSI bearish (59.9)",
-        "Strong trend (ADX 54.1)",
+        "RSI bearish (51.4)",
+        "Strong trend (ADX 45.9)",
         "Daily uptrend confirmation"
       ],
       "scores": {
@@ -74,43 +39,7 @@
       "outcome_time": null,
       "outcome_pips": 0.0,
       "trailing_stop_activated": false,
-      "original_sl": 1.334474972316197
-    },
-    {
-      "id": "USD/CAD_1767390801",
-      "pair": "USD/CAD",
-      "direction": "SELL",
-      "entry_price": 1.372939944267273,
-      "sl": 1.3805684787886483,
-      "tp": 1.3602257200649805,
-      "created_at": "2026-01-02T21:53:21.660547+00:00",
-      "expires_at": "2026-01-03T01:53:21.660547+00:00",
-      "status": "ACTIVE",
-      "confidence": 0.95,
-      "strategy": "TREND_FOLLOWING",
-      "indicators": {
-        "rsi": 38.76387234569682,
-        "adx": 65.30495016446812,
-        "ema12": 1.3736439902669362,
-        "ema200": 1.3895405242539227
-      },
-      "patterns": [],
-      "confidence_factors": [
-        "Strong downtrend (EMA alignment)",
-        "Below 200 EMA",
-        "RSI bullish (38.8)",
-        "Strong trend (ADX 65.3)",
-        "Daily downtrend confirmation"
-      ],
-      "scores": {
-        "bullish": 15,
-        "bearish": 65
-      },
-      "outcome": null,
-      "outcome_time": null,
-      "outcome_pips": 0.0,
-      "trailing_stop_activated": false,
-      "original_sl": 1.3805684787886483
+      "original_sl": 0.6610454065459115
     }
   ],
   "stats": {
@@ -119,15 +48,15 @@
     "losses": 0,
     "win_rate": 0,
     "total_pips": 0,
-    "active_signals": 3
+    "active_signals": 1
   },
   "api_usage": {
     "yfinance": {
       "enabled": true,
-      "calls": 18,
+      "calls": 2,
       "limit": 100,
-      "remaining": 82,
-      "percentage": 18.0
+      "remaining": 98,
+      "percentage": 2.0
     },
     "alpha_vantage": {
       "enabled": true,
@@ -191,5 +120,271 @@
     "max_correlated_pairs": 2
   },
   "best_trading_hours": [],
-  "recent_news": []
+  "recent_news": [
+    {
+      "uuid": "33476455-54a1-4ec4-bec2-6c742c29e808",
+      "title": "USD: Amplified Exposure To The Semiconductor Industry (NYSEARCA:USD)",
+      "description": "Gain 2x daily leveraged exposure to semiconductor stocks, especially NVDA, with USD ETF. Discover trading strategies & risk tips.",
+      "keywords": "",
+      "snippet": "The ProShares Ultra Semiconductors ETF ( USD ) is a leveraged exchange-traded fund designed to provide 2x the daily performance of the Dow Jones U.S. Semiconduc...",
+      "url": "https://seekingalpha.com/article/4844754-usd-amplified-exposure-to-semiconductor-industry",
+      "image_url": "https://static.seekingalpha.com/cdn/s3/uploads/getty_images/1939427277/image_1939427277.jpg?io=getty-c-w1536",
+      "language": "en",
+      "published_at": "2025-11-17T21:24:15.000000Z",
+      "source": "seekingalpha.com",
+      "relevance_score": null,
+      "entities": [
+        {
+          "symbol": "USD",
+          "name": "ProShares Ultra Semiconductors",
+          "exchange": null,
+          "exchange_long": null,
+          "country": "us",
+          "type": "etf",
+          "industry": "N/A",
+          "match_score": 110.15566,
+          "sentiment_score": 0,
+          "highlights": [
+            {
+              "highlight": "The <em>ProShares</em> <em>Ultra</em> <e[+159 characters]",
+              "sentiment": 0,
+              "highlighted_in": "main_text"
+            },
+            {
+              "highlight": "USD: Amplified Exposure To The Semiconductor Industry (<em>NYSEARCA:USD</em>)",
+              "sentiment": 0,
+              "highlighted_in": "title"
+            }
+          ]
+        }
+      ],
+      "similar": []
+    },
+    {
+      "uuid": "798b38b6-6e70-4f3a-b5a6-33c98e3a1953",
+      "title": "Is ProShares Ultra Semiconductors (USD) the Best Performing ETF of the Last 5 Years?",
+      "description": "We recently compiled a list of the 10 Best Performing ETFs of the Last 5 Years.\u00a0In this article, we are going to take a look at where ProShares Ultra Semiconductors (NYSE:USD) stands against the other...",
+      "keywords": "",
+      "snippet": "We recently compiled a list of the 10 Best Performing ETFs of the Last 5 Years. In this article, we are going to take a look at where ProShares Ultra Semiconduc...",
+      "url": "https://www.insidermonkey.com/blog/is-proshares-ultra-semiconductors-usd-the-best-performing-etf-of-the-last-5-years-1461002/",
+      "image_url": "https://d2gr5kl7dt2z3t.cloudfront.net/blog/wp-content/uploads/2023/12/12110902/USD-insidermonkey-1702397340668.jpg",
+      "language": "en",
+      "published_at": "2025-02-23T03:55:49.000000Z",
+      "source": "insidermonkey.com",
+      "relevance_score": null,
+      "entities": [
+        {
+          "symbol": "QCOM",
+          "name": "QUALCOMM Incorporated",
+          "exchange": null,
+          "exchange_long": null,
+          "country": "us",
+          "type": "equity",
+          "industry": "Technology",
+          "match_score": 36.785137,
+          "sentiment_score": 0.10115,
+          "highlights": [
+            {
+              "highlight": "<em>QUALCOMM</em> <em>Incorporated</em> [+311 characters]",
+              "sentiment": 0.2023,
+              "highlighted_in": "main_text"
+            },
+            {
+              "highlight": "<em>QUALCOMM</em> <em>Incorporated</em> [+297 characters]",
+              "sentiment": 0,
+              "highlighted_in": "main_text"
+            }
+          ]
+        },
+        {
+          "symbol": "QCOM34.SA",
+          "name": "QUALCOMM Incorporated",
+          "exchange": null,
+          "exchange_long": null,
+          "country": "br",
+          "type": "equity",
+          "industry": "Technology",
+          "match_score": 25.866632,
+          "sentiment_score": 0.10115,
+          "highlights": [
+            {
+              "highlight": "<em>QUALCOMM</em> <em>Incorporated</em> [+302 characters]",
+              "sentiment": 0.2023,
+              "highlighted_in": "main_text"
+            },
+            {
+              "highlight": "<em>QUALCOMM</em> <em>Incorporated</em> [+288 characters]",
+              "sentiment": 0,
+              "highlighted_in": "main_text"
+            }
+          ]
+        },
+        {
+          "symbol": "USD",
+          "name": "ProShares Ultra Semiconductors",
+          "exchange": null,
+          "exchange_long": null,
+          "country": "us",
+          "type": "etf",
+          "industry": "N/A",
+          "match_score": 159.71884,
+          "sentiment_score": 0.166075,
+          "highlights": [
+            {
+              "highlight": "In this article, we are going to take a [+323 characters]",
+              "sentiment": -0.6705,
+              "highlighted_in": "main_text"
+            },
+            {
+              "highlight": "<em>ProShares</em> <em>Ultra</em> <em>Se[+333 characters]",
+              "sentiment": 0.296,
+              "highlighted_in": "main_text"
+            },
+            {
+              "highlight": "These are derivatives exchanged with ano[+262 characters]",
+              "sentiment": 0.4019,
+              "highlighted_in": "main_text"
+            },
+            {
+              "highlight": "Is <em>ProShares</em> <em>Ultra</em> <em>Semiconductors</em> (USD) the Best Performing ETF of the Last 5 Years?",
+              "sentiment": 0.6369,
+              "highlighted_in": "title"
+            }
+          ]
+        },
+        {
+          "symbol": "QCOM.BA",
+          "name": "QUALCOMM Incorporated",
+          "exchange": null,
+          "exchange_long": null,
+          "country": "ar",
+          "type": "equity",
+          "industry": "Technology",
+          "match_score": 25.866917,
+          "sentiment_score": 0.10115,
+          "highlights": [
+            {
+              "highlight": "<em>QUALCOMM</em> <em>Incorporated</em> [+302 characters]",
+              "sentiment": 0.2023,
+              "highlighted_in": "main_text"
+            },
+            {
+              "highlight": "<em>QUALCOMM</em> <em>Incorporated</em> [+288 characters]",
+              "sentiment": 0,
+              "highlighted_in": "main_text"
+            }
+          ]
+        },
+        {
+          "symbol": "QCOM.SN",
+          "name": "QUALCOMM Incorporated",
+          "exchange": null,
+          "exchange_long": null,
+          "country": "cl",
+          "type": "equity",
+          "industry": "Technology",
+          "match_score": 25.866863,
+          "sentiment_score": 0.10115,
+          "highlights": [
+            {
+              "highlight": "<em>QUALCOMM</em> <em>Incorporated</em> [+302 characters]",
+              "sentiment": 0.2023,
+              "highlighted_in": "main_text"
+            },
+            {
+              "highlight": "<em>QUALCOMM</em> <em>Incorporated</em> [+288 characters]",
+              "sentiment": 0,
+              "highlighted_in": "main_text"
+            }
+          ]
+        },
+        {
+          "symbol": "QCI.DE",
+          "name": "QUALCOMM Incorporated",
+          "exchange": null,
+          "exchange_long": null,
+          "country": "de",
+          "type": "equity",
+          "industry": "Technology",
+          "match_score": 25.86773,
+          "sentiment_score": 0.10115,
+          "highlights": [
+            {
+              "highlight": "<em>QUALCOMM</em> <em>Incorporated</em> [+302 characters]",
+              "sentiment": 0.2023,
+              "highlighted_in": "main_text"
+            },
+            {
+              "highlight": "<em>QUALCOMM</em> <em>Incorporated</em> [+288 characters]",
+              "sentiment": 0,
+              "highlighted_in": "main_text"
+            }
+          ]
+        },
+        {
+          "symbol": "QCOM.MX",
+          "name": "QUALCOMM Incorporated",
+          "exchange": null,
+          "exchange_long": null,
+          "country": "mx",
+          "type": "equity",
+          "industry": "Technology",
+          "match_score": 25.86823,
+          "sentiment_score": 0.10115,
+          "highlights": [
+            {
+              "highlight": "<em>QUALCOMM</em> <em>Incorporated</em> [+302 characters]",
+              "sentiment": 0.2023,
+              "highlighted_in": "main_text"
+            },
+            {
+              "highlight": "<em>QUALCOMM</em> <em>Incorporated</em> [+288 characters]",
+              "sentiment": 0,
+              "highlighted_in": "main_text"
+            }
+          ]
+        }
+      ],
+      "similar": []
+    },
+    {
+      "uuid": "ad032e5c-3dcd-4dc2-b8b6-9507bf556ab7",
+      "title": "USD: Capitalizing On AI And Semiconductor Growth With 2x Leverage (NYSEARCA:USD)",
+      "description": "ProShares Ultra Semiconductors ETF targets 2x daily returns, with Nvidia as a major player. See why USD could benefit from AI-driven semiconductor demand.",
+      "keywords": "",
+      "snippet": "Nvidia ( NVDA ) is the largest player in the semiconductor industry, and ProShares Ultra Semiconductors ETF (NYSEARCA: USD ) is making an all-in bet. With over ...",
+      "url": "https://seekingalpha.com/article/4754103-usd-capitalizing-on-ai-and-semiconductor-growth-with-2x-leverage",
+      "image_url": "https://static.seekingalpha.com/cdn/s3/uploads/getty_images/1808243985/image_1808243985.jpg?io=getty-c-w1536",
+      "language": "en",
+      "published_at": "2025-02-01T12:43:33.000000Z",
+      "source": "seekingalpha.com",
+      "relevance_score": null,
+      "entities": [
+        {
+          "symbol": "USD",
+          "name": "ProShares Ultra Semiconductors",
+          "exchange": null,
+          "exchange_long": null,
+          "country": "us",
+          "type": "etf",
+          "industry": "N/A",
+          "match_score": 130.3671,
+          "sentiment_score": 0.1909,
+          "highlights": [
+            {
+              "highlight": "Nvidia ( NVDA ) is the largest player in[+154 characters]",
+              "sentiment": 0,
+              "highlighted_in": "main_text"
+            },
+            {
+              "highlight": "USD: Capitalizing On AI And Semiconductor Growth With 2x Leverage (<em>NYSEARCA:USD</em>)",
+              "sentiment": 0.3818,
+              "highlighted_in": "title"
+            }
+          ]
+        }
+      ],
+      "similar": []
+    }
+  ]
 }

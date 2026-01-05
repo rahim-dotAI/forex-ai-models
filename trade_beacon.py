@@ -3,7 +3,7 @@
 
 """
 AI FOREX BRAIN — PRODUCTION SIGNAL ENGINE
-ADX-safe, pandas-2.x compatible, dashboard-ready
+ADX corrected, scalar safe, dashboard export
 """
 
 import sys, time, json, uuid, logging
@@ -56,16 +56,14 @@ log = logging.getLogger(__name__)
 # =======================
 def check_market_open():
     today = datetime.now(timezone.utc).date()
+    # Weekend
     if today.weekday() >= 5:
+        log.info("Weekend — market closed")
         sys.exit(0)
 
     us = holidays.US()
-    if today in us and us[today] in {
-        "New Year's Day",
-        "Independence Day",
-        "Thanksgiving",
-        "Christmas Day",
-    }:
+    if today in us:
+        log.info(f"Market holiday: {us[today]}")
         sys.exit(0)
 
 check_market_open()
@@ -74,12 +72,12 @@ check_market_open()
 # SESSION
 # =======================
 def market_session():
-    h = datetime.now(timezone.utc).hour
-    if 0 <= h < 7:
+    hour = datetime.now(timezone.utc).hour
+    if 0 <= hour < 7:
         return "ASIAN", ["USD/JPY", "AUD/USD", "NZD/USD"]
-    if 7 <= h < 12:
+    if 7 <= hour < 12:
         return "LONDON", ["EUR/USD", "GBP/USD"]
-    if 12 <= h < 16:
+    if 12 <= hour < 16:
         return "LONDON_NY_OVERLAP", ["EUR/USD", "GBP/USD", "USD/CAD"]
     return "NEW_YORK", ["EUR/USD", "USD/CAD"]
 
@@ -115,8 +113,8 @@ def rsi(series: pd.Series, period: int = 14) -> pd.Series:
     gain = delta.clip(lower=0)
     loss = -delta.clip(upper=0)
 
-    avg_gain = gain.ewm(alpha=1 / period, adjust=False).mean()
-    avg_loss = loss.ewm(alpha=1 / period, adjust=False).mean()
+    avg_gain = gain.ewm(alpha=1/period, adjust=False).mean()
+    avg_loss = loss.ewm(alpha=1/period, adjust=False).mean()
 
     rs = avg_gain / (avg_loss + 1e-9)
     return 100 - (100 / (1 + rs))
@@ -132,32 +130,34 @@ def atr(df: pd.DataFrame, period: int = 14) -> pd.Series:
         (l - c.shift()).abs()
     ], axis=1).max(axis=1)
 
-    return tr.ewm(alpha=1 / period, adjust=False).mean()
+    return tr.ewm(alpha=1/period, adjust=False).mean()
 
 def adx(df: pd.DataFrame, period: int = 14) -> pd.Series:
     h = df["High"]
     l = df["Low"]
     c = df["Close"]
 
-    up = h.diff()
-    down = -l.diff()
-
-    plus_dm = up.where((up > down) & (up > 0), 0.0)
-    minus_dm = down.where((down > up) & (down > 0), 0.0)
-
+    # True range
     tr = pd.concat([
         h - l,
         (h - c.shift()).abs(),
         (l - c.shift()).abs()
     ], axis=1).max(axis=1)
 
-    atr_val = tr.ewm(alpha=1 / period, adjust=False).mean()
+    atr_val = tr.ewm(alpha=1/period, adjust=False).mean()
 
-    plus_di = 100 * plus_dm.ewm(alpha=1 / period, adjust=False).mean() / atr_val
-    minus_di = 100 * minus_dm.ewm(alpha=1 / period, adjust=False).mean() / atr_val
+    # Directional movements
+    up = h.diff()
+    down = -l.diff()
+
+    plus_dm = up.where((up > down) & (up > 0), 0.0)
+    minus_dm = down.where((down > up) & (down > 0), 0.0)
+
+    plus_di = 100 * plus_dm.ewm(alpha=1/period, adjust=False).mean() / atr_val
+    minus_di = 100 * minus_dm.ewm(alpha=1/period, adjust=False).mean() / atr_val
 
     dx = (plus_di - minus_di).abs() / (plus_di + minus_di + 1e-9) * 100
-    return dx.ewm(alpha=1 / period, adjust=False).mean()
+    return dx.ewm(alpha=1/period, adjust=False).mean()
 
 # =======================
 # DATA
@@ -188,7 +188,7 @@ class Signal:
     created: str
 
 # =======================
-# SIGNAL ENGINE
+# GENERATE SIGNAL
 # =======================
 def generate_signal(pair: str, active: List[Signal]) -> Optional[Signal]:
     if pair in [s.pair for s in active]:
@@ -200,24 +200,27 @@ def generate_signal(pair: str, active: List[Signal]) -> Optional[Signal]:
 
     close = df["Close"]
 
-    ema12 = ema(close, 12).iloc[-1].item()
-    ema26 = ema(close, 26).iloc[-1].item()
-    ema200 = ema(close, 200).iloc[-1].item()
-    r = rsi(close).iloc[-1].item()
-    a = adx(df).iloc[-1].item()
+    e12 = ema(close, 12).iloc[-1]
+    e26 = ema(close, 26).iloc[-1]
+    e200 = ema(close, 200).iloc[-1]
+    r = rsi(close).iloc[-1]
+    a = adx(df).iloc[-1]
 
     bull = bear = 0
-    if ema12 > ema26 > ema200:
+
+    if e12 > e26 > e200:
         bull += 40
-    if ema12 < ema26 < ema200:
+    if e12 < e26 < e200:
         bear += 40
+
     if r < 40:
         bull += 20
     if r > 60:
         bear += 20
+
     if a > 25:
-        bull += 10 if ema12 > ema26 else 0
-        bear += 10 if ema12 < ema26 else 0
+        bull += 10 if e12 > e26 else 0
+        bear += 10 if e12 < e26 else 0
 
     if abs(bull - bear) < 30:
         return None
@@ -229,7 +232,7 @@ def generate_signal(pair: str, active: List[Signal]) -> Optional[Signal]:
     if price is None:
         return None
 
-    atr_val = atr(df).iloc[-1].item()
+    atr_val = atr(df).iloc[-1]
     sl = price - atr_val * ATR_SL_MULT if side == "BUY" else price + atr_val * ATR_SL_MULT
     tp = price + atr_val * ATR_TP_MULT if side == "BUY" else price - atr_val * ATR_TP_MULT
 
@@ -241,11 +244,11 @@ def generate_signal(pair: str, active: List[Signal]) -> Optional[Signal]:
         sl=sl,
         tp=tp,
         confidence=confidence,
-        created=datetime.now(timezone.utc).isoformat(),
+        created=datetime.now(timezone.utc).isoformat()
     )
 
 # =======================
-# MAIN
+# MAIN EXECUTION
 # =======================
 def main():
     session, pairs = market_session()
@@ -268,6 +271,9 @@ def main():
 
     ACTIVE_FILE.write_text(json.dumps([asdict(s) for s in active], indent=2))
 
+    # =======================
+    # DASHBOARD OUTPUT
+    # =======================
     dashboard = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "next_run": None,
@@ -278,13 +284,12 @@ def main():
                 "direction": s.side,
                 "entry_price": s.entry,
                 "sl": s.sl,
-                "tp": s.tp,
-            }
-            for s in active
+                "tp": s.tp
+            } for s in active
         ],
         "stats": {"win_rate": 0.0, "total_pips": 0.0},
         "risk_management": {"daily_pips": 0.0},
-        "api_usage": {"yfinance": {"calls": 0}},
+        "api_usage": {"yfinance": {"calls": 0}}
     }
 
     DASHBOARD_FILE.write_text(json.dumps(dashboard, indent=2))

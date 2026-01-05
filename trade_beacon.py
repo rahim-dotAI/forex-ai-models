@@ -106,7 +106,7 @@ def fetch_price(pair: str) -> Optional[float]:
     if df.empty:
         return None
 
-    price = float(df["Close"].iloc[-1])
+    price = df["Close"].iloc[-1].item()
     PRICE_CACHE[pair] = (price, now)
     return price
 
@@ -208,11 +208,12 @@ def generate_signal(pair: str, active: List[Signal]) -> Optional[Signal]:
 
     close = df["Close"]
 
-    ema12 = float(ema(close, 12).iloc[-1])
-    ema26 = float(ema(close, 26).iloc[-1])
-    ema200 = float(ema(close, 200).iloc[-1])
-    r = float(rsi(close).iloc[-1])
-    a = float(adx(df).iloc[-1])
+    # --- SCALAR-SAFE --- #
+    ema12 = ema(close, 12).iloc[-1].item()
+    ema26 = ema(close, 26).iloc[-1].item()
+    ema200 = ema(close, 200).iloc[-1].item()
+    r = rsi(close).iloc[-1].item()
+    a = adx(df).iloc[-1].item()
 
     bull = bear = 0
 
@@ -240,7 +241,7 @@ def generate_signal(pair: str, active: List[Signal]) -> Optional[Signal]:
     if price is None:
         return None
 
-    atr_val = float(atr(df).iloc[-1])
+    atr_val = atr(df).iloc[-1].item()
 
     sl = price - atr_val * ATR_SL_MULT if side == "BUY" else price + atr_val * ATR_SL_MULT
     tp = price + atr_val * ATR_TP_MULT if side == "BUY" else price - atr_val * ATR_TP_MULT

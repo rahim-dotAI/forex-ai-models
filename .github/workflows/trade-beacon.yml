@@ -6,98 +6,69 @@ on:
     paths:
       - 'colab_trigger.txt'
   schedule:
-    - cron: "*/10 * * * 1-5"
+    - cron: "*/10 0-23 * * 1-5"  # fallback schedule after trigger limit reached (UTC)
 
 env:
   PYTHON_VERSION: "3.10"
   ENTRY_SCRIPT: "trade_beacon.py"
-  TRIGGER_COUNT_FILE: "state/trigger_count.json"
-  MAX_TRIGGER_RUNS_PER_DAY: 10
-  WORKFLOW_FILE: ".github/workflows/forex_trading.yml"
+  MAX_RUNS_PER_DAY: 10
 
 jobs:
   forex-trading:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    
+
     steps:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-        
+
       - name: 🐍 Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          
+
       - name: 📦 Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install holidays jq
 
-      - name: 🔢 Handle Trigger Run Counter & Push Enable/Disable
+      - name: 🔢 Determine if trigger should run
         id: trigger_count
         run: |
+          set -e
           TRIGGER_RUN=false
-          TODAY=$(date -u +"%Y-%m-%d")
+          TODAY=$(date -u +%Y-%m-%d)
+          COUNT_FILE="trigger_count.json"
 
-          # Determine if current event is a trigger
-          if [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
-            if jq -e '.commits' "$GITHUB_EVENT_PATH" >/dev/null; then
-              CHANGED_FILES=$(jq -r '.commits[].modified[]' "$GITHUB_EVENT_PATH" || true)
-              if echo "$CHANGED_FILES" | grep -q 'colab_trigger.txt'; then
-                TRIGGER_RUN=true
-              fi
+          # Initialize count file if not exists
+          if [ ! -f "$COUNT_FILE" ]; then
+            echo "{}" > "$COUNT_FILE"
+          fi
+
+          # Get today's run count
+          TODAY_COUNT=$(jq -r --arg day "$TODAY" '.[$day] // 0' "$COUNT_FILE")
+
+          echo "ℹ️ Today's trigger count: $TODAY_COUNT"
+
+          # Check event type
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            TRIGGER_RUN=true
+          elif [[ "$GITHUB_EVENT_NAME" == "push" ]]; then
+            FILE_CHANGED=$(jq -r '[.commits[].modified[]?, .commits[].added[]?] | .[]' "$GITHUB_EVENT_PATH" || true)
+            if echo "$FILE_CHANGED" | grep -q 'colab_trigger.txt'; then
+              TRIGGER_RUN=true
             fi
+          elif [[ "$GITHUB_EVENT_NAME" == "schedule" ]]; then
+            TRIGGER_RUN=true
           fi
 
-          mkdir -p state
-          # Initialize trigger count file if missing
-          if [ ! -f ${{ env.TRIGGER_COUNT_FILE }} ]; then
-            echo "{\"date\":\"$TODAY\",\"count\":0}" > ${{ env.TRIGGER_COUNT_FILE }}
-          fi
-
-          # Read current trigger count
-          DATA=$(cat ${{ env.TRIGGER_COUNT_FILE }})
-          FILE_DATE=$(echo $DATA | jq -r '.date')
-          COUNT=$(echo $DATA | jq -r '.count')
-
-          # Reset counter if file is from previous day
-          if [ "$FILE_DATE" != "$TODAY" ]; then
-            COUNT=0
-            # Re-enable push trigger at new day
-            sed -i '/^# push:/,/^[[:space:]]*[^#[:space:]]/ s/^# //' ${{ env.WORKFLOW_FILE }}
-            git config --local user.email "github-actions[bot]@users.noreply.github.com"
-            git config --local user.name "Trade Beacon Bot"
-            git add ${{ env.WORKFLOW_FILE }}
-            git commit -m "🔓 Re-enable push trigger for new day $TODAY"
-            git push
-          fi
-
-          # Increment if allowed
-          if [ "$TRIGGER_RUN" == "true" ] && [ "$COUNT" -lt ${{ env.MAX_TRIGGER_RUNS_PER_DAY }} ]; then
-            COUNT=$((COUNT+1))
-            echo "{\"date\":\"$TODAY\",\"count\":$COUNT}" > ${{ env.TRIGGER_COUNT_FILE }}
-            git config --local user.email "github-actions[bot]@users.noreply.github.com"
-            git config --local user.name "Trade Beacon Bot"
-            git add ${{ env.TRIGGER_COUNT_FILE }}
-            git commit -m "🔢 Increment daily trigger count to $COUNT"
-            git push
-
-            # Disable push trigger automatically if max per day reached
-            if [ "$COUNT" -ge ${{ env.MAX_TRIGGER_RUNS_PER_DAY }} ]; then
-              echo "⚠️ Max daily trigger runs reached – disabling push trigger"
-              sed -i '/push:/,/^[[:space:]]*[^#[:space:]]/ s/^/# /' ${{ env.WORKFLOW_FILE }}
-              git add ${{ env.WORKFLOW_FILE }}
-              git commit -m "🔒 Disable push trigger after $COUNT runs today"
-              git push
-              echo "✅ Push trigger disabled, only schedule will run"
-            fi
-          else
-            echo "{\"date\":\"$TODAY\",\"count\":$COUNT}" > ${{ env.TRIGGER_COUNT_FILE }}
+          # Only allow triggers if count < MAX_RUNS
+          if [[ $TODAY_COUNT -ge $MAX_RUNS_PER_DAY ]]; then
+            TRIGGER_RUN=false
           fi
 
           echo "trigger_run=$TRIGGER_RUN" >> $GITHUB_OUTPUT
@@ -106,34 +77,27 @@ jobs:
         id: check_market
         run: |
           python << 'EOF'
-          import datetime, holidays, sys, os
+import datetime, holidays, os, sys
 
-          today = datetime.date.today()
-          us = holidays.US()
-          github_output = os.environ.get('GITHUB_OUTPUT', '')
+today = datetime.date.today()
+us = holidays.US()
+github_output = os.environ.get('GITHUB_OUTPUT', '')
 
-          if today.weekday() >= 5:
-              print("🚫 Weekend – skipping trading")
-              if github_output:
-                  with open(github_output, 'a') as f:
-                      f.write("skip=true\n")
-              sys.exit(0)
-          
-          if today in us:
-              print(f"🚫 Market holiday: {us[today]} – skipping trading")
-              if github_output:
-                  with open(github_output, 'a') as f:
-                      f.write("skip=true\n")
-              sys.exit(0)
-          
-          print("✅ Market open – proceeding with trading")
-          if github_output:
-              with open(github_output, 'a') as f:
-                  f.write("skip=false\n")
-          EOF
+if today.weekday() >= 5 or today in us:
+    print(f"🚫 Market closed ({'Weekend' if today.weekday() >= 5 else 'Holiday'})")
+    if github_output:
+        with open(github_output, 'a') as f:
+            f.write("skip=true\n")
+    sys.exit(0)
+
+print("✅ Market open")
+if github_output:
+    with open(github_output, 'a') as f:
+        f.write("skip=false\n")
+EOF
 
       - name: 🚀 Run Trading Bot
-        if: steps.trigger_count.outputs.trigger_run == 'true' || github.event_name == 'schedule'
+        if: steps.trigger_count.outputs.trigger_run == 'true' && steps.check_market.outputs.skip != 'true'
         env:
           ALPHA_VANTAGE_KEY: ${{ secrets.ALPHA_VANTAGE_KEY }}
           BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}
@@ -141,29 +105,66 @@ jobs:
         run: python ${{ env.ENTRY_SCRIPT }}
 
       - name: 💾 Commit live trading data
-        if: steps.trigger_count.outputs.trigger_run == 'true' || github.event_name == 'schedule'
+        if: steps.trigger_count.outputs.trigger_run == 'true' && steps.check_market.outputs.skip != 'true'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "Trade Beacon Bot"
-          
+
           git add -f signal_state/*.json 2>/dev/null || true
           git add -f memory/*.json 2>/dev/null || true
           git add -f logs/*.log 2>/dev/null || true
-          
+
           if ! git diff --staged --quiet; then
             timestamp=$(date -u +"%Y-%m-%d %H:%M UTC")
             git commit -m "🔄 Live signal update - ${timestamp}"
-            echo "✅ Files committed"
+            git push
+            echo "✅ Data committed and pushed"
           else
             echo "ℹ️ No changes to commit"
           fi
-      
-      - name: 🚀 Push live data to repository
-        if: steps.trigger_count.outputs.trigger_run == 'true' || github.event_name == 'schedule'
+
+      - name: 🔁 Update daily trigger count and disable push if max reached
+        if: steps.trigger_count.outputs.trigger_run == 'true'
         run: |
-          git push
-          echo "✅ Live data pushed to repository"
-        
+          TODAY=$(date -u +%Y-%m-%d)
+          COUNT_FILE="trigger_count.json"
+
+          # Increment count
+          TODAY_COUNT=$(jq -r --arg day "$TODAY" '.[$day] // 0' "$COUNT_FILE")
+          NEW_COUNT=$((TODAY_COUNT + 1))
+          jq --arg day "$TODAY" --argjson count $NEW_COUNT '.[$day]=$count' "$COUNT_FILE" > tmp.json && mv tmp.json "$COUNT_FILE"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "Trade Beacon Bot"
+          git add "$COUNT_FILE"
+
+          # Disable push trigger if max reached
+          if [[ $NEW_COUNT -ge $MAX_RUNS_PER_DAY ]]; then
+            echo "🔒 Max runs reached today, disabling push trigger in YAML"
+            yq eval '.on.push = null' -i .github/workflows/forex-trading.yml
+            git add .github/workflows/forex-trading.yml
+          fi
+
+          if ! git diff --staged --quiet; then
+            git commit -m "🔄 Updated trigger count and workflow triggers"
+            git push
+          fi
+
+      - name: 🔄 Re-enable push trigger at midnight UTC
+        if: always()
+        run: |
+          HOUR=$(date -u +%H)
+          if [[ "$HOUR" == "00" ]]; then
+            echo "⏰ Midnight UTC – re-enabling push trigger"
+            yq eval '.on.push = {"paths":["colab_trigger.txt"]}' -i .github/workflows/forex-trading.yml
+            git config --local user.email "github-actions[bot]@users.noreply.github.com"
+            git config --local user.name "Trade Beacon Bot"
+            git add .github/workflows/forex-trading.yml
+            if ! git diff --staged --quiet; then
+              git commit -m "🔄 Re-enabled push trigger for new day"
+              git push
+            fi
+          fi
+
       - name: 📦 Upload logs (backup)
         if: always()
         uses: actions/upload-artifact@v4

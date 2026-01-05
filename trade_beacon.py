@@ -3,13 +3,13 @@
 
 """
 AI FOREX BRAIN — PRODUCTION SIGNAL ENGINE
-Stable, shape-safe, GitHub Actions compatible
+Fully shape-safe, scalar-safe, GitHub Actions stable
 """
 
 # =======================
 # STANDARD LIBRARIES
 # =======================
-import os, sys, time, json, uuid, logging
+import sys, time, json, uuid, logging
 from pathlib import Path
 from datetime import datetime, timezone
 from dataclasses import dataclass, asdict
@@ -26,15 +26,12 @@ import holidays
 # =======================
 # GLOBAL SETTINGS
 # =======================
-RUN_INTERVAL_MINUTES = 10
 MAX_ACTIVE_SIGNALS = 5
 ATR_SL_MULT = 2.0
 ATR_TP_MULT = 3.0
 MIN_CONFIDENCE = 0.72
 PRICE_CACHE_SECONDS = 600
 HIST_CACHE_SECONDS = 3600
-
-ALL_PAIRS = ["EUR/USD", "GBP/USD", "USD/JPY", "AUD/USD", "USD/CAD", "NZD/USD"]
 
 # =======================
 # PATHS
@@ -46,7 +43,6 @@ STATE.mkdir(exist_ok=True)
 DATA.mkdir(exist_ok=True)
 
 ACTIVE_FILE = STATE / "active_signals.json"
-RISK_FILE = STATE / "risk.json"
 
 # =======================
 # LOGGING
@@ -54,7 +50,6 @@ RISK_FILE = STATE / "risk.json"
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(message)s",
-    handlers=[logging.StreamHandler()]
 )
 log = logging.getLogger(__name__)
 
@@ -64,20 +59,16 @@ log = logging.getLogger(__name__)
 def check_market_open():
     today = datetime.now(timezone.utc).date()
 
-    # Weekend
     if today.weekday() >= 5:
         sys.exit(0)
 
-    # Major US holidays (Forex liquidity shutdown)
     us = holidays.US()
-    major = {
+    if today in us and us[today] in {
         "New Year's Day",
         "Independence Day",
         "Thanksgiving",
-        "Christmas Day"
-    }
-
-    if today in us and us[today] in major:
+        "Christmas Day",
+    }:
         sys.exit(0)
 
 check_market_open()
@@ -97,7 +88,7 @@ def market_session():
     return "NEW_YORK", ["EUR/USD", "USD/CAD"]
 
 # =======================
-# PRICE CACHE
+# PRICE FETCH
 # =======================
 PRICE_CACHE = {}
 
@@ -115,23 +106,17 @@ def fetch_price(pair: str) -> Optional[float]:
     if df.empty:
         return None
 
-    df = df[["Close"]].astype(float)
-    last_ts = df.index[-1].to_pydatetime().replace(tzinfo=timezone.utc)
-
-    if (datetime.now(timezone.utc) - last_ts).seconds > 300:
-        return None
-
     price = float(df["Close"].iloc[-1])
     PRICE_CACHE[pair] = (price, now)
     return price
 
 # =======================
-# TECHNICAL INDICATORS
+# INDICATORS (SAFE)
 # =======================
-def ema(series: pd.Series, period: int):
+def ema(series: pd.Series, period: int) -> pd.Series:
     return series.ewm(span=period, adjust=False).mean()
 
-def rsi(series: pd.Series, period: int = 14):
+def rsi(series: pd.Series, period: int = 14) -> pd.Series:
     delta = series.diff()
     gain = delta.clip(lower=0)
     loss = -delta.clip(upper=0)
@@ -142,38 +127,34 @@ def rsi(series: pd.Series, period: int = 14):
     rs = avg_gain / (avg_loss + 1e-9)
     return 100 - (100 / (1 + rs))
 
-def atr(df: pd.DataFrame, period: int = 14):
-    high = df["High"].astype(float).squeeze()
-    low = df["Low"].astype(float).squeeze()
-    close = df["Close"].astype(float).squeeze()
+def atr(df: pd.DataFrame, period: int = 14) -> pd.Series:
+    h = df["High"].squeeze().astype(float)
+    l = df["Low"].squeeze().astype(float)
+    c = df["Close"].squeeze().astype(float)
 
     tr = pd.concat([
-        high - low,
-        (high - close.shift()).abs(),
-        (low - close.shift()).abs()
+        h - l,
+        (h - c.shift()).abs(),
+        (l - c.shift()).abs()
     ], axis=1).max(axis=1)
 
     return tr.ewm(alpha=1/period, adjust=False).mean()
 
-def adx(df: pd.DataFrame, period: int = 14):
-    """
-    Shape-safe Wilder ADX (FIXED)
-    """
+def adx(df: pd.DataFrame, period: int = 14) -> pd.Series:
+    h = df["High"].squeeze().astype(float)
+    l = df["Low"].squeeze().astype(float)
+    c = df["Close"].squeeze().astype(float)
 
-    high = df["High"].astype(float).squeeze()
-    low = df["Low"].astype(float).squeeze()
-    close = df["Close"].astype(float).squeeze()
-
-    up = high.diff()
-    down = low.diff().abs()
+    up = h.diff()
+    down = l.diff().abs()
 
     plus_dm = np.where((up > down) & (up > 0), up, 0.0)
     minus_dm = np.where((down > up) & (down > 0), down, 0.0)
 
     tr = pd.concat([
-        high - low,
-        (high - close.shift()).abs(),
-        (low - close.shift()).abs()
+        h - l,
+        (h - c.shift()).abs(),
+        (l - c.shift()).abs()
     ], axis=1).max(axis=1)
 
     atr_val = tr.ewm(alpha=1/period, adjust=False).mean()
@@ -185,7 +166,7 @@ def adx(df: pd.DataFrame, period: int = 14):
     return dx.ewm(alpha=1/period, adjust=False).mean()
 
 # =======================
-# DATA LOADER
+# DATA
 # =======================
 def load_history(pair: str) -> pd.DataFrame:
     f = DATA / f"{pair.replace('/', '_')}.pkl"
@@ -194,17 +175,14 @@ def load_history(pair: str) -> pd.DataFrame:
         return pd.read_pickle(f)
 
     symbol = pair.replace("/", "") + "=X"
-    df = yf.download(symbol, period="5y", auto_adjust=True, progress=False)
-
-    if df.empty:
-        return df
+    df = yf.download(symbol, period="5y", progress=False)
 
     df = df[["High", "Low", "Close"]].astype(float)
     df.to_pickle(f)
     return df
 
 # =======================
-# SIGNAL STRUCT
+# SIGNAL
 # =======================
 @dataclass
 class Signal:
@@ -218,7 +196,7 @@ class Signal:
     created: str
 
 # =======================
-# SIGNAL GENERATION
+# SIGNAL ENGINE
 # =======================
 def generate_signal(pair: str, active: List[Signal]) -> Optional[Signal]:
     if pair in [s.pair for s in active]:
@@ -230,12 +208,11 @@ def generate_signal(pair: str, active: List[Signal]) -> Optional[Signal]:
 
     close = df["Close"]
 
-    ema12 = ema(close, 12).iloc[-1]
-    ema26 = ema(close, 26).iloc[-1]
-    ema200 = ema(close, 200).iloc[-1]
-
-    r = rsi(close).iloc[-1]
-    a = adx(df).iloc[-1]
+    ema12 = float(ema(close, 12).iloc[-1])
+    ema26 = float(ema(close, 26).iloc[-1])
+    ema200 = float(ema(close, 200).iloc[-1])
+    r = float(rsi(close).iloc[-1])
+    a = float(adx(df).iloc[-1])
 
     bull = bear = 0
 
@@ -263,7 +240,7 @@ def generate_signal(pair: str, active: List[Signal]) -> Optional[Signal]:
     if price is None:
         return None
 
-    atr_val = atr(df).iloc[-1]
+    atr_val = float(atr(df).iloc[-1])
 
     sl = price - atr_val * ATR_SL_MULT if side == "BUY" else price + atr_val * ATR_SL_MULT
     tp = price + atr_val * ATR_TP_MULT if side == "BUY" else price - atr_val * ATR_TP_MULT
@@ -276,7 +253,7 @@ def generate_signal(pair: str, active: List[Signal]) -> Optional[Signal]:
         sl=sl,
         tp=tp,
         confidence=confidence,
-        created=datetime.now(timezone.utc).isoformat()
+        created=datetime.now(timezone.utc).isoformat(),
     )
 
 # =======================
@@ -299,7 +276,7 @@ def main():
             active.append(sig)
             log.info(
                 f"NEW SIGNAL | {sig.side} {sig.pair} "
-                f"@ {sig.entry:.5f} | SL {sig.sl:.5f} | TP {sig.tp:.5f}"
+                f"@ {sig.entry:.5f} SL {sig.sl:.5f} TP {sig.tp:.5f}"
             )
 
     ACTIVE_FILE.write_text(json.dumps([asdict(s) for s in active], indent=2))

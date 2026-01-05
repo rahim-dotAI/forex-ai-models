@@ -3,7 +3,7 @@
 
 """
 AI FOREX BRAIN — PRODUCTION SIGNAL ENGINE
-Optimized for scheduled execution (10-minute cycles)
+Stable, shape-safe, GitHub Actions compatible
 """
 
 # =======================
@@ -11,9 +11,9 @@ Optimized for scheduled execution (10-minute cycles)
 # =======================
 import os, sys, time, json, uuid, logging
 from pathlib import Path
-from datetime import datetime, timezone, timedelta
-from dataclasses import dataclass, field, asdict
-from typing import Dict, List, Optional, Tuple
+from datetime import datetime, timezone
+from dataclasses import dataclass, asdict
+from typing import Optional, List
 
 # =======================
 # THIRD-PARTY
@@ -47,8 +47,6 @@ DATA.mkdir(exist_ok=True)
 
 ACTIVE_FILE = STATE / "active_signals.json"
 RISK_FILE = STATE / "risk.json"
-MEMORY_FILE = STATE / "memory.json"
-ANALYTICS_FILE = STATE / "analytics.json"
 
 # =======================
 # LOGGING
@@ -65,11 +63,20 @@ log = logging.getLogger(__name__)
 # =======================
 def check_market_open():
     today = datetime.now(timezone.utc).date()
+
+    # Weekend
     if today.weekday() >= 5:
         sys.exit(0)
 
+    # Major US holidays (Forex liquidity shutdown)
     us = holidays.US()
-    major = ["New Year's Day", "Independence Day", "Thanksgiving", "Christmas Day"]
+    major = {
+        "New Year's Day",
+        "Independence Day",
+        "Thanksgiving",
+        "Christmas Day"
+    }
+
     if today in us and us[today] in major:
         sys.exit(0)
 
@@ -80,6 +87,7 @@ check_market_open()
 # =======================
 def market_session():
     h = datetime.now(timezone.utc).hour
+
     if 0 <= h < 7:
         return "ASIAN", ["USD/JPY", "AUD/USD", "NZD/USD"]
     if 7 <= h < 12:
@@ -95,6 +103,7 @@ PRICE_CACHE = {}
 
 def fetch_price(pair: str) -> Optional[float]:
     now = time.time()
+
     if pair in PRICE_CACHE:
         price, ts = PRICE_CACHE[pair]
         if now - ts < PRICE_CACHE_SECONDS:
@@ -102,10 +111,13 @@ def fetch_price(pair: str) -> Optional[float]:
 
     symbol = pair.replace("/", "") + "=X"
     df = yf.download(symbol, period="1d", interval="1m", progress=False)
+
     if df.empty:
         return None
 
+    df = df[["Close"]].astype(float)
     last_ts = df.index[-1].to_pydatetime().replace(tzinfo=timezone.utc)
+
     if (datetime.now(timezone.utc) - last_ts).seconds > 300:
         return None
 
@@ -114,74 +126,82 @@ def fetch_price(pair: str) -> Optional[float]:
     return price
 
 # =======================
-# TECHNICALS
+# TECHNICAL INDICATORS
 # =======================
-def ema(s, n): return s.ewm(span=n, adjust=False).mean()
+def ema(series: pd.Series, period: int):
+    return series.ewm(span=period, adjust=False).mean()
 
-def rsi(series, n=14):
-    d = series.diff()
-    up = d.clip(lower=0).rolling(n).mean()
-    dn = -d.clip(upper=0).rolling(n).mean()
-    rs = up / (dn + 1e-9)
-    return 100 - 100 / (1 + rs)
+def rsi(series: pd.Series, period: int = 14):
+    delta = series.diff()
+    gain = delta.clip(lower=0)
+    loss = -delta.clip(upper=0)
 
-def atr(df, n=14):
+    avg_gain = gain.ewm(alpha=1/period, adjust=False).mean()
+    avg_loss = loss.ewm(alpha=1/period, adjust=False).mean()
+
+    rs = avg_gain / (avg_loss + 1e-9)
+    return 100 - (100 / (1 + rs))
+
+def atr(df: pd.DataFrame, period: int = 14):
+    high = df["High"].astype(float).squeeze()
+    low = df["Low"].astype(float).squeeze()
+    close = df["Close"].astype(float).squeeze()
+
     tr = pd.concat([
-        df["High"] - df["Low"],
-        abs(df["High"] - df["Close"].shift()),
-        abs(df["Low"] - df["Close"].shift())
+        high - low,
+        (high - close.shift()).abs(),
+        (low - close.shift()).abs()
     ], axis=1).max(axis=1)
-    return tr.rolling(n).mean()
 
-def adx(df, n=14):
-    up = df["High"].diff()
-    dn = -df["Low"].diff()
-    plus = np.where((up > dn) & (up > 0), up, 0.0)
-    minus = np.where((dn > up) & (dn > 0), dn, 0.0)
-    tr = atr(df, n)
-    plus_di = 100 * pd.Series(plus).rolling(n).mean() / tr
-    minus_di = 100 * pd.Series(minus).rolling(n).mean() / tr
+    return tr.ewm(alpha=1/period, adjust=False).mean()
+
+def adx(df: pd.DataFrame, period: int = 14):
+    """
+    Shape-safe Wilder ADX (FIXED)
+    """
+
+    high = df["High"].astype(float).squeeze()
+    low = df["Low"].astype(float).squeeze()
+    close = df["Close"].astype(float).squeeze()
+
+    up = high.diff()
+    down = low.diff().abs()
+
+    plus_dm = np.where((up > down) & (up > 0), up, 0.0)
+    minus_dm = np.where((down > up) & (down > 0), down, 0.0)
+
+    tr = pd.concat([
+        high - low,
+        (high - close.shift()).abs(),
+        (low - close.shift()).abs()
+    ], axis=1).max(axis=1)
+
+    atr_val = tr.ewm(alpha=1/period, adjust=False).mean()
+
+    plus_di = 100 * pd.Series(plus_dm, index=df.index).ewm(alpha=1/period, adjust=False).mean() / atr_val
+    minus_di = 100 * pd.Series(minus_dm, index=df.index).ewm(alpha=1/period, adjust=False).mean() / atr_val
+
     dx = (abs(plus_di - minus_di) / (plus_di + minus_di)) * 100
-    return dx.rolling(n).mean()
+    return dx.ewm(alpha=1/period, adjust=False).mean()
 
 # =======================
-# DATA LOAD
+# DATA LOADER
 # =======================
-def load_history(pair):
-    f = DATA / f"{pair.replace('/','_')}.pkl"
+def load_history(pair: str) -> pd.DataFrame:
+    f = DATA / f"{pair.replace('/', '_')}.pkl"
+
     if f.exists() and time.time() - f.stat().st_mtime < HIST_CACHE_SECONDS:
         return pd.read_pickle(f)
-    df = yf.download(pair.replace("/","")+"=X", period="5y", auto_adjust=True, progress=False)
-    if not df.empty:
-        df.to_pickle(f)
+
+    symbol = pair.replace("/", "") + "=X"
+    df = yf.download(symbol, period="5y", auto_adjust=True, progress=False)
+
+    if df.empty:
+        return df
+
+    df = df[["High", "Low", "Close"]].astype(float)
+    df.to_pickle(f)
     return df
-
-# =======================
-# RISK MANAGER
-# =======================
-class Risk:
-    def __init__(self):
-        self.max_dd = -500
-        self.equity = 0
-        self.peak = 0
-        self.load()
-
-    def load(self):
-        if RISK_FILE.exists():
-            d = json.loads(RISK_FILE.read_text())
-            self.equity = d["equity"]
-            self.peak = d["peak"]
-
-    def save(self):
-        RISK_FILE.write_text(json.dumps({"equity": self.equity, "peak": self.peak}))
-
-    def update(self, pips):
-        self.equity += pips
-        self.peak = max(self.peak, self.equity)
-        self.save()
-
-    def blocked(self):
-        return self.equity - self.peak <= self.max_dd
 
 # =======================
 # SIGNAL STRUCT
@@ -196,12 +216,11 @@ class Signal:
     tp: float
     confidence: float
     created: str
-    trailing: bool = False
 
 # =======================
-# SIGNAL ENGINE
+# SIGNAL GENERATION
 # =======================
-def generate(pair, active):
+def generate_signal(pair: str, active: List[Signal]) -> Optional[Signal]:
     if pair in [s.pair for s in active]:
         return None
 
@@ -210,30 +229,44 @@ def generate(pair, active):
         return None
 
     close = df["Close"]
-    e12, e26, e200 = ema(close,12).iloc[-1], ema(close,26).iloc[-1], ema(close,200).iloc[-1]
+
+    ema12 = ema(close, 12).iloc[-1]
+    ema26 = ema(close, 26).iloc[-1]
+    ema200 = ema(close, 200).iloc[-1]
+
     r = rsi(close).iloc[-1]
     a = adx(df).iloc[-1]
 
     bull = bear = 0
-    if e12 > e26 > e200: bull += 40
-    if e12 < e26 < e200: bear += 40
-    if r < 40: bull += 20
-    if r > 60: bear += 20
-    if a > 25: bull += 10 if e12 > e26 else 0
+
+    if ema12 > ema26 > ema200:
+        bull += 40
+    if ema12 < ema26 < ema200:
+        bear += 40
+
+    if r < 40:
+        bull += 20
+    if r > 60:
+        bear += 20
+
+    if a > 25:
+        bull += 10 if ema12 > ema26 else 0
+        bear += 10 if ema12 < ema26 else 0
 
     if abs(bull - bear) < 30:
         return None
 
     side = "BUY" if bull > bear else "SELL"
-    conf = min(0.85, MIN_CONFIDENCE + abs(bull-bear)/200)
+    confidence = min(0.85, MIN_CONFIDENCE + abs(bull - bear) / 200)
 
     price = fetch_price(pair)
-    if not price:
+    if price is None:
         return None
 
-    a_val = atr(df).iloc[-1]
-    sl = price - a_val*ATR_SL_MULT if side=="BUY" else price + a_val*ATR_SL_MULT
-    tp = price + a_val*ATR_TP_MULT if side=="BUY" else price - a_val*ATR_TP_MULT
+    atr_val = atr(df).iloc[-1]
+
+    sl = price - atr_val * ATR_SL_MULT if side == "BUY" else price + atr_val * ATR_SL_MULT
+    tp = price + atr_val * ATR_TP_MULT if side == "BUY" else price - atr_val * ATR_TP_MULT
 
     return Signal(
         id=str(uuid.uuid4()),
@@ -242,33 +275,32 @@ def generate(pair, active):
         entry=price,
         sl=sl,
         tp=tp,
-        confidence=conf,
+        confidence=confidence,
         created=datetime.now(timezone.utc).isoformat()
     )
 
 # =======================
-# MAIN LOOP
+# MAIN
 # =======================
 def main():
     session, pairs = market_session()
     log.info(f"Session: {session}")
 
-    active = []
+    active: List[Signal] = []
     if ACTIVE_FILE.exists():
         active = [Signal(**s) for s in json.loads(ACTIVE_FILE.read_text())]
-
-    risk = Risk()
-    if risk.blocked():
-        log.warning("Daily drawdown limit hit")
-        return
 
     for pair in pairs:
         if len(active) >= MAX_ACTIVE_SIGNALS:
             break
-        sig = generate(pair, active)
+
+        sig = generate_signal(pair, active)
         if sig:
             active.append(sig)
-            log.info(f"NEW {sig.side} {sig.pair} @ {sig.entry:.5f}")
+            log.info(
+                f"NEW SIGNAL | {sig.side} {sig.pair} "
+                f"@ {sig.entry:.5f} | SL {sig.sl:.5f} | TP {sig.tp:.5f}"
+            )
 
     ACTIVE_FILE.write_text(json.dumps([asdict(s) for s in active], indent=2))
 

@@ -210,6 +210,9 @@ def generate_signal(pair, active):
         bull += 10 if e12 > e26 else 0
         bear += 10 if e12 < e26 else 0
 
+    # Log signal analysis for debugging
+    log.info(f"{pair} Analysis: Bull={bull} Bear={bear} Diff={abs(bull-bear)} RSI={r:.1f} ADX={a:.1f}")
+
     if abs(bull - bear) < 30:
         return None
 

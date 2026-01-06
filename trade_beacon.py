@@ -185,11 +185,11 @@ def generate_signal(pair, active):
         return None
 
     close = df["Close"]
-    e12 = ema(close, 12).iloc[-1]
-    e26 = ema(close, 26).iloc[-1]
-    e200 = ema(close, 200).iloc[-1]
-    r = rsi(close).iloc[-1]
-    a = adx(df).iloc[-1]
+    e12 = float(ema(close, 12).iloc[-1])
+    e26 = float(ema(close, 26).iloc[-1])
+    e200 = float(ema(close, 200).iloc[-1])
+    r = float(rsi(close).iloc[-1])
+    a = float(adx(df).iloc[-1])
 
     bull = bear = 0
     if e12 > e26 > e200: bull += 40
@@ -208,7 +208,7 @@ def generate_signal(pair, active):
     if price is None:
         return None
 
-    atr_v = atr(df).iloc[-1]
+    atr_v = float(atr(df).iloc[-1])
     sl = price - atr_v * ATR_SL_MULT if side == "BUY" else price + atr_v * ATR_SL_MULT
     tp = price + atr_v * ATR_TP_MULT if side == "BUY" else price - atr_v * ATR_TP_MULT
 

@@ -191,8 +191,15 @@ def generate_signal(pair, active):
     r = rsi(close).iloc[-1]
     a = adx(df).iloc[-1]
     
-    # Convert to native Python float to avoid pandas ambiguity
-    e12, e26, e200, r, a = float(e12), float(e26), float(e200), float(r), float(a)
+    # Convert to native Python types using .item() for pandas compatibility
+    try:
+        e12 = e12.item() if hasattr(e12, 'item') else float(e12)
+        e26 = e26.item() if hasattr(e26, 'item') else float(e26)
+        e200 = e200.item() if hasattr(e200, 'item') else float(e200)
+        r = r.item() if hasattr(r, 'item') else float(r)
+        a = a.item() if hasattr(a, 'item') else float(a)
+    except (ValueError, AttributeError):
+        return None
 
     bull = bear = 0
     if e12 > e26 > e200: bull += 40
@@ -212,7 +219,11 @@ def generate_signal(pair, active):
         return None
 
     atr_v = atr(df).iloc[-1]
-    atr_v = float(atr_v)  # Convert to native Python float
+    try:
+        atr_v = atr_v.item() if hasattr(atr_v, 'item') else float(atr_v)
+    except (ValueError, AttributeError):
+        return None
+    
     sl = price - atr_v * ATR_SL_MULT if side == "BUY" else price + atr_v * ATR_SL_MULT
     tp = price + atr_v * ATR_TP_MULT if side == "BUY" else price - atr_v * ATR_TP_MULT
 

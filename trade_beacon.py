@@ -6,9 +6,9 @@ AI FOREX BRAIN — SIGNAL + TRADE MANAGEMENT ENGINE
 FULL PERFORMANCE TRACKING
 """
 
-import sys, time, json, uuid, logging
+import sys, time, json, uuid, logging, os
 from pathlib import Path
-from datetime import datetime, timezone, date
+from datetime import datetime, timezone, date, timedelta
 from dataclasses import dataclass, asdict
 from typing import Optional, List
 
@@ -53,6 +53,11 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 # =======================
+# GLOBAL COUNTERS
+# =======================
+API_CALLS = 0
+
+# =======================
 # MARKET STATUS
 # =======================
 def check_market_open():
@@ -84,12 +89,14 @@ def market_session():
 PRICE_CACHE = {}
 
 def fetch_price(pair: str) -> Optional[float]:
+    global API_CALLS
     now = time.time()
     if pair in PRICE_CACHE:
         price, ts = PRICE_CACHE[pair]
         if now - ts < PRICE_CACHE_SECONDS:
             return price
 
+    API_CALLS += 1
     symbol = pair.replace("/", "") + "=X"
     df = yf.download(symbol, period="1d", interval="1m", progress=False)
     if df.empty:
@@ -140,9 +147,12 @@ def adx(df, p=14):
 # DATA
 # =======================
 def load_history(pair):
+    global API_CALLS
     f = DATA / f"{pair.replace('/', '_')}.pkl"
     if f.exists() and time.time() - f.stat().st_mtime < HIST_CACHE_SECONDS:
         return pd.read_pickle(f)
+    
+    API_CALLS += 1
     symbol = pair.replace("/", "") + "=X"
     df = yf.download(symbol, period="5y", progress=False)
     df = df[["High", "Low", "Close"]].astype(float)
@@ -280,9 +290,12 @@ def main():
     today = date.today().isoformat()
     daily_pips = sum(t["pips"] for t in history if t["closed_at"].startswith(today))
 
+    # Calculate next run time (10 minutes from now)
+    next_run = datetime.now(timezone.utc) + timedelta(minutes=10)
+
     dashboard = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "next_run": None,
+        "next_run": next_run.isoformat(),
         "active_signals": len(active),
         "signals": [{
             "pair": s.pair,
@@ -298,11 +311,21 @@ def main():
         "risk_management": {
             "daily_pips": round(daily_pips, 1)
         },
-        "api_usage": {"yfinance": {"calls": len(PRICE_CACHE)}}
+        "api_usage": {
+            "yfinance": {
+                "calls": API_CALLS
+            }
+        },
+        "metadata": {
+            "session": session,
+            "run_mode": os.getenv("GITHUB_EVENT_NAME", "local"),
+            "pairs_checked": pairs,
+            "pairs_analyzed": len(pairs)
+        }
     }
 
     DASHBOARD_FILE.write_text(json.dumps(dashboard, indent=2))
-    log.info("Trade Beacon cycle complete")
+    log.info(f"Trade Beacon cycle complete | Session: {session} | API Calls: {API_CALLS} | Active: {len(active)}")
 
 if __name__ == "__main__":
     main()

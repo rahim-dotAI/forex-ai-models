@@ -18,7 +18,6 @@ env:
 jobs:
   forex-trading:
     runs-on: ubuntu-latest
-
     permissions:
       contents: write
 
@@ -39,7 +38,7 @@ jobs:
           pip install -r requirements.txt
           pip install holidays jq
 
-      - name: 🔢 Decide if bot should run
+      - name: 🔁 Decide run mode
         id: decide
         shell: bash
         run: |
@@ -49,44 +48,50 @@ jobs:
           TODAY="$(date -u +%Y-%m-%d)"
           STATE_FILE="trigger_state.json"
 
-          RUN=false
-
-          # Initialize state file if missing
+          # Init state if missing
           if [ ! -f "$STATE_FILE" ]; then
-            echo "{\"date\":\"$TODAY\",\"count\":0}" > "$STATE_FILE"
+            echo "{\"date\":\"$TODAY\",\"trigger_count\":0,\"mode\":\"trigger\"}" > "$STATE_FILE"
           fi
 
           STORED_DATE=$(jq -r '.date' "$STATE_FILE")
-          COUNT=$(jq -r '.count' "$STATE_FILE")
+          COUNT=$(jq -r '.trigger_count' "$STATE_FILE")
+          MODE=$(jq -r '.mode' "$STATE_FILE")
 
-          # Reset count at midnight UTC
+          # Reset at midnight UTC
           if [ "$STORED_DATE" != "$TODAY" ]; then
             COUNT=0
-            echo "{\"date\":\"$TODAY\",\"count\":0}" > "$STATE_FILE"
+            MODE="trigger"
           fi
 
-          # Manual run always allowed
-          if [ "$EVENT" = "workflow_dispatch" ]; then
-            RUN=true
-          fi
+          RUN=false
 
-          # Scheduled runs always allowed
-          if [ "$EVENT" = "schedule" ]; then
-            RUN=true
-          fi
-
-          # Push trigger (limited per day)
-          if [ "$EVENT" = "push" ]; then
-            if [ "$COUNT" -lt "$MAX_DAILY_TRIGGER_RUNS" ]; then
-              RUN=true
+          if [ "$MODE" = "trigger" ]; then
+            if [ "$EVENT" = "push" ]; then
               COUNT=$((COUNT + 1))
-              echo "{\"date\":\"$TODAY\",\"count\":$COUNT}" > "$STATE_FILE"
-            else
-              echo "🚫 Daily trigger limit reached ($COUNT)"
+              RUN=true
+
+              if [ "$COUNT" -ge "$MAX_DAILY_TRIGGER_RUNS" ]; then
+                MODE="schedule"
+              fi
+            fi
+
+            if [ "$EVENT" = "workflow_dispatch" ]; then
+              RUN=true
             fi
           fi
 
+          if [ "$MODE" = "schedule" ]; then
+            if [ "$EVENT" = "schedule" ] || [ "$EVENT" = "workflow_dispatch" ]; then
+              RUN=true
+            fi
+          fi
+
+          echo "{\"date\":\"$TODAY\",\"trigger_count\":$COUNT,\"mode\":\"$MODE\"}" > "$STATE_FILE"
+
           echo "run=$RUN" >> "$GITHUB_OUTPUT"
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+
+          cat "$STATE_FILE"
 
       - name: 📅 Check trading day
         if: steps.decide.outputs.run == 'true'
@@ -98,36 +103,27 @@ jobs:
           today = datetime.date.today()
           us = holidays.US()
 
-          if today.weekday() >= 5:
-              print("skip=true")
-          elif today in us:
-              print("skip=true")
-          else:
-              print("skip=false")
+          skip = today.weekday() >= 5 or today in us
 
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-              f.write(f"skip={'true' if today.weekday() >= 5 or today in us else 'false'}\n")
+              f.write(f"skip={'true' if skip else 'false'}\n")
           EOF
 
       - name: 🚀 Run Trading Bot
         if: steps.decide.outputs.run == 'true' && steps.market.outputs.skip != 'true'
-        env:
-          ALPHA_VANTAGE_KEY: ${{ secrets.ALPHA_VANTAGE_KEY }}
-          BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}
-          MARKETAUX_API_KEY: ${{ secrets.MARKETAUX_API_KEY }}
         run: |
           python ${{ env.ENTRY_SCRIPT }}
 
-      - name: 💾 Commit runtime data
+      - name: 💾 Commit state & outputs
         if: steps.decide.outputs.run == 'true'
         run: |
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "Trade Beacon Bot"
 
-          git add trigger_state.json logs/ signal_state/ memory/ || true
+          git add trigger_state.json signal_state/ logs/ || true
 
           if ! git diff --cached --quiet; then
-            git commit -m "🔄 Trade beacon run $(date -u +"%Y-%m-%d %H:%M UTC")"
+            git commit -m "🔄 Trade Beacon run ($(date -u +"%Y-%m-%d %H:%M UTC"))"
             git push
           fi
 
@@ -139,5 +135,4 @@ jobs:
           path: |
             logs/
             signal_state/
-            memory/
           if-no-files-found: ignore

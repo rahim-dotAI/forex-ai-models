@@ -3,23 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trade Beacon | Live Trading Dashboard</title>
+<title>Trade Beacon | Live Dashboard</title>
+
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
---bg:#0a0e1a;--surface:#111827;--surface-light:#1f2937;--border:#374151;
---text:#f9fafb;--text-dim:#9ca3af;--primary:#3b82f6;
---success:#10b981;--danger:#ef4444;--warning:#f59e0b
+--bg:#0a0e1a;--surface:#111827;--surface-light:#1f2937;
+--border:#374151;--text:#f9fafb;--text-dim:#9ca3af;
+--primary:#3b82f6;--success:#10b981;
+--danger:#ef4444;--warning:#f59e0b
 }
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text)}
 .navbar{display:flex;justify-content:space-between;align-items:center;
 padding:16px 32px;background:var(--surface);border-bottom:1px solid var(--border)}
 .logo{font-size:24px;font-weight:800}
 .logo span{color:var(--primary)}
-.nav-right{display:flex;gap:16px;align-items:center}
-
 .status-pill{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;
 display:flex;align-items:center;gap:6px}
 .status-live{background:rgba(16,185,129,.15);color:var(--success)}
@@ -31,32 +31,47 @@ animation:pulse 2s infinite}
 
 .container{max-width:1600px;margin:auto;padding:24px}
 .grid{display:grid;gap:24px}
-.grid-4{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.grid-4{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
 .grid-2{grid-template-columns:2fr 1fr}
 @media(max-width:1200px){.grid-2{grid-template-columns:1fr}}
 
-.card,.metric-card{background:var(--surface);border:1px solid var(--border);
-border-radius:16px;padding:24px}
+.card,.metric-card{
+background:var(--surface);
+border:1px solid var(--border);
+border-radius:16px;padding:24px
+}
 .metric-label{font-size:12px;color:var(--text-dim)}
-.metric-value{font-size:36px;font-weight:700}
+.metric-value{font-size:36px;font-weight:800}
 
-.signal-card{background:var(--surface-light);border-radius:12px;
-padding:16px;margin-bottom:12px;border-left:4px solid}
+.signal-card{
+background:var(--surface-light);
+border-radius:12px;
+padding:16px;margin-bottom:12px;
+border-left:4px solid
+}
 .signal-card.buy{border-color:var(--success)}
 .signal-card.sell{border-color:var(--danger)}
 
-.loading-overlay{position:fixed;inset:0;background:rgba(10,14,26,.95);
-display:flex;align-items:center;justify-content:center;z-index:9999}
-.loading-spinner{width:48px;height:48px;border:4px solid var(--border);
-border-top-color:var(--primary);border-radius:50%;
-animation:spin 1s linear infinite}
+.loading-overlay{
+position:fixed;inset:0;
+background:rgba(10,14,26,.95);
+display:flex;align-items:center;justify-content:center;
+z-index:9999
+}
+.loading-spinner{
+width:48px;height:48px;
+border:4px solid var(--border);
+border-top-color:var(--primary);
+border-radius:50%;
+animation:spin 1s linear infinite
+}
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 
 <body>
 
-<div class="loading-overlay" id="loadingOverlay">
+<div class="loading-overlay" id="loading">
 <div>
 <div class="loading-spinner"></div>
 <p style="margin-top:12px;color:var(--text-dim)">Loading Trade Beacon…</p>
@@ -65,11 +80,9 @@ animation:spin 1s linear infinite}
 
 <nav class="navbar">
 <div class="logo">Trade<span>Beacon</span></div>
-<div class="nav-right">
 <div class="status-pill status-live" id="health">
 <span class="pulse"></span>
 <span id="healthText">LIVE</span>
-</div>
 </div>
 </nav>
 
@@ -78,107 +91,98 @@ animation:spin 1s linear infinite}
 <div class="grid grid-4">
 <div class="metric-card">
 <div class="metric-label">Active Signals</div>
-<div class="metric-value" id="activeSignals">-</div>
+<div class="metric-value" id="activeSignals">0</div>
 </div>
 <div class="metric-card">
 <div class="metric-label">Win Rate</div>
-<div class="metric-value" id="winRate">-</div>
+<div class="metric-value" id="winRate">0%</div>
 </div>
 <div class="metric-card">
 <div class="metric-label">Total Pips</div>
-<div class="metric-value" id="totalPips">-</div>
+<div class="metric-value" id="totalPips">0</div>
 </div>
 <div class="metric-card">
 <div class="metric-label">Today</div>
-<div class="metric-value" id="dailyPips">-</div>
+<div class="metric-value" id="dailyPips">0</div>
 </div>
 </div>
 
 <div class="grid grid-2" style="margin-top:24px">
+
 <div class="card">
 <h3>Active Signals</h3>
-<div id="signalsContainer"></div>
+<div id="signals"></div>
 </div>
 
 <div class="card">
 <h3>System</h3>
 <p>Last Update: <span id="lastUpdate">-</span></p>
-<p>Next Run: <span id="nextRun">-</span></p>
 <p>YFinance Calls: <span id="apiCalls">-</span></p>
 </div>
-</div>
 
+</div>
 </div>
 
 <script>
-// ✅ FIXED URL (case-sensitive)
 const API_URL =
 'https://raw.githubusercontent.com/rahim-dotai/forex-ai-models/main/signal_state/dashboard_state.json';
 
-let lastSuccessTs = null;
+let lastSuccess = null;
 
-// Safari-safe date
 function parseTime(iso){
 if(!iso) return '-';
-return new Date(iso.replace('+00:00','Z'))
-.toLocaleString();
+return new Date(iso.replace('+00:00','Z')).toLocaleString();
 }
 
-// Health logic
 function setHealth(state){
 const el=document.getElementById('health');
-const text=document.getElementById('healthText');
+const txt=document.getElementById('healthText');
 el.className='status-pill status-'+state;
-text.textContent=state.toUpperCase();
+txt.textContent=state.toUpperCase();
 }
 
-async function loadState(){
-const res=await fetch(API_URL+'?t='+Date.now(),{cache:'no-store'});
-if(!res.ok) throw new Error('HTTP '+res.status);
-return res.json();
+async function fetchState(){
+const r=await fetch(API_URL+'?t='+Date.now(),{cache:'no-store'});
+if(!r.ok) throw new Error(r.status);
+return r.json();
 }
 
-function render(data){
-document.getElementById('loadingOverlay').style.display='none';
-
-lastSuccessTs=Date.now();
+function render(d){
+document.getElementById('loading').style.display='none';
+lastSuccess=Date.now();
 setHealth('live');
 
-document.getElementById('activeSignals').textContent=data.active_signals;
-document.getElementById('winRate').textContent=data.stats.win_rate.toFixed(1)+'%';
-document.getElementById('totalPips').textContent=data.stats.total_pips.toFixed(1);
-document.getElementById('dailyPips').textContent=data.risk_management.daily_pips.toFixed(1);
+document.getElementById('activeSignals').textContent=d.active_signals;
+document.getElementById('winRate').textContent=d.stats.win_rate.toFixed(1)+'%';
+document.getElementById('totalPips').textContent=d.stats.total_pips.toFixed(1);
+document.getElementById('dailyPips').textContent=d.risk_management.daily_pips.toFixed(1);
 
-document.getElementById('lastUpdate').textContent=parseTime(data.timestamp);
-document.getElementById('nextRun').textContent=parseTime(data.next_run);
-document.getElementById('apiCalls').textContent=data.api_usage.yfinance.calls+'/100';
+document.getElementById('lastUpdate').textContent=parseTime(d.timestamp);
+document.getElementById('apiCalls').textContent=d.api_usage.yfinance.calls;
 
-const html=data.signals.map(s=>`
+const html=d.signals.map(s=>`
 <div class="signal-card ${s.direction.toLowerCase()}">
 <b>${s.pair}</b> • ${s.direction}<br>
 Entry: ${s.entry_price.toFixed(5)}<br>
 SL: ${s.sl.toFixed(5)} | TP: ${s.tp.toFixed(5)}
 </div>`).join('');
 
-document.getElementById('signalsContainer').innerHTML=html||'No active signals';
+document.getElementById('signals').innerHTML =
+html || '<p style="color:var(--text-dim)">No active signals</p>';
 }
 
 async function refresh(){
 try{
-const data=await loadState();
-render(data);
+render(await fetchState());
 }catch(e){
 console.error(e);
-document.getElementById('loadingOverlay').style.display='none';
 setHealth('offline');
 }
 }
 
-// Health staleness check
 setInterval(()=>{
-if(!lastSuccessTs) return;
-const mins=(Date.now()-lastSuccessTs)/60000;
-if(mins>15) setHealth('stale');
+if(!lastSuccess) return;
+if((Date.now()-lastSuccess)/60000>15) setHealth('stale');
 },60000);
 
 refresh();

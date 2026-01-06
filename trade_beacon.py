@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 
 """
-AI FOREX BRAIN — PRODUCTION SIGNAL ENGINE
-ADX corrected, scalar safe, dashboard export
+AI FOREX BRAIN — SIGNAL + TRADE MANAGEMENT ENGINE
+FULL PERFORMANCE TRACKING
 """
 
 import sys, time, json, uuid, logging
 from pathlib import Path
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
 from dataclasses import dataclass, asdict
 from typing import Optional, List
 
@@ -40,6 +40,7 @@ DATA.mkdir(exist_ok=True)
 SIGNAL_STATE.mkdir(exist_ok=True)
 
 ACTIVE_FILE = STATE / "active_signals.json"
+HISTORY_FILE = STATE / "trade_history.json"
 DASHBOARD_FILE = SIGNAL_STATE / "dashboard_state.json"
 
 # =======================
@@ -56,14 +57,10 @@ log = logging.getLogger(__name__)
 # =======================
 def check_market_open():
     today = datetime.now(timezone.utc).date()
-    # Weekend
     if today.weekday() >= 5:
-        log.info("Weekend — market closed")
         sys.exit(0)
-
     us = holidays.US()
     if today in us:
-        log.info(f"Market holiday: {us[today]}")
         sys.exit(0)
 
 check_market_open()
@@ -72,12 +69,12 @@ check_market_open()
 # SESSION
 # =======================
 def market_session():
-    hour = datetime.now(timezone.utc).hour
-    if 0 <= hour < 7:
+    h = datetime.now(timezone.utc).hour
+    if 0 <= h < 7:
         return "ASIAN", ["USD/JPY", "AUD/USD", "NZD/USD"]
-    if 7 <= hour < 12:
+    if 7 <= h < 12:
         return "LONDON", ["EUR/USD", "GBP/USD"]
-    if 12 <= hour < 16:
+    if 12 <= h < 16:
         return "LONDON_NY_OVERLAP", ["EUR/USD", "GBP/USD", "USD/CAD"]
     return "NEW_YORK", ["EUR/USD", "USD/CAD"]
 
@@ -98,93 +95,54 @@ def fetch_price(pair: str) -> Optional[float]:
     if df.empty:
         return None
 
-    price = df["Close"].iloc[-1]
-    if isinstance(price, pd.Series):
-        price = price.item()
-    else:
-        price = float(price)
-    
+    price = float(df["Close"].iloc[-1])
     PRICE_CACHE[pair] = (price, now)
     return price
 
 # =======================
-# INDICATORS (SAFE)
+# INDICATORS
 # =======================
-def ema(series: pd.Series, period: int) -> pd.Series:
-    return series.ewm(span=period, adjust=False).mean()
+def ema(series, p): return series.ewm(span=p, adjust=False).mean()
 
-def rsi(series: pd.Series, period: int = 14) -> pd.Series:
-    delta = series.diff()
-    gain = delta.clip(lower=0)
-    loss = -delta.clip(upper=0)
-
-    avg_gain = gain.ewm(alpha=1/period, adjust=False).mean()
-    avg_loss = loss.ewm(alpha=1/period, adjust=False).mean()
-
-    rs = avg_gain / (avg_loss + 1e-9)
+def rsi(series, p=14):
+    d = series.diff()
+    g = d.clip(lower=0)
+    l = -d.clip(upper=0)
+    rs = g.ewm(alpha=1/p, adjust=False).mean() / (l.ewm(alpha=1/p, adjust=False).mean() + 1e-9)
     return 100 - (100 / (1 + rs))
 
-def atr(df: pd.DataFrame, period: int = 14) -> pd.Series:
-    h = df["High"]
-    l = df["Low"]
-    c = df["Close"]
+def atr(df, p=14):
+    tr = pd.concat([
+        df["High"] - df["Low"],
+        (df["High"] - df["Close"].shift()).abs(),
+        (df["Low"] - df["Close"].shift()).abs()
+    ], axis=1).max(axis=1)
+    return tr.ewm(alpha=1/p, adjust=False).mean()
 
+def adx(df, p=14):
+    h, l, c = df["High"], df["Low"], df["Close"]
     tr = pd.concat([
         h - l,
         (h - c.shift()).abs(),
         (l - c.shift()).abs()
     ], axis=1).max(axis=1)
-
-    return tr.ewm(alpha=1/period, adjust=False).mean()
-
-def adx(df: pd.DataFrame, period: int = 14) -> pd.Series:
-    h = df["High"]
-    l = df["Low"]
-    c = df["Close"]
-
-    # True range
-    tr = pd.concat([
-        h - l,
-        (h - c.shift()).abs(),
-        (l - c.shift()).abs()
-    ], axis=1).max(axis=1)
-
-    atr_val = tr.ewm(alpha=1/period, adjust=False).mean()
-
-    # Directional movements
+    atr_v = tr.ewm(alpha=1/p, adjust=False).mean()
     up = h.diff()
     down = -l.diff()
-
-    plus_dm = up.where((up > down) & (up > 0), 0.0)
-    minus_dm = down.where((down > up) & (down > 0), 0.0)
-
-    plus_di = 100 * plus_dm.ewm(alpha=1/period, adjust=False).mean() / (atr_val + 1e-9)
-    minus_di = 100 * minus_dm.ewm(alpha=1/period, adjust=False).mean() / (atr_val + 1e-9)
-
-    dx = (plus_di - minus_di).abs() / (plus_di + minus_di + 1e-9) * 100
-    return dx.ewm(alpha=1/period, adjust=False).mean()
-
-# =======================
-# SAFE SCALAR EXTRACTION
-# =======================
-def to_scalar(val) -> float:
-    """Safely convert pandas scalar/Series to Python float"""
-    if isinstance(val, pd.Series):
-        if len(val) == 0:
-            return 0.0
-        val = val.iloc[-1]
-    if pd.isna(val):
-        return 0.0
-    return float(val)
+    plus = up.where((up > down) & (up > 0), 0.0)
+    minus = down.where((down > up) & (down > 0), 0.0)
+    pdi = 100 * plus.ewm(alpha=1/p, adjust=False).mean() / (atr_v + 1e-9)
+    mdi = 100 * minus.ewm(alpha=1/p, adjust=False).mean() / (atr_v + 1e-9)
+    dx = (pdi - mdi).abs() / (pdi + mdi + 1e-9) * 100
+    return dx.ewm(alpha=1/p, adjust=False).mean()
 
 # =======================
 # DATA
 # =======================
-def load_history(pair: str) -> pd.DataFrame:
+def load_history(pair):
     f = DATA / f"{pair.replace('/', '_')}.pkl"
     if f.exists() and time.time() - f.stat().st_mtime < HIST_CACHE_SECONDS:
         return pd.read_pickle(f)
-
     symbol = pair.replace("/", "") + "=X"
     df = yf.download(symbol, period="5y", progress=False)
     df = df[["High", "Low", "Close"]].astype(float)
@@ -192,7 +150,7 @@ def load_history(pair: str) -> pd.DataFrame:
     return df
 
 # =======================
-# SIGNAL MODEL
+# MODELS
 # =======================
 @dataclass
 class Signal:
@@ -206,9 +164,9 @@ class Signal:
     created: str
 
 # =======================
-# GENERATE SIGNAL
+# SIGNAL ENGINE
 # =======================
-def generate_signal(pair: str, active: List[Signal]) -> Optional[Signal]:
+def generate_signal(pair, active):
     if pair in [s.pair for s in active]:
         return None
 
@@ -217,26 +175,17 @@ def generate_signal(pair: str, active: List[Signal]) -> Optional[Signal]:
         return None
 
     close = df["Close"]
-
-    # Extract scalar values safely
-    e12 = to_scalar(ema(close, 12).iloc[-1])
-    e26 = to_scalar(ema(close, 26).iloc[-1])
-    e200 = to_scalar(ema(close, 200).iloc[-1])
-    r = to_scalar(rsi(close).iloc[-1])
-    a = to_scalar(adx(df).iloc[-1])
+    e12 = ema(close, 12).iloc[-1]
+    e26 = ema(close, 26).iloc[-1]
+    e200 = ema(close, 200).iloc[-1]
+    r = rsi(close).iloc[-1]
+    a = adx(df).iloc[-1]
 
     bull = bear = 0
-
-    if e12 > e26 > e200:
-        bull += 40
-    if e12 < e26 < e200:
-        bear += 40
-
-    if r < 40:
-        bull += 20
-    if r > 60:
-        bear += 20
-
+    if e12 > e26 > e200: bull += 40
+    if e12 < e26 < e200: bear += 40
+    if r < 40: bull += 20
+    if r > 60: bear += 20
     if a > 25:
         bull += 10 if e12 > e26 else 0
         bear += 10 if e12 < e26 else 0
@@ -245,15 +194,13 @@ def generate_signal(pair: str, active: List[Signal]) -> Optional[Signal]:
         return None
 
     side = "BUY" if bull > bear else "SELL"
-    confidence = min(0.85, MIN_CONFIDENCE + abs(bull - bear) / 200)
-
     price = fetch_price(pair)
     if price is None:
         return None
 
-    atr_val = to_scalar(atr(df).iloc[-1])
-    sl = price - atr_val * ATR_SL_MULT if side == "BUY" else price + atr_val * ATR_SL_MULT
-    tp = price + atr_val * ATR_TP_MULT if side == "BUY" else price - atr_val * ATR_TP_MULT
+    atr_v = atr(df).iloc[-1]
+    sl = price - atr_v * ATR_SL_MULT if side == "BUY" else price + atr_v * ATR_SL_MULT
+    tp = price + atr_v * ATR_TP_MULT if side == "BUY" else price - atr_v * ATR_TP_MULT
 
     return Signal(
         id=str(uuid.uuid4()),
@@ -262,20 +209,59 @@ def generate_signal(pair: str, active: List[Signal]) -> Optional[Signal]:
         entry=price,
         sl=sl,
         tp=tp,
-        confidence=confidence,
+        confidence=min(0.85, MIN_CONFIDENCE + abs(bull - bear)/200),
         created=datetime.now(timezone.utc).isoformat()
     )
 
 # =======================
-# MAIN EXECUTION
+# TRADE MANAGEMENT
+# =======================
+def pips(pair, entry, exit):
+    factor = 0.01 if "JPY" in pair else 0.0001
+    return (exit - entry) / factor
+
+# =======================
+# MAIN
 # =======================
 def main():
     session, pairs = market_session()
-    log.info(f"Session: {session}")
+    active = []
+    history = []
 
-    active: List[Signal] = []
     if ACTIVE_FILE.exists():
         active = [Signal(**s) for s in json.loads(ACTIVE_FILE.read_text())]
+    if HISTORY_FILE.exists():
+        history = json.loads(HISTORY_FILE.read_text())
+
+    still_active = []
+    for s in active:
+        price = fetch_price(s.pair)
+        if price is None:
+            still_active.append(s)
+            continue
+
+        hit_tp = price >= s.tp if s.side == "BUY" else price <= s.tp
+        hit_sl = price <= s.sl if s.side == "BUY" else price >= s.sl
+
+        if hit_tp or hit_sl:
+            exit_price = s.tp if hit_tp else s.sl
+            pip_val = pips(s.pair, s.entry, exit_price)
+            if s.side == "SELL":
+                pip_val *= -1
+
+            history.append({
+                "pair": s.pair,
+                "side": s.side,
+                "entry": s.entry,
+                "exit": exit_price,
+                "pips": round(pip_val, 1),
+                "result": "WIN" if hit_tp else "LOSS",
+                "closed_at": datetime.now(timezone.utc).isoformat()
+            })
+        else:
+            still_active.append(s)
+
+    active = still_active
 
     for pair in pairs:
         if len(active) >= MAX_ACTIVE_SIGNALS:
@@ -283,36 +269,40 @@ def main():
         sig = generate_signal(pair, active)
         if sig:
             active.append(sig)
-            log.info(
-                f"NEW SIGNAL | {sig.side} {sig.pair} "
-                f"@ {sig.entry:.5f} SL {sig.sl:.5f} TP {sig.tp:.5f}"
-            )
 
     ACTIVE_FILE.write_text(json.dumps([asdict(s) for s in active], indent=2))
+    HISTORY_FILE.write_text(json.dumps(history, indent=2))
 
-    # =======================
-    # DASHBOARD OUTPUT
-    # =======================
+    wins = [t for t in history if t["result"] == "WIN"]
+    losses = [t for t in history if t["result"] == "LOSS"]
+    total = len(wins) + len(losses)
+
+    today = date.today().isoformat()
+    daily_pips = sum(t["pips"] for t in history if t["closed_at"].startswith(today))
+
     dashboard = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "next_run": None,
         "active_signals": len(active),
-        "signals": [
-            {
-                "pair": s.pair,
-                "direction": s.side,
-                "entry_price": s.entry,
-                "sl": s.sl,
-                "tp": s.tp
-            } for s in active
-        ],
-        "stats": {"win_rate": 0.0, "total_pips": 0.0},
-        "risk_management": {"daily_pips": 0.0},
-        "api_usage": {"yfinance": {"calls": 0}}
+        "signals": [{
+            "pair": s.pair,
+            "direction": s.side,
+            "entry_price": s.entry,
+            "sl": s.sl,
+            "tp": s.tp
+        } for s in active],
+        "stats": {
+            "win_rate": round((len(wins) / total * 100) if total else 0.0, 1),
+            "total_pips": round(sum(t["pips"] for t in history), 1)
+        },
+        "risk_management": {
+            "daily_pips": round(daily_pips, 1)
+        },
+        "api_usage": {"yfinance": {"calls": len(PRICE_CACHE)}}
     }
 
     DASHBOARD_FILE.write_text(json.dumps(dashboard, indent=2))
-    log.info("Dashboard updated")
+    log.info("Trade Beacon cycle complete")
 
 if __name__ == "__main__":
     main()

@@ -1,89 +1,693 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=signal_state/dashboard.html">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirecting to Trade Beacon Dashboard...</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #0a0a0f, #1a1a2e);
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            text-align: center;
-        }
-        
-        .loading-container {
-            padding: 40px;
-        }
-        
-        .spinner {
-            border: 4px solid rgba(139, 92, 246, 0.1);
-            border-radius: 50%;
-            border-top: 4px solid #8b5cf6;
-            width: 80px;
-            height: 80px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 30px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        h1 {
-            font-size: 2.5rem;
-            background: linear-gradient(135deg, #8b5cf6, #ec4899);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 16px;
-        }
-        
-        p {
-            color: #a78bfa;
-            font-size: 1.1rem;
-        }
-        
-        .manual-link {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 12px 24px;
-            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-            border-radius: 12px;
-            color: white;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        
-        .manual-link:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trade Beacon Pro | Live Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--bg:#0a0e1a;--surface:#111827;--surface-light:#1f2937;--surface-hover:#252d3d;
+--border:#374151;--border-hover:#4b5563;--text:#f9fafb;--text-dim:#9ca3af;--text-dimmer:#6b7280;
+--primary:#3b82f6;--success:#10b981;--danger:#ef4444;--warning:#f59e0b;
+--purple:#a855f7;--cyan:#06b6d4;
+}
+body{
+font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;
+background-image:radial-gradient(circle at 20% 50%,rgba(59,130,246,0.03) 0%,transparent 50%),
+radial-gradient(circle at 80% 80%,rgba(168,85,247,0.03) 0%,transparent 50%);
+}
+.navbar{
+display:flex;justify-content:space-between;align-items:center;padding:20px 40px;
+background:rgba(17,24,39,0.8);border-bottom:1px solid var(--border);
+backdrop-filter:blur(20px);position:sticky;top:0;z-index:1000;
+}
+.logo{font-size:28px;font-weight:900;display:flex;align-items:center;gap:14px}
+.logo-icon{
+width:44px;height:44px;background:linear-gradient(135deg,var(--primary),var(--purple));
+border-radius:14px;display:flex;align-items:center;justify-content:center;
+box-shadow:0 10px 30px rgba(59,130,246,0.3);
+}
+.logo-icon svg{width:24px;height:24px;fill:white}
+.logo-text{
+background:linear-gradient(135deg,var(--primary),var(--purple));
+-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.nav-actions{display:flex;align-items:center;gap:16px}
+.refresh-btn{
+padding:10px 20px;background:var(--surface-light);border:2px solid var(--border);
+border-radius:14px;color:var(--text);font-size:13px;font-weight:600;
+cursor:pointer;transition:all 0.3s;display:flex;align-items:center;gap:10px;
+}
+.refresh-btn:hover{border-color:var(--primary);transform:translateY(-2px)}
+.refresh-icon{display:flex}
+.refresh-icon svg{width:16px;height:16px;stroke:currentColor}
+.status-pill{
+padding:10px 20px;border-radius:24px;font-size:13px;font-weight:700;
+display:flex;align-items:center;gap:10px;
+}
+.status-live{background:rgba(16,185,129,.15);color:var(--success);border:2px solid var(--success)}
+.status-stale{background:rgba(245,158,11,.15);color:var(--warning);border:2px solid var(--warning)}
+.status-offline{background:rgba(239,68,68,.15);color:var(--danger);border:2px solid var(--danger)}
+.pulse{width:10px;height:10px;border-radius:50%;background:currentColor;position:relative}
+.pulse::before{
+content:'';position:absolute;inset:-4px;border-radius:50%;border:2px solid currentColor;
+animation:pulsate 2s infinite;
+}
+@keyframes pulsate{50%{opacity:0;transform:scale(1.5)}}
+@keyframes rotate360{to{transform:rotate(360deg)}}
+.container{max-width:1600px;margin:auto;padding:40px}
+.grid{display:grid;gap:28px}
+.grid-4{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.grid-2{grid-template-columns:1.5fr 1fr}
+@media(max-width:1200px){.grid-2{grid-template-columns:1fr}}
+.card,.metric-card{
+background:var(--surface);border:1px solid var(--border);border-radius:24px;
+padding:32px;transition:all 0.4s;position:relative;overflow:hidden;
+}
+.card:hover,.metric-card:hover{
+transform:translateY(-6px);border-color:var(--border-hover);
+box-shadow:0 20px 60px rgba(0,0,0,0.4);
+}
+.metric-card{text-align:center}
+.metric-icon{
+width:56px;height:56px;margin:0 auto 16px;
+background:var(--surface-light);border-radius:16px;
+display:flex;align-items:center;justify-content:center;border:2px solid var(--border);
+}
+.metric-icon svg{width:28px;height:28px}
+.metric-label{
+font-size:13px;color:var(--text-dim);text-transform:uppercase;
+letter-spacing:1.5px;font-weight:600;margin-bottom:12px;
+}
+.metric-value{font-size:44px;font-weight:900;letter-spacing:-2px}
+.mode-switcher{
+background:linear-gradient(135deg,rgba(59,130,246,0.05),rgba(168,85,247,0.05));
+border:2px solid var(--border);border-radius:28px;padding:40px;margin-bottom:40px;
+}
+.mode-header{display:flex;align-items:center;gap:16px;margin-bottom:32px}
+.mode-header-icon{
+width:60px;height:60px;background:linear-gradient(135deg,var(--primary),var(--purple));
+border-radius:18px;display:flex;align-items:center;justify-content:center;
+box-shadow:0 10px 40px rgba(59,130,246,0.3);
+}
+.mode-header-icon svg{width:32px;height:32px;fill:white}
+.mode-header h3{font-size:28px;font-weight:900}
+.mode-toggle{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px}
+.mode-btn{
+padding:32px;border:3px solid var(--border);border-radius:24px;
+background:var(--surface-light);color:var(--text);cursor:pointer;
+transition:all 0.5s;text-align:center;
+}
+.mode-btn:hover{
+transform:translateY(-8px);border-color:var(--primary);
+box-shadow:0 20px 60px rgba(59,130,246,0.3);
+}
+.mode-btn.active{
+background:linear-gradient(135deg,var(--primary),var(--purple));
+border-color:transparent;transform:translateY(-6px);
+box-shadow:0 20px 80px rgba(59,130,246,0.5);
+}
+.mode-icon-wrapper{
+width:64px;height:64px;margin:0 auto 16px;background:rgba(255,255,255,0.1);
+border-radius:18px;display:flex;align-items:center;justify-content:center;
+}
+.mode-icon-wrapper svg{width:36px;height:36px;fill:currentColor}
+.mode-btn .mode-title{font-size:22px;font-weight:800;margin-bottom:10px}
+.mode-btn .mode-desc{font-size:14px;opacity:0.85;line-height:1.6}
+.mode-badge{
+display:inline-block;padding:8px 18px;border-radius:20px;font-size:11px;
+font-weight:800;margin-top:16px;text-transform:uppercase;letter-spacing:1.2px;
+}
+.mode-badge.conservative{background:rgba(16,185,129,.3);color:var(--success);border:1px solid var(--success)}
+.mode-badge.aggressive{background:rgba(239,68,68,.3);color:var(--danger);border:1px solid var(--danger)}
+.mode-info{
+padding:24px;background:var(--surface-light);border-radius:20px;
+font-size:14px;line-height:1.9;border-left:5px solid var(--primary);
+}
+.mode-info strong{color:var(--primary);font-weight:700}
+.signal-card{
+background:var(--surface-light);border-radius:20px;padding:24px;margin-bottom:20px;
+border-left:5px solid;transition:all 0.4s;
+}
+.signal-card:hover{transform:translateX(12px);box-shadow:0 15px 40px rgba(0,0,0,0.4)}
+.signal-card.buy{border-color:var(--success)}
+.signal-card.sell{border-color:var(--danger)}
+.signal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.signal-pair{font-size:22px;font-weight:800;display:flex;align-items:center;gap:12px}
+.signal-direction{
+display:inline-flex;align-items:center;gap:6px;padding:6px 14px;
+border-radius:14px;font-size:12px;font-weight:700;text-transform:uppercase;
+}
+.signal-direction.buy{background:rgba(16,185,129,.2);color:var(--success);border:2px solid var(--success)}
+.signal-direction.sell{background:rgba(239,68,68,.2);color:var(--danger);border:2px solid var(--danger)}
+.signal-direction svg{width:14px;height:14px;fill:currentColor}
+.signal-confidence{
+padding:6px 14px;border-radius:14px;font-size:11px;font-weight:700;
+text-transform:uppercase;background:rgba(59,130,246,.2);
+color:var(--primary);border:2px solid var(--primary);
+}
+.signal-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-top:16px}
+.signal-metric{padding:12px;background:var(--surface);border-radius:12px;border:1px solid var(--border)}
+.signal-metric-label{font-size:11px;color:var(--text-dimmer);text-transform:uppercase;margin-bottom:4px;font-weight:600}
+.signal-metric-value{font-size:16px;font-weight:800}
+.signal-footer{
+margin-top:16px;padding-top:16px;border-top:1px solid var(--border);
+display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-dim);
+}
+.signal-footer svg{width:14px;height:14px;stroke:currentColor}
+.loading-overlay{
+position:fixed;inset:0;
+background:linear-gradient(135deg,rgba(10,14,26,0.98),rgba(17,24,39,0.98));
+display:flex;align-items:center;justify-content:center;z-index:9999;
+}
+.loading-spinner{
+width:80px;height:80px;border:8px solid var(--border);
+border-top-color:var(--primary);border-radius:50%;
+animation:spin 1s linear infinite;margin:0 auto 24px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.settings-row{
+display:flex;justify-content:space-between;padding:20px 0;
+border-bottom:1px solid var(--border);align-items:center;
+}
+.settings-row:last-child{border:none}
+.settings-label{color:var(--text-dim);font-size:14px;font-weight:600;display:flex;align-items:center;gap:10px}
+.settings-label svg{width:18px;height:18px;stroke:currentColor}
+.settings-value{
+font-weight:800;padding:8px 18px;background:var(--surface-light);
+border-radius:14px;font-size:14px;border:2px solid var(--border);
+}
+.empty-state{text-align:center;padding:60px 40px;color:var(--text-dim)}
+.empty-state-icon{
+width:80px;height:80px;margin:0 auto 20px;background:var(--surface-light);
+border-radius:20px;display:flex;align-items:center;justify-content:center;border:2px solid var(--border);
+}
+.empty-state-icon svg{width:40px;height:40px;stroke:currentColor}
+.empty-state-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px}
+.debug-panel{
+position:fixed;bottom:20px;right:20px;background:var(--surface);border:2px solid var(--border);
+border-radius:16px;padding:20px;max-width:400px;font-size:12px;z-index:999;
+}
+.debug-panel h4{margin-bottom:12px;color:var(--primary)}
+.debug-panel pre{background:var(--bg);padding:10px;border-radius:8px;overflow-x:auto;margin-top:8px}
+h3{margin-bottom:24px;font-size:22px;font-weight:800;display:flex;align-items:center;gap:12px}
+h3 svg{width:24px;height:24px}
+@media(max-width:768px){
+.navbar{padding:16px 20px}
+.container{padding:24px 20px}
+.mode-toggle{grid-template-columns:1fr}
+.grid-4{grid-template-columns:1fr}
+}
+</style>
 </head>
 <body>
-    <div class="loading-container">
-        <div class="spinner"></div>
-        <h1>⚡ Trade Beacon</h1>
-        <p>Redirecting to Neural Command Center...</p>
-        <a href="signal_state/dashboard.html" class="manual-link">
-            Click here if not redirected automatically
-        </a>
-    </div>
+
+<div class="loading-overlay" id="loading">
+<div class="loading-content" style="text-align:center">
+<div class="loading-spinner"></div>
+<p style="font-size:20px;font-weight:700;color:var(--text);margin-bottom:8px">Initializing Trade Beacon</p>
+<p style="font-size:14px;color:var(--text-dim)">Loading real-time market data...</p>
+</div>
+</div>
+
+<nav class="navbar">
+<div class="logo">
+<div class="logo-icon">
+<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 2L2 7L12 12L22 7L12 2Z" fill="white"/>
+<path d="M2 17L12 22L22 17" stroke="white" stroke-width="2"/>
+<path d="M2 12L12 17L22 12" stroke="white" stroke-width="2"/>
+</svg>
+</div>
+<div>Trade<span class="logo-text">Beacon</span></div>
+</div>
+<div class="nav-actions">
+<button class="refresh-btn" onclick="forceRefresh()">
+<span class="refresh-icon">
+<svg viewBox="0 0 24 24" fill="none">
+<path d="M1 4V10H7" stroke="currentColor" stroke-width="2"/>
+<path d="M23 20V14H17" stroke="currentColor" stroke-width="2"/>
+<path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14L18.36 18.36A9 9 0 0 1 3.51 15" stroke="currentColor" stroke-width="2"/>
+</svg>
+</span>
+<span>Refresh</span>
+</button>
+<div class="status-pill status-live" id="health">
+<span class="pulse"></span>
+<span id="healthText">LIVE</span>
+</div>
+</div>
+</nav>
+
+<div class="container">
+
+<div class="mode-switcher">
+<div class="mode-header">
+<div class="mode-header-icon">
+<svg viewBox="0 0 24 24" fill="none">
+<circle cx="12" cy="12" r="10" fill="white"/>
+<path d="M12 6V12L16 14" stroke="#3b82f6" stroke-width="2"/>
+</svg>
+</div>
+<h3>Trading Strategy Mode</h3>
+</div>
+<div class="mode-toggle">
+<button class="mode-btn" id="btnConservative" onclick="setMode('conservative')">
+<div class="mode-icon-wrapper">
+<svg viewBox="0 0 24 24">
+<path d="M12 22C12 22 3 18 3 11V5L12 2L21 5V11C21 18 12 22 12 22Z" fill="currentColor"/>
+</svg>
+</div>
+<div class="mode-title">High Confidence</div>
+<div class="mode-desc">Premium quality signals with strict filtering criteria</div>
+<span class="mode-badge conservative">Quality First</span>
+</button>
+<button class="mode-btn active" id="btnAggressive" onclick="setMode('aggressive')">
+<div class="mode-icon-wrapper">
+<svg viewBox="0 0 24 24">
+<path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="currentColor"/>
+</svg>
+</div>
+<div class="mode-title">Aggressive</div>
+<div class="mode-desc">Maximum opportunities with flexible criteria</div>
+<span class="mode-badge aggressive">Volume First</span>
+</button>
+</div>
+<div class="mode-info" id="modeInfo">
+<strong>Active Configuration:</strong> Aggressive Mode • Threshold: 30 • Min ADX: None • RSI: Any
+</div>
+</div>
+
+<div class="grid grid-4">
+<div class="metric-card">
+<div class="metric-icon" style="border-color:var(--primary)">
+<svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)">
+<path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke-width="2"/>
+</svg>
+</div>
+<div class="metric-label">Active Signals</div>
+<div class="metric-value" style="color:var(--primary)" id="activeSignals">-</div>
+</div>
+<div class="metric-card">
+<div class="metric-icon" style="border-color:var(--success)">
+<svg viewBox="0 0 24 24" fill="none" stroke="var(--success)">
+<path d="M22 12H18L15 21L9 3L6 12H2" stroke-width="2"/>
+</svg>
+</div>
+<div class="metric-label">Win Rate</div>
+<div class="metric-value" style="color:var(--success)" id="winRate">-</div>
+</div>
+<div class="metric-card">
+<div class="metric-icon" style="border-color:var(--warning)">
+<svg viewBox="0 0 24 24" fill="none" stroke="var(--warning)">
+<circle cx="12" cy="12" r="3" stroke-width="2"/>
+<path d="M12 2V6M12 18V22M4.93 4.93L7.76 7.76M16.24 16.24L19.07 19.07M2 12H6M18 12H22M4.93 19.07L7.76 16.24M16.24 7.76L19.07 4.93" stroke-width="2"/>
+</svg>
+</div>
+<div class="metric-label">Total Pips</div>
+<div class="metric-value" style="color:var(--warning)" id="totalPips">-</div>
+</div>
+<div class="metric-card">
+<div class="metric-icon" style="border-color:var(--cyan)">
+<svg viewBox="0 0 24 24" fill="none" stroke="var(--cyan)">
+<path d="M3 3V21M21 21H3M7 16L12 11L16 15L21 10" stroke-width="2"/>
+</svg>
+</div>
+<div class="metric-label">Today</div>
+<div class="metric-value" style="color:var(--cyan)" id="dailyPips">-</div>
+</div>
+</div>
+
+<div class="grid grid-2" style="margin-top:32px">
+<div class="card">
+<h3>
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+<circle cx="12" cy="12" r="10" stroke-width="2"/>
+<path d="M12 6V12L16 14" stroke-width="2"/>
+</svg>
+Active Trading Signals
+</h3>
+<div id="signals"></div>
+</div>
+
+<div class="card">
+<h3>
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+<circle cx="12" cy="12" r="3" stroke-width="2"/>
+<path d="M12 1V3M12 21V23M4.22 4.22L5.64 5.64M18.36 18.36L19.78 19.78M1 12H3M21 12H23M4.22 19.78L5.64 18.36M18.36 5.64L19.78 4.22" stroke-width="2"/>
+</svg>
+System Configuration
+</h3>
+<div class="settings-row">
+<span class="settings-label">
+<svg viewBox="0 0 24 24" fill="none">
+<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+<path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2"/>
+</svg>
+Last Update
+</span>
+<span class="settings-value" id="lastUpdate">-</span>
+</div>
+<div class="settings-row">
+<span class="settings-label">
+<svg viewBox="0 0 24 24" fill="none">
+<path d="M21 16V8C21 6.9 20.1 6 19 6H5C3.9 6 3 6.9 3 8V16C3 17.1 3.9 18 5 18H19C20.1 18 21 17.1 21 16Z" stroke="currentColor" stroke-width="2"/>
+<path d="M3 10H21" stroke="currentColor" stroke-width="2"/>
+</svg>
+API Calls
+</span>
+<span class="settings-value" id="apiCalls">-</span>
+</div>
+<div class="settings-row">
+<span class="settings-label">
+<svg viewBox="0 0 24 24" fill="none">
+<path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" stroke-width="2"/>
+<path d="M2 17L12 22L22 17M2 12L12 17L22 12" stroke="currentColor" stroke-width="2"/>
+</svg>
+Signal Threshold
+</span>
+<span class="settings-value" id="currentThreshold">30</span>
+</div>
+<div class="settings-row">
+<span class="settings-label">
+<svg viewBox="0 0 24 24" fill="none">
+<path d="M22 12H18L15 21L9 3L6 12H2" stroke="currentColor" stroke-width="2"/>
+</svg>
+Minimum ADX
+</span>
+<span class="settings-value" id="currentADX">None</span>
+</div>
+<div class="settings-row">
+<span class="settings-label">
+<svg viewBox="0 0 24 24" fill="none">
+<path d="M3 3V21M21 21H3M7 11L12 16L21 7" stroke="currentColor" stroke-width="2"/>
+</svg>
+RSI Filter
+</span>
+<span class="settings-value" id="currentRSI">Any</span>
+</div>
+</div>
+</div>
+
+<!-- DEBUG PANEL - Shows what's happening -->
+<div class="debug-panel" id="debugPanel" style="display:none">
+<h4>🔍 Debug Info</h4>
+<div id="debugInfo"></div>
+</div>
+
+</div>
+
+<script>
+// CONFIGURATION - Try multiple URLs
+const API_URLS = [
+  './signal_state/dashboard_state.json',  // Relative path (GitHub Pages)
+  'signal_state/dashboard_state.json',    // Alternative relative
+  'https://raw.githubusercontent.com/rahim-dotAI/forex-ai-models/main/signal_state/dashboard_state.json'  // Fallback to raw
+];
+
+const MODES = {
+  conservative: {
+    name: 'High Confidence',
+    threshold: 50,
+    minADX: 20,
+    rsiOversold: 35,
+    rsiOverbought: 65,
+    description: 'High Confidence Mode • Threshold: 50 • Min ADX: 20 • RSI: <35 or >65'
+  },
+  aggressive: {
+    name: 'Aggressive',
+    threshold: 30,
+    minADX: null,
+    rsiOversold: 40,
+    rsiOverbought: 60,
+    description: 'Aggressive Mode • Threshold: 30 • Min ADX: None • RSI: Any'
+  }
+};
+
+let currentMode = 'aggressive';
+let lastSuccess = null;
+let debugMode = false;
+
+// Enable debug mode with URL parameter: ?debug=1
+if (window.location.search.includes('debug=1')) {
+  debugMode = true;
+  document.getElementById('debugPanel').style.display = 'block';
+}
+
+function debug(msg, data) {
+  console.log(msg, data || '');
+  if (debugMode) {
+    const debugInfo = document.getElementById('debugInfo');
+    const time = new Date().toLocaleTimeString();
+    debugInfo.innerHTML = `<div style="margin:4px 0;color:var(--text-dim)">[${time}] ${msg}</div>` + debugInfo.innerHTML;
+    if (data) {
+      debugInfo.innerHTML += `<pre>${JSON.stringify(data, null, 2).substring(0, 500)}</pre>`;
+    }
+  }
+}
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('btnConservative').classList.toggle('active', mode === 'conservative');
+  document.getElementById('btnAggressive').classList.toggle('active', mode === 'aggressive');
+  
+  const config = MODES[mode];
+  document.getElementById('modeInfo').innerHTML = `<strong>Active Configuration:</strong> ${config.description}`;
+  document.getElementById('currentThreshold').textContent = config.threshold;
+  document.getElementById('currentADX').textContent = config.minADX || 'None';
+  document.getElementById('currentRSI').textContent = 
+    config.minADX ? `<${config.rsiOversold} or >${config.rsiOverbought}` : 'Any';
+  
+  localStorage.setItem('tradeBeaconMode', mode);
+}
+
+function parseTime(iso){
+  if(!iso) return '-';
+  try {
+    return new Date(iso.replace('+00:00','Z')).toLocaleString();
+  } catch {
+    return iso;
+  }
+}
+
+function setHealth(state){
+  const el = document.getElementById('health');
+  const txt = document.getElementById('healthText');
+  el.className = 'status-pill status-' + state;
+  txt.textContent = state.toUpperCase();
+}
+
+async function fetchState(){
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substring(2, 15);
+  
+  // Try each URL until one works
+  for (let i = 0; i < API_URLS.length; i++) {
+    try {
+      const url = API_URLS[i];
+      const cacheBuster = `?t=${timestamp}&r=${random}`;
+      const fullUrl = url + cacheBuster;
+      
+      debug(`Attempting fetch from URL ${i + 1}/${API_URLS.length}: ${url}`);
+      
+      const r = await fetch(fullUrl, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
+      
+      debug(`Response status: ${r.status} ${r.statusText}`);
+      
+      if (!r.ok) {
+        throw new Error(`HTTP ${r.status}`);
+      }
+      
+      const text = await r.text();
+      debug(`Received ${text.length} characters`);
+      
+      const data = JSON.parse(text);
+      debug(`✅ Successfully parsed JSON with ${data.active_signals} signals`, data);
+      
+      return data;
+      
+    } catch (err) {
+      debug(`❌ Failed with URL ${i + 1}: ${err.message}`);
+      if (i === API_URLS.length - 1) {
+        throw new Error(`All URLs failed. Last error: ${err.message}`);
+      }
+    }
+  }
+}
+
+function render(d){
+  debug('Rendering data', d);
+  
+  document.getElementById('loading').style.display = 'none';
+  lastSuccess = Date.now();
+  setHealth('live');
+
+  document.getElementById('activeSignals').textContent = d.active_signals || 0;
+  document.getElementById('winRate').textContent = (d.stats?.win_rate || 0).toFixed(1) + '%';
+  document.getElementById('totalPips').textContent = (d.stats?.total_pips || 0).toFixed(1);
+  document.getElementById('dailyPips').textContent = (d.risk_management?.daily_pips || 0).toFixed(1);
+
+  document.getElementById('lastUpdate').textContent = parseTime(d.timestamp);
+  document.getElementById('apiCalls').textContent = d.api_usage?.yfinance?.calls || 0;
+
+  const signals = d.signals || [];
+  
+  debug(`Rendering ${signals.length} signals`);
+  
+  if (signals.length === 0) {
+    document.getElementById('signals').innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          <svg viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 8V12M12 16H12.01" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="empty-state-title">No Active Signals</div>
+        <div class="empty-state-desc">Waiting for market conditions to generate new trading opportunities</div>
+      </div>
+    `;
+    return;
+  }
+
+  const html = signals.map(s => {
+    const dir = s.direction.toLowerCase();
+    const directionIcon = dir === 'buy' 
+      ? '<svg viewBox="0 0 24 24" fill="none"><path d="M12 19V5M5 12L12 5L19 12" stroke="currentColor" stroke-width="2"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="none"><path d="M12 5V19M5 12L12 19L19 12" stroke="currentColor" stroke-width="2"/></svg>';
     
-    <script>
-        // Backup JavaScript redirect
-        setTimeout(() => {
-            window.location.href = 'signal_state/dashboard.html';
-        }, 100);
-    </script>
+    return `
+    <div class="signal-card ${dir}">
+      <div class="signal-header">
+        <div class="signal-pair">
+          ${s.pair}
+          <span class="signal-direction ${dir}">
+            ${directionIcon}
+            ${s.direction}
+          </span>
+        </div>
+        ${s.confidence ? `<span class="signal-confidence">${s.confidence}</span>` : ''}
+      </div>
+      
+      <div class="signal-metrics">
+        ${s.entry_price ? `
+          <div class="signal-metric">
+            <div class="signal-metric-label">Entry Price</div>
+            <div class="signal-metric-value">${s.entry_price.toFixed(5)}</div>
+          </div>
+        ` : ''}
+        ${s.sl ? `
+          <div class="signal-metric">
+            <div class="signal-metric-label">Stop Loss</div>
+            <div class="signal-metric-value" style="color:var(--danger)">${s.sl.toFixed(5)}</div>
+          </div>
+        ` : ''}
+        ${s.tp ? `
+          <div class="signal-metric">
+            <div class="signal-metric-label">Take Profit</div>
+            <div class="signal-metric-value" style="color:var(--success)">${s.tp.toFixed(5)}</div>
+          </div>
+        ` : ''}
+        ${s.score ? `
+          <div class="signal-metric">
+            <div class="signal-metric-label">Score</div>
+            <div class="signal-metric-value" style="color:var(--primary)">${s.score}</div>
+          </div>
+        ` : ''}
+        ${s.rsi ? `
+          <div class="signal-metric">
+            <div class="signal-metric-label">RSI</div>
+            <div class="signal-metric-value">${s.rsi.toFixed(1)}</div>
+          </div>
+        ` : ''}
+        ${s.adx ? `
+          <div class="signal-metric">
+            <div class="signal-metric-label">ADX</div>
+            <div class="signal-metric-value">${s.adx.toFixed(1)}</div>
+          </div>
+        ` : ''}
+      </div>
+      
+      ${s.timestamp ? `
+        <div class="signal-footer">
+          <svg viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          ${parseTime(s.timestamp)}
+        </div>
+      ` : ''}
+    </div>
+    `;
+  }).join('');
+
+  document.getElementById('signals').innerHTML = html;
+}
+
+async function update(){
+  try {
+    const refreshIcon = document.querySelector('.refresh-icon');
+    if (refreshIcon) {
+      refreshIcon.style.animation = 'rotate360 1s linear infinite';
+    }
+    
+    debug('Starting update...');
+    const data = await fetchState();
+    render(data);
+    
+    if (refreshIcon) {
+      refreshIcon.style.animation = '';
+    }
+    
+  } catch (err) {
+    console.error('Update error:', err);
+    debug(`❌ Update failed: ${err.message}`);
+    
+    const refreshIcon = document.querySelector('.refresh-icon');
+    if (refreshIcon) {
+      refreshIcon.style.animation = '';
+    }
+    
+    if (lastSuccess && Date.now() - lastSuccess < 300000) {
+      setHealth('stale');
+    } else {
+      setHealth('offline');
+      document.getElementById('loading').style.display = 'none';
+    }
+  }
+}
+
+async function forceRefresh() {
+  debug('Force refresh triggered');
+  
+  if ('caches' in window) {
+    caches.keys().then(names => {
+      names.forEach(name => caches.delete(name));
+    });
+  }
+  
+  await update();
+}
+
+// Initialize
+const savedMode = localStorage.getItem('tradeBeaconMode');
+if (savedMode && MODES[savedMode]) {
+  setMode(savedMode);
+}
+
+debug('Dashboard initialized');
+update();
+setInterval(update, 15000);
+</script>
+
 </body>
 </html>

@@ -4,7 +4,6 @@ on:
   # Scheduled runs (GitHub timing may lag — handled in code)
   schedule:
     - cron: "*/10 * * * 1-5"   # Every 10 minutes, Mon–Fri (UTC)
-
   # Manual run
   workflow_dispatch:
     inputs:
@@ -25,40 +24,40 @@ env:
 jobs:
   forex-trading:
     runs-on: ubuntu-latest
-
     permissions:
       contents: write
-
+    
     steps:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
+      
       - name: 🐍 Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-
+      
       - name: 📦 Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install holidays jq
-
+      
       # Optional mode override (manual / API trigger)
       - name: ⚙️ Apply mode override
-        if: github.event.inputs.mode != 'default'
+        if: github.event.inputs.mode != 'default' && github.event.inputs.mode != ''
         run: |
           MODE="${{ github.event.inputs.mode }}"
           echo "🎯 Applying mode: $MODE"
-
+          
           if [ -f config.json ]; then
             jq --arg mode "$MODE" '.mode = $mode' config.json > tmp.json && mv tmp.json config.json
           else
-            cat > config.json << 'EOF'
+            echo "Creating new config.json with mode: $MODE"
+            cat > config.json << EOF
           {
-            "mode": "aggressive",
+            "mode": "$MODE",
             "settings": {
               "aggressive": {
                 "threshold": 30,
@@ -75,48 +74,60 @@ jobs:
             }
           }
           EOF
-            jq --arg mode "$MODE" '.mode = $mode' config.json > tmp.json && mv tmp.json config.json
           fi
-
+          
+          echo "📄 Current config.json:"
           cat config.json
-
+      
       - name: 📅 Check trading day
         id: market
         run: |
           python << 'EOF'
           import datetime, holidays, os
-
+          
           today = datetime.date.today()
           us = holidays.US()
           skip = today.weekday() >= 5 or today in us
-
-          print("Market open" if not skip else "Market closed")
-
+          
+          status = "Market closed" if skip else "Market open"
+          print(status)
+          
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
               f.write(f"skip={'true' if skip else 'false'}\n")
+              f.write(f"status={status}\n")
           EOF
-
+      
       - name: 🤖 Run Trade Beacon
         if: steps.market.outputs.skip != 'true'
         run: |
           echo "🤖 Running Trade Beacon..."
           python ${{ env.ENTRY_SCRIPT }}
-
-      # 🔑 THIS IS THE IMPORTANT PART FOR YOUR DASHBOARD
+      
+      - name: ⏭️ Skip message
+        if: steps.market.outputs.skip == 'true'
+        run: |
+          echo "⏭️ Skipping run: ${{ steps.market.outputs.status }}"
+      
+      # 🔑 CRITICAL: Commit dashboard & signals for live updates
       - name: 💾 Commit dashboard & signals
+        if: steps.market.outputs.skip != 'true'
         run: |
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "Trade Beacon Bot"
-
-          git add -f signal_state/dashboard_state.json signals.csv config.json || true
-
+          
+          # Add files
+          git add -f signal_state/dashboard_state.json signals.csv config.json 2>/dev/null || true
+          
+          # Check if there are changes
           if ! git diff --cached --quiet; then
-            git commit -m "📊 Trade Beacon update $(date -u '+%Y-%m-%d %H:%M UTC')"
+            TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M UTC')
+            git commit -m "📊 Trade Beacon update ${TIMESTAMP}"
             git push
+            echo "✅ Dashboard updated and pushed"
           else
-            echo "✅ No dashboard changes"
+            echo "✅ No changes to commit"
           fi
-
+      
       - name: 📦 Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -126,4 +137,6 @@ jobs:
             signal_state/
             signals.csv
             config.json
+            *.log
+          retention-days: 7
           if-no-files-found: ignore

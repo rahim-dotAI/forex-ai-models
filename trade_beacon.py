@@ -128,12 +128,15 @@ def generate_signal(pair: str) -> dict | None:
         r = last(rsi(close))
         a = last(adx_calc(high, low, close))
         
+        # Get current price for entry
+        current_price = last(close)
+        
     except Exception as e:
         log.warning(f"⚠️ {pair} indicator calc failed: {e}")
         return None
 
     # Validate all indicators calculated successfully
-    if None in (e12, e26, e200, r, a):
+    if None in (e12, e26, e200, r, a, current_price):
         log.warning(f"⚠️ {pair} indicators incomplete, skipping")
         return None
 
@@ -213,6 +216,14 @@ def generate_signal(pair: str) -> dict | None:
     else:
         confidence = "MODERATE"
 
+    # Calculate SL and TP based on direction
+    if direction == "BUY":
+        sl = current_price * 0.985  # 1.5% stop loss
+        tp = current_price * 1.020  # 2% take profit
+    else:
+        sl = current_price * 1.015  # 1.5% stop loss
+        tp = current_price * 0.980  # 2% take profit
+
     return {
         "pair": pair.replace("=X", ""),
         "direction": direction,
@@ -220,8 +231,62 @@ def generate_signal(pair: str) -> dict | None:
         "confidence": confidence,
         "rsi": round(r, 1),
         "adx": round(a, 1),
+        "entry_price": round(current_price, 5),
+        "sl": round(sl, 5),
+        "tp": round(tp, 5),
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
+
+
+# =========================
+# WRITE DASHBOARD STATE
+# =========================
+def write_dashboard_state(signals: list, api_calls: int):
+    """Write the dashboard state JSON file"""
+    
+    # Determine session based on current UTC hour
+    hour = datetime.now(timezone.utc).hour
+    if 0 <= hour < 8:
+        session = "ASIAN"
+    elif 8 <= hour < 16:
+        session = "EUROPEAN"
+    else:
+        session = "US"
+    
+    # Calculate stats (placeholder - you can enhance this)
+    total_pips = 0
+    win_rate = 0
+    daily_pips = 0
+    
+    dashboard_data = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "active_signals": len(signals),
+        "session": session,
+        "signals": signals,
+        "stats": {
+            "win_rate": win_rate,
+            "total_pips": total_pips
+        },
+        "risk_management": {
+            "daily_pips": daily_pips
+        },
+        "api_usage": {
+            "yfinance": {
+                "calls": api_calls
+            }
+        }
+    }
+    
+    # Create directory if it doesn't exist
+    output_dir = Path("signal_state")
+    output_dir.mkdir(exist_ok=True)
+    
+    # Write JSON file
+    output_file = output_dir / "dashboard_state.json"
+    with open(output_file, 'w') as f:
+        json.dump(dashboard_data, f, indent=2)
+    
+    log.info(f"📊 Dashboard state written to {output_file}")
 
 
 # =========================
@@ -237,14 +302,19 @@ def main():
     )
     
     active = []
+    api_calls = 0
 
     for pair in PAIRS:
         log.info(f"🔍 Analyzing {pair.replace('=X', '')}...")
         sig = generate_signal(pair)
+        api_calls += 1  # Count each API call
         if sig:
             active.append(sig)
 
     log.info(f"🚀 Cycle complete | Active signals: {len(active)}")
+
+    # Always write dashboard state (even if no signals)
+    write_dashboard_state(active, api_calls)
 
     if active:
         df = pd.DataFrame(active)

@@ -2,10 +2,24 @@ name: AI Forex Trading System
 
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Trading Mode'
+        required: false
+        type: choice
+        options:
+          - default
+          - aggressive
+          - conservative
+        default: 'default'
+
+  repository_dispatch:
+    types: [update-mode]
 
   push:
     paths:
       - colab_trigger.txt
+      - config.json
 
   schedule:
     - cron: "*/10 * * * 1-5"
@@ -39,6 +53,46 @@ jobs:
           pip install -r requirements.txt
           pip install holidays jq
 
+      - name: ⚙️ Apply mode override
+        if: github.event.inputs.mode != 'default' || github.event_name == 'repository_dispatch'
+        run: |
+          MODE="${{ github.event.inputs.mode }}"
+          if [ -z "$MODE" ] || [ "$MODE" = "default" ]; then
+            MODE="${{ github.event.client_payload.mode }}"
+          fi
+          
+          if [ "$MODE" != "default" ] && [ -n "$MODE" ]; then
+            echo "🎯 Applying mode: $MODE"
+            if [ -f config.json ]; then
+              jq --arg mode "$MODE" '.mode = $mode' config.json > tmp.json && mv tmp.json config.json
+              echo "✅ config.json updated to $MODE mode"
+              cat config.json
+            else
+              echo "⚠️ config.json not found, creating default"
+              cat > config.json << 'CONFIGEOF'
+          {
+            "mode": "aggressive",
+            "settings": {
+              "aggressive": {
+                "threshold": 30,
+                "min_adx": null,
+                "rsi_oversold": 40,
+                "rsi_overbought": 60
+              },
+              "conservative": {
+                "threshold": 50,
+                "min_adx": 20,
+                "rsi_oversold": 35,
+                "rsi_overbought": 65
+              }
+            }
+          }
+          CONFIGEOF
+              jq --arg mode "$MODE" '.mode = $mode' config.json > tmp.json && mv tmp.json config.json
+              echo "✅ Created config.json with $MODE mode"
+            fi
+          fi
+
       - name: 🔁 Decide run mode
         id: decide
         shell: bash
@@ -70,6 +124,13 @@ jobs:
           # Manual run always allowed
           if [ "$EVENT" = "workflow_dispatch" ]; then
             RUN=true
+            echo "🚀 Manual trigger detected"
+          fi
+
+          # Repository dispatch (mode change)
+          if [ "$EVENT" = "repository_dispatch" ]; then
+            RUN=true
+            echo "🎯 Mode change trigger detected"
           fi
 
           # Trigger-file push mode
@@ -77,15 +138,20 @@ jobs:
             if [ "$COUNT" -lt "$MAX_DAILY_TRIGGER_RUNS" ]; then
               RUN=true
               COUNT=$((COUNT + 1))
+              echo "✅ Trigger run #$COUNT"
               if [ "$COUNT" -ge "$MAX_DAILY_TRIGGER_RUNS" ]; then
                 MODE="schedule"
+                echo "⚠️ Max triggers reached, switching to schedule mode"
               fi
+            else
+              echo "❌ Max daily triggers reached ($MAX_DAILY_TRIGGER_RUNS)"
             fi
           fi
 
           # Schedule mode
           if [ "$MODE" = "schedule" ] && [ "$EVENT" = "schedule" ]; then
             RUN=true
+            echo "⏰ Scheduled run"
           fi
 
           # Save updated state
@@ -103,16 +169,31 @@ jobs:
         id: market
         run: |
           python << 'EOF'
-          import datetime, holidays, os
+          import datetime
+          import holidays
+          import os
 
           today = datetime.date.today()
           us = holidays.US()
 
           skip = today.weekday() >= 5 or today in us
 
+          status = "🚫 CLOSED" if skip else "✅ OPEN"
+          print(f"Market status: {status}")
+
           with open(os.environ["GITHUB_OUTPUT"], "a") as f:
               f.write(f"skip={'true' if skip else 'false'}\n")
           EOF
+
+      - name: 📊 Show current configuration
+        if: steps.decide.outputs.run == 'true' && steps.market.outputs.skip != 'true'
+        run: |
+          echo "🎯 Current Trading Configuration:"
+          if [ -f config.json ]; then
+            cat config.json | jq .
+          else
+            echo "⚠️ No config.json found, using defaults"
+          fi
 
       - name: 🚀 Run Trading Bot
         if: steps.decide.outputs.run == 'true' && steps.market.outputs.skip != 'true'
@@ -121,6 +202,7 @@ jobs:
           BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}
           MARKETAUX_API_KEY: ${{ secrets.MARKETAUX_API_KEY }}
         run: |
+          echo "🤖 Starting Trade Beacon..."
           python ${{ env.ENTRY_SCRIPT }}
 
       - name: 💾 Commit runtime data
@@ -129,11 +211,21 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "Trade Beacon Bot"
 
-          git add trigger_state.json logs/ signal_state/ memory/ || true
+          git add trigger_state.json logs/ signal_state/ memory/ config.json signals.csv || true
 
           if ! git diff --cached --quiet; then
-            git commit -m "🔄 Trade beacon run $(date -u +"%Y-%m-%d %H:%M UTC")"
+            COMMIT_MSG="🔄 Trade beacon run $(date -u +"%Y-%m-%d %H:%M UTC")"
+            
+            # Add mode info if available
+            if [ -f config.json ]; then
+              MODE=$(jq -r '.mode // "unknown"' config.json)
+              COMMIT_MSG="$COMMIT_MSG [${MODE} mode]"
+            fi
+            
+            git commit -m "$COMMIT_MSG"
             git push
+          else
+            echo "✅ No changes to commit"
           fi
 
       - name: 📦 Upload logs
@@ -145,4 +237,52 @@ jobs:
             logs/
             signal_state/
             memory/
+            config.json
+            signals.csv
           if-no-files-found: ignore
+
+      - name: 📝 Summary
+        if: always()
+        run: |
+          echo "## 📊 Trade Beacon Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Event**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Run Mode**: ${{ steps.decide.outputs.mode }}" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.market.outputs.skip }}" = "true" ]; then
+            echo "- **Market Status**: 🚫 Closed (Weekend/Holiday)" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Market Status**: ✅ Open" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ -f config.json ]; then
+            MODE=$(jq -r '.mode // "unknown"' config.json)
+            THRESHOLD=$(jq -r ".settings.${MODE}.threshold // \"N/A\"" config.json)
+            MIN_ADX=$(jq -r ".settings.${MODE}.min_adx // \"None\"" config.json)
+            echo "- **Trading Mode**: ${MODE}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Signal Threshold**: ${THRESHOLD}" >> $GITHUB_STEP_SUMMARY
+            echo "- **Min ADX**: ${MIN_ADX}" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ -f signals.csv ]; then
+            SIGNAL_COUNT=$(($(wc -l < signals.csv) - 1))
+            if [ $SIGNAL_COUNT -lt 0 ]; then
+              SIGNAL_COUNT=0
+            fi
+            echo "- **Signals Generated**: ${SIGNAL_COUNT}" >> $GITHUB_STEP_SUMMARY
+            
+            if [ $SIGNAL_COUNT -gt 0 ]; then
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "### 🎯 Active Signals" >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              cat signals.csv >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "- **Signals Generated**: 0" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "*Last updated: $(date -u +"%Y-%m-%d %H:%M:%S UTC")*" >> $GITHUB_STEP_SUMMARY

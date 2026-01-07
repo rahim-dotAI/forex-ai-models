@@ -229,9 +229,19 @@ def generate_signal(pair, active):
         return None
 
     atr_v = atr(df).iloc[-1]
+    
+    # Convert ATR to scalar using helper function
+    def to_scalar(val):
+        if hasattr(val, 'item'):
+            return val.item()
+        elif hasattr(val, '__iter__') and not isinstance(val, str):
+            return float(list(val)[0]) if len(list(val)) > 0 else float(val)
+        else:
+            return float(val)
+    
     try:
-        atr_v = atr_v.item() if hasattr(atr_v, 'item') else float(atr_v)
-    except (ValueError, AttributeError) as e:
+        atr_v = to_scalar(atr_v)
+    except (ValueError, AttributeError, TypeError) as e:
         log.warning(f"  ❌ {pair} failed to convert ATR: {e}")
         return None
     

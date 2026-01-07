@@ -213,108 +213,6 @@ border-left:4px solid var(--primary);
 }
 .mode-info strong{color:var(--primary);font-weight:700}
 
-/* CONFIG MODAL */
-.modal-overlay{
-position:fixed;inset:0;
-background:rgba(0,0,0,0.8);
-backdrop-filter:blur(10px);
-display:flex;align-items:center;justify-content:center;
-z-index:10000;
-animation:fadeIn 0.3s;
-}
-@keyframes fadeIn{from{opacity:0}}
-.modal{
-background:var(--surface);
-border:2px solid var(--border);
-border-radius:24px;
-padding:40px;
-max-width:600px;
-width:90%;
-max-height:80vh;
-overflow-y:auto;
-animation:slideUp 0.4s cubic-bezier(0.4,0,0.2,1);
-}
-@keyframes slideUp{from{transform:translateY(50px);opacity:0}}
-.modal h2{
-font-size:28px;
-margin-bottom:24px;
-background:linear-gradient(135deg,var(--primary),var(--purple));
--webkit-background-clip:text;-webkit-text-fill-color:transparent;
-}
-.input-group{
-margin-bottom:24px;
-}
-.input-group label{
-display:block;
-font-size:14px;
-font-weight:600;
-color:var(--text-dim);
-margin-bottom:8px;
-text-transform:uppercase;
-letter-spacing:1px;
-}
-.input-group input{
-width:100%;
-padding:14px 18px;
-background:var(--surface-light);
-border:2px solid var(--border);
-border-radius:12px;
-color:var(--text);
-font-size:16px;
-font-family:inherit;
-transition:all 0.3s;
-}
-.input-group input:focus{
-outline:none;
-border-color:var(--primary);
-box-shadow:0 0 0 3px rgba(59,130,246,0.1);
-}
-.input-group input::placeholder{
-color:var(--text-dim);
-opacity:0.5;
-}
-.btn-group{
-display:flex;
-gap:12px;
-margin-top:32px;
-}
-.btn{
-flex:1;
-padding:14px 24px;
-border:none;
-border-radius:12px;
-font-size:16px;
-font-weight:700;
-cursor:pointer;
-transition:all 0.3s;
-}
-.btn-primary{
-background:linear-gradient(135deg,var(--primary),var(--purple));
-color:white;
-}
-.btn-primary:hover{
-transform:translateY(-2px);
-box-shadow:0 10px 30px rgba(59,130,246,0.4);
-}
-.btn-secondary{
-background:var(--surface-light);
-color:var(--text);
-border:2px solid var(--border);
-}
-.btn-secondary:hover{
-border-color:var(--primary);
-}
-
-.config-notice{
-background:rgba(245,158,11,0.1);
-border:2px solid var(--warning);
-border-radius:12px;
-padding:16px;
-margin-bottom:24px;
-font-size:14px;
-line-height:1.6;
-}
-
 /* SIGNAL CARDS */
 .signal-card{
 background:var(--surface-light);
@@ -408,7 +306,7 @@ max-width:400px;
 
 h3{margin-bottom:20px;font-size:20px;font-weight:800}
 
-.config-btn{
+.refresh-btn{
 padding:8px 16px;
 background:var(--surface-light);
 border:2px solid var(--border);
@@ -418,10 +316,16 @@ font-size:13px;
 font-weight:600;
 cursor:pointer;
 transition:all 0.3s;
+display:flex;
+align-items:center;
+gap:8px;
 }
-.config-btn:hover{
+.refresh-btn:hover{
 border-color:var(--primary);
 transform:translateY(-2px);
+}
+.refresh-btn:active .refresh-icon{
+animation:spin 0.5s linear;
 }
 </style>
 </head>
@@ -436,43 +340,16 @@ transform:translateY(-2px);
 </div>
 </div>
 
-<!-- CONFIG MODAL -->
-<div class="modal-overlay" id="configModal" style="display:none">
-<div class="modal">
-<h2>🔐 GitHub Configuration</h2>
-<div class="config-notice">
-⚠️ <strong>Security Notice:</strong> Your credentials are stored locally in your browser and never transmitted to any server except GitHub's official API.
-</div>
-<div class="input-group">
-<label>GitHub Username</label>
-<input type="text" id="githubUsername" placeholder="your-username">
-</div>
-<div class="input-group">
-<label>Repository Name</label>
-<input type="text" id="githubRepo" placeholder="forex-ai-models">
-</div>
-<div class="input-group">
-<label>GitHub Personal Access Token</label>
-<input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
-<p style="font-size:12px;color:var(--text-dim);margin-top:8px">
-Create at: <a href="https://github.com/settings/tokens" target="_blank" style="color:var(--primary)">github.com/settings/tokens</a><br>
-Required permission: <code style="background:var(--surface-light);padding:2px 6px;border-radius:4px">repo</code>
-</p>
-</div>
-<div class="btn-group">
-<button class="btn btn-secondary" onclick="closeConfigModal()">Cancel</button>
-<button class="btn btn-primary" onclick="saveConfig()">Save Configuration</button>
-</div>
-</div>
-</div>
-
 <nav class="navbar">
 <div class="logo">
 <div class="logo-icon">📡</div>
 <div>Trade<span>Beacon</span></div>
 </div>
 <div style="display:flex;align-items:center;gap:16px">
-<button class="config-btn" onclick="openConfigModal()">⚙️ Configure GitHub</button>
+<button class="refresh-btn" onclick="forceRefresh()">
+<span class="refresh-icon">🔄</span>
+<span>Refresh</span>
+</button>
 <div class="status-pill status-live" id="health">
 <span class="pulse"></span>
 <span id="healthText">LIVE</span>
@@ -587,90 +464,6 @@ const MODES = {
 
 let currentMode = 'aggressive';
 let lastSuccess = null;
-let githubConfig = null;
-
-// Load saved config
-function loadGithubConfig() {
-  const saved = localStorage.getItem('tradeBeaconGithubConfig');
-  if (saved) {
-    try {
-      githubConfig = JSON.parse(saved);
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-  return false;
-}
-
-function openConfigModal() {
-  document.getElementById('configModal').style.display = 'flex';
-  if (githubConfig) {
-    document.getElementById('githubUsername').value = githubConfig.username || '';
-    document.getElementById('githubRepo').value = githubConfig.repo || '';
-    document.getElementById('githubToken').value = githubConfig.token || '';
-  }
-}
-
-function closeConfigModal() {
-  document.getElementById('configModal').style.display = 'none';
-}
-
-function saveConfig() {
-  const username = document.getElementById('githubUsername').value.trim();
-  const repo = document.getElementById('githubRepo').value.trim();
-  const token = document.getElementById('githubToken').value.trim();
-  
-  if (!username || !repo || !token) {
-    showNotification('❌ Please fill in all fields', 'error');
-    return;
-  }
-  
-  githubConfig = { username, repo, token };
-  localStorage.setItem('tradeBeaconGithubConfig', JSON.stringify(githubConfig));
-  
-  closeConfigModal();
-  showNotification('✅ GitHub configuration saved securely', 'success');
-}
-
-async function triggerGithubWorkflow(mode) {
-  if (!githubConfig) {
-    showNotification('⚠️ Please configure GitHub credentials first', 'warning');
-    setTimeout(() => openConfigModal(), 1500);
-    return false;
-  }
-  
-  try {
-    const url = `https://api.github.com/repos/${githubConfig.username}/${githubConfig.repo}/dispatches`;
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/vnd.github+json',
-        'Authorization': `Bearer ${githubConfig.token}`,
-        'Content-Type': 'application/json',
-        'X-GitHub-Api-Version': '2022-11-28'
-      },
-      body: JSON.stringify({
-        event_type: 'update-mode',
-        client_payload: {
-          mode: mode
-        }
-      })
-    });
-    
-    if (response.status === 204) {
-      return true;
-    } else {
-      const error = await response.text();
-      console.error('GitHub API Error:', error);
-      return false;
-    }
-  } catch (error) {
-    console.error('Network error:', error);
-    return false;
-  }
-}
 
 function setMode(mode) {
   currentMode = mode;
@@ -686,28 +479,13 @@ function setMode(mode) {
     config.minADX ? `<${config.rsiOversold} or >${config.rsiOverbought}` : 'Any';
   
   localStorage.setItem('tradeBeaconMode', mode);
-  
-  // Trigger GitHub workflow
-  if (loadGithubConfig()) {
-    showNotification(`${config.icon} Switching to ${config.name} mode...`, 'info');
-    
-    triggerGithubWorkflow(mode).then(success => {
-      if (success) {
-        showNotification(`✅ ${config.name} mode activated - Next run will use new settings`, 'success');
-      } else {
-        showNotification('❌ Failed to trigger GitHub workflow - Check your token permissions', 'error');
-      }
-    });
-  } else {
-    showNotification(`${config.icon} Mode changed (UI only) - Configure GitHub to sync with bot`, 'warning');
-  }
+  showNotification(`${config.icon} Switched to ${config.name} mode`, 'success');
 }
 
 function showNotification(msg, type = 'info') {
   const notification = document.createElement('div');
   notification.className = 'notification';
   
-  // Add color based on type
   if (type === 'error') {
     notification.style.borderColor = 'var(--danger)';
   } else if (type === 'success') {
@@ -727,7 +505,11 @@ function showNotification(msg, type = 'info') {
 
 function parseTime(iso){
   if(!iso) return '-';
-  return new Date(iso.replace('+00:00','Z')).toLocaleString();
+  try {
+    return new Date(iso.replace('+00:00','Z')).toLocaleString();
+  } catch {
+    return iso;
+  }
 }
 
 function setHealth(state){
@@ -738,7 +520,16 @@ function setHealth(state){
 }
 
 async function fetchState(){
-  const r=await fetch(API_URL+'?t='+Date.now(),{cache:'no-store'});
+  // Add timestamp and disable cache to always get fresh data
+  const timestamp = new Date().getTime();
+  const r = await fetch(`${API_URL}?_=${timestamp}`, {
+    cache: 'no-store',
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    }
+  });
   if(!r.ok) throw new Error(r.status);
   return r.json();
 }
@@ -797,8 +588,12 @@ async function update(){
   }
 }
 
+async function forceRefresh() {
+  showNotification('🔄 Refreshing data...', 'info');
+  await update();
+}
+
 // Initialize
-loadGithubConfig();
 const savedMode = localStorage.getItem('tradeBeaconMode');
 if (savedMode && MODES[savedMode]) {
   currentMode = savedMode;
@@ -812,15 +607,11 @@ if (savedMode && MODES[savedMode]) {
     config.minADX ? `<${config.rsiOversold} or >${config.rsiOverbought}` : 'Any';
 }
 
+// Initial load
 update();
-setInterval(update, 30000);
 
-// Close modal on outside click
-document.getElementById('configModal').addEventListener('click', (e) => {
-  if (e.target.id === 'configModal') {
-    closeConfigModal();
-  }
-});
+// Auto-refresh every 15 seconds (more frequent for better updates)
+setInterval(update, 15000);
 </script>
 
 </body>

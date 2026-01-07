@@ -228,22 +228,17 @@ def generate_signal(pair, active):
         log.warning(f"  ❌ {pair} failed to fetch price")
         return None
 
-    atr_v = atr(df).iloc[-1]
+    atr_series = atr(df)
     
-    # Convert ATR to scalar using helper function
-    def to_scalar(val):
-        if hasattr(val, 'item'):
-            return val.item()
-        elif hasattr(val, '__iter__') and not isinstance(val, str):
-            return float(list(val)[0]) if len(list(val)) > 0 else float(val)
-        else:
-            return float(val)
-    
+    # Extract ATR value with fallback methods
     try:
-        atr_v = to_scalar(atr_v)
-    except (ValueError, AttributeError, TypeError) as e:
-        log.warning(f"  ❌ {pair} failed to convert ATR: {e}")
-        return None
+        atr_v = float(atr_series.iloc[-1])
+    except (ValueError, TypeError):
+        try:
+            atr_v = float(atr_series.values[-1])
+        except Exception as e:
+            log.warning(f"  ❌ {pair} failed to convert ATR: {e}")
+            return None
     
     sl = price - atr_v * ATR_SL_MULT if side == "BUY" else price + atr_v * ATR_SL_MULT
     tp = price + atr_v * ATR_TP_MULT if side == "BUY" else price - atr_v * ATR_TP_MULT

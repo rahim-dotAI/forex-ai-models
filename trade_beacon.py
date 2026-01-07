@@ -177,11 +177,15 @@ class Signal:
 # SIGNAL ENGINE
 # =======================
 def generate_signal(pair, active):
+    log.info(f"🔍 Analyzing {pair}...")
+    
     if pair in [s.pair for s in active]:
+        log.info(f"  ⏭️  {pair} already active, skipping")
         return None
 
     df = load_history(pair)
     if len(df) < 200:
+        log.warning(f"  ❌ {pair} insufficient data: {len(df)} bars")
         return None
 
     close = df["Close"]
@@ -198,7 +202,8 @@ def generate_signal(pair, active):
         e200 = e200.item() if hasattr(e200, 'item') else float(e200)
         r = r.item() if hasattr(r, 'item') else float(r)
         a = a.item() if hasattr(a, 'item') else float(a)
-    except (ValueError, AttributeError):
+    except (ValueError, AttributeError) as e:
+        log.warning(f"{pair} ❌ Failed to convert indicators: {e}")
         return None
 
     bull = bear = 0
@@ -211,24 +216,29 @@ def generate_signal(pair, active):
         bear += 10 if e12 < e26 else 0
 
     # Log signal analysis for debugging
-    log.info(f"{pair} Analysis: Bull={bull} Bear={bear} Diff={abs(bull-bear)} RSI={r:.1f} ADX={a:.1f}")
+    log.info(f"  📊 {pair}: Bull={bull} Bear={bear} Diff={abs(bull-bear)} | RSI={r:.1f} ADX={a:.1f}")
 
     if abs(bull - bear) < 30:
+        log.info(f"  ⚠️  {pair} signal too weak (need 30+ diff)")
         return None
 
     side = "BUY" if bull > bear else "SELL"
     price = fetch_price(pair)
     if price is None:
+        log.warning(f"  ❌ {pair} failed to fetch price")
         return None
 
     atr_v = atr(df).iloc[-1]
     try:
         atr_v = atr_v.item() if hasattr(atr_v, 'item') else float(atr_v)
-    except (ValueError, AttributeError):
+    except (ValueError, AttributeError) as e:
+        log.warning(f"  ❌ {pair} failed to convert ATR: {e}")
         return None
     
     sl = price - atr_v * ATR_SL_MULT if side == "BUY" else price + atr_v * ATR_SL_MULT
     tp = price + atr_v * ATR_TP_MULT if side == "BUY" else price - atr_v * ATR_TP_MULT
+
+    log.info(f"  ✅ {pair} SIGNAL GENERATED: {side} @ {price:.5f}")
 
     return Signal(
         id=str(uuid.uuid4()),

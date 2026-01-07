@@ -3,12 +3,12 @@
 
 """
 AI FOREX BRAIN — SIGNAL + TRADE MANAGEMENT ENGINE
-FIXED INDICATOR EXTRACTION (NO ZERO-SIGNAL BUG)
+CRASH-FREE • NUMPY-SAFE • ADX-SAFE
 """
 
 import sys, time, json, uuid, logging, os
 from pathlib import Path
-from datetime import datetime, timezone, date, timedelta
+from datetime import datetime, timezone, date
 from dataclasses import dataclass, asdict
 from typing import Optional
 
@@ -80,6 +80,15 @@ def market_session():
     return "NEW_YORK", ["EUR/USD", "USD/CAD"]
 
 # =======================
+# SAFE SCALAR EXTRACTOR
+# =======================
+def last(series) -> Optional[float]:
+    series = series.dropna()
+    if series.empty:
+        return None
+    return series.iloc[-1].item()
+
+# =======================
 # PRICE FETCH
 # =======================
 PRICE_CACHE = {}
@@ -99,7 +108,10 @@ def fetch_price(pair: str) -> Optional[float]:
     if df.empty:
         return None
 
-    price = float(df["Close"].dropna().values[-1])
+    price = last(df["Close"])
+    if price is None:
+        return None
+
     PRICE_CACHE[pair] = (price, now)
     return price
 
@@ -179,10 +191,6 @@ class Signal:
 # =======================
 # SIGNAL ENGINE
 # =======================
-def last(series):
-    series = series.dropna()
-    return float(series.values[-1])
-
 def generate_signal(pair, active):
     log.info(f"🔍 Analyzing {pair}...")
 
@@ -190,7 +198,7 @@ def generate_signal(pair, active):
         return None
 
     df = load_history(pair)
-    if len(df) < 250:
+    if len(df) < 300:
         return None
 
     close = df["Close"]
@@ -201,6 +209,10 @@ def generate_signal(pair, active):
     r = last(rsi(close))
     a = last(adx(df))
 
+    if None in (e12, e26, e200, r, a):
+        log.warning(f"⚠️ {pair} indicators incomplete, skipping")
+        return None
+
     bull = bear = 0
     if e12 > e26 > e200: bull += 40
     if e12 < e26 < e200: bear += 40
@@ -209,8 +221,6 @@ def generate_signal(pair, active):
     if a > 25:
         bull += 10 if e12 > e26 else 0
         bear += 10 if e12 < e26 else 0
-
-    log.info(f"📊 {pair} Bull={bull} Bear={bear} RSI={r:.1f} ADX={a:.1f}")
 
     if abs(bull - bear) < 30:
         return None
@@ -221,6 +231,9 @@ def generate_signal(pair, active):
         return None
 
     atr_v = last(atr(df))
+    if atr_v is None:
+        return None
+
     sl = price - atr_v * ATR_SL_MULT if side == "BUY" else price + atr_v * ATR_SL_MULT
     tp = price + atr_v * ATR_TP_MULT if side == "BUY" else price - atr_v * ATR_TP_MULT
 
@@ -242,12 +255,10 @@ def generate_signal(pair, active):
 # =======================
 def main():
     session, pairs = market_session()
-    active, history = [], []
+    active = []
 
     if ACTIVE_FILE.exists():
         active = [Signal(**s) for s in json.loads(ACTIVE_FILE.read_text())]
-    if HISTORY_FILE.exists():
-        history = json.loads(HISTORY_FILE.read_text())
 
     for pair in pairs:
         if len(active) >= MAX_ACTIVE_SIGNALS:
@@ -257,7 +268,6 @@ def main():
             active.append(sig)
 
     ACTIVE_FILE.write_text(json.dumps([asdict(s) for s in active], indent=2))
-    HISTORY_FILE.write_text(json.dumps(history, indent=2))
 
     DASHBOARD_FILE.write_text(json.dumps({
         "timestamp": datetime.now(timezone.utc).isoformat(),

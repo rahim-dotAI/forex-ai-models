@@ -1,22 +1,39 @@
 name: AI Forex Trading System
 
 on:
+  # Scheduled runs (GitHub timing may lag — handled in code)
   schedule:
-    - cron: "*/10 * * * 1-5"   # Every 10 minutes, Mon–Fri
+    - cron: "*/10 * * * 1-5"   # Every 10 minutes, Mon–Fri (UTC)
+
+  # Manual run
   workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Trading Mode'
+        required: false
+        type: choice
+        options:
+          - default
+          - aggressive
+          - conservative
+        default: 'default'
 
 env:
   PYTHON_VERSION: "3.10"
   ENTRY_SCRIPT: "trade_beacon.py"
-  TRIGGER_FILE: "colab_trigger.txt"
 
 jobs:
   forex-trading:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+
     steps:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: 🐍 Setup Python
         uses: actions/setup-python@v5
@@ -29,50 +46,84 @@ jobs:
           pip install -r requirements.txt
           pip install holidays jq
 
-      - name: 🧠 Check trigger file
-        id: trigger
+      # Optional mode override (manual / API trigger)
+      - name: ⚙️ Apply mode override
+        if: github.event.inputs.mode != 'default'
         run: |
-          if [[ ! -f "${{ env.TRIGGER_FILE }}" ]]; then
-            echo "run=false" >> $GITHUB_OUTPUT
-            echo "⏭ No trigger file found — skipping run"
+          MODE="${{ github.event.inputs.mode }}"
+          echo "🎯 Applying mode: $MODE"
+
+          if [ -f config.json ]; then
+            jq --arg mode "$MODE" '.mode = $mode' config.json > tmp.json && mv tmp.json config.json
           else
-            echo "run=true" >> $GITHUB_OUTPUT
-            echo "🚀 Trigger file detected"
+            cat > config.json << 'EOF'
+          {
+            "mode": "aggressive",
+            "settings": {
+              "aggressive": {
+                "threshold": 30,
+                "min_adx": null,
+                "rsi_oversold": 40,
+                "rsi_overbought": 60
+              },
+              "conservative": {
+                "threshold": 50,
+                "min_adx": 20,
+                "rsi_oversold": 35,
+                "rsi_overbought": 65
+              }
+            }
+          }
+          EOF
+            jq --arg mode "$MODE" '.mode = $mode' config.json > tmp.json && mv tmp.json config.json
           fi
 
-      - name: 🛑 Exit if no trigger
-        if: steps.trigger.outputs.run != 'true'
-        run: exit 0
+          cat config.json
 
-      - name: 🧠 Check market status
+      - name: 📅 Check trading day
+        id: market
         run: |
           python << 'EOF'
-          from market_status import is_market_open
-          if not is_market_open():
-              print("❌ Market closed — exiting")
-              exit(0)
-          print("✅ Market open")
+          import datetime, holidays, os
+
+          today = datetime.date.today()
+          us = holidays.US()
+          skip = today.weekday() >= 5 or today in us
+
+          print("Market open" if not skip else "Market closed")
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"skip={'true' if skip else 'false'}\n")
           EOF
 
       - name: 🤖 Run Trade Beacon
+        if: steps.market.outputs.skip != 'true'
         run: |
-          echo "🤖 Starting Trade Beacon..."
-          python trade_beacon.py
+          echo "🤖 Running Trade Beacon..."
+          python ${{ env.ENTRY_SCRIPT }}
 
+      # 🔑 THIS IS THE IMPORTANT PART FOR YOUR DASHBOARD
       - name: 💾 Commit dashboard & signals
         run: |
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git config user.name "github-actions[bot]"
+          git config user.name "Trade Beacon Bot"
 
-          git add -f dashboard_state.json signals.csv
-          git commit -m "🔄 Trade update $(date -u '+%Y-%m-%d %H:%M UTC')" || echo "No changes to commit"
-          git push
+          git add -f signal_state/dashboard_state.json signals.csv config.json || true
 
-      - name: 📦 Upload logs artifact
+          if ! git diff --cached --quiet; then
+            git commit -m "📊 Trade Beacon update $(date -u '+%Y-%m-%d %H:%M UTC')"
+            git push
+          else
+            echo "✅ No dashboard changes"
+          fi
+
+      - name: 📦 Upload artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: trading-logs
+          name: trade-beacon-artifacts
           path: |
-            logs/
+            signal_state/
             signals.csv
-            dashboard_state.json
+            config.json
+          if-no-files-found: ignore

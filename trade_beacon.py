@@ -1,5 +1,7 @@
 import logging
 import sys
+import json
+from pathlib import Path
 from datetime import datetime, timezone
 
 import pandas as pd
@@ -8,14 +10,45 @@ from ta.trend import EMAIndicator, ADXIndicator
 from ta.momentum import RSIIndicator
 
 # =========================
+# LOAD DYNAMIC CONFIG
+# =========================
+def load_config():
+    """Load trading mode from config.json"""
+    config_path = Path("config.json")
+    if not config_path.exists():
+        log.warning("⚠️ config.json not found, using aggressive defaults")
+        return {
+            "mode": "aggressive",
+            "settings": {
+                "aggressive": {
+                    "threshold": 30,
+                    "min_adx": None,
+                    "rsi_oversold": 40,
+                    "rsi_overbought": 60
+                }
+            }
+        }
+    
+    with open(config_path, 'r') as f:
+        return json.load(f)
+
+# =========================
 # CONFIG
 # =========================
 PAIRS = ["USDJPY=X", "AUDUSD=X", "NZDUSD=X"]
 INTERVAL = "15m"
 LOOKBACK = "7d"
+MIN_ROWS = 60
 
-MIN_ROWS = 60        # Minimum candles required
-SIGNAL_THRESHOLD = 30  # Minimum score difference to generate signal
+# Load mode settings
+CONFIG = load_config()
+MODE = CONFIG["mode"]
+SETTINGS = CONFIG["settings"][MODE]
+
+SIGNAL_THRESHOLD = SETTINGS["threshold"]
+MIN_ADX = SETTINGS.get("min_adx")
+RSI_OVERSOLD = SETTINGS.get("rsi_oversold", 40)
+RSI_OVERBOUGHT = SETTINGS.get("rsi_overbought", 60)
 
 # =========================
 # LOGGING
@@ -72,10 +105,10 @@ def adx_calc(high, low, close):
 
 
 # =========================
-# SIGNAL ENGINE
+# SIGNAL ENGINE - DYNAMIC MODE
 # =========================
 def generate_signal(pair: str) -> dict | None:
-    """Generate trading signal for a single pair"""
+    """Generate trading signal based on current mode"""
     df = download(pair)
 
     if len(df) < MIN_ROWS:
@@ -104,6 +137,11 @@ def generate_signal(pair: str) -> dict | None:
         log.warning(f"⚠️ {pair} indicators incomplete, skipping")
         return None
 
+    # PRE-FILTER: ADX check (only in conservative mode)
+    if MIN_ADX is not None and a < MIN_ADX:
+        log.info(f"❌ {pair} | ADX too low ({a:.1f} < {MIN_ADX}) - no strong trend")
+        return None
+
     # =========================
     # SCORING LOGIC
     # =========================
@@ -115,14 +153,34 @@ def generate_signal(pair: str) -> dict | None:
     elif e12 < e26 < e200:
         bear += 40
 
-    # RSI momentum (20 points)
-    if r < 40:
-        bull += 20
-    elif r > 60:
-        bear += 20
+    # RSI momentum (scoring depends on mode)
+    if MODE == "conservative":
+        # Strict: only extreme zones get points
+        if r < RSI_OVERSOLD:
+            bull += 30
+        elif r > RSI_OVERBOUGHT:
+            bear += 30
+    else:
+        # Aggressive: wider zones
+        if r < RSI_OVERSOLD:
+            bull += 20
+        elif r > RSI_OVERBOUGHT:
+            bear += 20
 
-    # ADX trend confirmation (10 points)
+    # ADX trend confirmation
     if a > 25:
+        if e12 > e26:
+            bull += 20
+        elif e12 < e26:
+            bear += 20
+    elif MIN_ADX and a > MIN_ADX:
+        # Moderate trend (only in conservative mode)
+        if e12 > e26:
+            bull += 10
+        elif e12 < e26:
+            bear += 10
+    elif not MIN_ADX and a > 15:
+        # Aggressive mode: accept weaker trends
         if e12 > e26:
             bull += 10
         elif e12 < e26:
@@ -130,21 +188,36 @@ def generate_signal(pair: str) -> dict | None:
 
     diff = abs(bull - bear)
 
+    # Quality rating
+    quality = "⭐" if diff >= 70 else "⭐⭐" if diff >= 60 else "⭐⭐⭐" if diff >= 50 else ""
+
     log.info(
-        f"{pair} | Bull={bull} Bear={bear} Diff={diff} "
+        f"{pair} | Bull={bull} Bear={bear} Diff={diff} {quality} | "
         f"RSI={r:.1f} ADX={a:.1f}"
     )
 
     # Filter weak signals
     if diff < SIGNAL_THRESHOLD:
+        log.info(f"❌ {pair} | Signal too weak (diff={diff} < {SIGNAL_THRESHOLD})")
         return None
 
     direction = "BUY" if bull > bear else "SELL"
+    
+    # Confidence classification
+    if diff >= 70:
+        confidence = "EXCELLENT"
+    elif diff >= 60:
+        confidence = "STRONG"
+    elif diff >= 50:
+        confidence = "GOOD"
+    else:
+        confidence = "MODERATE"
 
     return {
         "pair": pair.replace("=X", ""),
         "direction": direction,
         "score": diff,
+        "confidence": confidence,
         "rsi": round(r, 1),
         "adx": round(a, 1),
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -155,7 +228,14 @@ def generate_signal(pair: str) -> dict | None:
 # MAIN
 # =========================
 def main():
-    log.info("🚀 Starting Trade Beacon Analysis...")
+    mode_label = "HIGH CONFIDENCE" if MODE == "conservative" else "AGGRESSIVE"
+    log.info(f"🚀 Starting Trade Beacon Analysis - {mode_label} MODE")
+    log.info(
+        f"📊 Settings: Threshold={SIGNAL_THRESHOLD}, "
+        f"Min ADX={MIN_ADX or 'None'}, "
+        f"RSI Zones=<{RSI_OVERSOLD} or >{RSI_OVERBOUGHT}"
+    )
+    
     active = []
 
     for pair in PAIRS:
@@ -170,13 +250,13 @@ def main():
         df = pd.DataFrame(active)
         df.to_csv("signals.csv", index=False)
         log.info("📄 signals.csv written")
-        print("\n" + "="*60)
-        print("ACTIVE SIGNALS:")
-        print("="*60)
+        print("\n" + "="*70)
+        print(f"🎯 {mode_label} SIGNALS:")
+        print("="*70)
         print(df.to_string(index=False))
-        print("="*60 + "\n")
+        print("="*70 + "\n")
     else:
-        log.info("✅ No signals meet threshold - market conditions neutral")
+        log.info(f"✅ No signals meet {mode_label.lower()} criteria - waiting for better setups")
 
 
 if __name__ == "__main__":

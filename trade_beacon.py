@@ -1,16 +1,7 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
-"""
-AI FOREX BRAIN — SIGNAL + TRADE MANAGEMENT ENGINE
-CRASH-FREE • NUMPY-SAFE • ADX-SAFE
-"""
-
 import logging
 import sys
 from datetime import datetime, timezone
 
-import numpy as np
 import pandas as pd
 import yfinance as yf
 from ta.trend import EMAIndicator, ADXIndicator
@@ -23,8 +14,8 @@ PAIRS = ["USDJPY=X", "AUDUSD=X", "NZDUSD=X"]
 INTERVAL = "15m"
 LOOKBACK = "7d"
 
-MIN_ROWS = 60        # HARD safety floor
-SIGNAL_THRESHOLD = 30
+MIN_ROWS = 60        # Minimum candles required
+SIGNAL_THRESHOLD = 30  # Minimum score difference to generate signal
 
 # =========================
 # LOGGING
@@ -41,13 +32,14 @@ log = logging.getLogger("trade-beacon")
 # UTILS
 # =========================
 def last(series: pd.Series):
-    """Safely extract last value"""
+    """Safely extract last value from a Series"""
     if series is None or series.empty:
         return None
     return float(series.iloc[-1])
 
 
 def download(pair: str) -> pd.DataFrame:
+    """Download OHLCV data from yfinance"""
     df = yf.download(
         pair,
         interval=INTERVAL,
@@ -65,21 +57,25 @@ def download(pair: str) -> pd.DataFrame:
 # INDICATORS
 # =========================
 def ema(series, period):
-    return EMAIndicator(series, period).ema_indicator()
+    """Calculate EMA indicator"""
+    return EMAIndicator(series, window=period).ema_indicator()
 
 
-def rsi(series):
-    return RSIIndicator(series).rsi()
+def rsi(series, period=14):
+    """Calculate RSI indicator"""
+    return RSIIndicator(series, window=period).rsi()
 
 
-def adx(df):
-    return ADXIndicator(df["High"], df["Low"], df["Close"]).adx()
+def adx_calc(high, low, close):
+    """Calculate ADX indicator"""
+    return ADXIndicator(high, low, close, window=14).adx()
 
 
 # =========================
 # SIGNAL ENGINE
 # =========================
 def generate_signal(pair: str) -> dict | None:
+    """Generate trading signal for a single pair"""
     df = download(pair)
 
     if len(df) < MIN_ROWS:
@@ -87,34 +83,45 @@ def generate_signal(pair: str) -> dict | None:
         return None
 
     try:
-        e12 = last(ema(df["Close"], 12))
-        e26 = last(ema(df["Close"], 26))
-        e200 = last(ema(df["Close"], 200))
-        r = last(rsi(df["Close"]))
-        a = last(adx(df))
+        # FIX: Flatten 2D arrays to 1D Series
+        close = df["Close"].squeeze()
+        high = df["High"].squeeze()
+        low = df["Low"].squeeze()
+        
+        # Calculate indicators
+        e12 = last(ema(close, 12))
+        e26 = last(ema(close, 26))
+        e200 = last(ema(close, 200))
+        r = last(rsi(close))
+        a = last(adx_calc(high, low, close))
+        
     except Exception as e:
         log.warning(f"⚠️ {pair} indicator calc failed: {e}")
         return None
 
+    # Validate all indicators calculated successfully
     if None in (e12, e26, e200, r, a):
         log.warning(f"⚠️ {pair} indicators incomplete, skipping")
         return None
 
+    # =========================
+    # SCORING LOGIC
+    # =========================
     bull = bear = 0
 
-    # EMA structure
+    # EMA structure (40 points)
     if e12 > e26 > e200:
         bull += 40
     elif e12 < e26 < e200:
         bear += 40
 
-    # RSI
+    # RSI momentum (20 points)
     if r < 40:
         bull += 20
     elif r > 60:
         bear += 20
 
-    # ADX confirmation
+    # ADX trend confirmation (10 points)
     if a > 25:
         if e12 > e26:
             bull += 10
@@ -128,6 +135,7 @@ def generate_signal(pair: str) -> dict | None:
         f"RSI={r:.1f} ADX={a:.1f}"
     )
 
+    # Filter weak signals
     if diff < SIGNAL_THRESHOLD:
         return None
 
@@ -137,6 +145,8 @@ def generate_signal(pair: str) -> dict | None:
         "pair": pair.replace("=X", ""),
         "direction": direction,
         "score": diff,
+        "rsi": round(r, 1),
+        "adx": round(a, 1),
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -145,10 +155,11 @@ def generate_signal(pair: str) -> dict | None:
 # MAIN
 # =========================
 def main():
+    log.info("🚀 Starting Trade Beacon Analysis...")
     active = []
 
     for pair in PAIRS:
-        log.info(f"🔍 Analyzing {pair.replace('=X','')}...")
+        log.info(f"🔍 Analyzing {pair.replace('=X', '')}...")
         sig = generate_signal(pair)
         if sig:
             active.append(sig)
@@ -159,6 +170,13 @@ def main():
         df = pd.DataFrame(active)
         df.to_csv("signals.csv", index=False)
         log.info("📄 signals.csv written")
+        print("\n" + "="*60)
+        print("ACTIVE SIGNALS:")
+        print("="*60)
+        print(df.to_string(index=False))
+        print("="*60 + "\n")
+    else:
+        log.info("✅ No signals meet threshold - market conditions neutral")
 
 
 if __name__ == "__main__":

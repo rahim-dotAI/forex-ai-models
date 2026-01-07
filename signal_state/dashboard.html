@@ -757,8 +757,11 @@ RSI Filter
 </div>
 
 <script>
-// Use raw GitHub URL instead of API endpoint - no rate limits, no base64 decoding needed
+// Use raw GitHub URL with aggressive cache busting
 const API_URL = 'https://raw.githubusercontent.com/rahim-dotAI/forex-ai-models/main/signal_state/dashboard_state.json';
+
+// Add version to force reload when page is refreshed
+const VERSION = Date.now();
 
 const MODES = {
   conservative: {
@@ -852,19 +855,37 @@ function setHealth(state){
 
 async function fetchState(){
   try {
-    const timestamp = new Date().getTime();
-    // Fetch raw JSON directly - no base64 decoding needed, no API rate limits
-    const r = await fetch(`${API_URL}?t=${timestamp}`, {
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 15);
+    
+    // ULTRA aggressive cache busting - GitHub CDN can be sticky
+    const cacheBuster = `?v=${VERSION}&t=${timestamp}&r=${random}&nocache=${Date.now()}`;
+    const url = `${API_URL}${cacheBuster}`;
+    
+    console.log('Fetching from:', url);
+    
+    const r = await fetch(url, {
+      method: 'GET',
       cache: 'no-store',
       headers: {
-        'Cache-Control': 'no-cache'
-      }
+        'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      },
+      mode: 'cors'
     });
-    if(!r.ok) throw new Error(`HTTP ${r.status}`);
+    
+    if(!r.ok) {
+      throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+    }
+    
     const data = await r.json();
+    console.log('✅ Fetched successfully:', data.active_signals, 'signals');
+    console.log('Timestamp:', data.timestamp);
+    
     return data;
   } catch(err) {
-    console.error('Fetch error:', err);
+    console.error('❌ Fetch error:', err);
     throw err;
   }
 }
@@ -970,10 +991,33 @@ function render(d){
 
 async function update(){
   try {
+    // Show loading state on refresh button
+    const refreshBtn = document.querySelector('.refresh-btn');
+    const refreshIcon = document.querySelector('.refresh-icon');
+    if (refreshIcon) {
+      refreshIcon.style.animation = 'rotate360 1s linear infinite';
+    }
+    
     const data = await fetchState();
     render(data);
+    
+    // Stop loading animation
+    if (refreshIcon) {
+      refreshIcon.style.animation = '';
+    }
+    
   } catch (err) {
-    console.error('Fetch error:', err);
+    console.error('Update error:', err);
+    
+    // Stop loading animation
+    const refreshIcon = document.querySelector('.refresh-icon');
+    if (refreshIcon) {
+      refreshIcon.style.animation = '';
+    }
+    
+    // Show error notification
+    showNotification(`Connection failed: ${err.message}`, 'error');
+    
     if (lastSuccess && Date.now() - lastSuccess < 300000) {
       setHealth('stale');
     } else {
@@ -985,7 +1029,17 @@ async function update(){
 
 async function forceRefresh() {
   showNotification('Refreshing market data...', 'info');
+  
+  // Clear any cached data
+  if ('caches' in window) {
+    caches.keys().then(names => {
+      names.forEach(name => caches.delete(name));
+    });
+  }
+  
   await update();
+  
+  showNotification('Data refreshed successfully!', 'success');
 }
 
 // Initialize

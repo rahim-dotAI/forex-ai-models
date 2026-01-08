@@ -67,8 +67,8 @@ jobs:
               "aggressive": {
                 "threshold": 30,
                 "min_adx": null,
-                "rsi_oversold": 40,
-                "rsi_overbought": 60
+                "rsi_oversold": 45,
+                "rsi_overbought": 55
               },
               "conservative": {
                 "threshold": 50,
@@ -119,6 +119,9 @@ jobs:
         run: |
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "Trade Beacon Bot"
+          
+          # Pull latest changes first to avoid conflicts
+          git pull origin main --rebase || true
           
           # Add files (including signal history for performance tracking)
           git add -f signal_state/dashboard_state.json signal_state/signal_history.json signals.csv config.json 2>/dev/null || true

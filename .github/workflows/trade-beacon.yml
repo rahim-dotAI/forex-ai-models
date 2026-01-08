@@ -115,8 +115,8 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "Trade Beacon Bot"
           
-          # Add files
-          git add -f signal_state/dashboard_state.json signals.csv config.json 2>/dev/null || true
+          # Add files (including signal history for performance tracking)
+          git add -f signal_state/dashboard_state.json signal_state/signal_history.json signals.csv config.json 2>/dev/null || true
           
           # Check if there are changes
           if ! git diff --cached --quiet; then

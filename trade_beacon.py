@@ -8,6 +8,7 @@ import pandas as pd
 import yfinance as yf
 from ta.trend import EMAIndicator, ADXIndicator
 from ta.momentum import RSIIndicator
+from ta.volatility import AverageTrueRange
 
 # Import performance tracker
 from performance_tracker import track_performance
@@ -35,8 +36,8 @@ def load_config():
                 "aggressive": {
                     "threshold": 30,
                     "min_adx": None,
-                    "rsi_oversold": 40,
-                    "rsi_overbought": 60
+                    "rsi_oversold": 45,
+                    "rsi_overbought": 55
                 }
             }
         }
@@ -48,8 +49,8 @@ def load_config():
 # =========================
 PAIRS = ["USDJPY=X", "AUDUSD=X", "NZDUSD=X"]
 INTERVAL = "15m"
-LOOKBACK = "7d"
-MIN_ROWS = 60
+LOOKBACK = "14d"  # ✅ FIXED: Increased for stable EMA-200
+MIN_ROWS = 220     # ✅ FIXED: More candles needed
 
 CONFIG = load_config()
 MODE = CONFIG["mode"]
@@ -57,8 +58,8 @@ SETTINGS = CONFIG["settings"][MODE]
 
 SIGNAL_THRESHOLD = SETTINGS["threshold"]
 MIN_ADX = SETTINGS.get("min_adx")
-RSI_OVERSOLD = SETTINGS.get("rsi_oversold", 40)
-RSI_OVERBOUGHT = SETTINGS.get("rsi_overbought", 60)
+RSI_OVERSOLD = SETTINGS.get("rsi_oversold", 45)  # ✅ FIXED: More aggressive default
+RSI_OVERBOUGHT = SETTINGS.get("rsi_overbought", 55)  # ✅ FIXED: More aggressive default
 
 # =========================
 # UTILS
@@ -88,6 +89,10 @@ def rsi(series, period=14):
 def adx_calc(high, low, close):
     return ADXIndicator(high, low, close, window=14).adx()
 
+def atr_calc(high, low, close):
+    """Calculate Average True Range for dynamic stops"""
+    return AverageTrueRange(high, low, close, window=14).average_true_range()
+
 # =========================
 # SIGNAL ENGINE
 # =========================
@@ -106,13 +111,14 @@ def generate_signal(pair: str) -> dict | None:
         e200 = last(ema(close, 200))
         r = last(rsi(close))
         a = last(adx_calc(high, low, close))
+        atr = last(atr_calc(high, low, close))
         current_price = last(close)
 
     except Exception as e:
         log.warning(f"⚠️ {pair} indicator calc failed: {e}")
         return None
 
-    if None in (e12, e26, e200, r, a, current_price):
+    if None in (e12, e26, e200, r, a, current_price, atr):
         log.warning(f"⚠️ {pair} indicators incomplete, skipping")
         return None
 
@@ -122,11 +128,13 @@ def generate_signal(pair: str) -> dict | None:
 
     bull = bear = 0
 
+    # EMA Trend Structure (40 points)
     if e12 > e26 > e200:
         bull += 40
     elif e12 < e26 < e200:
         bear += 40
 
+    # RSI Context (20-30 points)
     if MODE == "conservative":
         if r < RSI_OVERSOLD:
             bull += 30
@@ -138,6 +146,7 @@ def generate_signal(pair: str) -> dict | None:
         elif r > RSI_OVERBOUGHT:
             bear += 20
 
+    # ADX Trend Strength (10-20 points)
     if a > 25:
         if e12 > e26:
             bull += 20
@@ -155,7 +164,14 @@ def generate_signal(pair: str) -> dict | None:
             bear += 10
 
     diff = abs(bull - bear)
-    quality = "⭐" if diff >= 70 else "⭐⭐" if diff >= 60 else "⭐⭐⭐" if diff >= 50 else ""
+    
+    # ✅ FIXED: Stars now correctly show strength (more stars = stronger signal)
+    quality = (
+        "⭐⭐⭐" if diff >= 70 else
+        "⭐⭐"  if diff >= 60 else
+        "⭐"   if diff >= 50 else
+        ""
+    )
 
     log.info(
         f"{pair} | Bull={bull} Bear={bear} Diff={diff} {quality} | RSI={r:.1f} ADX={a:.1f}"
@@ -176,12 +192,13 @@ def generate_signal(pair: str) -> dict | None:
     else:
         confidence = "MODERATE"
 
+    # ✅ IMPROVED: ATR-based dynamic stops with proper risk:reward
     if direction == "BUY":
-        sl = current_price * 0.985
-        tp = current_price * 1.020
+        sl = current_price - (1.5 * atr)  # 1.5x ATR stop loss
+        tp = current_price + (2.5 * atr)  # 2.5x ATR take profit (1.67:1 R:R)
     else:
-        sl = current_price * 1.015
-        tp = current_price * 0.980
+        sl = current_price + (1.5 * atr)
+        tp = current_price - (2.5 * atr)
 
     return {
         "pair": pair.replace("=X", ""),
@@ -190,9 +207,11 @@ def generate_signal(pair: str) -> dict | None:
         "confidence": confidence,
         "rsi": round(r, 1),
         "adx": round(a, 1),
+        "atr": round(atr, 5),
         "entry_price": round(current_price, 5),
         "sl": round(sl, 5),
         "tp": round(tp, 5),
+        "risk_reward": 1.67,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -215,10 +234,11 @@ def write_dashboard_state(signals: list, api_calls: int):
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "active_signals": len(signals),
         "session": session,
+        "mode": MODE,
         "signals": signals,
         "api_usage": {"yfinance": {"calls": api_calls}},
-        "stats": performance["stats"],  # ✨ Real stats
-        "risk_management": performance["risk_management"]  # ✨ Real daily pips
+        "stats": performance["stats"],
+        "risk_management": performance["risk_management"]
     }
 
     output_dir = Path("signal_state")

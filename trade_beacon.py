@@ -9,6 +9,9 @@ import yfinance as yf
 from ta.trend import EMAIndicator, ADXIndicator
 from ta.momentum import RSIIndicator
 
+# Import performance tracker
+from performance_tracker import track_performance
+
 # =========================
 # LOGGING
 # =========================
@@ -194,7 +197,7 @@ def generate_signal(pair: str) -> dict | None:
     }
 
 # =========================
-# DASHBOARD
+# DASHBOARD WITH TRACKING
 # =========================
 def write_dashboard_state(signals: list, api_calls: int):
     hour = datetime.now(timezone.utc).hour
@@ -205,12 +208,17 @@ def write_dashboard_state(signals: list, api_calls: int):
     else:
         session = "US"
 
+    # ✨ GET PERFORMANCE STATS ✨
+    performance = track_performance(signals)
+
     dashboard_data = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "active_signals": len(signals),
         "session": session,
         "signals": signals,
         "api_usage": {"yfinance": {"calls": api_calls}},
+        "stats": performance["stats"],  # ✨ Real stats
+        "risk_management": performance["risk_management"]  # ✨ Real daily pips
     }
 
     output_dir = Path("signal_state")
@@ -219,6 +227,13 @@ def write_dashboard_state(signals: list, api_calls: int):
     with open(output_file, 'w') as f:
         json.dump(dashboard_data, f, indent=2)
     log.info(f"📊 Dashboard written to {output_file}")
+    
+    # Log performance stats
+    stats = performance["stats"]
+    if stats["total_trades"] > 0:
+        log.info(f"📈 Performance: {stats['total_trades']} trades | "
+                f"Win Rate: {stats['win_rate']}% | "
+                f"Total Pips: {stats['total_pips']}")
 
 # =========================
 # TIME-WINDOW GUARD

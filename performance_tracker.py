@@ -118,14 +118,23 @@ class PerformanceTracker:
                 log.warning(f"⚠️ No data for {signal['pair']}")
                 return
             
-            # Get recent price data - handle single element Series properly
+            # Get recent price data - FIXED: properly handle single element Series
             close_series = df["Close"]
             high_series = df["High"]
             low_series = df["Low"]
             
-            current_price = float(close_series.iloc[-1]) if len(close_series) > 0 else 0.0
-            high = float(high_series.max()) if len(high_series) > 0 else 0.0
-            low = float(low_series.min()) if len(low_series) > 0 else 0.0
+            # Use .item() to safely extract scalar values from Series
+            current_price = close_series.iloc[-1] if len(close_series) > 0 else 0.0
+            high = high_series.max() if len(high_series) > 0 else 0.0
+            low = low_series.min() if len(low_series) > 0 else 0.0
+            
+            # Convert to float if they are Series (handles both scalar and Series return types)
+            if hasattr(current_price, 'item'):
+                current_price = current_price.item()
+            if hasattr(high, 'item'):
+                high = high.item()
+            if hasattr(low, 'item'):
+                low = low.item()
             
             direction = signal["direction"]
             entry = signal["entry_price"]

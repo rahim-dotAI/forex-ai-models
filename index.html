@@ -148,7 +148,7 @@ padding:6px 14px;border-radius:14px;font-size:11px;font-weight:700;
 text-transform:uppercase;background:rgba(59,130,246,.2);
 color:var(--primary);border:2px solid var(--primary);
 }
-.signal-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-top:16px}
+.signal-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px;margin-top:16px}
 .signal-metric{padding:12px;background:var(--surface);border-radius:12px;border:1px solid var(--border)}
 .signal-metric-label{font-size:11px;color:var(--text-dimmer);text-transform:uppercase;margin-bottom:4px;font-weight:600}
 .signal-metric-value{font-size:16px;font-weight:800}
@@ -186,12 +186,6 @@ border-radius:20px;display:flex;align-items:center;justify-content:center;border
 }
 .empty-state-icon svg{width:40px;height:40px;stroke:currentColor}
 .empty-state-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px}
-.debug-panel{
-position:fixed;bottom:20px;right:20px;background:var(--surface);border:2px solid var(--border);
-border-radius:16px;padding:20px;max-width:400px;font-size:12px;z-index:999;
-}
-.debug-panel h4{margin-bottom:12px;color:var(--primary)}
-.debug-panel pre{background:var(--bg);padding:10px;border-radius:8px;overflow-x:auto;margin-top:8px}
 h3{margin-bottom:24px;font-size:22px;font-weight:800;display:flex;align-items:center;gap:12px}
 h3 svg{width:24px;height:24px}
 @media(max-width:768px){
@@ -199,6 +193,7 @@ h3 svg{width:24px;height:24px}
 .container{padding:24px 20px}
 .mode-toggle{grid-template-columns:1fr}
 .grid-4{grid-template-columns:1fr}
+.signal-metrics{grid-template-columns:repeat(2,1fr)}
 }
 </style>
 </head>
@@ -276,7 +271,7 @@ h3 svg{width:24px;height:24px}
 </button>
 </div>
 <div class="mode-info" id="modeInfo">
-<strong>Active Configuration:</strong> Aggressive Mode • Threshold: 30 • Min ADX: None • RSI: Any
+<strong>Active Configuration:</strong> Aggressive Mode • Threshold: 30 • Min ADX: None • RSI: 45/55
 </div>
 </div>
 
@@ -386,25 +381,18 @@ Minimum ADX
 </svg>
 RSI Filter
 </span>
-<span class="settings-value" id="currentRSI">Any</span>
+<span class="settings-value" id="currentRSI">45/55</span>
 </div>
 </div>
-</div>
-
-<!-- DEBUG PANEL - Shows what's happening -->
-<div class="debug-panel" id="debugPanel" style="display:none">
-<h4>🔍 Debug Info</h4>
-<div id="debugInfo"></div>
 </div>
 
 </div>
 
 <script>
-// CONFIGURATION - Try multiple URLs
 const API_URLS = [
-  './signal_state/dashboard_state.json',  // Relative path (GitHub Pages)
-  'signal_state/dashboard_state.json',    // Alternative relative
-  'https://raw.githubusercontent.com/rahim-dotAI/forex-ai-models/main/signal_state/dashboard_state.json'  // Fallback to raw
+  './signal_state/dashboard_state.json',
+  'signal_state/dashboard_state.json',
+  'https://raw.githubusercontent.com/rahim-dotAI/forex-ai-models/main/signal_state/dashboard_state.json'
 ];
 
 const MODES = {
@@ -414,39 +402,20 @@ const MODES = {
     minADX: 20,
     rsiOversold: 35,
     rsiOverbought: 65,
-    description: 'High Confidence Mode • Threshold: 50 • Min ADX: 20 • RSI: <35 or >65'
+    description: 'High Confidence Mode • Threshold: 50 • Min ADX: 20 • RSI: 35/65'
   },
   aggressive: {
     name: 'Aggressive',
     threshold: 30,
     minADX: null,
-    rsiOversold: 40,
-    rsiOverbought: 60,
-    description: 'Aggressive Mode • Threshold: 30 • Min ADX: None • RSI: Any'
+    rsiOversold: 45,
+    rsiOverbought: 55,
+    description: 'Aggressive Mode • Threshold: 30 • Min ADX: None • RSI: 45/55'
   }
 };
 
 let currentMode = 'aggressive';
 let lastSuccess = null;
-let debugMode = false;
-
-// Enable debug mode with URL parameter: ?debug=1
-if (window.location.search.includes('debug=1')) {
-  debugMode = true;
-  document.getElementById('debugPanel').style.display = 'block';
-}
-
-function debug(msg, data) {
-  console.log(msg, data || '');
-  if (debugMode) {
-    const debugInfo = document.getElementById('debugInfo');
-    const time = new Date().toLocaleTimeString();
-    debugInfo.innerHTML = `<div style="margin:4px 0;color:var(--text-dim)">[${time}] ${msg}</div>` + debugInfo.innerHTML;
-    if (data) {
-      debugInfo.innerHTML += `<pre>${JSON.stringify(data, null, 2).substring(0, 500)}</pre>`;
-    }
-  }
-}
 
 function setMode(mode) {
   currentMode = mode;
@@ -457,8 +426,7 @@ function setMode(mode) {
   document.getElementById('modeInfo').innerHTML = `<strong>Active Configuration:</strong> ${config.description}`;
   document.getElementById('currentThreshold').textContent = config.threshold;
   document.getElementById('currentADX').textContent = config.minADX || 'None';
-  document.getElementById('currentRSI').textContent = 
-    config.minADX ? `<${config.rsiOversold} or >${config.rsiOverbought}` : 'Any';
+  document.getElementById('currentRSI').textContent = `${config.rsiOversold}/${config.rsiOverbought}`;
   
   localStorage.setItem('tradeBeaconMode', mode);
 }
@@ -483,14 +451,11 @@ async function fetchState(){
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(2, 15);
   
-  // Try each URL until one works
   for (let i = 0; i < API_URLS.length; i++) {
     try {
       const url = API_URLS[i];
       const cacheBuster = `?t=${timestamp}&r=${random}`;
       const fullUrl = url + cacheBuster;
-      
-      debug(`Attempting fetch from URL ${i + 1}/${API_URLS.length}: ${url}`);
       
       const r = await fetch(fullUrl, {
         method: 'GET',
@@ -501,22 +466,14 @@ async function fetchState(){
         }
       });
       
-      debug(`Response status: ${r.status} ${r.statusText}`);
-      
-      if (!r.ok) {
-        throw new Error(`HTTP ${r.status}`);
-      }
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
       
       const text = await r.text();
-      debug(`Received ${text.length} characters`);
-      
       const data = JSON.parse(text);
-      debug(`✅ Successfully parsed JSON with ${data.active_signals} signals`, data);
       
       return data;
       
     } catch (err) {
-      debug(`❌ Failed with URL ${i + 1}: ${err.message}`);
       if (i === API_URLS.length - 1) {
         throw new Error(`All URLs failed. Last error: ${err.message}`);
       }
@@ -525,8 +482,6 @@ async function fetchState(){
 }
 
 function render(d){
-  debug('Rendering data', d);
-  
   document.getElementById('loading').style.display = 'none';
   lastSuccess = Date.now();
   setHealth('live');
@@ -540,8 +495,6 @@ function render(d){
   document.getElementById('apiCalls').textContent = d.api_usage?.yfinance?.calls || 0;
 
   const signals = d.signals || [];
-  
-  debug(`Rendering ${signals.length} signals`);
   
   if (signals.length === 0) {
     document.getElementById('signals').innerHTML = `
@@ -581,7 +534,7 @@ function render(d){
       <div class="signal-metrics">
         ${s.entry_price ? `
           <div class="signal-metric">
-            <div class="signal-metric-label">Entry Price</div>
+            <div class="signal-metric-label">Entry</div>
             <div class="signal-metric-value">${s.entry_price.toFixed(5)}</div>
           </div>
         ` : ''}
@@ -615,6 +568,18 @@ function render(d){
             <div class="signal-metric-value">${s.adx.toFixed(1)}</div>
           </div>
         ` : ''}
+        ${s.atr ? `
+          <div class="signal-metric">
+            <div class="signal-metric-label">ATR</div>
+            <div class="signal-metric-value" style="color:var(--purple)">${s.atr.toFixed(5)}</div>
+          </div>
+        ` : ''}
+        ${s.risk_reward ? `
+          <div class="signal-metric">
+            <div class="signal-metric-label">R:R</div>
+            <div class="signal-metric-value" style="color:var(--cyan)">${s.risk_reward}:1</div>
+          </div>
+        ` : ''}
       </div>
       
       ${s.timestamp ? `
@@ -640,7 +605,6 @@ async function update(){
       refreshIcon.style.animation = 'rotate360 1s linear infinite';
     }
     
-    debug('Starting update...');
     const data = await fetchState();
     render(data);
     
@@ -650,7 +614,6 @@ async function update(){
     
   } catch (err) {
     console.error('Update error:', err);
-    debug(`❌ Update failed: ${err.message}`);
     
     const refreshIcon = document.querySelector('.refresh-icon');
     if (refreshIcon) {
@@ -667,8 +630,6 @@ async function update(){
 }
 
 async function forceRefresh() {
-  debug('Force refresh triggered');
-  
   if ('caches' in window) {
     caches.keys().then(names => {
       names.forEach(name => caches.delete(name));
@@ -678,13 +639,11 @@ async function forceRefresh() {
   await update();
 }
 
-// Initialize
 const savedMode = localStorage.getItem('tradeBeaconMode');
 if (savedMode && MODES[savedMode]) {
   setMode(savedMode);
 }
 
-debug('Dashboard initialized');
 update();
 setInterval(update, 15000);
 </script>

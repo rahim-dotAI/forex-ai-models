@@ -36,10 +36,34 @@ class PerformanceTracker:
         
         try:
             with open(self.history_file, 'r') as f:
-                return json.load(f)
+                data = json.load(f)
+                
+            # Validate structure
+            if not isinstance(data.get("signals"), list):
+                raise ValueError("Invalid history structure")
+            
+            return data
+            
         except Exception as e:
             log.error(f"Failed to load history: {e}")
-            return {"signals": [], "stats": {}, "daily": {}}
+            
+            # Backup corrupted file
+            if self.history_file.exists():
+                backup = self.history_file.with_suffix('.json.bak')
+                self.history_file.rename(backup)
+                log.warning(f"Backed up corrupted file to {backup}")
+            
+            return {
+                "signals": [],
+                "stats": {
+                    "total_trades": 0,
+                    "winning_trades": 0,
+                    "losing_trades": 0,
+                    "total_pips": 0.0,
+                    "win_rate": 0.0
+                },
+                "daily": {}
+            }
     
     def _save_history(self):
         """Save signal history to file"""
@@ -118,23 +142,14 @@ class PerformanceTracker:
                 log.warning(f"⚠️ No data for {signal['pair']}")
                 return
             
-            # Get recent price data - FIXED: properly handle single element Series
-            close_series = df["Close"]
-            high_series = df["High"]
-            low_series = df["Low"]
+            # FIXED: Use squeeze() consistently with trade_beacon.py
+            close = df["Close"].squeeze()
+            high = df["High"].squeeze()
+            low = df["Low"].squeeze()
             
-            # Use .item() to safely extract scalar values from Series
-            current_price = close_series.iloc[-1] if len(close_series) > 0 else 0.0
-            high = high_series.max() if len(high_series) > 0 else 0.0
-            low = low_series.min() if len(low_series) > 0 else 0.0
-            
-            # Convert to float if they are Series (handles both scalar and Series return types)
-            if hasattr(current_price, 'item'):
-                current_price = current_price.item()
-            if hasattr(high, 'item'):
-                high = high.item()
-            if hasattr(low, 'item'):
-                low = low.item()
+            current_price = float(close.iloc[-1]) if len(close) > 0 else 0.0
+            high_price = float(high.max()) if len(high) > 0 else 0.0
+            low_price = float(low.min()) if len(low) > 0 else 0.0
             
             direction = signal["direction"]
             entry = signal["entry_price"]
@@ -143,26 +158,26 @@ class PerformanceTracker:
             
             # Check if TP or SL was hit
             if direction == "BUY":
-                if high >= tp:
+                if high_price >= tp:
                     # TP Hit - WIN
-                    pips = self._calculate_pips(signal['pair'], entry, tp)
+                    pips = self._calculate_pips(signal['pair'], entry, tp, direction)
                     self._close_signal(signal, "WIN", tp, pips)
                     log.info(f"✅ WIN: {signal['pair']} BUY - TP hit at {tp} (+{pips:.1f} pips)")
-                elif low <= sl:
+                elif low_price <= sl:
                     # SL Hit - LOSS
-                    pips = self._calculate_pips(signal['pair'], entry, sl)
+                    pips = self._calculate_pips(signal['pair'], entry, sl, direction)
                     self._close_signal(signal, "LOSS", sl, pips)
                     log.info(f"❌ LOSS: {signal['pair']} BUY - SL hit at {sl} ({pips:.1f} pips)")
             
             else:  # SELL
-                if low <= tp:
+                if low_price <= tp:
                     # TP Hit - WIN
-                    pips = self._calculate_pips(signal['pair'], entry, tp)
+                    pips = self._calculate_pips(signal['pair'], entry, tp, direction)
                     self._close_signal(signal, "WIN", tp, pips)
                     log.info(f"✅ WIN: {signal['pair']} SELL - TP hit at {tp} (+{pips:.1f} pips)")
-                elif high >= sl:
+                elif high_price >= sl:
                     # SL Hit - LOSS
-                    pips = self._calculate_pips(signal['pair'], entry, sl)
+                    pips = self._calculate_pips(signal['pair'], entry, sl, direction)
                     self._close_signal(signal, "LOSS", sl, pips)
                     log.info(f"❌ LOSS: {signal['pair']} SELL - SL hit at {sl} ({pips:.1f} pips)")
             
@@ -192,8 +207,11 @@ class PerformanceTracker:
             self.history["daily"][today]["pips"] += pips
             self.history["daily"][today]["trades"] += 1
     
-    def _calculate_pips(self, pair: str, entry: float, exit: float) -> float:
-        """Calculate pips based on pair type"""
+    def _calculate_pips(self, pair: str, entry: float, exit: float, direction: str) -> float:
+        """
+        Calculate pips based on pair type
+        FIXED: Now correctly handles SELL trades by inverting difference
+        """
         # JPY pairs: 1 pip = 0.01
         if "JPY" in pair:
             pip_value = 0.01
@@ -202,6 +220,12 @@ class PerformanceTracker:
             pip_value = 0.0001
         
         diff = exit - entry
+        
+        # CRITICAL FIX: For SELL, profit is when price goes DOWN
+        # So we need to invert the difference
+        if direction == "SELL":
+            diff = -diff
+        
         pips = diff / pip_value
         
         return pips

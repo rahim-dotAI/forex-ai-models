@@ -3,7 +3,7 @@ name: AI Forex Trading System
 on:
   # Scheduled runs (GitHub timing may lag — handled in code)
   schedule:
-    - cron: "*/10 * * * 1-5"   # Every 10 minutes, Mon–Fri (UTC)
+    - cron: "*/15 * * * 1-5"   # Every 15 minutes, Mon–Fri (UTC)
   
   # External trigger from cron-job.org (IMPORTANT!)
   repository_dispatch:

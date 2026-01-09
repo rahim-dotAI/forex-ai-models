@@ -260,8 +260,9 @@ def write_dashboard_state(signals: list, api_calls: int):
 # =========================
 def in_execution_window():
     """
-    Ensures the bot runs only once per 15-min window.
+    Ensures the bot runs only once per execution window.
     This prevents double runs if GitHub schedule lags.
+    Set to 10 minutes for a 15-minute cron schedule.
     """
     last_run_file = Path("signal_state/last_run.txt")
     now = datetime.now(timezone.utc)
@@ -271,8 +272,8 @@ def in_execution_window():
             last_run_str = f.read().strip()
         try:
             last_run = datetime.fromisoformat(last_run_str)
-            if now - last_run < timedelta(minutes=15):
-                log.info(f"⏱ Already ran in the last 15 minutes ({last_run}) - exiting")
+            if now - last_run < timedelta(minutes=10):
+                log.info(f"⏱ Already ran in the last 10 minutes ({last_run}) - exiting")
                 return False
         except Exception:
             pass

@@ -1,11 +1,14 @@
 import logging
 import sys
 import json
+import os
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
+from typing import Dict, List, Optional
 
 import pandas as pd
 import yfinance as yf
+import requests
 from ta.trend import EMAIndicator, ADXIndicator
 from ta.momentum import RSIIndicator
 from ta.volatility import AverageTrueRange
@@ -32,6 +35,7 @@ def load_config():
         log.warning("⚠️ config.json not found, using aggressive defaults")
         return {
             "mode": "aggressive",
+            "use_sentiment": True,
             "settings": {
                 "aggressive": {
                     "threshold": 30,
@@ -49,20 +53,153 @@ def load_config():
 # =========================
 PAIRS = ["USDJPY=X", "AUDUSD=X", "NZDUSD=X"]
 INTERVAL = "15m"
-LOOKBACK = "14d"  # ✅ FIXED: Increased for stable EMA-200
-MIN_ROWS = 220     # ✅ FIXED: More candles needed
+LOOKBACK = "14d"
+MIN_ROWS = 220
 
 CONFIG = load_config()
 MODE = CONFIG["mode"]
+USE_SENTIMENT = CONFIG.get("use_sentiment", True)
 SETTINGS = CONFIG["settings"][MODE]
 
 SIGNAL_THRESHOLD = SETTINGS["threshold"]
 MIN_ADX = SETTINGS.get("min_adx")
-RSI_OVERSOLD = SETTINGS.get("rsi_oversold", 45)  # ✅ FIXED: More aggressive default
-RSI_OVERBOUGHT = SETTINGS.get("rsi_overbought", 55)  # ✅ FIXED: More aggressive default
+RSI_OVERSOLD = SETTINGS.get("rsi_oversold", 45)
+RSI_OVERBOUGHT = SETTINGS.get("rsi_overbought", 55)
 
 # =========================
-# UTILS
+# SENTIMENT ANALYSIS
+# =========================
+class SentimentAnalyzer:
+    """Hugging Face FinBERT sentiment analysis - no token required"""
+    
+    def __init__(self):
+        self.model_id = "ProsusAI/finbert"
+        self.api_url = f"https://api-inference.huggingface.co/models/{self.model_id}"
+        
+    def analyze(self, text: str) -> Dict:
+        """Analyze financial text sentiment"""
+        try:
+            response = requests.post(
+                self.api_url,
+                json={"inputs": text},
+                timeout=10
+            )
+            
+            if response.status_code == 503:
+                log.info("⏳ HF model loading, retrying in 20s...")
+                import time
+                time.sleep(20)
+                response = requests.post(self.api_url, json={"inputs": text}, timeout=10)
+            
+            response.raise_for_status()
+            result = response.json()
+            
+            if isinstance(result, list) and len(result) > 0:
+                top = max(result[0], key=lambda x: x['score'])
+                return {"label": top['label'], "score": round(top['score'], 3)}
+            
+            return {"label": "neutral", "score": 0.0}
+            
+        except Exception as e:
+            log.warning(f"⚠️ Sentiment analysis failed: {e}")
+            return {"label": "neutral", "score": 0.0}
+
+
+class NewsAggregator:
+    """Fetch forex news using NewsAPI"""
+    
+    def __init__(self):
+        # Try environment variable first (GitHub Actions), then local file
+        self.api_key = os.environ.get('newsapi_key')
+        if not self.api_key:
+            key_file = Path("newsapi_key.txt")
+            if key_file.exists():
+                self.api_key = key_file.read_text().strip()
+    
+    def get_news(self, pairs: List[str]) -> List[Dict]:
+        """Fetch recent forex news for currency pairs"""
+        if not self.api_key:
+            log.warning("⚠️ No NewsAPI key - sentiment disabled")
+            return []
+        
+        # Extract currencies from pairs
+        currencies = set()
+        for pair in pairs:
+            clean = pair.replace("=X", "")
+            currencies.add(clean[:3])
+            currencies.add(clean[3:])
+        
+        query = " OR ".join(currencies)
+        
+        try:
+            url = "https://newsapi.org/v2/everything"
+            params = {
+                "q": f"forex ({query})",
+                "language": "en",
+                "sortBy": "publishedAt",
+                "pageSize": 10,
+                "apiKey": self.api_key
+            }
+            
+            response = requests.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            
+            articles = []
+            for article in data.get("articles", [])[:5]:
+                articles.append({
+                    "title": article.get("title", ""),
+                    "description": article.get("description", ""),
+                    "source": article.get("source", {}).get("name", "Unknown"),
+                    "published": article.get("publishedAt", "")
+                })
+            
+            return articles
+            
+        except Exception as e:
+            log.error(f"❌ News fetch failed: {e}")
+            return []
+
+
+def analyze_sentiment_for_pair(pair: str, analyzer: SentimentAnalyzer, 
+                                news_agg: NewsAggregator) -> Dict:
+    """Generate sentiment adjustment for a currency pair"""
+    
+    articles = news_agg.get_news([pair])
+    
+    if not articles:
+        return {"adjustment": 0, "sentiment": "neutral", "news_count": 0}
+    
+    sentiments = []
+    for article in articles:
+        text = f"{article['title']} {article['description']}"
+        sentiment = analyzer.analyze(text)
+        sentiments.append(sentiment)
+        log.info(f"📰 {article['title'][:50]}... | {sentiment['label']} ({sentiment['score']:.2f})")
+    
+    positive = sum(1 for s in sentiments if s['label'] == 'positive')
+    negative = sum(1 for s in sentiments if s['label'] == 'negative')
+    
+    if positive > negative:
+        adjustment = min(20, positive * 10)
+        overall = "bullish"
+    elif negative > positive:
+        adjustment = max(-20, -negative * 10)
+        overall = "bearish"
+    else:
+        adjustment = 0
+        overall = "neutral"
+    
+    return {
+        "adjustment": adjustment,
+        "sentiment": overall,
+        "news_count": len(articles),
+        "positive": positive,
+        "negative": negative
+    }
+
+# =========================
+# TECHNICAL ANALYSIS UTILS
 # =========================
 def last(series: pd.Series):
     return None if series is None or series.empty else float(series.iloc[-1])
@@ -90,7 +227,6 @@ def adx_calc(high, low, close):
     return ADXIndicator(high, low, close, window=14).adx()
 
 def atr_calc(high, low, close):
-    """Calculate Average True Range for dynamic stops"""
     return AverageTrueRange(high, low, close, window=14).average_true_range()
 
 # =========================
@@ -101,6 +237,7 @@ def generate_signal(pair: str) -> dict | None:
     if len(df) < MIN_ROWS:
         log.warning(f"⚠️ {pair} not enough candles ({len(df)}), skipping")
         return None
+    
     try:
         close = df["Close"].squeeze()
         high = df["High"].squeeze()
@@ -165,7 +302,6 @@ def generate_signal(pair: str) -> dict | None:
 
     diff = abs(bull - bear)
     
-    # ✅ FIXED: Stars now correctly show strength (more stars = stronger signal)
     quality = (
         "⭐⭐⭐" if diff >= 70 else
         "⭐⭐"  if diff >= 60 else
@@ -192,10 +328,10 @@ def generate_signal(pair: str) -> dict | None:
     else:
         confidence = "MODERATE"
 
-    # ✅ IMPROVED: ATR-based dynamic stops with proper risk:reward
+    # ATR-based dynamic stops
     if direction == "BUY":
-        sl = current_price - (1.5 * atr)  # 1.5x ATR stop loss
-        tp = current_price + (2.5 * atr)  # 2.5x ATR take profit (1.67:1 R:R)
+        sl = current_price - (1.5 * atr)
+        tp = current_price + (2.5 * atr)
     else:
         sl = current_price + (1.5 * atr)
         tp = current_price - (2.5 * atr)
@@ -204,6 +340,7 @@ def generate_signal(pair: str) -> dict | None:
         "pair": pair.replace("=X", ""),
         "direction": direction,
         "score": diff,
+        "technical_score": diff,
         "confidence": confidence,
         "rsi": round(r, 1),
         "adx": round(a, 1),
@@ -216,7 +353,65 @@ def generate_signal(pair: str) -> dict | None:
     }
 
 # =========================
-# DASHBOARD WITH TRACKING
+# SENTIMENT ENHANCEMENT
+# =========================
+def enhance_with_sentiment(signals: List[Dict]) -> List[Dict]:
+    """Add sentiment analysis to signals"""
+    
+    if not USE_SENTIMENT or not signals:
+        return signals
+    
+    log.info("\n" + "="*70)
+    log.info("📰 Analyzing news sentiment...")
+    log.info("="*70)
+    
+    analyzer = SentimentAnalyzer()
+    news_agg = NewsAggregator()
+    
+    enhanced = []
+    
+    for signal in signals:
+        pair_ticker = f"{signal['pair']}=X"
+        
+        sentiment_data = analyze_sentiment_for_pair(pair_ticker, analyzer, news_agg)
+        
+        original_score = signal['score']
+        adjustment = sentiment_data['adjustment']
+        
+        # Apply adjustment based on direction
+        if signal['direction'] == 'BUY':
+            signal['score'] += adjustment
+        else:
+            signal['score'] -= adjustment
+        
+        signal['score'] = max(0, min(100, signal['score']))
+        
+        # Update confidence based on new score
+        if signal['score'] >= 70:
+            signal['confidence'] = "EXCELLENT"
+        elif signal['score'] >= 60:
+            signal['confidence'] = "STRONG"
+        elif signal['score'] >= 50:
+            signal['confidence'] = "GOOD"
+        else:
+            signal['confidence'] = "MODERATE"
+        
+        signal['sentiment'] = {
+            "overall": sentiment_data['sentiment'],
+            "adjustment": adjustment,
+            "original_score": original_score,
+            "news_count": sentiment_data['news_count']
+        }
+        
+        log.info(f"💡 {signal['pair']} | Sentiment: {sentiment_data['sentiment']} | "
+                f"Score: {original_score} → {signal['score']} ({adjustment:+d})")
+        
+        enhanced.append(signal)
+    
+    return enhanced
+
+# =========================
+# DASHBOARD
 # =========================
 def write_dashboard_state(signals: list, api_calls: int):
     hour = datetime.now(timezone.utc).hour
@@ -227,7 +422,6 @@ def write_dashboard_state(signals: list, api_calls: int):
     else:
         session = "US"
 
-    # ✨ GET PERFORMANCE STATS ✨
     performance = track_performance(signals)
 
     dashboard_data = {
@@ -235,8 +429,12 @@ def write_dashboard_state(signals: list, api_calls: int):
         "active_signals": len(signals),
         "session": session,
         "mode": MODE,
+        "sentiment_enabled": USE_SENTIMENT,
         "signals": signals,
-        "api_usage": {"yfinance": {"calls": api_calls}},
+        "api_usage": {
+            "yfinance": {"calls": api_calls},
+            "sentiment": {"enabled": USE_SENTIMENT}
+        },
         "stats": performance["stats"],
         "risk_management": performance["risk_management"]
     }
@@ -248,7 +446,6 @@ def write_dashboard_state(signals: list, api_calls: int):
         json.dump(dashboard_data, f, indent=2)
     log.info(f"📊 Dashboard written to {output_file}")
     
-    # Log performance stats
     stats = performance["stats"]
     if stats["total_trades"] > 0:
         log.info(f"📈 Performance: {stats['total_trades']} trades | "
@@ -259,11 +456,6 @@ def write_dashboard_state(signals: list, api_calls: int):
 # TIME-WINDOW GUARD
 # =========================
 def in_execution_window():
-    """
-    Ensures the bot runs only once per execution window.
-    This prevents double runs if GitHub schedule lags.
-    Set to 10 minutes for a 15-minute cron schedule.
-    """
     last_run_file = Path("signal_state/last_run.txt")
     now = datetime.now(timezone.utc)
 
@@ -290,10 +482,13 @@ def main():
     if not in_execution_window():
         return
 
-    log.info(f"🚀 Starting Trade Beacon - Mode={MODE}")
+    sentiment_status = "ON" if USE_SENTIMENT else "OFF"
+    log.info(f"🚀 Starting Trade Beacon - Mode={MODE} | Sentiment={sentiment_status}")
+    
     active = []
     api_calls = 0
 
+    # Generate technical signals
     for pair in PAIRS:
         log.info(f"🔍 Analyzing {pair.replace('=X','')}...")
         sig = generate_signal(pair)
@@ -301,18 +496,42 @@ def main():
         if sig:
             active.append(sig)
 
-    log.info(f"✅ Cycle complete | Active signals: {len(active)}")
+    # Enhance with sentiment
+    if USE_SENTIMENT and active:
+        try:
+            active = enhance_with_sentiment(active)
+            log.info("✅ Sentiment analysis complete")
+        except Exception as e:
+            log.error(f"❌ Sentiment analysis failed: {e}")
+            log.info("⚠️ Continuing with technical signals only")
+
+    log.info(f"\n✅ Cycle complete | Active signals: {len(active)}")
     write_dashboard_state(active, api_calls)
 
     if active:
         df = pd.DataFrame(active)
         df.to_csv("signals.csv", index=False)
         log.info("📄 signals.csv written")
+        
         print("\n" + "="*70)
-        print(f"🎯 {MODE.upper()} SIGNALS:")
+        print(f"🎯 {MODE.upper()} SIGNALS {'+ SENTIMENT' if USE_SENTIMENT else ''}:")
         print("="*70)
-        print(df.to_string(index=False))
+        
+        display_cols = ["pair", "direction", "score", "confidence", "rsi", "adx", "entry_price", "sl", "tp"]
+        print(df[display_cols].to_string(index=False))
         print("="*70 + "\n")
+        
+        # Show sentiment details if enabled
+        if USE_SENTIMENT and "sentiment" in df.columns:
+            print("📰 SENTIMENT DETAILS:")
+            print("="*70)
+            for _, row in df.iterrows():
+                sent = row.get('sentiment', {})
+                if isinstance(sent, dict):
+                    print(f"{row['pair']}: {sent.get('overall', 'N/A').upper()} "
+                          f"({sent.get('adjustment', 0):+d} points, "
+                          f"{sent.get('news_count', 0)} articles)")
+            print("="*70 + "\n")
     else:
         log.info("✅ No strong signals this cycle")
 

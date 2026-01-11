@@ -116,6 +116,7 @@ jobs:
         if: steps.market.outputs.skip != 'true'
         env:
           newsapi_key: ${{ secrets.newsapi_key }}
+          MARKETAUX_API_KEY: ${{ secrets.MARKETAUX_API_KEY }}
         run: |
           echo "🤖 Running Trade Beacon with Sentiment Analysis..."
           python ${{ env.ENTRY_SCRIPT }}

@@ -126,25 +126,73 @@ jobs:
         run: |
           echo "⏭️ Skipping run: ${{ steps.market.outputs.status }}"
       
-      # 🔑 CRITICAL: Commit dashboard & signals for live updates
+      # 🔑 CRITICAL: Commit dashboard & signals for live updates (FIXED RACE CONDITIONS)
       - name: 💾 Commit dashboard & signals
         if: steps.market.outputs.skip != 'true'
         run: |
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "Trade Beacon Bot"
           
-          # Pull latest changes first to avoid conflicts
-          git pull origin main --rebase || true
+          # Pull latest changes with retry logic (exponential backoff)
+          echo "🔄 Pulling latest changes..."
+          for i in {1..5}; do
+            if git pull origin main --rebase; then
+              echo "✅ Successfully pulled latest changes"
+              break
+            else
+              if [ $i -lt 5 ]; then
+                WAIT=$((2 ** i))
+                echo "⚠️ Pull failed, retrying in ${WAIT}s... (attempt $i/5)"
+                sleep $WAIT
+              else
+                echo "❌ Failed to pull after 5 attempts"
+                exit 1
+              fi
+            fi
+          done
           
           # Add files (including signal history for performance tracking)
-          git add -f signal_state/dashboard_state.json signal_state/signal_history.json signals.csv config.json 2>/dev/null || true
+          git add -f signal_state/dashboard_state.json signal_state/signal_history.json signal_state/last_run.txt signal_state/last_success.txt signals.csv config.json 2>/dev/null || true
           
           # Check if there are changes
           if ! git diff --cached --quiet; then
             TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M UTC')
-            git commit -m "📊 Trade Beacon update ${TIMESTAMP}"
-            git push
-            echo "✅ Dashboard updated and pushed"
+            
+            # Commit with retry logic
+            for i in {1..3}; do
+              if git commit -m "📊 Trade Beacon update ${TIMESTAMP}"; then
+                echo "✅ Successfully committed changes"
+                break
+              else
+                if [ $i -lt 3 ]; then
+                  echo "⚠️ Commit failed, retrying... (attempt $i/3)"
+                  sleep 2
+                else
+                  echo "❌ Failed to commit after 3 attempts"
+                  exit 1
+                fi
+              fi
+            done
+            
+            # Push with retry logic
+            for i in {1..5}; do
+              if git push; then
+                echo "✅ Dashboard updated and pushed"
+                break
+              else
+                if [ $i -lt 5 ]; then
+                  WAIT=$((2 ** i))
+                  echo "⚠️ Push failed, retrying in ${WAIT}s... (attempt $i/5)"
+                  sleep $WAIT
+                  
+                  # Try to pull and rebase before next push attempt
+                  git pull origin main --rebase || true
+                else
+                  echo "❌ Failed to push after 5 attempts"
+                  exit 1
+                fi
+              fi
+            done
           else
             echo "✅ No changes to commit"
           fi
@@ -153,7 +201,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: trade-beacon-artifacts
+          name: trade-beacon-artifacts-${{ github.run_number }}
           path: |
             signal_state/
             signals.csv
@@ -161,3 +209,11 @@ jobs:
             *.log
           retention-days: 7
           if-no-files-found: ignore
+      
+      # Cleanup old artifacts (optional - keeps workflow runs clean)
+      - name: 🧹 Cleanup old workflow runs
+        if: always()
+        continue-on-error: true
+        run: |
+          echo "Note: GitHub automatically deletes artifacts after retention period"
+          echo "Manual cleanup via: gh run list --limit 100 | gh run delete"

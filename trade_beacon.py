@@ -106,21 +106,35 @@ class SentimentAnalyzer:
 
 
 class NewsAggregator:
-    """Fetch forex news using NewsAPI"""
+    """Fetch forex news using NewsAPI and Marketaux"""
     
     def __init__(self):
-        # Try environment variable first (GitHub Actions), then local file
-        self.api_key = os.environ.get('newsapi_key')
-        if not self.api_key:
+        # Try environment variables first (GitHub Actions), then local files
+        self.newsapi_key = os.environ.get('newsapi_key')
+        if not self.newsapi_key:
             key_file = Path("newsapi_key.txt")
             if key_file.exists():
-                self.api_key = key_file.read_text().strip()
+                self.newsapi_key = key_file.read_text().strip()
+        
+        self.marketaux_key = os.environ.get('MARKETAUX_API_KEY')
+        if not self.marketaux_key:
+            key_file = Path("marketaux_key.txt")
+            if key_file.exists():
+                self.marketaux_key = key_file.read_text().strip()
+        
+        # Track API usage to stay within free tiers
+        self.newsapi_calls = 0
+        self.marketaux_calls = 0
     
     def get_news(self, pairs: List[str]) -> List[Dict]:
-        """Fetch recent forex news for currency pairs"""
-        if not self.api_key:
-            log.warning("⚠️ No NewsAPI key - sentiment disabled")
-            return []
+        """
+        Fetch recent forex news from both NewsAPI and Marketaux.
+        Optimized to stay within free tier limits:
+        - NewsAPI: 100 requests/day (we use ~32/day at 15min intervals)
+        - Marketaux: 100 requests/day (we use ~32/day at 15min intervals)
+        Strategy: Fetch 3 from each source = 6 articles per run
+        """
+        all_articles = []
         
         # Extract currencies from pairs
         currencies = set()
@@ -129,16 +143,40 @@ class NewsAggregator:
             currencies.add(clean[:3])
             currencies.add(clean[3:])
         
-        query = " OR ".join(currencies)
+        # Fetch from NewsAPI (3 articles)
+        if self.newsapi_key:
+            newsapi_articles = self._fetch_newsapi(currencies, limit=3)
+            all_articles.extend(newsapi_articles)
+            self.newsapi_calls += 1
+        else:
+            log.warning("⚠️ No NewsAPI key - skipping NewsAPI")
         
+        # Fetch from Marketaux (3 articles)
+        if self.marketaux_key:
+            marketaux_articles = self._fetch_marketaux(currencies, limit=3)
+            all_articles.extend(marketaux_articles)
+            self.marketaux_calls += 1
+        else:
+            log.warning("⚠️ No Marketaux key - skipping Marketaux")
+        
+        if not all_articles:
+            log.warning("⚠️ No news sources available - sentiment disabled")
+        else:
+            log.info(f"📰 Fetched {len(all_articles)} articles (NewsAPI: {len([a for a in all_articles if a.get('source_api') == 'NewsAPI'])}, Marketaux: {len([a for a in all_articles if a.get('source_api') == 'Marketaux'])})")
+        
+        return all_articles
+    
+    def _fetch_newsapi(self, currencies: set, limit: int = 3) -> List[Dict]:
+        """Fetch news from NewsAPI"""
         try:
+            query = " OR ".join(currencies)
             url = "https://newsapi.org/v2/everything"
             params = {
                 "q": f"forex ({query})",
                 "language": "en",
                 "sortBy": "publishedAt",
-                "pageSize": 10,
-                "apiKey": self.api_key
+                "pageSize": limit,
+                "apiKey": self.newsapi_key
             }
             
             response = requests.get(url, params=params, timeout=10)
@@ -146,18 +184,63 @@ class NewsAggregator:
             data = response.json()
             
             articles = []
-            for article in data.get("articles", [])[:5]:
+            for article in data.get("articles", [])[:limit]:
                 articles.append({
                     "title": article.get("title", ""),
                     "description": article.get("description", ""),
                     "source": article.get("source", {}).get("name", "Unknown"),
-                    "published": article.get("publishedAt", "")
+                    "published": article.get("publishedAt", ""),
+                    "source_api": "NewsAPI"
                 })
             
+            log.info(f"✅ NewsAPI: {len(articles)} articles")
             return articles
             
         except Exception as e:
-            log.error(f"❌ News fetch failed: {e}")
+            log.error(f"❌ NewsAPI fetch failed: {e}")
+            return []
+    
+    def _fetch_marketaux(self, currencies: set, limit: int = 3) -> List[Dict]:
+        """
+        Fetch news from Marketaux API.
+        Optimized for forex news with financial focus.
+        """
+        try:
+            # Marketaux uses symbols like USD, EUR, JPY
+            # Build query with currency codes
+            symbols = ",".join(list(currencies)[:3])  # Limit to 3 currencies to keep query simple
+            
+            url = "https://api.marketaux.com/v1/news/all"
+            params = {
+                "symbols": symbols,
+                "filter_entities": "true",
+                "language": "en",
+                "limit": limit,
+                "api_token": self.marketaux_key
+            }
+            
+            response = requests.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            
+            articles = []
+            for article in data.get("data", [])[:limit]:
+                # Marketaux provides sentiment scores, but we'll use FinBERT for consistency
+                articles.append({
+                    "title": article.get("title", ""),
+                    "description": article.get("description", ""),
+                    "source": article.get("source", "Marketaux"),
+                    "published": article.get("published_at", ""),
+                    "source_api": "Marketaux",
+                    # Store Marketaux sentiment for comparison (optional)
+                    "marketaux_sentiment": article.get("entities", [{}])[0].get("sentiment_score") if article.get("entities") else None
+                })
+            
+            log.info(f"✅ Marketaux: {len(articles)} articles")
+            return articles
+            
+        except Exception as e:
+            log.error(f"❌ Marketaux fetch failed: {e}")
             return []
 
 
@@ -168,18 +251,29 @@ def analyze_sentiment_for_pair(pair: str, analyzer: SentimentAnalyzer,
     articles = news_agg.get_news([pair])
     
     if not articles:
-        return {"adjustment": 0, "sentiment": "neutral", "news_count": 0}
+        return {"adjustment": 0, "sentiment": "neutral", "news_count": 0, "sources": {"newsapi": 0, "marketaux": 0}}
     
     sentiments = []
+    newsapi_count = 0
+    marketaux_count = 0
+    
     for article in articles:
         text = f"{article['title']} {article['description']}"
         sentiment = analyzer.analyze(text)
         sentiments.append(sentiment)
-        log.info(f"📰 {article['title'][:50]}... | {sentiment['label']} ({sentiment['score']:.2f})")
+        
+        # Track which API the article came from
+        if article.get('source_api') == 'NewsAPI':
+            newsapi_count += 1
+        elif article.get('source_api') == 'Marketaux':
+            marketaux_count += 1
+        
+        log.info(f"📰 [{article.get('source_api', 'Unknown')}] {article['title'][:50]}... | {sentiment['label']} ({sentiment['score']:.2f})")
     
     positive = sum(1 for s in sentiments if s['label'] == 'positive')
     negative = sum(1 for s in sentiments if s['label'] == 'negative')
     
+    # Calculate adjustment with cap at ±20
     if positive > negative:
         adjustment = min(20, positive * 10)
         overall = "bullish"
@@ -195,7 +289,11 @@ def analyze_sentiment_for_pair(pair: str, analyzer: SentimentAnalyzer,
         "sentiment": overall,
         "news_count": len(articles),
         "positive": positive,
-        "negative": negative
+        "negative": negative,
+        "sources": {
+            "newsapi": newsapi_count,
+            "marketaux": marketaux_count
+        }
     }
 
 # =========================
@@ -362,7 +460,7 @@ def enhance_with_sentiment(signals: List[Dict]) -> List[Dict]:
         return signals
     
     log.info("\n" + "="*70)
-    log.info("📰 Analyzing news sentiment...")
+    log.info("📰 Analyzing news sentiment from NewsAPI + Marketaux...")
     log.info("="*70)
     
     analyzer = SentimentAnalyzer()
@@ -400,13 +498,19 @@ def enhance_with_sentiment(signals: List[Dict]) -> List[Dict]:
             "overall": sentiment_data['sentiment'],
             "adjustment": adjustment,
             "original_score": original_score,
-            "news_count": sentiment_data['news_count']
+            "news_count": sentiment_data['news_count'],
+            "sources": sentiment_data.get('sources', {})
         }
         
         log.info(f"💡 {signal['pair']} | Sentiment: {sentiment_data['sentiment']} | "
-                f"Score: {original_score} → {signal['score']} ({adjustment:+d})")
+                f"Score: {original_score} → {signal['score']} ({adjustment:+d}) | "
+                f"Sources: NewsAPI={sentiment_data.get('sources', {}).get('newsapi', 0)}, "
+                f"Marketaux={sentiment_data.get('sources', {}).get('marketaux', 0)}")
         
         enhanced.append(signal)
+    
+    # Log API usage stats
+    log.info(f"📊 API Usage: NewsAPI calls={news_agg.newsapi_calls}, Marketaux calls={news_agg.marketaux_calls}")
     
     return enhanced
 
@@ -433,7 +537,11 @@ def write_dashboard_state(signals: list, api_calls: int):
         "signals": signals,
         "api_usage": {
             "yfinance": {"calls": api_calls},
-            "sentiment": {"enabled": USE_SENTIMENT}
+            "sentiment": {
+                "enabled": USE_SENTIMENT,
+                "newsapi": getattr(news_agg, 'newsapi_calls', 0) if 'news_agg' in locals() else 0,
+                "marketaux": getattr(news_agg, 'marketaux_calls', 0) if 'news_agg' in locals() else 0
+            }
         },
         "stats": performance["stats"],
         "risk_management": performance["risk_management"]

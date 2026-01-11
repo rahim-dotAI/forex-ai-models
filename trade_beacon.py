@@ -45,8 +45,23 @@ def load_config():
                 }
             }
         }
+    
     with open(config_path, 'r') as f:
-        return json.load(f)
+        config = json.load(f)
+    
+    # VALIDATE CONFIG
+    mode = config.get("mode", "aggressive")
+    if mode not in ["aggressive", "conservative"]:
+        log.error(f"❌ Invalid mode '{mode}', defaulting to aggressive")
+        config["mode"] = "aggressive"
+        mode = "aggressive"
+    
+    if mode not in config.get("settings", {}):
+        log.error(f"❌ Settings missing for mode '{mode}'")
+        raise ValueError(f"Config incomplete for mode: {mode}")
+    
+    log.info(f"✅ Config loaded: mode={mode}, sentiment={config.get('use_sentiment', True)}")
+    return config
 
 # =========================
 # CONFIG
@@ -453,7 +468,7 @@ def generate_signal(pair: str) -> dict | None:
 # =========================
 # SENTIMENT ENHANCEMENT
 # =========================
-def enhance_with_sentiment(signals: List[Dict]) -> List[Dict]:
+def enhance_with_sentiment(signals: List[Dict], news_agg: NewsAggregator) -> List[Dict]:
     """Add sentiment analysis to signals"""
     
     if not USE_SENTIMENT or not signals:
@@ -464,7 +479,6 @@ def enhance_with_sentiment(signals: List[Dict]) -> List[Dict]:
     log.info("="*70)
     
     analyzer = SentimentAnalyzer()
-    news_agg = NewsAggregator()
     
     enhanced = []
     
@@ -517,7 +531,7 @@ def enhance_with_sentiment(signals: List[Dict]) -> List[Dict]:
 # =========================
 # DASHBOARD
 # =========================
-def write_dashboard_state(signals: list, api_calls: int):
+def write_dashboard_state(signals: list, api_calls: int, newsapi_calls: int = 0, marketaux_calls: int = 0):
     hour = datetime.now(timezone.utc).hour
     if 0 <= hour < 8:
         session = "ASIAN"
@@ -539,8 +553,8 @@ def write_dashboard_state(signals: list, api_calls: int):
             "yfinance": {"calls": api_calls},
             "sentiment": {
                 "enabled": USE_SENTIMENT,
-                "newsapi": getattr(news_agg, 'newsapi_calls', 0) if 'news_agg' in locals() else 0,
-                "marketaux": getattr(news_agg, 'marketaux_calls', 0) if 'news_agg' in locals() else 0
+                "newsapi": newsapi_calls,
+                "marketaux": marketaux_calls
             }
         },
         "stats": performance["stats"],
@@ -561,10 +575,11 @@ def write_dashboard_state(signals: list, api_calls: int):
                 f"Total Pips: {stats['total_pips']}")
 
 # =========================
-# TIME-WINDOW GUARD
+# TIME-WINDOW GUARD (FIXED)
 # =========================
 def in_execution_window():
     last_run_file = Path("signal_state/last_run.txt")
+    success_file = Path("signal_state/last_success.txt")
     now = datetime.now(timezone.utc)
 
     if last_run_file.exists():
@@ -572,9 +587,26 @@ def in_execution_window():
             last_run_str = f.read().strip()
         try:
             last_run = datetime.fromisoformat(last_run_str)
-            if now - last_run < timedelta(minutes=10):
-                log.info(f"⏱ Already ran in the last 10 minutes ({last_run}) - exiting")
-                return False
+            
+            # Check if last run succeeded
+            if success_file.exists():
+                with open(success_file, 'r') as f:
+                    last_success_str = f.read().strip()
+                try:
+                    last_success = datetime.fromisoformat(last_success_str)
+                    # If successful run was recent, skip
+                    if now - last_success < timedelta(minutes=10):
+                        log.info(f"⏱ Already ran successfully at {last_success} - exiting")
+                        return False
+                except Exception:
+                    pass
+            else:
+                # Last run failed, allow retry after 2 minutes
+                if now - last_run < timedelta(minutes=2):
+                    log.info(f"⏱ Last run failed at {last_run}, waiting for retry window (2 min)")
+                    return False
+                else:
+                    log.info(f"⚠️ Last run failed, attempting retry...")
         except Exception:
             pass
 
@@ -582,6 +614,13 @@ def in_execution_window():
     with open(last_run_file, 'w') as f:
         f.write(now.isoformat())
     return True
+
+def mark_success():
+    """Mark run as successful"""
+    success_file = Path("signal_state/last_success.txt")
+    success_file.parent.mkdir(exist_ok=True)
+    with open(success_file, 'w') as f:
+        f.write(datetime.now(timezone.utc).isoformat())
 
 # =========================
 # MAIN
@@ -595,6 +634,8 @@ def main():
     
     active = []
     api_calls = 0
+    newsapi_calls = 0
+    marketaux_calls = 0
 
     # Generate technical signals
     for pair in PAIRS:
@@ -607,14 +648,17 @@ def main():
     # Enhance with sentiment
     if USE_SENTIMENT and active:
         try:
-            active = enhance_with_sentiment(active)
+            news_agg = NewsAggregator()
+            active = enhance_with_sentiment(active, news_agg)
+            newsapi_calls = news_agg.newsapi_calls
+            marketaux_calls = news_agg.marketaux_calls
             log.info("✅ Sentiment analysis complete")
         except Exception as e:
             log.error(f"❌ Sentiment analysis failed: {e}")
             log.info("⚠️ Continuing with technical signals only")
 
     log.info(f"\n✅ Cycle complete | Active signals: {len(active)}")
-    write_dashboard_state(active, api_calls)
+    write_dashboard_state(active, api_calls, newsapi_calls, marketaux_calls)
 
     if active:
         df = pd.DataFrame(active)
@@ -642,6 +686,10 @@ def main():
             print("="*70 + "\n")
     else:
         log.info("✅ No strong signals this cycle")
+    
+    # Mark run as successful
+    mark_success()
+    log.info("✅ Run completed successfully")
 
 
 if __name__ == "__main__":

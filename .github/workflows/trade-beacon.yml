@@ -21,6 +21,11 @@ on:
           - aggressive
           - conservative
         default: 'default'
+      sentiment:
+        description: 'Enable Sentiment Analysis'
+        required: false
+        type: boolean
+        default: true
 
 env:
   PYTHON_VERSION: "3.10"
@@ -54,15 +59,20 @@ jobs:
         if: github.event.inputs.mode != 'default' && github.event.inputs.mode != ''
         run: |
           MODE="${{ github.event.inputs.mode }}"
+          SENTIMENT="${{ github.event.inputs.sentiment }}"
           echo "🎯 Applying mode: $MODE"
+          echo "📰 Sentiment analysis: $SENTIMENT"
           
           if [ -f config.json ]; then
-            jq --arg mode "$MODE" '.mode = $mode' config.json > tmp.json && mv tmp.json config.json
+            jq --arg mode "$MODE" --argjson sentiment "$SENTIMENT" \
+               '.mode = $mode | .use_sentiment = $sentiment' \
+               config.json > tmp.json && mv tmp.json config.json
           else
             echo "Creating new config.json with mode: $MODE"
             cat > config.json << EOF
           {
             "mode": "$MODE",
+            "use_sentiment": ${SENTIMENT:-true},
             "settings": {
               "aggressive": {
                 "threshold": 30,
@@ -104,8 +114,10 @@ jobs:
       
       - name: 🤖 Run Trade Beacon
         if: steps.market.outputs.skip != 'true'
+        env:
+          newsapi_key: ${{ secrets.newsapi_key }}
         run: |
-          echo "🤖 Running Trade Beacon..."
+          echo "🤖 Running Trade Beacon with Sentiment Analysis..."
           python ${{ env.ENTRY_SCRIPT }}
       
       - name: ⏭️ Skip message

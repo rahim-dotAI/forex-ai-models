@@ -133,69 +133,92 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "Trade Beacon Bot"
           
-          # Pull latest changes with retry logic (exponential backoff)
+          # Stage changes first
+          git add -f signal_state/dashboard_state.json signal_state/signal_history.json signal_state/last_run.txt signal_state/last_success.txt signals.csv config.json 2>/dev/null || true
+          
+          # Commit changes if any exist (before pulling)
+          if ! git diff --staged --quiet; then
+            TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M UTC')
+            git commit -m "📊 Trade Beacon update ${TIMESTAMP} [skip ci]" || {
+              echo "⚠️ Commit failed, continuing..."
+            }
+          else
+            echo "ℹ️ No changes to commit"
+          fi
+          
+          # Pull latest changes with merge strategy (not rebase) to avoid conflicts
           echo "🔄 Pulling latest changes..."
-          for i in {1..5}; do
-            if git pull origin main --rebase; then
-              echo "✅ Successfully pulled latest changes"
+          MAX_RETRIES=5
+          for i in $(seq 1 $MAX_RETRIES); do
+            # Fetch first
+            git fetch origin main
+            
+            # Try to merge (not rebase)
+            if git merge origin/main --no-edit -m "Auto-merge: Sync with remote [skip ci]"; then
+              echo "✅ Successfully merged latest changes"
               break
             else
-              if [ $i -lt 5 ]; then
-                WAIT=$((2 ** i))
-                echo "⚠️ Pull failed, retrying in ${WAIT}s... (attempt $i/5)"
-                sleep $WAIT
+              # Check if it's a merge conflict
+              if git diff --name-only --diff-filter=U | grep -q .; then
+                echo "⚠️ Merge conflict detected, resolving automatically..."
+                
+                # For generated files, always keep our version
+                git checkout --ours signal_state/ 2>/dev/null || true
+                git checkout --ours signals.csv 2>/dev/null || true
+                git checkout --ours config.json 2>/dev/null || true
+                
+                # Stage resolved files
+                git add signal_state/ signals.csv config.json 2>/dev/null || true
+                
+                # Complete the merge
+                git commit -m "Auto-merge: Resolved conflicts (keeping local changes) [skip ci]" || true
+                echo "✅ Conflicts resolved"
+                break
               else
-                echo "❌ Failed to pull after 5 attempts"
-                exit 1
+                # Different error, retry
+                if [ $i -lt $MAX_RETRIES ]; then
+                  WAIT=$((2 ** i))
+                  echo "⚠️ Merge failed, retrying in ${WAIT}s... (attempt $i/$MAX_RETRIES)"
+                  sleep $WAIT
+                  git merge --abort 2>/dev/null || true
+                else
+                  echo "❌ Failed to merge after $MAX_RETRIES attempts"
+                  git merge --abort 2>/dev/null || true
+                  exit 1
+                fi
               fi
             fi
           done
           
-          # Add files (including signal history for performance tracking)
-          git add -f signal_state/dashboard_state.json signal_state/signal_history.json signal_state/last_run.txt signal_state/last_success.txt signals.csv config.json 2>/dev/null || true
-          
-          # Check if there are changes
-          if ! git diff --cached --quiet; then
-            TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M UTC')
-            
-            # Commit with retry logic
-            for i in {1..3}; do
-              if git commit -m "📊 Trade Beacon update ${TIMESTAMP}"; then
-                echo "✅ Successfully committed changes"
-                break
+          # Push with retry logic and force-with-lease as fallback
+          echo "🔄 Pushing changes..."
+          for i in $(seq 1 5); do
+            if git push origin main; then
+              echo "✅ Dashboard updated and pushed successfully"
+              break
+            else
+              if [ $i -lt 5 ]; then
+                WAIT=$((2 ** i))
+                echo "⚠️ Push failed, retrying in ${WAIT}s... (attempt $i/5)"
+                sleep $WAIT
+                
+                # Try to pull and merge before next push attempt
+                git fetch origin main
+                git merge origin/main --no-edit -m "Auto-merge: Retry sync [skip ci]" || {
+                  git merge --abort 2>/dev/null || true
+                }
               else
-                if [ $i -lt 3 ]; then
-                  echo "⚠️ Commit failed, retrying... (attempt $i/3)"
-                  sleep 2
+                # Last resort: force push with lease (safe force push)
+                echo "⚠️ Standard push failed, attempting force-with-lease..."
+                if git push --force-with-lease origin main; then
+                  echo "✅ Force-pushed successfully (this should be rare)"
                 else
-                  echo "❌ Failed to commit after 3 attempts"
+                  echo "❌ Failed to push after all attempts"
                   exit 1
                 fi
               fi
-            done
-            
-            # Push with retry logic
-            for i in {1..5}; do
-              if git push; then
-                echo "✅ Dashboard updated and pushed"
-                break
-              else
-                if [ $i -lt 5 ]; then
-                  WAIT=$((2 ** i))
-                  echo "⚠️ Push failed, retrying in ${WAIT}s... (attempt $i/5)"
-                  sleep $WAIT
-                  
-                  # Try to pull and rebase before next push attempt
-                  git pull origin main --rebase || true
-                else
-                  echo "❌ Failed to push after 5 attempts"
-                  exit 1
-                fi
-              fi
-            done
-          else
-            echo "✅ No changes to commit"
-          fi
+            fi
+          done
       
       - name: 📦 Upload artifacts
         if: always()

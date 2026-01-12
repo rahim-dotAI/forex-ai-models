@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional
+import time
 
 import pandas as pd
 import yfinance as yf
@@ -82,42 +83,161 @@ RSI_OVERSOLD = SETTINGS.get("rsi_oversold", 45)
 RSI_OVERBOUGHT = SETTINGS.get("rsi_overbought", 55)
 
 # =========================
-# SENTIMENT ANALYSIS
+# IMPROVED SENTIMENT ANALYSIS WITH FALLBACK MODELS
 # =========================
 class SentimentAnalyzer:
-    """Hugging Face FinBERT sentiment analysis - no token required"""
+    """
+    Multi-model sentiment analyzer with automatic fallback.
+    Handles deprecated models gracefully.
+    """
     
-    def __init__(self):
-        self.model_id = "ProsusAI/finbert"
-        self.api_url = f"https://api-inference.huggingface.co/models/{self.model_id}"
+    def __init__(self, hf_api_key: str = None):
+        self.hf_api_key = hf_api_key
+        self.session = requests.Session()
+        if hf_api_key:
+            self.session.headers.update({"Authorization": f"Bearer {hf_api_key}"})
         
-    def analyze(self, text: str) -> Dict:
-        """Analyze financial text sentiment"""
-        try:
-            response = requests.post(
-                self.api_url,
-                json={"inputs": text},
-                timeout=10
-            )
-            
-            if response.status_code == 503:
-                log.info("⏳ HF model loading, retrying in 20s...")
-                import time
-                time.sleep(20)
-                response = requests.post(self.api_url, json={"inputs": text}, timeout=10)
-            
-            response.raise_for_status()
-            result = response.json()
-            
-            if isinstance(result, list) and len(result) > 0:
-                top = max(result[0], key=lambda x: x['score'])
-                return {"label": top['label'], "score": round(top['score'], 3)}
-            
+        # Updated model list with working alternatives (in priority order)
+        self.models = [
+            {
+                "name": "FinBERT-tone",
+                "url": "https://api-inference.huggingface.co/models/yiyanghkust/finbert-tone",
+                "label_map": {"positive": "positive", "negative": "negative", "neutral": "neutral"}
+            },
+            {
+                "name": "DistilRoBERTa-financial",
+                "url": "https://api-inference.huggingface.co/models/mrm8488/distilroberta-finetuned-financial-news-sentiment-analysis",
+                "label_map": {"positive": "positive", "negative": "negative", "neutral": "neutral"}
+            },
+            {
+                "name": "Twitter-RoBERTa",
+                "url": "https://api-inference.huggingface.co/models/cardiffnlp/twitter-roberta-base-sentiment-latest",
+                "label_map": {"label_2": "positive", "label_0": "negative", "label_1": "neutral"}
+            },
+            {
+                "name": "FinBERT-ESG",
+                "url": "https://api-inference.huggingface.co/models/yiyanghkust/finbert-esg",
+                "label_map": {"positive": "positive", "negative": "negative", "neutral": "neutral"}
+            }
+        ]
+        
+        self.current_model_idx = 0
+        self.failed_models = set()
+        log.info(f"🤖 Sentiment analyzer initialized with {len(self.models)} fallback models")
+    
+    def _normalize_label(self, raw_label: str, model_idx: int) -> str:
+        """Normalize model-specific labels to positive/negative/neutral"""
+        label_map = self.models[model_idx].get("label_map", {})
+        normalized = label_map.get(raw_label.lower(), "neutral")
+        return normalized
+    
+    def analyze(self, text: str, max_retries: int = 2) -> Dict:
+        """
+        Analyze sentiment with automatic model fallback.
+        
+        Returns:
+            Dict with 'label' (positive/negative/neutral) and 'score' (0.0-1.0)
+        """
+        if not text or len(text.strip()) < 10:
+            log.debug("Text too short for sentiment analysis")
             return {"label": "neutral", "score": 0.0}
+        
+        # Try each model until one works
+        for attempt in range(len(self.models)):
+            if self.current_model_idx in self.failed_models:
+                self.current_model_idx = (self.current_model_idx + 1) % len(self.models)
+                continue
             
-        except Exception as e:
-            log.warning(f"⚠️ Sentiment analysis failed: {e}")
-            return {"label": "neutral", "score": 0.0}
+            model = self.models[self.current_model_idx]
+            
+            try:
+                result = self._call_model(model, text, max_retries)
+                if result:
+                    return result
+                else:
+                    # Model failed, try next
+                    log.warning(f"⚠️ {model['name']} failed, trying next model...")
+                    self.failed_models.add(self.current_model_idx)
+                    self.current_model_idx = (self.current_model_idx + 1) % len(self.models)
+                    
+            except Exception as e:
+                log.warning(f"⚠️ {model['name']} error: {e}")
+                self.failed_models.add(self.current_model_idx)
+                self.current_model_idx = (self.current_model_idx + 1) % len(self.models)
+        
+        # All models failed
+        log.warning("⚠️ All sentiment models failed, defaulting to neutral")
+        return {"label": "neutral", "score": 0.0}
+    
+    def _call_model(self, model: Dict, text: str, max_retries: int) -> Optional[Dict]:
+        """Call a specific HuggingFace model"""
+        for retry in range(max_retries):
+            try:
+                response = self.session.post(
+                    model["url"],
+                    json={"inputs": text[:512]},  # Truncate to avoid token limits
+                    timeout=15
+                )
+                
+                # Handle model loading
+                if response.status_code == 503:
+                    if retry < max_retries - 1:
+                        wait_time = 10 * (retry + 1)
+                        log.info(f"⏳ {model['name']} loading, waiting {wait_time}s...")
+                        time.sleep(wait_time)
+                        continue
+                    else:
+                        return None
+                
+                # Handle gone/deprecated models
+                if response.status_code == 410:
+                    log.warning(f"⚠️ {model['name']} is deprecated (410 Gone)")
+                    return None
+                
+                # Handle rate limits
+                if response.status_code == 429:
+                    if retry < max_retries - 1:
+                        log.warning(f"⚠️ {model['name']} rate limited, waiting...")
+                        time.sleep(5 * (retry + 1))
+                        continue
+                    else:
+                        return None
+                
+                response.raise_for_status()
+                result = response.json()
+                
+                # Parse response
+                if isinstance(result, list) and len(result) > 0:
+                    if isinstance(result[0], list):
+                        # Format: [[{"label": "...", "score": ...}]]
+                        top = max(result[0], key=lambda x: x.get('score', 0))
+                    else:
+                        # Format: [{"label": "...", "score": ...}]
+                        top = max(result, key=lambda x: x.get('score', 0))
+                    
+                    raw_label = top.get('label', 'neutral')
+                    normalized_label = self._normalize_label(raw_label, self.current_model_idx)
+                    score = round(top.get('score', 0.0), 3)
+                    
+                    if retry > 0:
+                        log.info(f"✅ {model['name']} succeeded on retry {retry + 1}")
+                    
+                    return {"label": normalized_label, "score": score}
+                
+                return {"label": "neutral", "score": 0.0}
+                
+            except requests.exceptions.RequestException as e:
+                if retry < max_retries - 1:
+                    log.debug(f"Request error, retrying... ({e})")
+                    time.sleep(2)
+                else:
+                    log.debug(f"Request failed after retries: {e}")
+                    return None
+            except Exception as e:
+                log.debug(f"Unexpected error: {e}")
+                return None
+        
+        return None
 
 
 class NewsAggregator:
@@ -478,7 +598,9 @@ def enhance_with_sentiment(signals: List[Dict], news_agg: NewsAggregator) -> Lis
     log.info("📰 Analyzing news sentiment from NewsAPI + Marketaux...")
     log.info("="*70)
     
-    analyzer = SentimentAnalyzer()
+    # Get HF API key if available
+    hf_key = os.environ.get('HF_API_KEY') or os.environ.get('HUGGINGFACE_API_KEY')
+    analyzer = SentimentAnalyzer(hf_api_key=hf_key)
     
     enhanced = []
     

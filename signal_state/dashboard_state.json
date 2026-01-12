@@ -1,24 +1,49 @@
 {
-  "timestamp": "2026-01-12T16:33:43.053697+00:00",
-  "active_signals": 2,
+  "timestamp": "2026-01-12T16:48:22.376919+00:00",
+  "active_signals": 3,
   "session": "US",
   "mode": "aggressive",
   "sentiment_enabled": true,
   "signals": [
+    {
+      "pair": "USDJPY",
+      "direction": "BUY",
+      "score": 30,
+      "technical_score": 30,
+      "confidence": "MODERATE",
+      "rsi": 62.3,
+      "adx": 15.3,
+      "atr": 0.09262,
+      "entry_price": 158.07201,
+      "sl": 157.93307,
+      "tp": 158.30357,
+      "risk_reward": 1.67,
+      "timestamp": "2026-01-12T16:47:29.484196+00:00",
+      "sentiment": {
+        "overall": "neutral",
+        "adjustment": 0,
+        "original_score": 30,
+        "news_count": 0,
+        "sources": {
+          "newsapi": 0,
+          "marketaux": 0
+        }
+      }
+    },
     {
       "pair": "AUDUSD",
       "direction": "BUY",
       "score": 40,
       "technical_score": 40,
       "confidence": "MODERATE",
-      "rsi": 63.9,
+      "rsi": 62.2,
       "adx": 27.4,
-      "atr": 0.00034,
-      "entry_price": 0.67222,
-      "sl": 0.67172,
-      "tp": 0.67306,
+      "atr": 0.00032,
+      "entry_price": 0.67213,
+      "sl": 0.67166,
+      "tp": 0.67293,
       "risk_reward": 1.67,
-      "timestamp": "2026-01-12T16:32:49.832525+00:00",
+      "timestamp": "2026-01-12T16:47:29.681906+00:00",
       "sentiment": {
         "overall": "neutral",
         "adjustment": 0,
@@ -36,14 +61,14 @@
       "score": 30,
       "technical_score": 30,
       "confidence": "MODERATE",
-      "rsi": 60.1,
-      "adx": 20.2,
-      "atr": 0.00032,
-      "entry_price": 0.57673,
-      "sl": 0.57626,
-      "tp": 0.57753,
+      "rsi": 62.7,
+      "adx": 19.8,
+      "atr": 0.0003,
+      "entry_price": 0.57687,
+      "sl": 0.57642,
+      "tp": 0.57762,
       "risk_reward": 1.67,
-      "timestamp": "2026-01-12T16:32:50.268461+00:00",
+      "timestamp": "2026-01-12T16:47:29.851786+00:00",
       "sentiment": {
         "overall": "neutral",
         "adjustment": 0,
@@ -62,19 +87,19 @@
     },
     "sentiment": {
       "enabled": true,
-      "newsapi": 2,
-      "marketaux": 2
+      "newsapi": 3,
+      "marketaux": 3
     }
   },
   "stats": {
-    "total_trades": 432,
+    "total_trades": 435,
     "winning_trades": 102,
-    "losing_trades": 330,
-    "total_pips": -774.2,
-    "win_rate": 23.6
+    "losing_trades": 333,
+    "total_pips": -797.3,
+    "win_rate": 23.4
   },
   "risk_management": {
-    "daily_pips": -300.7,
+    "daily_pips": -323.8,
     "max_drawdown": 0.0
   }
 }

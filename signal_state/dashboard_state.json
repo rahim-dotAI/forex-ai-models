@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-01-13T13:18:30.644183+00:00",
-  "active_signals": 2,
+  "timestamp": "2026-01-13T13:31:48.003493+00:00",
+  "active_signals": 3,
   "session": "EUROPEAN",
   "mode": "aggressive",
   "sentiment_enabled": true,
@@ -8,21 +8,21 @@
     {
       "pair": "USDJPY",
       "direction": "BUY",
-      "score": 50,
-      "technical_score": 50,
-      "confidence": "GOOD",
-      "rsi": 51.0,
-      "adx": 17.3,
-      "atr": 0.08583,
-      "entry_price": 158.85699,
-      "sl": 158.72825,
-      "tp": 159.07157,
+      "score": 70,
+      "technical_score": 70,
+      "confidence": "EXCELLENT",
+      "rsi": 36.8,
+      "adx": 18.5,
+      "atr": 0.10143,
+      "entry_price": 158.634,
+      "sl": 158.48185,
+      "tp": 158.88759,
       "risk_reward": 1.67,
-      "timestamp": "2026-01-13T13:17:39.075765+00:00",
+      "timestamp": "2026-01-13T13:30:44.281428+00:00",
       "sentiment": {
         "overall": "neutral",
         "adjustment": 0,
-        "original_score": 50,
+        "original_score": 70,
         "news_count": 3,
         "sources": {
           "newsapi": 3,
@@ -33,17 +33,42 @@
     {
       "pair": "AUDUSD",
       "direction": "SELL",
+      "score": 70,
+      "technical_score": 70,
+      "confidence": "EXCELLENT",
+      "rsi": 63.2,
+      "adx": 22.5,
+      "atr": 0.00031,
+      "entry_price": 0.67132,
+      "sl": 0.67178,
+      "tp": 0.67055,
+      "risk_reward": 1.67,
+      "timestamp": "2026-01-13T13:30:44.479311+00:00",
+      "sentiment": {
+        "overall": "neutral",
+        "adjustment": 0,
+        "original_score": 70,
+        "news_count": 3,
+        "sources": {
+          "newsapi": 3,
+          "marketaux": 0
+        }
+      }
+    },
+    {
+      "pair": "NZDUSD",
+      "direction": "SELL",
       "score": 30,
       "technical_score": 30,
       "confidence": "MODERATE",
-      "rsi": 38.8,
-      "adx": 20.9,
-      "atr": 0.00022,
-      "entry_price": 0.67006,
-      "sl": 0.6704,
-      "tp": 0.6695,
+      "rsi": 55.6,
+      "adx": 24.0,
+      "atr": 0.00032,
+      "entry_price": 0.57707,
+      "sl": 0.57755,
+      "tp": 0.57625,
       "risk_reward": 1.67,
-      "timestamp": "2026-01-13T13:17:39.443666+00:00",
+      "timestamp": "2026-01-13T13:30:44.656088+00:00",
       "sentiment": {
         "overall": "neutral",
         "adjustment": 0,
@@ -62,19 +87,19 @@
     },
     "sentiment": {
       "enabled": true,
-      "newsapi": 2,
-      "marketaux": 2
+      "newsapi": 3,
+      "marketaux": 3
     }
   },
   "stats": {
-    "total_trades": 601,
-    "winning_trades": 128,
+    "total_trades": 604,
+    "winning_trades": 131,
     "losing_trades": 473,
-    "total_pips": -1960.9,
-    "win_rate": 21.3
+    "total_pips": -1919.6,
+    "win_rate": 21.7
   },
   "risk_management": {
-    "daily_pips": -880.7,
+    "daily_pips": -839.4,
     "max_drawdown": 0.0
   }
 }

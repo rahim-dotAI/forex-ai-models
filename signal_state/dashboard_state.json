@@ -1,28 +1,53 @@
 {
-  "timestamp": "2026-01-14T14:18:26.631117+00:00",
-  "active_signals": 1,
+  "timestamp": "2026-01-14T14:31:48.961193+00:00",
+  "active_signals": 2,
   "session": "EUROPEAN",
   "mode": "aggressive",
   "sentiment_enabled": true,
   "signals": [
     {
-      "pair": "AUDUSD",
+      "pair": "USDJPY",
       "direction": "SELL",
-      "score": 60,
-      "technical_score": 60,
-      "confidence": "STRONG",
-      "rsi": 48.4,
-      "adx": 25.2,
-      "atr": 0.00035,
-      "entry_price": 0.66867,
-      "sl": 0.6692,
-      "tp": 0.6678,
+      "score": 40,
+      "technical_score": 40,
+      "confidence": "MODERATE",
+      "rsi": 24.3,
+      "adx": 60.7,
+      "atr": 0.16577,
+      "entry_price": 158.24001,
+      "sl": 158.48867,
+      "tp": 157.82557,
       "risk_reward": 1.67,
-      "timestamp": "2026-01-14T14:17:24.853091+00:00",
+      "timestamp": "2026-01-14T14:30:23.470124+00:00",
       "sentiment": {
         "overall": "neutral",
         "adjustment": 0,
-        "original_score": 60,
+        "original_score": 40,
+        "news_count": 6,
+        "sources": {
+          "newsapi": 3,
+          "marketaux": 3
+        }
+      }
+    },
+    {
+      "pair": "AUDUSD",
+      "direction": "SELL",
+      "score": 50,
+      "technical_score": 50,
+      "confidence": "GOOD",
+      "rsi": 49.9,
+      "adx": 23.8,
+      "atr": 0.00034,
+      "entry_price": 0.66876,
+      "sl": 0.66927,
+      "tp": 0.66791,
+      "risk_reward": 1.67,
+      "timestamp": "2026-01-14T14:30:23.664312+00:00",
+      "sentiment": {
+        "overall": "neutral",
+        "adjustment": 0,
+        "original_score": 50,
         "news_count": 6,
         "sources": {
           "newsapi": 3,
@@ -37,19 +62,19 @@
     },
     "sentiment": {
       "enabled": true,
-      "newsapi": 1,
-      "marketaux": 1
+      "newsapi": 2,
+      "marketaux": 2
     }
   },
   "stats": {
-    "total_trades": 769,
-    "winning_trades": 177,
-    "losing_trades": 592,
-    "total_pips": -2348.7,
-    "win_rate": 23.0
+    "total_trades": 771,
+    "winning_trades": 178,
+    "losing_trades": 593,
+    "total_pips": -2365.1,
+    "win_rate": 23.1
   },
   "risk_management": {
-    "daily_pips": 197.2,
+    "daily_pips": 180.9,
     "max_drawdown": 0.0
   }
 }

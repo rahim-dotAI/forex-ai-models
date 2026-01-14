@@ -1,29 +1,55 @@
 {
-  "timestamp": "2026-01-14T06:33:37.458837+00:00",
-  "active_signals": 0,
+  "timestamp": "2026-01-14T06:49:12.278491+00:00",
+  "active_signals": 1,
   "session": "ASIAN",
   "mode": "aggressive",
   "sentiment_enabled": true,
-  "signals": [],
+  "signals": [
+    {
+      "pair": "USDJPY",
+      "direction": "BUY",
+      "score": 40,
+      "technical_score": 40,
+      "confidence": "MODERATE",
+      "rsi": 48.5,
+      "adx": 13.0,
+      "atr": 0.0898,
+      "entry_price": 159.20799,
+      "sl": 159.07329,
+      "tp": 159.4325,
+      "risk_reward": 1.67,
+      "timestamp": "2026-01-14T06:48:12.646297+00:00",
+      "sentiment": {
+        "overall": "neutral",
+        "adjustment": 0,
+        "original_score": 40,
+        "news_count": 3,
+        "sources": {
+          "newsapi": 0,
+          "marketaux": 3
+        }
+      }
+    }
+  ],
   "api_usage": {
     "yfinance": {
       "calls": 3
     },
     "sentiment": {
       "enabled": true,
-      "newsapi": 0,
-      "marketaux": 0
+      "newsapi": 1,
+      "marketaux": 1
     }
   },
   "stats": {
-    "total_trades": 732,
-    "winning_trades": 156,
+    "total_trades": 733,
+    "winning_trades": 157,
     "losing_trades": 576,
-    "total_pips": -2432.8,
-    "win_rate": 21.3
+    "total_pips": -2410.4,
+    "win_rate": 21.4
   },
   "risk_management": {
-    "daily_pips": 113.1,
+    "daily_pips": 135.6,
     "max_drawdown": 0.0
   }
 }

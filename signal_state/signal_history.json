@@ -5882,11 +5882,11 @@
       "score": 50,
       "confidence": "GOOD",
       "timestamp": "2026-01-08T22:10:59.205061+00:00",
-      "status": "OPEN",
-      "outcome": null,
+      "status": "EXPIRED",
+      "outcome": "EXPIRED",
       "pips": 0.0,
-      "closed_at": null,
-      "closed_price": null
+      "closed_at": "2026-01-15T22:17:50.769944+00:00",
+      "closed_price": 158.593994140625
     },
     {
       "id": "USDJPY_2026-01-08T22:20:59.668946+00:00",
@@ -21983,14 +21983,46 @@
       "pips": 6.099999999999994,
       "closed_at": "2026-01-15T21:54:53.379854+00:00",
       "closed_price": 0.57387
+    },
+    {
+      "id": "USDJPY_2026-01-15T22:17:48.783256+00:00",
+      "pair": "USDJPY",
+      "direction": "BUY",
+      "entry_price": 158.59399,
+      "sl": 158.49646,
+      "tp": 158.75655,
+      "score": 50,
+      "confidence": "GOOD",
+      "timestamp": "2026-01-15T22:17:48.783256+00:00",
+      "status": "WIN",
+      "outcome": "WIN",
+      "pips": 16.256000000001336,
+      "closed_at": "2026-01-15T22:17:50.956243+00:00",
+      "closed_price": 158.75655
+    },
+    {
+      "id": "AUDUSD_2026-01-15T22:17:49.013009+00:00",
+      "pair": "AUDUSD",
+      "direction": "BUY",
+      "entry_price": 0.67006,
+      "sl": 0.6697,
+      "tp": 0.67067,
+      "score": 50,
+      "confidence": "GOOD",
+      "timestamp": "2026-01-15T22:17:49.013009+00:00",
+      "status": "WIN",
+      "outcome": "WIN",
+      "pips": 6.099999999999994,
+      "closed_at": "2026-01-15T22:17:51.032370+00:00",
+      "closed_price": 0.67067
     }
   ],
   "stats": {
-    "total_trades": 1005,
-    "winning_trades": 270,
+    "total_trades": 1007,
+    "winning_trades": 272,
     "losing_trades": 735,
-    "total_pips": -2566.1,
-    "win_rate": 26.9
+    "total_pips": -2543.7,
+    "win_rate": 27.0
   },
   "daily": {
     "2026-01-08": {
@@ -22014,8 +22046,8 @@
       "trades": 148
     },
     "2026-01-15": {
-      "pips": -23.488999999987254,
-      "trades": 163
+      "pips": -1.1329999999859233,
+      "trades": 165
     }
   }
 }

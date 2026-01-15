@@ -3098,11 +3098,11 @@
       "score": 30,
       "confidence": "MODERATE",
       "timestamp": "2026-01-08T13:52:52.148369+00:00",
-      "status": "OPEN",
-      "outcome": null,
+      "status": "EXPIRED",
+      "outcome": "EXPIRED",
       "pips": 0.0,
-      "closed_at": null,
-      "closed_price": null
+      "closed_at": "2026-01-15T14:06:35.771001+00:00",
+      "closed_price": 0.6677796840667725
     },
     {
       "id": "NZDUSD_2026-01-08T13:52:52.287416+00:00",
@@ -3114,11 +3114,11 @@
       "score": 40,
       "confidence": "MODERATE",
       "timestamp": "2026-01-08T13:52:52.287416+00:00",
-      "status": "OPEN",
-      "outcome": null,
+      "status": "EXPIRED",
+      "outcome": "EXPIRED",
       "pips": 0.0,
-      "closed_at": null,
-      "closed_price": null
+      "closed_at": "2026-01-15T14:06:35.963452+00:00",
+      "closed_price": 0.5728689432144165
     },
     {
       "id": "USDJPY_2026-01-08T14:01:15.825781+00:00",
@@ -3130,11 +3130,11 @@
       "score": 30,
       "confidence": "MODERATE",
       "timestamp": "2026-01-08T14:01:15.825781+00:00",
-      "status": "OPEN",
-      "outcome": null,
+      "status": "EXPIRED",
+      "outcome": "EXPIRED",
       "pips": 0.0,
-      "closed_at": null,
-      "closed_price": null
+      "closed_at": "2026-01-15T14:06:36.295400+00:00",
+      "closed_price": 158.843994140625
     },
     {
       "id": "AUDUSD_2026-01-08T14:01:15.981075+00:00",
@@ -3146,11 +3146,11 @@
       "score": 30,
       "confidence": "MODERATE",
       "timestamp": "2026-01-08T14:01:15.981075+00:00",
-      "status": "OPEN",
-      "outcome": null,
+      "status": "EXPIRED",
+      "outcome": "EXPIRED",
       "pips": 0.0,
-      "closed_at": null,
-      "closed_price": null
+      "closed_at": "2026-01-15T14:06:36.491905+00:00",
+      "closed_price": 0.6677796840667725
     },
     {
       "id": "NZDUSD_2026-01-08T14:01:16.176397+00:00",
@@ -3162,11 +3162,11 @@
       "score": 40,
       "confidence": "MODERATE",
       "timestamp": "2026-01-08T14:01:16.176397+00:00",
-      "status": "OPEN",
-      "outcome": null,
+      "status": "EXPIRED",
+      "outcome": "EXPIRED",
       "pips": 0.0,
-      "closed_at": null,
-      "closed_price": null
+      "closed_at": "2026-01-15T14:06:36.671573+00:00",
+      "closed_price": 0.5728689432144165
     },
     {
       "id": "USDJPY_2026-01-08T14:11:04.895101+00:00",
@@ -20863,14 +20863,46 @@
       "pips": -4.499999999999504,
       "closed_at": "2026-01-15T13:51:44.141757+00:00",
       "closed_price": 0.57358
+    },
+    {
+      "id": "USDJPY_2026-01-15T14:06:33.698396+00:00",
+      "pair": "USDJPY",
+      "direction": "BUY",
+      "entry_price": 158.845,
+      "sl": 158.68899,
+      "tp": 159.10501,
+      "score": 30,
+      "confidence": "MODERATE",
+      "timestamp": "2026-01-15T14:06:33.698396+00:00",
+      "status": "LOSS",
+      "outcome": "LOSS",
+      "pips": -15.601000000000909,
+      "closed_at": "2026-01-15T14:07:00.050721+00:00",
+      "closed_price": 158.68899
+    },
+    {
+      "id": "NZDUSD_2026-01-15T14:06:34.431058+00:00",
+      "pair": "NZDUSD",
+      "direction": "SELL",
+      "entry_price": 0.57277,
+      "sl": 0.57324,
+      "tp": 0.57199,
+      "score": 40,
+      "confidence": "MODERATE",
+      "timestamp": "2026-01-15T14:06:34.431058+00:00",
+      "status": "LOSS",
+      "outcome": "LOSS",
+      "pips": -4.699999999999704,
+      "closed_at": "2026-01-15T14:07:00.268264+00:00",
+      "closed_price": 0.57324
     }
   ],
   "stats": {
-    "total_trades": 935,
+    "total_trades": 937,
     "winning_trades": 229,
-    "losing_trades": 706,
-    "total_pips": -2853.6,
-    "win_rate": 24.5
+    "losing_trades": 708,
+    "total_pips": -2873.9,
+    "win_rate": 24.4
   },
   "daily": {
     "2026-01-08": {
@@ -20894,8 +20926,8 @@
       "trades": 148
     },
     "2026-01-15": {
-      "pips": -311.00699999998795,
-      "trades": 93
+      "pips": -331.30799999998857,
+      "trades": 95
     }
   }
 }

@@ -5754,11 +5754,11 @@
       "score": 50,
       "confidence": "GOOD",
       "timestamp": "2026-01-08T21:10:58.272572+00:00",
-      "status": "OPEN",
-      "outcome": null,
+      "status": "EXPIRED",
+      "outcome": "EXPIRED",
       "pips": 0.0,
-      "closed_at": null,
-      "closed_price": null
+      "closed_at": "2026-01-15T21:20:07.005345+00:00",
+      "closed_price": 158.65499877929688
     },
     {
       "id": "USDJPY_2026-01-08T21:21:05.340412+00:00",
@@ -21807,14 +21807,46 @@
       "pips": 6.200000000000649,
       "closed_at": "2026-01-15T21:03:05.546184+00:00",
       "closed_price": 0.57327
+    },
+    {
+      "id": "AUDUSD_2026-01-15T21:20:05.746984+00:00",
+      "pair": "AUDUSD",
+      "direction": "BUY",
+      "entry_price": 0.67011,
+      "sl": 0.66971,
+      "tp": 0.67077,
+      "score": 50,
+      "confidence": "GOOD",
+      "timestamp": "2026-01-15T21:20:05.746984+00:00",
+      "status": "WIN",
+      "outcome": "WIN",
+      "pips": 6.599999999999939,
+      "closed_at": "2026-01-15T21:20:08.008532+00:00",
+      "closed_price": 0.67077
+    },
+    {
+      "id": "NZDUSD_2026-01-15T21:20:05.934427+00:00",
+      "pair": "NZDUSD",
+      "direction": "SELL",
+      "entry_price": 0.57405,
+      "sl": 0.57442,
+      "tp": 0.57344,
+      "score": 30,
+      "confidence": "MODERATE",
+      "timestamp": "2026-01-15T21:20:05.934427+00:00",
+      "status": "WIN",
+      "outcome": "WIN",
+      "pips": 6.099999999999994,
+      "closed_at": "2026-01-15T21:20:08.099741+00:00",
+      "closed_price": 0.57344
     }
   ],
   "stats": {
-    "total_trades": 994,
-    "winning_trades": 259,
+    "total_trades": 996,
+    "winning_trades": 261,
     "losing_trades": 735,
-    "total_pips": -2666.9,
-    "win_rate": 26.1
+    "total_pips": -2654.2,
+    "win_rate": 26.2
   },
   "daily": {
     "2026-01-08": {
@@ -21838,8 +21870,8 @@
       "trades": 148
     },
     "2026-01-15": {
-      "pips": -124.27599999999134,
-      "trades": 152
+      "pips": -111.57599999999141,
+      "trades": 154
     }
   }
 }

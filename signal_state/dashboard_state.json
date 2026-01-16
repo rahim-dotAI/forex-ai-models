@@ -1,24 +1,49 @@
 {
-  "timestamp": "2026-01-16T01:03:11.233422+00:00",
-  "active_signals": 1,
+  "timestamp": "2026-01-16T01:17:29.771164+00:00",
+  "active_signals": 2,
   "session": "ASIAN",
   "mode": "aggressive",
   "sentiment_enabled": true,
   "signals": [
+    {
+      "pair": "USDJPY",
+      "direction": "BUY",
+      "score": 60,
+      "technical_score": 60,
+      "confidence": "STRONG",
+      "rsi": 44.2,
+      "adx": 12.8,
+      "atr": 0.0777,
+      "entry_price": 158.524,
+      "sl": 158.40745,
+      "tp": 158.71826,
+      "risk_reward": 1.67,
+      "timestamp": "2026-01-16T01:17:27.593505+00:00",
+      "sentiment": {
+        "overall": "neutral",
+        "adjustment": 0,
+        "original_score": 60,
+        "news_count": 6,
+        "sources": {
+          "newsapi": 3,
+          "marketaux": 3
+        }
+      }
+    },
     {
       "pair": "AUDUSD",
       "direction": "BUY",
       "score": 50,
       "technical_score": 50,
       "confidence": "GOOD",
-      "rsi": 49.3,
-      "adx": 16.5,
-      "atr": 0.00028,
-      "entry_price": 0.67015,
-      "sl": 0.66972,
-      "tp": 0.67086,
+      "rsi": 51.8,
+      "adx": 15.5,
+      "atr": 0.00029,
+      "entry_price": 0.67029,
+      "sl": 0.66986,
+      "tp": 0.671,
       "risk_reward": 1.67,
-      "timestamp": "2026-01-16T01:03:07.280836+00:00",
+      "timestamp": "2026-01-16T01:17:27.817666+00:00",
       "sentiment": {
         "overall": "neutral",
         "adjustment": 0,
@@ -37,8 +62,8 @@
     },
     "sentiment": {
       "enabled": true,
-      "newsapi": 1,
-      "marketaux": 1
+      "newsapi": 2,
+      "marketaux": 2
     }
   },
   "stats": {

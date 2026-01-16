@@ -1,18 +1,44 @@
 {
-  "timestamp": "2026-01-16T01:32:46.920434+00:00",
-  "active_signals": 0,
+  "timestamp": "2026-01-16T01:47:59.139848+00:00",
+  "active_signals": 1,
   "session": "ASIAN",
   "mode": "aggressive",
   "sentiment_enabled": true,
-  "signals": [],
+  "signals": [
+    {
+      "pair": "AUDUSD",
+      "direction": "BUY",
+      "score": 40,
+      "technical_score": 40,
+      "confidence": "MODERATE",
+      "rsi": 53.0,
+      "adx": 14.4,
+      "atr": 0.00028,
+      "entry_price": 0.67038,
+      "sl": 0.66996,
+      "tp": 0.67106,
+      "risk_reward": 1.67,
+      "timestamp": "2026-01-16T01:47:58.112113+00:00",
+      "sentiment": {
+        "overall": "neutral",
+        "adjustment": 0,
+        "original_score": 40,
+        "news_count": 6,
+        "sources": {
+          "newsapi": 3,
+          "marketaux": 3
+        }
+      }
+    }
+  ],
   "api_usage": {
     "yfinance": {
       "calls": 3
     },
     "sentiment": {
       "enabled": true,
-      "newsapi": 0,
-      "marketaux": 0
+      "newsapi": 1,
+      "marketaux": 1
     }
   },
   "stats": {

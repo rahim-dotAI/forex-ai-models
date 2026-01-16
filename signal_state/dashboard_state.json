@@ -1,80 +1,29 @@
 {
-  "timestamp": "2026-01-16T01:17:29.771164+00:00",
-  "active_signals": 2,
+  "timestamp": "2026-01-16T01:32:46.920434+00:00",
+  "active_signals": 0,
   "session": "ASIAN",
   "mode": "aggressive",
   "sentiment_enabled": true,
-  "signals": [
-    {
-      "pair": "USDJPY",
-      "direction": "BUY",
-      "score": 60,
-      "technical_score": 60,
-      "confidence": "STRONG",
-      "rsi": 44.2,
-      "adx": 12.8,
-      "atr": 0.0777,
-      "entry_price": 158.524,
-      "sl": 158.40745,
-      "tp": 158.71826,
-      "risk_reward": 1.67,
-      "timestamp": "2026-01-16T01:17:27.593505+00:00",
-      "sentiment": {
-        "overall": "neutral",
-        "adjustment": 0,
-        "original_score": 60,
-        "news_count": 6,
-        "sources": {
-          "newsapi": 3,
-          "marketaux": 3
-        }
-      }
-    },
-    {
-      "pair": "AUDUSD",
-      "direction": "BUY",
-      "score": 50,
-      "technical_score": 50,
-      "confidence": "GOOD",
-      "rsi": 51.8,
-      "adx": 15.5,
-      "atr": 0.00029,
-      "entry_price": 0.67029,
-      "sl": 0.66986,
-      "tp": 0.671,
-      "risk_reward": 1.67,
-      "timestamp": "2026-01-16T01:17:27.817666+00:00",
-      "sentiment": {
-        "overall": "neutral",
-        "adjustment": 0,
-        "original_score": 50,
-        "news_count": 6,
-        "sources": {
-          "newsapi": 3,
-          "marketaux": 3
-        }
-      }
-    }
-  ],
+  "signals": [],
   "api_usage": {
     "yfinance": {
       "calls": 3
     },
     "sentiment": {
       "enabled": true,
-      "newsapi": 2,
-      "marketaux": 2
+      "newsapi": 0,
+      "marketaux": 0
     }
   },
   "stats": {
-    "total_trades": 1018,
+    "total_trades": 1020,
     "winning_trades": 282,
-    "losing_trades": 736,
-    "total_pips": -2437.2,
-    "win_rate": 27.7
+    "losing_trades": 738,
+    "total_pips": -2458.4,
+    "win_rate": 27.6
   },
   "risk_management": {
-    "daily_pips": -3.3,
+    "daily_pips": -24.4,
     "max_drawdown": 0.0
   }
 }

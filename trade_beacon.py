@@ -1056,7 +1056,7 @@ def generate_signal(pair: str) -> dict | None:
         "risk_reward": round(risk_reward, 2),
         "spread": round(spread, 5),
         "timestamp": now.isoformat(),
-        # ✅ NEW: Signal metadata for subscribers
+        # ✅ Signal metadata for subscribers
         "metadata": {
             "signal_type": signal_type,
             "market_state": market_state,
@@ -1194,18 +1194,83 @@ def enhance_with_sentiment(signals: List[Dict], news_agg: NewsAggregator) -> Lis
     return enhanced
 
 # =========================
-# DASHBOARD & HEALTH CHECK
+# DASHBOARD WRITER - Enhanced with daily pips and freshness
 # =========================
+def calculate_daily_pips(signals: List[Dict]) -> float:
+    """Calculate total pips from today's signals"""
+    today = datetime.now(timezone.utc).date()
+    daily_pips = 0
+    
+    for signal in signals:
+        try:
+            signal_time = datetime.fromisoformat(signal.get('timestamp', ''))
+            if signal_time.date() == today:
+                # Calculate potential pips from this signal
+                entry = signal.get('entry_price', 0)
+                tp = signal.get('tp', 0)
+                if entry and tp:
+                    pips = abs(tp - entry) * 10000
+                    daily_pips += pips
+        except Exception:
+            continue
+    
+    return round(daily_pips, 1)
+
+
 def write_dashboard_state(signals: list, successful_downloads: int, newsapi_calls: int = 0, marketaux_calls: int = 0):
+    """Write comprehensive dashboard state with all required fields"""
+    
     hour = datetime.now(timezone.utc).hour
     if 0 <= hour < 8:
         session = "ASIAN"
-    elif 8 <= hour < 16:
+    elif 8 <= hour < 13:
         session = "EUROPEAN"
-    else:
+    elif 13 <= hour < 16:
+        session = "OVERLAP"
+    elif 16 <= hour < 21:
         session = "US"
+    else:
+        session = "LATE_US"
 
     performance = track_performance(signals)
+    
+    # Calculate daily pips
+    daily_pips = calculate_daily_pips(signals)
+    
+    # Enrich signals with freshness data
+    enriched_signals = []
+    for signal in signals:
+        signal_copy = signal.copy()
+        
+        # Add freshness calculation
+        try:
+            signal_time = datetime.fromisoformat(signal.get('timestamp', ''))
+            age_minutes = (datetime.now(timezone.utc) - signal_time).total_seconds() / 60
+            
+            if age_minutes < 15:
+                freshness = "FRESH"
+            elif age_minutes < 30:
+                freshness = "RECENT"
+            elif age_minutes < 60:
+                freshness = "AGING"
+            else:
+                freshness = "STALE"
+            
+            confidence_decay = max(0, 100 - (age_minutes * 2))
+            
+            signal_copy['freshness'] = {
+                "status": freshness,
+                "age_minutes": round(age_minutes, 1),
+                "confidence_decay": round(confidence_decay, 1)
+            }
+        except Exception:
+            signal_copy['freshness'] = {
+                "status": "UNKNOWN",
+                "age_minutes": 0,
+                "confidence_decay": 100
+            }
+        
+        enriched_signals.append(signal_copy)
 
     dashboard_data = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -1213,7 +1278,7 @@ def write_dashboard_state(signals: list, successful_downloads: int, newsapi_call
         "session": session,
         "mode": MODE,
         "sentiment_enabled": USE_SENTIMENT,
-        "signals": signals,
+        "signals": enriched_signals,
         "api_usage": {
             "yfinance": {"successful_downloads": successful_downloads},
             "sentiment": {
@@ -1222,38 +1287,74 @@ def write_dashboard_state(signals: list, successful_downloads: int, newsapi_call
                 "marketaux": marketaux_calls
             }
         },
-        "stats": performance["stats"],
-        "risk_management": performance["risk_management"]
+        "stats": {
+            "total_trades": performance["stats"].get("total_trades", 0),
+            "win_rate": performance["stats"].get("win_rate", 0),
+            "total_pips": performance["stats"].get("total_pips", 0),
+            "wins": performance["stats"].get("wins", 0),
+            "losses": performance["stats"].get("losses", 0)
+        },
+        "risk_management": {
+            "daily_pips": daily_pips,
+            "total_risk_pips": performance["risk_management"].get("total_risk_pips", 0),
+            "max_drawdown": performance["risk_management"].get("max_drawdown", 0),
+            "average_risk_reward": performance["risk_management"].get("average_risk_reward", 0)
+        },
+        "system": {
+            "last_update": datetime.now(timezone.utc).isoformat(),
+            "data_sources_available": successful_downloads > 0,
+            "sentiment_available": newsapi_calls > 0 or marketaux_calls > 0
+        }
     }
 
     output_dir = Path("signal_state")
     output_dir.mkdir(exist_ok=True)
     output_file = output_dir / "dashboard_state.json"
+    
     with open(output_file, 'w') as f:
         json.dump(dashboard_data, f, indent=2)
+    
     log.info(f"📊 Dashboard written to {output_file}")
     
     stats = performance["stats"]
     if stats["total_trades"] > 0:
         log.info(f"📈 Performance: {stats['total_trades']} trades | "
                 f"Win Rate: {stats['win_rate']}% | "
-                f"Total Pips: {stats['total_pips']}")
+                f"Total Pips: {stats['total_pips']} | "
+                f"Daily Pips: {daily_pips}")
     
     write_health_check(signals, successful_downloads, newsapi_calls, marketaux_calls)
 
+
 def write_health_check(signals: list, successful_downloads: int, newsapi_calls: int, marketaux_calls: int):
     """Write health check file for monitoring"""
+    
+    status = "ok"
+    issues = []
+    
+    if successful_downloads == 0:
+        status = "error"
+        issues.append("No market data available")
+    
+    if len(signals) == 0 and successful_downloads > 0:
+        status = "warning"
+        issues.append("No signals generated")
+    
     health = {
-        "status": "ok",
+        "status": status,
         "last_run": datetime.now(timezone.utc).isoformat(),
         "signal_count": len(signals),
+        "issues": issues,
         "api_status": {
             "yfinance": "ok" if successful_downloads > 0 else "error",
             "newsapi": "ok" if newsapi_calls > 0 else ("disabled" if not USE_SENTIMENT else "error"),
             "marketaux": "ok" if marketaux_calls > 0 else ("disabled" if not USE_SENTIMENT else "error")
         },
-        "mode": MODE,
-        "pairs_monitored": len(PAIRS)
+        "system_info": {
+            "mode": MODE,
+            "pairs_monitored": len(PAIRS),
+            "last_success": datetime.now(timezone.utc).isoformat() if status == "ok" else None
+        }
     }
     
     output_dir = Path("signal_state")
@@ -1261,6 +1362,14 @@ def write_health_check(signals: list, successful_downloads: int, newsapi_calls: 
     
     with open(output_dir / "health.json", "w") as f:
         json.dump(health, f, indent=2)
+    
+    if status == "ok":
+        log.info("✅ System health: OK")
+    elif status == "warning":
+        log.warning(f"⚠️ System health: WARNING - {', '.join(issues)}")
+    else:
+        log.error(f"❌ System health: ERROR - {', '.join(issues)}")
+
 
 # =========================
 # TIME-WINDOW GUARD

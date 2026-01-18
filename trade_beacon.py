@@ -6,6 +6,8 @@ from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional
 import time
+from functools import wraps, lru_cache
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pandas as pd
 import yfinance as yf
@@ -28,6 +30,55 @@ logging.basicConfig(
 log = logging.getLogger("trade-beacon")
 
 # =========================
+# CONFIGURATION
+# =========================
+# Expanded pair list for more opportunities
+PAIRS = [
+    "USDJPY=X",   # Major - USD/JPY
+    "EURUSD=X",   # Major - EUR/USD
+    "GBPUSD=X",   # Major - GBP/USD
+    "AUDUSD=X",   # Major - AUD/USD
+    "NZDUSD=X",   # Major - NZD/USD
+    "USDCAD=X",   # Major - USD/CAD
+    "USDCHF=X",   # Major - USD/CHF
+    "EURJPY=X",   # Cross - EUR/JPY
+    "GBPJPY=X",   # Cross - GBP/JPY
+    "EURGBP=X",   # Cross - EUR/GBP
+]
+
+INTERVAL = "15m"
+LOOKBACK = "14d"
+MIN_ROWS = 220
+
+# =========================
+# RETRY DECORATOR WITH EXPONENTIAL BACKOFF
+# =========================
+def retry_with_backoff(max_retries=3, backoff_factor=5):
+    """Retry decorator with exponential backoff for rate limits"""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            for attempt in range(max_retries):
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    error_msg = str(e).lower()
+                    if "rate limit" in error_msg or "429" in error_msg or "too many requests" in error_msg:
+                        if attempt < max_retries - 1:
+                            wait_time = (2 ** attempt) * backoff_factor
+                            log.warning(f"⚠️ Rate limited, waiting {wait_time}s... (attempt {attempt + 1}/{max_retries})")
+                            time.sleep(wait_time)
+                        else:
+                            log.error(f"❌ Rate limit exceeded after {max_retries} attempts")
+                            raise
+                    else:
+                        # Non-rate-limit error, raise immediately
+                        raise
+            raise Exception(f"Failed after {max_retries} attempts")
+        return wrapper
+    return decorator
+
+# =========================
 # LOAD DYNAMIC CONFIG
 # =========================
 def load_config():
@@ -42,7 +93,15 @@ def load_config():
                     "threshold": 30,
                     "min_adx": None,
                     "rsi_oversold": 45,
-                    "rsi_overbought": 55
+                    "rsi_overbought": 55,
+                    "min_volume_ratio": 0.8
+                },
+                "conservative": {
+                    "threshold": 50,
+                    "min_adx": 20,
+                    "rsi_oversold": 35,
+                    "rsi_overbought": 65,
+                    "min_volume_ratio": 1.2
                 }
             }
         }
@@ -65,30 +124,127 @@ def load_config():
     return config
 
 # =========================
-# CONFIG
+# API KEY VALIDATION
 # =========================
-PAIRS = ["USDJPY=X", "AUDUSD=X", "NZDUSD=X"]
-INTERVAL = "15m"
-LOOKBACK = "14d"
-MIN_ROWS = 220
+def validate_api_keys():
+    """Validate API keys on startup"""
+    required_keys = {
+        'newsapi_key': os.environ.get('newsapi_key'),
+        'MARKETAUX_API_KEY': os.environ.get('MARKETAUX_API_KEY')
+    }
+    
+    missing_keys = [k for k, v in required_keys.items() if not v]
+    
+    if missing_keys:
+        log.warning(f"⚠️ Missing API keys: {', '.join(missing_keys)}")
+        log.warning("Sentiment analysis will be disabled")
+        return False
+    
+    # Test NewsAPI
+    try:
+        r = requests.get(
+            "https://newsapi.org/v2/top-headlines",
+            params={"country": "us", "pageSize": 1, "apiKey": required_keys['newsapi_key']},
+            timeout=5
+        )
+        if r.status_code == 401:
+            log.error("❌ Invalid NewsAPI key")
+            return False
+        elif r.status_code == 429:
+            log.warning("⚠️ NewsAPI rate limit reached")
+            return False
+        log.info("✅ NewsAPI key validated")
+    except Exception as e:
+        log.warning(f"⚠️ NewsAPI validation failed: {e}")
+        return False
+    
+    # Test Marketaux
+    try:
+        r = requests.get(
+            "https://api.marketaux.com/v1/news/all",
+            params={"api_token": required_keys['MARKETAUX_API_KEY'], "limit": 1},
+            timeout=5
+        )
+        if r.status_code == 401:
+            log.error("❌ Invalid Marketaux key")
+            return False
+        elif r.status_code == 429:
+            log.warning("⚠️ Marketaux rate limit reached")
+            return False
+        log.info("✅ Marketaux key validated")
+    except Exception as e:
+        log.warning(f"⚠️ Marketaux validation failed: {e}")
+        return False
+    
+    return True
 
 CONFIG = load_config()
 MODE = CONFIG["mode"]
-USE_SENTIMENT = CONFIG.get("use_sentiment", True)
+USE_SENTIMENT = CONFIG.get("use_sentiment", True) and validate_api_keys()
 SETTINGS = CONFIG["settings"][MODE]
 
 SIGNAL_THRESHOLD = SETTINGS["threshold"]
 MIN_ADX = SETTINGS.get("min_adx")
 RSI_OVERSOLD = SETTINGS.get("rsi_oversold", 45)
 RSI_OVERBOUGHT = SETTINGS.get("rsi_overbought", 55)
+MIN_VOLUME_RATIO = SETTINGS.get("min_volume_ratio", 0.8)
 
 # =========================
-# IMPROVED SENTIMENT ANALYSIS WITH FALLBACK MODELS
+# MARKET SESSION DETECTION
+# =========================
+def get_market_session() -> str:
+    """Return active forex session"""
+    hour = datetime.now(timezone.utc).hour
+    
+    # Asian: 00:00-08:00 UTC (Tokyo open: 00:00)
+    # European: 08:00-13:00 UTC (London open: 08:00)
+    # Overlap: 13:00-16:00 UTC (EU-US overlap)
+    # US: 16:00-21:00 UTC (NY dominance)
+    # Late US: 21:00-00:00 UTC (NY close)
+    
+    if 0 <= hour < 8:
+        return "ASIAN"
+    elif 8 <= hour < 13:
+        return "EUROPEAN"
+    elif 13 <= hour < 16:
+        return "OVERLAP"
+    elif 16 <= hour < 21:
+        return "US"
+    else:
+        return "LATE_US"
+
+def get_session_bonus(pair: str, session: str) -> int:
+    """Apply session-based scoring bonus"""
+    bonus = 0
+    
+    if session == "ASIAN":
+        if "JPY" in pair:
+            bonus = 5  # JPY pairs active in Asian session
+        elif pair in ["AUDUSD=X", "NZDUSD=X"]:
+            bonus = 5  # AUD/NZD active in Asian session
+    
+    elif session in ["EUROPEAN", "OVERLAP"]:
+        if pair in ["EURUSD=X", "GBPUSD=X", "EURGBP=X"]:
+            bonus = 5  # EUR/GBP pairs active in European session
+        elif "EUR" in pair or "GBP" in pair:
+            bonus = 3
+    
+    elif session == "OVERLAP":
+        # High liquidity period - boost all signals
+        bonus += 3
+    
+    elif session == "US":
+        if pair in ["EURUSD=X", "GBPUSD=X", "USDCAD=X"]:
+            bonus = 5  # Major USD pairs active in US session
+    
+    return bonus
+
+# =========================
+# IMPROVED SENTIMENT ANALYSIS WITH MODEL HEALTH CHECK
 # =========================
 class SentimentAnalyzer:
     """
-    Multi-model sentiment analyzer with automatic fallback.
-    Handles deprecated models gracefully.
+    Multi-model sentiment analyzer with automatic fallback and health checks.
     """
     
     def __init__(self, hf_api_key: str = None):
@@ -123,7 +279,28 @@ class SentimentAnalyzer:
         
         self.current_model_idx = 0
         self.failed_models = set()
-        log.info(f"🤖 Sentiment analyzer initialized with {len(self.models)} fallback models")
+        
+        # Verify models on initialization
+        self._verify_models()
+        
+        log.info(f"🤖 Sentiment analyzer initialized with {len(self.models)} models ({len(self.models) - len(self.failed_models)} working)")
+    
+    def _verify_models(self):
+        """Test each model and identify working ones"""
+        for idx, model in enumerate(self.models):
+            try:
+                result = self._call_model(model, "test market sentiment", max_retries=1)
+                if result:
+                    log.info(f"✅ {model['name']} is available")
+                else:
+                    log.warning(f"⚠️ {model['name']} not responding")
+                    self.failed_models.add(idx)
+            except Exception as e:
+                log.warning(f"❌ {model['name']} unavailable: {e}")
+                self.failed_models.add(idx)
+        
+        if len(self.failed_models) == len(self.models):
+            log.error("❌ No working sentiment models available!")
     
     def _normalize_label(self, raw_label: str, model_idx: int) -> str:
         """Normalize model-specific labels to positive/negative/neutral"""
@@ -398,7 +575,8 @@ def filter_articles_for_pair(pair: str, all_articles: List[Dict]) -> List[Dict]:
     Example: For USDJPY, look for articles mentioning USD or JPY
     """
     # Extract currencies from pair (e.g., "USDJPY" -> ["USD", "JPY"])
-    currencies = [pair[:3], pair[3:6]] if len(pair) >= 6 else [pair[:3]]
+    clean_pair = pair.replace("=X", "")
+    currencies = [clean_pair[:3], clean_pair[3:6]] if len(clean_pair) >= 6 else [clean_pair[:3]]
     
     relevant_articles = []
     
@@ -478,7 +656,9 @@ def analyze_sentiment_from_articles(pair: str, articles: List[Dict],
 def last(series: pd.Series):
     return None if series is None or series.empty else float(series.iloc[-1])
 
+@retry_with_backoff(max_retries=3, backoff_factor=5)
 def download(pair: str) -> pd.DataFrame:
+    """Download data with retry logic for rate limits"""
     df = yf.download(
         pair,
         interval=INTERVAL,
@@ -504,9 +684,10 @@ def atr_calc(high, low, close):
     return AverageTrueRange(high, low, close, window=14).average_true_range()
 
 # =========================
-# SIGNAL ENGINE
+# SIGNAL ENGINE WITH VOLUME & SESSION FILTERS
 # =========================
 def generate_signal(pair: str) -> dict | None:
+    """Generate trading signal with volume confirmation and session filtering"""
     df = download(pair)
     if len(df) < MIN_ROWS:
         log.warning(f"⚠️ {pair} not enough candles ({len(df)}), skipping")
@@ -516,6 +697,7 @@ def generate_signal(pair: str) -> dict | None:
         close = df["Close"].squeeze()
         high = df["High"].squeeze()
         low = df["Low"].squeeze()
+        volume = df["Volume"].squeeze()
 
         e12 = last(ema(close, 12))
         e26 = last(ema(close, 26))
@@ -524,6 +706,12 @@ def generate_signal(pair: str) -> dict | None:
         a = last(adx_calc(high, low, close))
         atr = last(atr_calc(high, low, close))
         current_price = last(close)
+        
+        # Volume analysis
+        avg_volume = volume.rolling(window=20).mean()
+        current_volume = last(volume)
+        avg_vol = last(avg_volume)
+        volume_ratio = current_volume / avg_vol if avg_vol and avg_vol > 0 else 1.0
 
     except Exception as e:
         log.warning(f"⚠️ {pair} indicator calc failed: {e}")
@@ -533,8 +721,14 @@ def generate_signal(pair: str) -> dict | None:
         log.warning(f"⚠️ {pair} indicators incomplete, skipping")
         return None
 
+    # ADX filter
     if MIN_ADX is not None and a < MIN_ADX:
         log.info(f"❌ {pair} | ADX too low ({a:.1f} < {MIN_ADX})")
+        return None
+    
+    # Volume filter
+    if volume_ratio < MIN_VOLUME_RATIO:
+        log.info(f"❌ {pair} | Volume too low ({volume_ratio:.2f} < {MIN_VOLUME_RATIO})")
         return None
 
     bull = bear = 0
@@ -573,6 +767,26 @@ def generate_signal(pair: str) -> dict | None:
             bull += 10
         elif e12 < e26:
             bear += 10
+    
+    # Volume confirmation (10 points)
+    if volume_ratio > 1.5:
+        if e12 > e26:
+            bull += 10
+        else:
+            bear += 10
+    elif volume_ratio > 1.2:
+        if e12 > e26:
+            bull += 5
+        else:
+            bear += 5
+    
+    # Session bonus
+    session = get_market_session()
+    session_bonus = get_session_bonus(pair, session)
+    if e12 > e26:
+        bull += session_bonus
+    else:
+        bear += session_bonus
 
     diff = abs(bull - bear)
     
@@ -584,7 +798,8 @@ def generate_signal(pair: str) -> dict | None:
     )
 
     log.info(
-        f"{pair} | Bull={bull} Bear={bear} Diff={diff} {quality} | RSI={r:.1f} ADX={a:.1f}"
+        f"{pair} | Bull={bull} Bear={bear} Diff={diff} {quality} | "
+        f"RSI={r:.1f} ADX={a:.1f} Vol={volume_ratio:.2f} Session={session}"
     )
 
     if diff < SIGNAL_THRESHOLD:
@@ -619,6 +834,8 @@ def generate_signal(pair: str) -> dict | None:
         "rsi": round(r, 1),
         "adx": round(a, 1),
         "atr": round(atr, 5),
+        "volume_ratio": round(volume_ratio, 2),
+        "session": session,
         "entry_price": round(current_price, 5),
         "sl": round(sl, 5),
         "tp": round(tp, 5),
@@ -627,7 +844,7 @@ def generate_signal(pair: str) -> dict | None:
     }
 
 # =========================
-# SENTIMENT ENHANCEMENT (FIXED)
+# SENTIMENT ENHANCEMENT
 # =========================
 def enhance_with_sentiment(signals: List[Dict], news_agg: NewsAggregator) -> List[Dict]:
     """
@@ -711,7 +928,7 @@ def enhance_with_sentiment(signals: List[Dict], news_agg: NewsAggregator) -> Lis
     return enhanced
 
 # =========================
-# DASHBOARD
+# DASHBOARD & HEALTH CHECK
 # =========================
 def write_dashboard_state(signals: list, api_calls: int, newsapi_calls: int = 0, marketaux_calls: int = 0):
     hour = datetime.now(timezone.utc).hour
@@ -755,9 +972,33 @@ def write_dashboard_state(signals: list, api_calls: int, newsapi_calls: int = 0,
         log.info(f"📈 Performance: {stats['total_trades']} trades | "
                 f"Win Rate: {stats['win_rate']}% | "
                 f"Total Pips: {stats['total_pips']}")
+    
+    # Write health check
+    write_health_check(signals, api_calls, newsapi_calls, marketaux_calls)
+
+def write_health_check(signals: list, api_calls: int, newsapi_calls: int, marketaux_calls: int):
+    """Write health check file for monitoring"""
+    health = {
+        "status": "ok",
+        "last_run": datetime.now(timezone.utc).isoformat(),
+        "signal_count": len(signals),
+        "api_status": {
+            "yfinance": "ok" if api_calls > 0 else "error",
+            "newsapi": "ok" if newsapi_calls > 0 else ("disabled" if not USE_SENTIMENT else "error"),
+            "marketaux": "ok" if marketaux_calls > 0 else ("disabled" if not USE_SENTIMENT else "error")
+        },
+        "mode": MODE,
+        "pairs_monitored": len(PAIRS)
+    }
+    
+    output_dir = Path("signal_state")
+    output_dir.mkdir(exist_ok=True)
+    
+    with open(output_dir / "health.json", "w") as f:
+        json.dump(health, f, indent=2)
 
 # =========================
-# TIME-WINDOW GUARD (FIXED)
+# TIME-WINDOW GUARD
 # =========================
 def in_execution_window():
     last_run_file = Path("signal_state/last_run.txt")
@@ -805,7 +1046,7 @@ def mark_success():
         f.write(datetime.now(timezone.utc).isoformat())
 
 # =========================
-# MAIN
+# MAIN WITH PARALLEL PROCESSING
 # =========================
 def main():
     if not in_execution_window():
@@ -813,19 +1054,32 @@ def main():
 
     sentiment_status = "ON" if USE_SENTIMENT else "OFF"
     log.info(f"🚀 Starting Trade Beacon - Mode={MODE} | Sentiment={sentiment_status}")
+    log.info(f"📊 Monitoring {len(PAIRS)} pairs: {', '.join([p.replace('=X', '') for p in PAIRS])}")
     
     active = []
     api_calls = 0
     newsapi_calls = 0
     marketaux_calls = 0
 
-    # Generate technical signals
-    for pair in PAIRS:
-        log.info(f"🔍 Analyzing {pair.replace('=X','')}...")
-        sig = generate_signal(pair)
-        api_calls += 1
-        if sig:
-            active.append(sig)
+    # Generate technical signals with parallel processing
+    log.info("🔍 Analyzing pairs in parallel...")
+    
+    with ThreadPoolExecutor(max_workers=min(5, len(PAIRS))) as executor:
+        futures = {executor.submit(generate_signal, pair): pair for pair in PAIRS}
+        
+        for future in as_completed(futures):
+            pair = futures[future]
+            try:
+                sig = future.result()
+                api_calls += 1
+                if sig:
+                    active.append(sig)
+                    log.info(f"✅ {pair.replace('=X', '')} - Signal generated")
+                else:
+                    log.info(f"⏭️ {pair.replace('=X', '')} - No signal")
+            except Exception as e:
+                log.error(f"❌ {pair.replace('=X', '')} failed: {e}")
+                api_calls += 1
 
     # Enhance with sentiment
     if USE_SENTIMENT and active:
@@ -851,7 +1105,7 @@ def main():
         print(f"🎯 {MODE.upper()} SIGNALS {'+ SENTIMENT' if USE_SENTIMENT else ''}:")
         print("="*70)
         
-        display_cols = ["pair", "direction", "score", "confidence", "rsi", "adx", "entry_price", "sl", "tp"]
+        display_cols = ["pair", "direction", "score", "confidence", "rsi", "adx", "volume_ratio", "session"]
         print(df[display_cols].to_string(index=False))
         print("="*70 + "\n")
         

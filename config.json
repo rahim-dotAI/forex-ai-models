@@ -4,17 +4,19 @@
   "settings": {
     "aggressive": {
       "threshold": 30,
-      "min_adx": null,
+      "min_adx": 15,
       "rsi_oversold": 45,
       "rsi_overbought": 55,
-      "min_volume_ratio": 0.8
+      "min_volume_ratio": 0.8,
+      "volume_penalty": 5
     },
     "conservative": {
       "threshold": 50,
       "min_adx": 20,
       "rsi_oversold": 35,
       "rsi_overbought": 65,
-      "min_volume_ratio": 1.2
+      "min_volume_ratio": 1.0,
+      "volume_penalty": 10
     }
   }
 }

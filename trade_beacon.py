@@ -243,6 +243,108 @@ MIN_VOLUME_RATIO = SETTINGS.get("min_volume_ratio", 0.8)
 VOLUME_PENALTY = SETTINGS.get("volume_penalty", 5)
 
 # =========================
+# ✅ NEW: HELPER FUNCTIONS FOR BACKEND INTELLIGENCE
+# =========================
+def calculate_hold_time(risk_reward: float, atr: float) -> str:
+    """
+    Calculate suggested hold time based on R:R and volatility.
+    Frontend will trust this instead of calculating.
+    """
+    if risk_reward > 2.5 or atr > 0.002:
+        return "SWING"
+    elif risk_reward > 1.8 or atr > 0.0015:
+        return "INTRADAY"
+    return "SHORT"
+
+
+def calculate_eligible_modes(score: int, adx: float, volume_ratio: float, rsi: float) -> List[str]:
+    """
+    Determine which modes this signal qualifies for.
+    Frontend will filter based on this instead of re-calculating.
+    """
+    modes = []
+    
+    # Conservative criteria
+    conservative_settings = CONFIG["settings"]["conservative"]
+    if (score >= conservative_settings["threshold"] and
+        adx >= conservative_settings["min_adx"] and
+        volume_ratio >= conservative_settings["min_volume_ratio"] and
+        conservative_settings["rsi_oversold"] <= rsi <= conservative_settings["rsi_overbought"]):
+        modes.append("conservative")
+    
+    # Aggressive criteria
+    aggressive_settings = CONFIG["settings"]["aggressive"]
+    if (score >= aggressive_settings["threshold"] and
+        adx >= aggressive_settings["min_adx"] and
+        volume_ratio >= aggressive_settings["min_volume_ratio"] and
+        aggressive_settings["rsi_oversold"] <= rsi <= aggressive_settings["rsi_overbought"]):
+        modes.append("aggressive")
+    
+    return modes
+
+
+def calculate_signal_freshness(timestamp: datetime) -> dict:
+    """
+    Calculate signal freshness metadata.
+    Frontend will trust this instead of calculating age.
+    """
+    age_minutes = (datetime.now(timezone.utc) - timestamp).total_seconds() / 60
+    
+    if age_minutes < 15:
+        status = "FRESH"
+    elif age_minutes < 30:
+        status = "RECENT"
+    elif age_minutes < 60:
+        status = "AGING"
+    else:
+        status = "STALE"
+    
+    confidence_decay = max(0, 100 - (age_minutes * 2))
+    
+    return {
+        "status": status,
+        "age_minutes": round(age_minutes, 1),
+        "confidence_decay": round(confidence_decay, 1)
+    }
+
+
+def calculate_market_volatility(signals: List[Dict]) -> str:
+    """
+    Calculate overall market volatility state.
+    Frontend will display this instead of inferring.
+    """
+    if not signals:
+        return "CALM"
+    
+    avg_atr = sum(s.get("atr", 0) for s in signals) / len(signals)
+    avg_volume = sum(s.get("volume_ratio", 1) for s in signals) / len(signals)
+    
+    if avg_atr > 0.002 or avg_volume > 1.5:
+        return "HIGH"
+    elif avg_atr > 0.0015 or avg_volume > 1.2:
+        return "NORMAL"
+    return "CALM"
+
+
+def calculate_market_sentiment(signals: List[Dict]) -> str:
+    """
+    Calculate overall market sentiment bias.
+    Frontend will display this instead of inferring.
+    """
+    if not signals:
+        return "MIXED"
+    
+    bullish = sum(1 for s in signals if s.get("direction") == "BUY")
+    bearish = sum(1 for s in signals if s.get("direction") == "SELL")
+    
+    if bullish > bearish * 1.5:
+        return "BULLISH"
+    elif bearish > bullish * 1.5:
+        return "BEARISH"
+    return "MIXED"
+
+
+# =========================
 # MARKET SESSION DETECTION
 # =========================
 def get_market_session() -> str:
@@ -389,7 +491,6 @@ class SentimentAnalyzer:
         self._model_lock = threading.Lock()
         self.health_tracker = ModelHealthTracker()
         
-        # Lazy verification - don't verify on startup
         available_count = sum(1 for i in range(len(self.models)) if self.health_tracker.is_available(i))
         log.info(f"🤖 Sentiment analyzer initialized with {len(self.models)} models ({available_count} available)")
     
@@ -415,9 +516,7 @@ class SentimentAnalyzer:
         return normalized
     
     def analyze(self, text: str, max_retries: int = 2) -> Dict:
-        """
-        Analyze sentiment with automatic model fallback (thread-safe).
-        """
+        """Analyze sentiment with automatic model fallback (thread-safe)."""
         if not text or len(text.strip()) < 10:
             return {"label": "neutral", "score": 0.0}
         
@@ -727,7 +826,6 @@ class MarketDataCache:
             
             age = time.time() - self._timestamps.get(key, 0)
             if age > self.ttl:
-                # Expired
                 del self._cache[key]
                 del self._timestamps[key]
                 return None
@@ -758,13 +856,11 @@ def last(series: pd.Series):
 @retry_with_backoff(max_retries=3, backoff_factor=5)
 def download(pair: str) -> pd.DataFrame:
     """Download data with TTL-based caching"""
-    # Check cache first
     cached = _market_cache.get(pair)
     if cached is not None:
         log.debug(f"📦 Using cached data for {pair}")
         return cached
     
-    # Download fresh data
     log.debug(f"📥 Downloading fresh data for {pair}")
     df = yf.download(
         pair,
@@ -780,12 +876,10 @@ def download(pair: str) -> pd.DataFrame:
     
     df = df.dropna()
     
-    # Validate data quality
     if len(df) < MIN_ROWS:
         log.warning(f"⚠️ {pair} insufficient data: {len(df)} rows")
         return df
     
-    # Cache the result
     _market_cache.set(pair, df)
     
     return df
@@ -805,18 +899,10 @@ def atr_calc(high, low, close):
 def get_spread(pair: str) -> float:
     """Get typical spread for a pair"""
     clean_pair = pair.replace("=X", "")
-    return SPREADS.get(clean_pair, 0.0002)  # Default 2 pips
+    return SPREADS.get(clean_pair, 0.0002)
 
 def classify_market_state(adx: float, atr: float, volume_ratio: float) -> str:
-    """
-    Classify current market conditions for signal context.
-    
-    Returns:
-        - CHOPPY: Low trend strength, difficult trading conditions
-        - CONSOLIDATING: Moderate conditions, range-bound
-        - TRENDING_MODERATE: Clear trend forming
-        - TRENDING_STRONG: Strong directional movement with volume
-    """
+    """Classify current market conditions for signal context."""
     if adx < 15:
         return "CHOPPY"
     elif adx > 25 and volume_ratio > 1.2:
@@ -827,15 +913,7 @@ def classify_market_state(adx: float, atr: float, volume_ratio: float) -> str:
         return "CONSOLIDATING"
 
 def get_signal_type(e12: float, e26: float, e200: float, rsi: float) -> str:
-    """
-    Classify the type of trading opportunity.
-    
-    Returns:
-        - trend-continuation: Following established trend
-        - reversal: Counter-trend opportunity
-        - breakout: Breaking consolidation
-        - momentum: Strong directional move
-    """
+    """Classify the type of trading opportunity."""
     if e12 > e26 > e200:
         if rsi > 60:
             return "momentum"
@@ -851,48 +929,11 @@ def get_signal_type(e12: float, e26: float, e200: float, rsi: float) -> str:
     else:
         return "breakout"
 
-def calculate_signal_freshness(timestamp: str) -> dict:
-    """
-    Calculate how fresh/stale a signal is and apply confidence decay.
-    
-    Signals lose validity over time as market conditions change.
-    
-    Returns:
-        Dict with freshness classification, age, and confidence decay factor
-    """
-    try:
-        generated = datetime.fromisoformat(timestamp)
-        age_minutes = (datetime.now(timezone.utc) - generated).total_seconds() / 60
-        
-        if age_minutes < 15:
-            freshness = "FRESH"
-        elif age_minutes < 30:
-            freshness = "RECENT"
-        elif age_minutes < 60:
-            freshness = "AGING"
-        else:
-            freshness = "STALE"
-        
-        # Confidence decays 2% per minute (100% at 0min, 50% at 25min, 0% at 50min)
-        confidence_decay = max(0, 100 - (age_minutes * 2))
-        
-        return {
-            "freshness": freshness,
-            "age_minutes": round(age_minutes, 1),
-            "confidence_decay": round(confidence_decay, 1)
-        }
-    except Exception:
-        return {
-            "freshness": "UNKNOWN",
-            "age_minutes": 0,
-            "confidence_decay": 100
-        }
-
 # =========================
-# SIGNAL ENGINE WITH SPREAD AWARENESS
+# ✅ ENHANCED SIGNAL ENGINE WITH BACKEND INTELLIGENCE
 # =========================
 def generate_signal(pair: str) -> dict | None:
-    """Generate trading signal with spread-adjusted SL/TP"""
+    """Generate trading signal with full backend intelligence"""
     df = download(pair)
     if len(df) < MIN_ROWS:
         log.warning(f"⚠️ {pair} not enough candles ({len(df)}), skipping")
@@ -1011,11 +1052,11 @@ def generate_signal(pair: str) -> dict | None:
     
     # ATR-based dynamic stops with spread adjustment
     if direction == "BUY":
-        entry_price = current_price + (spread / 2)  # Account for spread
+        entry_price = current_price + (spread / 2)
         sl = entry_price - (1.5 * atr)
         tp = entry_price + (2.5 * atr)
     else:
-        entry_price = current_price - (spread / 2)  # Account for spread
+        entry_price = current_price - (spread / 2)
         sl = entry_price + (1.5 * atr)
         tp = entry_price - (2.5 * atr)
     
@@ -1035,11 +1076,23 @@ def generate_signal(pair: str) -> dict | None:
     
     # Generate timestamp and expiration
     now = datetime.now(timezone.utc)
-    valid_for_minutes = 60  # Signals valid for 1 hour
+    valid_for_minutes = 60
     expires_at = now + timedelta(minutes=valid_for_minutes)
+    
+    # ✅ NEW: Calculate backend intelligence
+    hold_time = calculate_hold_time(risk_reward, atr)
+    eligible_modes = calculate_eligible_modes(diff, a, volume_ratio, r)
+    freshness = calculate_signal_freshness(now)
+    
+    # ✅ NEW: Generate unique signal ID
+    clean_pair = pair.replace("=X", "")
+    signal_id = f"{clean_pair}_{now.strftime('%Y%m%d_%H%M%S')}"
 
     return {
-        "pair": pair.replace("=X", ""),
+        # ✅ NEW: Unique identifier
+        "signal_id": signal_id,
+        
+        "pair": clean_pair,
         "direction": direction,
         "score": diff,
         "technical_score": diff,
@@ -1056,7 +1109,13 @@ def generate_signal(pair: str) -> dict | None:
         "risk_reward": round(risk_reward, 2),
         "spread": round(spread, 5),
         "timestamp": now.isoformat(),
-        # ✅ Signal metadata for subscribers
+        
+        # ✅ NEW: Backend intelligence
+        "hold_time": hold_time,
+        "eligible_modes": eligible_modes,
+        "freshness": freshness,
+        
+        # Signal metadata
         "metadata": {
             "signal_type": signal_type,
             "market_state": market_state,
@@ -1080,13 +1139,11 @@ def filter_correlated_signals(signals: List[Dict]) -> List[Dict]:
     filtered = []
     pairs_taken = set()
     
-    # Sort by score (keep highest quality signals)
     sorted_signals = sorted(signals, key=lambda x: x['score'], reverse=True)
     
     for signal in sorted_signals:
         pair = f"{signal['pair']}=X"
         
-        # Check if correlated with already selected pairs
         is_correlated = False
         for taken_pair in pairs_taken:
             for corr_group in CORRELATED_PAIRS:
@@ -1107,12 +1164,10 @@ def filter_correlated_signals(signals: List[Dict]) -> List[Dict]:
     return filtered
 
 # =========================
-# SENTIMENT ENHANCEMENT - FIXED DIRECTION LOGIC
+# SENTIMENT ENHANCEMENT
 # =========================
 def enhance_with_sentiment(signals: List[Dict], news_agg: NewsAggregator) -> List[Dict]:
-    """
-    Add sentiment analysis to signals with proper direction logic.
-    """
+    """Add sentiment analysis to signals with proper direction logic."""
     
     if not USE_SENTIMENT or not signals:
         return signals
@@ -1135,7 +1190,7 @@ def enhance_with_sentiment(signals: List[Dict], news_agg: NewsAggregator) -> Lis
         pair = signal['pair']
         pair_ticker = f"{pair}=X"
         
-        pair_articles = filter_articles_for_pair(pair, all_articles)
+        pair_articles = filter_articles_for_pair(pair_ticker, all_articles)
         
         sentiment_data = analyze_sentiment_from_articles(
             pair_ticker, 
@@ -1146,11 +1201,6 @@ def enhance_with_sentiment(signals: List[Dict], news_agg: NewsAggregator) -> Lis
         original_score = signal['technical_score']
         adjustment = sentiment_data['adjustment']
         
-        # CRITICAL FIX: Sentiment should SUPPORT the direction
-        # BUY + bullish news = boost
-        # BUY + bearish news = penalty
-        # SELL + bearish news = boost (double negative = positive)
-        # SELL + bullish news = penalty
         direction_multiplier = 1 if signal['direction'] == 'BUY' else -1
         final_adjustment = adjustment * direction_multiplier
         
@@ -1162,6 +1212,14 @@ def enhance_with_sentiment(signals: List[Dict], news_agg: NewsAggregator) -> Lis
         if signal['score'] < SIGNAL_THRESHOLD:
             log.info(f"❌ {pair} | Signal too weak after sentiment ({signal['score']} < {SIGNAL_THRESHOLD})")
             continue
+        
+        # ✅ NEW: Recalculate eligible modes after sentiment adjustment
+        signal['eligible_modes'] = calculate_eligible_modes(
+            signal['score'],
+            signal['adx'],
+            signal['volume_ratio'],
+            signal['rsi']
+        )
         
         # Update confidence based on combined score
         if signal['score'] >= 70:
@@ -1194,7 +1252,7 @@ def enhance_with_sentiment(signals: List[Dict], news_agg: NewsAggregator) -> Lis
     return enhanced
 
 # =========================
-# DASHBOARD WRITER - Enhanced with daily pips and freshness
+# ✅ ENHANCED DASHBOARD WRITER
 # =========================
 def calculate_daily_pips(signals: List[Dict]) -> float:
     """Calculate total pips from today's signals"""
@@ -1205,7 +1263,6 @@ def calculate_daily_pips(signals: List[Dict]) -> float:
         try:
             signal_time = datetime.fromisoformat(signal.get('timestamp', ''))
             if signal_time.date() == today:
-                # Calculate potential pips from this signal
                 entry = signal.get('entry_price', 0)
                 tp = signal.get('tp', 0)
                 if entry and tp:
@@ -1218,59 +1275,15 @@ def calculate_daily_pips(signals: List[Dict]) -> float:
 
 
 def write_dashboard_state(signals: list, successful_downloads: int, newsapi_calls: int = 0, marketaux_calls: int = 0):
-    """Write comprehensive dashboard state with all required fields"""
+    """Write comprehensive dashboard state with backend intelligence"""
     
-    hour = datetime.now(timezone.utc).hour
-    if 0 <= hour < 8:
-        session = "ASIAN"
-    elif 8 <= hour < 13:
-        session = "EUROPEAN"
-    elif 13 <= hour < 16:
-        session = "OVERLAP"
-    elif 16 <= hour < 21:
-        session = "US"
-    else:
-        session = "LATE_US"
-
+    session = get_market_session()
     performance = track_performance(signals)
-    
-    # Calculate daily pips
     daily_pips = calculate_daily_pips(signals)
     
-    # Enrich signals with freshness data
-    enriched_signals = []
-    for signal in signals:
-        signal_copy = signal.copy()
-        
-        # Add freshness calculation
-        try:
-            signal_time = datetime.fromisoformat(signal.get('timestamp', ''))
-            age_minutes = (datetime.now(timezone.utc) - signal_time).total_seconds() / 60
-            
-            if age_minutes < 15:
-                freshness = "FRESH"
-            elif age_minutes < 30:
-                freshness = "RECENT"
-            elif age_minutes < 60:
-                freshness = "AGING"
-            else:
-                freshness = "STALE"
-            
-            confidence_decay = max(0, 100 - (age_minutes * 2))
-            
-            signal_copy['freshness'] = {
-                "status": freshness,
-                "age_minutes": round(age_minutes, 1),
-                "confidence_decay": round(confidence_decay, 1)
-            }
-        except Exception:
-            signal_copy['freshness'] = {
-                "status": "UNKNOWN",
-                "age_minutes": 0,
-                "confidence_decay": 100
-            }
-        
-        enriched_signals.append(signal_copy)
+    # ✅ NEW: Calculate market state (frontend will trust this)
+    market_volatility = calculate_market_volatility(signals)
+    market_sentiment = calculate_market_sentiment(signals)
 
     dashboard_data = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -1278,7 +1291,17 @@ def write_dashboard_state(signals: list, successful_downloads: int, newsapi_call
         "session": session,
         "mode": MODE,
         "sentiment_enabled": USE_SENTIMENT,
-        "signals": enriched_signals,
+        
+        # ✅ NEW: Market state for frontend
+        "market_state": {
+            "volatility": market_volatility,
+            "sentiment_bias": market_sentiment,
+            "session": session,
+            "trending_pairs": [s['pair'] for s in signals if s.get('metadata', {}).get('market_state') == 'TRENDING_STRONG']
+        },
+        
+        "signals": signals,
+        
         "api_usage": {
             "yfinance": {"successful_downloads": successful_downloads},
             "sentiment": {
@@ -1287,6 +1310,7 @@ def write_dashboard_state(signals: list, successful_downloads: int, newsapi_call
                 "marketaux": marketaux_calls
             }
         },
+        
         "stats": {
             "total_trades": performance["stats"].get("total_trades", 0),
             "win_rate": performance["stats"].get("win_rate", 0),
@@ -1294,16 +1318,19 @@ def write_dashboard_state(signals: list, successful_downloads: int, newsapi_call
             "wins": performance["stats"].get("wins", 0),
             "losses": performance["stats"].get("losses", 0)
         },
+        
         "risk_management": {
             "daily_pips": daily_pips,
             "total_risk_pips": performance["risk_management"].get("total_risk_pips", 0),
             "max_drawdown": performance["risk_management"].get("max_drawdown", 0),
             "average_risk_reward": performance["risk_management"].get("average_risk_reward", 0)
         },
+        
         "system": {
             "last_update": datetime.now(timezone.utc).isoformat(),
             "data_sources_available": successful_downloads > 0,
-            "sentiment_available": newsapi_calls > 0 or marketaux_calls > 0
+            "sentiment_available": newsapi_calls > 0 or marketaux_calls > 0,
+            "version": "2.0.0"
         }
     }
 
@@ -1353,7 +1380,8 @@ def write_health_check(signals: list, successful_downloads: int, newsapi_calls: 
         "system_info": {
             "mode": MODE,
             "pairs_monitored": len(PAIRS),
-            "last_success": datetime.now(timezone.utc).isoformat() if status == "ok" else None
+            "last_success": datetime.now(timezone.utc).isoformat() if status == "ok" else None,
+            "version": "2.0.0"
         }
     }
     
@@ -1424,20 +1452,18 @@ def main():
         return
 
     sentiment_status = "ON" if USE_SENTIMENT else "OFF"
-    log.info(f"🚀 Starting Trade Beacon - Mode={MODE} | Sentiment={sentiment_status}")
+    log.info(f"🚀 Starting Trade Beacon v2.0 - Mode={MODE} | Sentiment={sentiment_status}")
     log.info(f"📊 Monitoring {len(PAIRS)} pairs: {', '.join([p.replace('=X', '') for p in PAIRS])}")
-    log.info(f"💰 Spread-aware pricing enabled")
+    log.info(f"💰 Features: Spread-aware pricing | Backend intelligence | Unique signal IDs")
     
     active = []
     successful_downloads = 0
     newsapi_calls = 0
     marketaux_calls = 0
 
-    # Clear cache at start of each run to ensure fresh data
     _market_cache.clear()
     log.info("🔄 Cache cleared for fresh data")
 
-    # Generate technical signals with parallel processing
     log.info("🔍 Analyzing pairs in parallel...")
     
     with ThreadPoolExecutor(max_workers=min(5, len(PAIRS))) as executor:
@@ -1450,18 +1476,18 @@ def main():
                 if sig:
                     active.append(sig)
                     successful_downloads += 1
-                    log.info(f"✅ {pair.replace('=X', '')} - Signal generated (RR: {sig['risk_reward']:.2f})")
+                    log.info(f"✅ {pair.replace('=X', '')} - Signal generated "
+                            f"(RR: {sig['risk_reward']:.2f}, Hold: {sig['hold_time']}, "
+                            f"Modes: {', '.join(sig['eligible_modes'])})")
                 else:
                     successful_downloads += 1
                     log.info(f"⏭️ {pair.replace('=X', '')} - No signal")
             except Exception as e:
                 log.error(f"❌ {pair.replace('=X', '')} failed: {e}")
 
-    # Apply correlation filter
     if len(active) > 1:
         active = filter_correlated_signals(active)
 
-    # Enhance with sentiment
     if USE_SENTIMENT and active:
         try:
             news_agg = NewsAggregator()
@@ -1482,79 +1508,19 @@ def main():
         log.info("📄 signals.csv written")
         
         print("\n" + "="*80)
-        print(f"🎯 {MODE.upper()} SIGNALS {'+ SENTIMENT' if USE_SENTIMENT else ''} (SPREAD-ADJUSTED):")
+        print(f"🎯 {MODE.upper()} SIGNALS {'+ SENTIMENT' if USE_SENTIMENT else ''} (v2.0):")
         print("="*80)
         
-        display_cols = ["pair", "direction", "score", "confidence", "rsi", "adx", 
-                       "volume_ratio", "session", "risk_reward", "spread"]
+        display_cols = ["signal_id", "pair", "direction", "score", "confidence", 
+                       "hold_time", "risk_reward", "eligible_modes"]
         print(df[display_cols].to_string(index=False))
         print("="*80 + "\n")
-        
-        # Show signal metadata
-        print("📊 SIGNAL METADATA:")
-        print("="*80)
-        for _, row in df.iterrows():
-            meta = row.get('metadata', {})
-            if isinstance(meta, dict):
-                freshness_data = calculate_signal_freshness(row['timestamp'])
-                print(f"{row['pair']}: {meta.get('signal_type', 'N/A').upper()} | "
-                      f"Market: {meta.get('market_state', 'N/A')} | "
-                      f"Valid: {meta.get('valid_for_minutes', 0)}min | "
-                      f"Expires: {meta.get('expires_at', 'N/A')[:16]} | "
-                      f"Freshness: {freshness_data['freshness']}")
-        print("="*80 + "\n")
-        
-        # Show sentiment details if enabled
-        if USE_SENTIMENT and "sentiment" in df.columns:
-            print("📰 SENTIMENT DETAILS:")
-            print("="*80)
-            for _, row in df.iterrows():
-                sent = row.get('sentiment', {})
-                if isinstance(sent, dict):
-                    tech_score = row.get('technical_score', 0)
-                    final_score = row.get('score', 0)
-                    sentiment_impact = final_score - tech_score
-                    
-                    print(f"{row['pair']} ({row['direction']}): "
-                          f"{sent.get('overall', 'N/A').upper()} "
-                          f"({sent.get('adjustment', 0):+d} → {sentiment_impact:+d} pts, "
-                          f"{sent.get('news_count', 0)} articles) | "
-                          f"Tech: {tech_score} → Final: {final_score}")
-            print("="*80 + "\n")
-        
-        # Show risk summary
-        print("💰 RISK SUMMARY:")
-        print("="*80)
-        total_risk = 0
-        for _, row in df.iterrows():
-            risk_pips = abs(row['entry_price'] - row['sl']) * 10000  # Convert to pips
-            reward_pips = abs(row['tp'] - row['entry_price']) * 10000
-            print(f"{row['pair']}: Risk {risk_pips:.1f} pips | Reward {reward_pips:.1f} pips | "
-                  f"RR {row['risk_reward']:.2f} | Spread {row['spread']*10000:.1f} pips")
-            total_risk += risk_pips
-        print(f"\nTotal Risk Exposure: {total_risk:.1f} pips")
-        print("="*80 + "\n")
-        
-        # Export signals with metadata for API/webhook consumers
-        signals_with_metadata = []
-        for _, row in df.iterrows():
-            signal_dict = row.to_dict()
-            # Add freshness calculation
-            signal_dict['freshness'] = calculate_signal_freshness(row['timestamp'])
-            signals_with_metadata.append(signal_dict)
-        
-        # Write enriched signals for API consumers
-        output_dir = Path("signal_state")
-        output_dir.mkdir(exist_ok=True)
-        with open(output_dir / "signals_enriched.json", 'w') as f:
-            json.dump(signals_with_metadata, f, indent=2)
-        log.info("📡 Enriched signals written to signal_state/signals_enriched.json")
         
     else:
         log.info("✅ No strong signals this cycle")
     
     mark_success()
-    log.info("✅ Run completed successfully")
+    log.info("✅ Run completed successfully - Trade Beacon v2.0")
 
 
 if __name__ == "__main__":

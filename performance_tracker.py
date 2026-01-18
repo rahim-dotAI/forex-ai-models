@@ -132,7 +132,8 @@ class PerformanceTracker:
             "outcome": None,
             "pips": 0.0,
             "closed_at": None,
-            "closed_price": None
+            "closed_price": None,
+            "risk_reward": signal.get("risk_reward", 0.0)
         }
         
         self.history["signals"].append(tracked_signal)
@@ -323,6 +324,87 @@ class PerformanceTracker:
         today = datetime.now(timezone.utc).date().isoformat()
         return self.history.get("daily", {}).get(today, {}).get("pips", 0.0)
     
+    def get_risk_metrics(self, current_signals: List[Dict]) -> Dict:
+        """
+        Calculate risk management metrics from current signals
+        
+        Args:
+            current_signals: List of current active signals
+            
+        Returns:
+            Dict with risk management data
+        """
+        if not current_signals:
+            return {
+                "total_risk_pips": 0.0,
+                "max_drawdown": 0.0,
+                "average_risk_reward": 0.0
+            }
+        
+        total_risk_pips = 0.0
+        risk_rewards = []
+        
+        for signal in current_signals:
+            # Calculate risk in pips for each signal
+            entry = signal.get("entry_price", 0)
+            sl = signal.get("sl", 0)
+            pair = signal.get("pair", "")
+            direction = signal.get("direction", "BUY")
+            
+            if entry > 0 and sl > 0:
+                risk_pips = abs(self._calculate_pips(pair, entry, sl, direction))
+                total_risk_pips += risk_pips
+            
+            # Track risk-reward ratios
+            rr = signal.get("risk_reward", 0)
+            if rr > 0:
+                risk_rewards.append(rr)
+        
+        # Calculate average risk-reward
+        avg_rr = sum(risk_rewards) / len(risk_rewards) if risk_rewards else 0.0
+        
+        # Calculate max drawdown from history
+        max_drawdown = self._calculate_max_drawdown()
+        
+        return {
+            "total_risk_pips": round(total_risk_pips, 1),
+            "max_drawdown": round(max_drawdown, 1),
+            "average_risk_reward": round(avg_rr, 2)
+        }
+    
+    def _calculate_max_drawdown(self) -> float:
+        """Calculate maximum drawdown from trade history"""
+        closed_signals = [
+            s for s in self.history["signals"] 
+            if s["status"] in ["WIN", "LOSS"]
+        ]
+        
+        if not closed_signals:
+            return 0.0
+        
+        # Sort by timestamp
+        sorted_signals = sorted(
+            closed_signals, 
+            key=lambda x: x.get("closed_at", x.get("timestamp", ""))
+        )
+        
+        # Calculate cumulative pips
+        cumulative_pips = 0
+        peak = 0
+        max_dd = 0
+        
+        for signal in sorted_signals:
+            cumulative_pips += signal.get("pips", 0)
+            
+            if cumulative_pips > peak:
+                peak = cumulative_pips
+            
+            drawdown = peak - cumulative_pips
+            if drawdown > max_dd:
+                max_dd = drawdown
+        
+        return max_dd
+    
     def cleanup_old_signals(self, days: int = 30):
         """Remove signals older than X days"""
         cutoff = datetime.now(timezone.utc) - timedelta(days=days)
@@ -365,14 +447,23 @@ def track_performance(signals: List[Dict]) -> Dict:
     # Cleanup old signals (keep last 30 days)
     tracker.cleanup_old_signals(days=30)
     
-    # Return stats for dashboard
+    # Get statistics
     stats = tracker.get_stats()
     daily_pips = tracker.get_daily_pips()
+    risk_metrics = tracker.get_risk_metrics(signals)
     
     return {
-        "stats": stats,
+        "stats": {
+            "total_trades": stats.get("total_trades", 0),
+            "win_rate": stats.get("win_rate", 0.0),
+            "total_pips": stats.get("total_pips", 0.0),
+            "wins": stats.get("winning_trades", 0),
+            "losses": stats.get("losing_trades", 0)
+        },
         "risk_management": {
             "daily_pips": round(daily_pips, 1),
-            "max_drawdown": 0.0  # Can be calculated later
+            "total_risk_pips": risk_metrics["total_risk_pips"],
+            "max_drawdown": risk_metrics["max_drawdown"],
+            "average_risk_reward": risk_metrics["average_risk_reward"]
         }
     }

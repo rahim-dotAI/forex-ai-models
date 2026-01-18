@@ -31,6 +31,11 @@ env:
   PYTHON_VERSION: "3.10"
   ENTRY_SCRIPT: "trade_beacon.py"
 
+# CRITICAL: Concurrency control to prevent race conditions
+concurrency:
+  group: trade-beacon-${{ github.workflow }}
+  cancel-in-progress: false  # Wait for previous run to finish
+
 jobs:
   forex-trading:
     runs-on: ubuntu-latest
@@ -78,13 +83,15 @@ jobs:
                 "threshold": 30,
                 "min_adx": null,
                 "rsi_oversold": 45,
-                "rsi_overbought": 55
+                "rsi_overbought": 55,
+                "min_volume_ratio": 0.8
               },
               "conservative": {
                 "threshold": 50,
                 "min_adx": 20,
                 "rsi_oversold": 35,
-                "rsi_overbought": 65
+                "rsi_overbought": 65,
+                "min_volume_ratio": 1.2
               }
             }
           }
@@ -117,6 +124,7 @@ jobs:
         env:
           newsapi_key: ${{ secrets.newsapi_key }}
           MARKETAUX_API_KEY: ${{ secrets.MARKETAUX_API_KEY }}
+          HF_API_KEY: ${{ secrets.HF_API_KEY }}
         run: |
           echo "🤖 Running Trade Beacon with Sentiment Analysis..."
           python ${{ env.ENTRY_SCRIPT }}
@@ -126,15 +134,36 @@ jobs:
         run: |
           echo "⏭️ Skipping run: ${{ steps.market.outputs.status }}"
       
-      # 🔑 CRITICAL: Commit dashboard & signals for live updates (FIXED RACE CONDITIONS)
+      # 🔑 CRITICAL: Commit dashboard & signals with file locking
       - name: 💾 Commit dashboard & signals
         if: steps.market.outputs.skip != 'true'
         run: |
+          # File-based locking mechanism
+          LOCK_FILE=".github/.trade-beacon.lock"
+          
+          # Wait for lock (max 2 minutes)
+          echo "🔒 Acquiring lock..."
+          for i in {1..24}; do
+            if mkdir "$LOCK_FILE" 2>/dev/null; then
+              echo "✅ Lock acquired"
+              trap "rmdir '$LOCK_FILE' 2>/dev/null || true" EXIT
+              break
+            fi
+            echo "⏳ Waiting for lock... (attempt $i/24)"
+            sleep 5
+          done
+          
+          if [ ! -d "$LOCK_FILE" ]; then
+            echo "❌ Failed to acquire lock after 2 minutes"
+            exit 1
+          fi
+          
+          # Configure Git
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "Trade Beacon Bot"
           
           # Stage changes first
-          git add -f signal_state/dashboard_state.json signal_state/signal_history.json signal_state/last_run.txt signal_state/last_success.txt signals.csv config.json 2>/dev/null || true
+          git add -f signal_state/dashboard_state.json signal_state/signal_history.json signal_state/health.json signal_state/last_run.txt signal_state/last_success.txt signals.csv config.json 2>/dev/null || true
           
           # Commit changes if any exist (before pulling)
           if ! git diff --staged --quiet; then
@@ -184,6 +213,8 @@ jobs:
                 else
                   echo "❌ Failed to merge after $MAX_RETRIES attempts"
                   git merge --abort 2>/dev/null || true
+                  # Release lock before exit
+                  rmdir "$LOCK_FILE" 2>/dev/null || true
                   exit 1
                 fi
               fi
@@ -214,11 +245,17 @@ jobs:
                   echo "✅ Force-pushed successfully (this should be rare)"
                 else
                   echo "❌ Failed to push after all attempts"
+                  # Release lock before exit
+                  rmdir "$LOCK_FILE" 2>/dev/null || true
                   exit 1
                 fi
               fi
             fi
           done
+          
+          # Release lock (trap will also handle this)
+          rmdir "$LOCK_FILE" 2>/dev/null || true
+          echo "🔓 Lock released"
       
       - name: 📦 Upload artifacts
         if: always()

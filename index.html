@@ -1,778 +1,538 @@
-import React, { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, ChevronDown, ChevronUp, Star, Clock, Target, BarChart3 } from 'lucide-react';
-
-const TradeBeaconElite = () => {
-  const [data, setData] = useState(null);
-  const [currentMode, setCurrentMode] = useState(localStorage.getItem('mode') || 'conservative');
-  const [expandedSignals, setExpandedSignals] = useState(new Set());
-  const [primarySignal, setPrimarySignal] = useState(localStorage.getItem('primarySignal') || null);
-  const [lastUpdate, setLastUpdate] = useState(null);
-  const [health, setHealth] = useState('live');
-
-  const MODES = {
-    conservative: {
-      threshold: 50,
-      minADX: 20,
-      minVolumeRatio: 1.0,
-      rsiOversold: 35,
-      rsiOverbought: 65
-    },
-    aggressive: {
-      threshold: 30,
-      minADX: 15,
-      minVolumeRatio: 0.8,
-      rsiOversold: 45,
-      rsiOverbought: 55
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trade Beacon Elite - Forex Signal Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-  };
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
 
-  const API_URLS = [
-    './signal_state/dashboard_state.json',
-    'signal_state/dashboard_state.json',
-    'https://raw.githubusercontent.com/rahim-dotAI/forex-ai-models/main/signal_state/dashboard_state.json'
-  ];
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    const { TrendingUp, TrendingDown, ChevronDown, ChevronUp, Star, Clock, Target, BarChart3 } = lucide;
 
-  useEffect(() => {
-    fetchData();
-    const interval = setInterval(fetchData, 15000);
-    return () => clearInterval(interval);
-  }, []);
+    const TradeBeaconElite = () => {
+      const [data, setData] = useState(null);
+      const [currentMode, setCurrentMode] = useState(localStorage.getItem('mode') || 'conservative');
+      const [expandedSignals, setExpandedSignals] = useState(new Set());
+      const [primarySignal, setPrimarySignal] = useState(localStorage.getItem('primarySignal') || null);
+      const [lastUpdate, setLastUpdate] = useState(null);
+      const [health, setHealth] = useState('live');
 
-  const fetchData = async () => {
-    for (const url of API_URLS) {
-      try {
-        const response = await fetch(url + '?t=' + Date.now(), {
-          cache: 'no-store',
-          headers: { 'Cache-Control': 'no-cache' }
-        });
-        if (!response.ok) continue;
-        const json = await response.json();
-        if (json && json.signals) {
-          setData(json);
-          setLastUpdate(new Date());
-          setHealth('live');
-          return;
+      const MODES = {
+        conservative: {
+          threshold: 50,
+          minADX: 20,
+          minVolumeRatio: 1.0,
+          rsiOversold: 35,
+          rsiOverbought: 65
+        },
+        aggressive: {
+          threshold: 30,
+          minADX: 15,
+          minVolumeRatio: 0.8,
+          rsiOversold: 45,
+          rsiOverbought: 55
         }
-      } catch (e) {
-        console.warn('Fetch failed:', url);
-      }
-    }
-    setHealth('stale');
-  };
-
-  const passesMode = (signal) => {
-    const mode = MODES[currentMode];
-    if (signal.score < mode.threshold) return false;
-    if (signal.adx != null && signal.adx < mode.minADX) return false;
-    if (signal.volume_ratio != null && signal.volume_ratio < mode.minVolumeRatio) return false;
-    if (signal.rsi != null && (signal.rsi < mode.rsiOversold || signal.rsi > mode.rsiOverbought)) return false;
-    return true;
-  };
-
-  const getSignalAge = (timestamp) => {
-    if (!timestamp) return null;
-    try {
-      const signalTime = new Date(timestamp.replace('+00:00', 'Z'));
-      return (new Date() - signalTime) / (1000 * 60);
-    } catch {
-      return null;
-    }
-  };
-
-  const getFreshnessStatus = (ageMinutes) => {
-    if (ageMinutes < 15) return { status: 'FRESH', color: '#10b981', opacity: 1.0 };
-    if (ageMinutes < 30) return { status: 'RECENT', color: '#06b6d4', opacity: 0.95 };
-    if (ageMinutes < 60) return { status: 'AGING', color: '#f59e0b', opacity: 0.85 };
-    return { status: 'STALE', color: '#6b7280', opacity: 0.7 };
-  };
-
-  const getHoldTime = (signal) => {
-    // ✅ FIX: Trust backend if available
-    if (signal.hold_time) return signal.hold_time;
-    
-    // Fallback calculation
-    const rr = signal.risk_reward || 0;
-    const atr = signal.atr || 0;
-    
-    if (rr > 2.5 || atr > 0.002) return 'SWING';
-    if (rr > 1.8 || atr > 0.0015) return 'INTRADAY';
-    return 'SHORT';
-  };
-
-  const getConfidenceGradient = (score) => {
-    if (score >= 70) return 'linear-gradient(135deg, #8b5cf6, #6366f1)';
-    if (score >= 60) return 'linear-gradient(135deg, #3b82f6, #06b6d4)';
-    if (score >= 50) return 'linear-gradient(135deg, #06b6d4, #14b8a6)';
-    return 'linear-gradient(135deg, #10b981, #059669)';
-  };
-
-  const getVolatility = (signals) => {
-    // ✅ FIX: Trust backend market state if available
-    if (data?.market_state?.volatility) {
-      return data.market_state.volatility;
-    }
-    
-    // Fallback calculation
-    if (!signals || signals.length === 0) return 'CALM';
-    const avgATR = signals.reduce((sum, s) => sum + (s.atr || 0), 0) / signals.length;
-    const avgVol = signals.reduce((sum, s) => sum + (s.volume_ratio || 1), 0) / signals.length;
-    
-    if (avgATR > 0.002 || avgVol > 1.5) return 'HIGH';
-    if (avgATR > 0.0015 || avgVol > 1.2) return 'NORMAL';
-    return 'CALM';
-  };
-
-  const getSentimentBias = (signals) => {
-    // ✅ FIX: Trust backend market state if available
-    if (data?.market_state?.sentiment_bias) {
-      return data.market_state.sentiment_bias;
-    }
-    
-    // Fallback calculation
-    if (!signals || signals.length === 0) return 'MIXED';
-    const bullish = signals.filter(s => s.direction === 'BUY').length;
-    const bearish = signals.filter(s => s.direction === 'SELL').length;
-    
-    if (bullish > bearish * 1.5) return 'BULLISH';
-    if (bearish > bullish * 1.5) return 'BEARISH';
-    return 'MIXED';
-  };
-
-  // ✅ FIX: Generate stable composite key
-  const getSignalId = (signal) => {
-    return signal.signal_id || `${signal.pair}_${signal.timestamp}`;
-  };
-
-  const toggleExpand = (id) => {
-    const newExpanded = new Set(expandedSignals);
-    if (newExpanded.has(id)) {
-      newExpanded.delete(id);
-    } else {
-      newExpanded.add(id);
-    }
-    setExpandedSignals(newExpanded);
-  };
-
-  const togglePrimary = (id) => {
-    const newPrimary = primarySignal === id ? null : id;
-    setPrimarySignal(newPrimary);
-    localStorage.setItem('primarySignal', newPrimary || '');
-  };
-
-  // ✅ FIX: Failsafe confidence derivation
-  const getConfidenceLabel = (signal) => {
-    if (signal.confidence) return signal.confidence;
-    const score = signal.score;
-    return score >= 70 ? 'EXCELLENT' :
-           score >= 60 ? 'STRONG' :
-           score >= 50 ? 'GOOD' : 'MODERATE';
-  };
-
-  // ✅ FIX: Trust backend freshness if available
-  const getFreshnessData = (signal) => {
-    if (signal.freshness?.status) {
-      return {
-        status: signal.freshness.status,
-        color: signal.freshness.status === 'FRESH' ? '#10b981' :
-               signal.freshness.status === 'RECENT' ? '#06b6d4' :
-               signal.freshness.status === 'AGING' ? '#f59e0b' : '#6b7280',
-        opacity: 1 - (signal.freshness.age_minutes / 120),
-        ageMinutes: signal.freshness.age_minutes
       };
-    }
-    
-    const ageMinutes = getSignalAge(signal.timestamp);
-    return getFreshnessStatus(ageMinutes);
-  };
 
-  const handleModeChange = (mode) => {
-    setCurrentMode(mode);
-    localStorage.setItem('mode', mode);
-  };
+      const API_URLS = [
+        './signal_state/dashboard_state.json',
+        'signal_state/dashboard_state.json',
+        'https://raw.githubusercontent.com/rahim-dotAI/forex-ai-models/main/signal_state/dashboard_state.json'
+      ];
 
-  if (!data) {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0a0e1a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f9fafb' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '48px', marginBottom: '20px' }}>⏳</div>
-          <div style={{ fontSize: '20px', fontWeight: 600 }}>Loading Trade Beacon...</div>
-        </div>
-      </div>
-    );
-  }
+      useEffect(() => {
+        fetchData();
+        const interval = setInterval(fetchData, 15000);
+        return () => clearInterval(interval);
+      }, []);
 
-  const allSignals = data.signals || [];
-  const filteredSignals = allSignals
-    .filter(passesMode)
-    .sort((a, b) => b.score - a.score);
+      const fetchData = async () => {
+        for (const url of API_URLS) {
+          try {
+            const response = await fetch(url + '?t=' + Date.now(), {
+              cache: 'no-store',
+              headers: { 'Cache-Control': 'no-cache' }
+            });
+            if (!response.ok) continue;
+            const json = await response.json();
+            if (json && json.signals) {
+              setData(json);
+              setLastUpdate(new Date());
+              setHealth('live');
+              return;
+            }
+          } catch (e) {
+            console.warn('Fetch failed:', url);
+          }
+        }
+        setHealth('stale');
+      };
 
-  const volatility = getVolatility(allSignals);
-  const sentimentBias = getSentimentBias(allSignals);
-  const session = data.session || 'UNKNOWN';
+      const passesMode = (signal) => {
+        const mode = MODES[currentMode];
+        if (signal.score < mode.threshold) return false;
+        if (signal.adx != null && signal.adx < mode.minADX) return false;
+        if (signal.volume_ratio != null && signal.volume_ratio < mode.minVolumeRatio) return false;
+        if (signal.rsi != null && (signal.rsi < mode.rsiOversold || signal.rsi > mode.rsiOverbought)) return false;
+        return true;
+      };
 
-  return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#0a0e1a',
-      color: '#f9fafb',
-      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
-    }}>
-      {/* Navbar */}
-      <nav style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '20px 40px',
-        background: 'rgba(17, 24, 39, 0.9)',
-        borderBottom: '1px solid #374151',
-        backdropFilter: 'blur(20px)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 1000
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{
-            width: '44px',
-            height: '44px',
-            background: 'linear-gradient(135deg, #3b82f6, #a855f7)',
-            borderRadius: '14px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 10px 30px rgba(59, 130, 246, 0.3)'
-          }}>
-            <BarChart3 size={24} color="white" />
-          </div>
-          <div style={{ fontSize: '28px', fontWeight: 900 }}>
-            Trade<span style={{
-              background: 'linear-gradient(135deg, #3b82f6, #a855f7)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent'
-            }}>Beacon</span>
-          </div>
-        </div>
-        
-        <div style={{
-          padding: '10px 20px',
-          borderRadius: '24px',
-          fontSize: '13px',
-          fontWeight: 700,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          background: health === 'live' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-          color: health === 'live' ? '#10b981' : '#f59e0b',
-          border: `2px solid ${health === 'live' ? '#10b981' : '#f59e0b'}`
-        }}>
-          <div style={{
-            width: '10px',
-            height: '10px',
-            borderRadius: '50%',
-            background: 'currentColor',
-            position: 'relative'
-          }}>
-            <div style={{
-              position: 'absolute',
-              inset: '-4px',
-              borderRadius: '50%',
-              border: '2px solid currentColor',
-              animation: 'pulse 2s infinite'
-            }} />
-          </div>
-          {health.toUpperCase()}
-        </div>
-      </nav>
+      const getSignalAge = (timestamp) => {
+        if (!timestamp) return null;
+        try {
+          const signalTime = new Date(timestamp.replace('+00:00', 'Z'));
+          return (new Date() - signalTime) / (1000 * 60);
+        } catch {
+          return null;
+        }
+      };
 
-      <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '40px' }}>
-        {/* Market Pulse */}
-        <div style={{
-          background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(168, 85, 247, 0.1))',
-          border: '1px solid #374151',
-          borderRadius: '20px',
-          padding: '30px',
-          marginBottom: '32px'
-        }}>
-          <div style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1.2px', fontWeight: 600 }}>
-            📊 Market Pulse
-          </div>
-          
-          <div style={{ fontSize: '20px', fontWeight: 700, marginBottom: '16px', lineHeight: 1.5 }}>
-            {filteredSignals.length} quality signal{filteredSignals.length !== 1 ? 's' : ''} • {session} session • Volatility {volatility === 'HIGH' ? '↑' : volatility === 'CALM' ? '↓' : '→'}
-          </div>
-          
-          {/* Volatility Strip */}
-          <div style={{ marginBottom: '16px' }}>
-            <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '6px' }}>Volatility</div>
-            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-              {['CALM', 'NORMAL', 'HIGH'].map(level => (
-                <div key={level} style={{
-                  flex: 1,
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: volatility === level ? 
-                    (level === 'HIGH' ? '#f59e0b' : level === 'NORMAL' ? '#3b82f6' : '#6b7280') :
-                    '#1f2937',
-                  transition: 'all 0.3s'
-                }} />
-              ))}
-              <div style={{ fontSize: '13px', fontWeight: 600, marginLeft: '12px', color: '#f9fafb' }}>
-                {volatility}
-              </div>
+      const getFreshnessStatus = (ageMinutes) => {
+        if (ageMinutes < 15) return { status: 'FRESH', color: '#10b981', opacity: 1.0 };
+        if (ageMinutes < 30) return { status: 'RECENT', color: '#06b6d4', opacity: 0.95 };
+        if (ageMinutes < 60) return { status: 'AGING', color: '#f59e0b', opacity: 0.85 };
+        return { status: 'STALE', color: '#6b7280', opacity: 0.7 };
+      };
+
+      const getHoldTime = (signal) => {
+        if (signal.hold_time) return signal.hold_time;
+        const rr = signal.risk_reward || 0;
+        const atr = signal.atr || 0;
+        if (rr > 2.5 || atr > 0.002) return 'SWING';
+        if (rr > 1.8 || atr > 0.0015) return 'INTRADAY';
+        return 'SHORT';
+      };
+
+      const getConfidenceGradient = (score) => {
+        if (score >= 70) return 'linear-gradient(135deg, #8b5cf6, #6366f1)';
+        if (score >= 60) return 'linear-gradient(135deg, #3b82f6, #06b6d4)';
+        if (score >= 50) return 'linear-gradient(135deg, #06b6d4, #14b8a6)';
+        return 'linear-gradient(135deg, #10b981, #059669)';
+      };
+
+      const getVolatility = (signals) => {
+        if (data?.market_state?.volatility) return data.market_state.volatility;
+        if (!signals || signals.length === 0) return 'CALM';
+        const avgATR = signals.reduce((sum, s) => sum + (s.atr || 0), 0) / signals.length;
+        const avgVol = signals.reduce((sum, s) => sum + (s.volume_ratio || 1), 0) / signals.length;
+        if (avgATR > 0.002 || avgVol > 1.5) return 'HIGH';
+        if (avgATR > 0.0015 || avgVol > 1.2) return 'NORMAL';
+        return 'CALM';
+      };
+
+      const getSentimentBias = (signals) => {
+        if (data?.market_state?.sentiment_bias) return data.market_state.sentiment_bias;
+        if (!signals || signals.length === 0) return 'MIXED';
+        const bullish = signals.filter(s => s.direction === 'BUY').length;
+        const bearish = signals.filter(s => s.direction === 'SELL').length;
+        if (bullish > bearish * 1.5) return 'BULLISH';
+        if (bearish > bullish * 1.5) return 'BEARISH';
+        return 'MIXED';
+      };
+
+      const getSignalId = (signal) => {
+        return signal.signal_id || `${signal.pair}_${signal.timestamp}`;
+      };
+
+      const toggleExpand = (id) => {
+        const newExpanded = new Set(expandedSignals);
+        if (newExpanded.has(id)) {
+          newExpanded.delete(id);
+        } else {
+          newExpanded.add(id);
+        }
+        setExpandedSignals(newExpanded);
+      };
+
+      const togglePrimary = (id) => {
+        const newPrimary = primarySignal === id ? null : id;
+        setPrimarySignal(newPrimary);
+        localStorage.setItem('primarySignal', newPrimary || '');
+      };
+
+      const getConfidenceLabel = (signal) => {
+        if (signal.confidence) return signal.confidence;
+        const score = signal.score;
+        return score >= 70 ? 'EXCELLENT' :
+               score >= 60 ? 'STRONG' :
+               score >= 50 ? 'GOOD' : 'MODERATE';
+      };
+
+      const getFreshnessData = (signal) => {
+        if (signal.freshness?.status) {
+          return {
+            status: signal.freshness.status,
+            color: signal.freshness.status === 'FRESH' ? '#10b981' :
+                   signal.freshness.status === 'RECENT' ? '#06b6d4' :
+                   signal.freshness.status === 'AGING' ? '#f59e0b' : '#6b7280',
+            opacity: 1 - (signal.freshness.age_minutes / 120),
+            ageMinutes: signal.freshness.age_minutes
+          };
+        }
+        const ageMinutes = getSignalAge(signal.timestamp);
+        return getFreshnessStatus(ageMinutes);
+      };
+
+      const handleModeChange = (mode) => {
+        setCurrentMode(mode);
+        localStorage.setItem('mode', mode);
+      };
+
+      if (!data) {
+        return (
+          <div style={{ minHeight: '100vh', background: '#0a0e1a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f9fafb' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '48px', marginBottom: '20px' }}>⏳</div>
+              <div style={{ fontSize: '20px', fontWeight: 600 }}>Loading Trade Beacon...</div>
             </div>
           </div>
-          
-          <div style={{ fontSize: '16px', color: '#d1d5db' }}>
-            Market sentiment: {sentimentBias}
-            {lastUpdate && (
-              <span style={{ marginLeft: '20px', fontSize: '13px', color: '#6b7280' }}>
-                Updated {Math.floor((new Date() - lastUpdate) / 1000)}s ago
-              </span>
+        );
+      }
+
+      const allSignals = data.signals || [];
+      const filteredSignals = allSignals.filter(passesMode).sort((a, b) => b.score - a.score);
+      const volatility = getVolatility(allSignals);
+      const sentimentBias = getSentimentBias(allSignals);
+      const session = data.session || 'UNKNOWN';
+
+      return (
+        <div style={{ minHeight: '100vh', background: '#0a0e1a', color: '#f9fafb', fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+          {/* Navbar */}
+          <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 40px', background: 'rgba(17, 24, 39, 0.9)', borderBottom: '1px solid #374151', backdropFilter: 'blur(20px)', position: 'sticky', top: 0, zIndex: 1000 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{ width: '44px', height: '44px', background: 'linear-gradient(135deg, #3b82f6, #a855f7)', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(59, 130, 246, 0.3)' }}>
+                <BarChart3 size={24} color="white" />
+              </div>
+              <div style={{ fontSize: '28px', fontWeight: 900 }}>
+                Trade<span style={{ background: 'linear-gradient(135deg, #3b82f6, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Beacon</span>
+              </div>
+            </div>
+            <div style={{ padding: '10px 20px', borderRadius: '24px', fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '10px', background: health === 'live' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)', color: health === 'live' ? '#10b981' : '#f59e0b', border: `2px solid ${health === 'live' ? '#10b981' : '#f59e0b'}` }}>
+              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'currentColor', position: 'relative' }}>
+                <div style={{ position: 'absolute', inset: '-4px', borderRadius: '50%', border: '2px solid currentColor', animation: 'pulse 2s infinite' }} />
+              </div>
+              {health.toUpperCase()}
+            </div>
+          </nav>
+
+          <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '40px' }}>
+            {/* Market Pulse */}
+            <div style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(168, 85, 247, 0.1))', border: '1px solid #374151', borderRadius: '20px', padding: '30px', marginBottom: '32px' }}>
+              <div style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1.2px', fontWeight: 600 }}>📊 Market Pulse</div>
+              <div style={{ fontSize: '20px', fontWeight: 700, marginBottom: '16px', lineHeight: 1.5 }}>
+                {filteredSignals.length} quality signal{filteredSignals.length !== 1 ? 's' : ''} • {session} session • Volatility {volatility === 'HIGH' ? '↑' : volatility === 'CALM' ? '↓' : '→'}
+              </div>
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '6px' }}>Volatility</div>
+                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                  {['CALM', 'NORMAL', 'HIGH'].map(level => (
+                    <div key={level} style={{ flex: 1, height: '8px', borderRadius: '4px', background: volatility === level ? (level === 'HIGH' ? '#f59e0b' : level === 'NORMAL' ? '#3b82f6' : '#6b7280') : '#1f2937', transition: 'all 0.3s' }} />
+                  ))}
+                  <div style={{ fontSize: '13px', fontWeight: 600, marginLeft: '12px', color: '#f9fafb' }}>{volatility}</div>
+                </div>
+              </div>
+              <div style={{ fontSize: '16px', color: '#d1d5db' }}>
+                Market sentiment: {sentimentBias}
+                {lastUpdate && <span style={{ marginLeft: '20px', fontSize: '13px', color: '#6b7280' }}>Updated {Math.floor((new Date() - lastUpdate) / 1000)}s ago</span>}
+              </div>
+            </div>
+
+            {/* Mode Selector */}
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '32px' }}>
+              {Object.keys(MODES).map(mode => (
+                <button key={mode} onClick={() => handleModeChange(mode)} style={{ flex: 1, padding: '16px 24px', border: currentMode === mode ? 'none' : '2px solid #374151', borderRadius: '16px', background: currentMode === mode ? 'linear-gradient(135deg, #3b82f6, #a855f7)' : '#1f2937', color: '#f9fafb', cursor: 'pointer', transition: 'all 0.3s', fontSize: '14px', fontWeight: 600, boxShadow: currentMode === mode ? '0 10px 40px rgba(59, 130, 246, 0.4)' : 'none' }}>
+                  <div>{mode.charAt(0).toUpperCase() + mode.slice(1)}</div>
+                  <div style={{ fontSize: '11px', opacity: 0.7, marginTop: '4px' }}>{mode === 'conservative' ? 'Score ≥50 • ADX ≥20' : 'Score ≥30 • ADX ≥15'}</div>
+                </button>
+              ))}
+            </div>
+
+            {/* Stats */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+              {[
+                { label: 'Active Signals', value: filteredSignals.length, color: '#3b82f6' },
+                { label: 'Win Rate', value: `${(data.stats?.win_rate || 0).toFixed(1)}%`, color: '#10b981' },
+                { label: 'Total Pips', value: (data.stats?.total_pips || 0).toFixed(1), color: '#f59e0b' },
+                { label: 'Daily Pips', value: (data.risk_management?.daily_pips || 0).toFixed(1), color: '#06b6d4' }
+              ].map(stat => (
+                <div key={stat.label} style={{ background: '#111827', border: '1px solid #374151', borderRadius: '20px', padding: '24px', transition: 'all 0.3s' }}>
+                  <div style={{ fontSize: '12px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: '8px' }}>{stat.label}</div>
+                  <div style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-1px', color: stat.color }}>{stat.value}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Signals */}
+            {filteredSignals.length === 0 ? (
+              <div style={{ background: '#111827', border: '1px solid #374151', borderRadius: '20px', padding: '60px 40px', textAlign: 'center' }}>
+                <div style={{ fontSize: '48px', marginBottom: '20px' }}>💤</div>
+                <div style={{ fontSize: '24px', fontWeight: 700, marginBottom: '16px' }}>No Signals Right Now</div>
+                <div style={{ fontSize: '16px', color: '#9ca3af', lineHeight: 1.6, maxWidth: '500px', margin: '0 auto' }}>
+                  Market conditions don't meet quality standards in <strong>{currentMode.toUpperCase()}</strong> mode:
+                  <div style={{ marginTop: '16px', textAlign: 'left' }}>
+                    • ADX below {MODES[currentMode].minADX} on most pairs<br/>
+                    • Volume below average threshold<br/>
+                    • Choppy price action detected
+                  </div>
+                  <div style={{ marginTop: '20px' }}>Try switching to {currentMode === 'conservative' ? 'AGGRESSIVE' : 'CONSERVATIVE'} mode or wait for clearer opportunities.</div>
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '20px' }}>
+                {filteredSignals.map(signal => {
+                  const signalId = getSignalId(signal);
+                  const freshnessData = getFreshnessData(signal);
+                  const isExpanded = expandedSignals.has(signalId);
+                  const isPrimary = primarySignal === signalId;
+                  const holdTime = getHoldTime(signal);
+                  const confidence = getConfidenceLabel(signal);
+                  const dir = signal.direction.toLowerCase();
+
+                  return (
+                    <div key={signalId} style={{ background: '#1f2937', borderRadius: '16px', padding: '20px', borderLeft: `4px solid ${dir === 'buy' ? '#10b981' : '#ef4444'}`, transition: 'all 0.3s', opacity: isPrimary ? 1 : (primarySignal && !isPrimary ? 0.6 : freshnessData.opacity), transform: isPrimary ? 'scale(1.02)' : 'scale(1)', boxShadow: isPrimary ? '0 20px 60px rgba(59, 130, 246, 0.3)' : 'none' }}>
+                      {/* Header */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{ fontSize: '20px', fontWeight: 800 }}>{signal.pair}</div>
+                          <div style={{ padding: '4px 10px', borderRadius: '10px', fontSize: '11px', fontWeight: 700, background: dir === 'buy' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)', color: dir === 'buy' ? '#10b981' : '#ef4444', border: `2px solid ${dir === 'buy' ? '#10b981' : '#ef4444'}` }}>{signal.direction}</div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <button onClick={() => togglePrimary(signalId)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px' }}>
+                            <Star size={20} fill={isPrimary ? '#f59e0b' : 'none'} color={isPrimary ? '#f59e0b' : '#6b7280'} />
+                          </button>
+                          <div style={{ fontSize: '11px', fontWeight: 700, color: freshnessData.color, padding: '4px 8px', borderRadius: '8px', background: `${freshnessData.color}20` }}>
+                            {freshnessData.status} ({Math.floor(freshnessData.ageMinutes)}m)
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Confidence */}
+                      <div style={{ marginBottom: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                          <div style={{ fontSize: '16px', fontWeight: 700 }}>{confidence}</div>
+                          <div style={{ fontSize: '18px', fontWeight: 800 }}>{signal.score}</div>
+                        </div>
+                        <div style={{ height: '8px', borderRadius: '4px', background: '#111827', overflow: 'hidden' }}>
+                          <div style={{ width: `${signal.score}%`, height: '100%', background: getConfidenceGradient(signal.score), transition: 'width 0.5s ease' }} />
+                        </div>
+                      </div>
+
+                      {/* Price Action */}
+                      <div style={{ background: '#111827', borderRadius: '12px', padding: '16px', marginBottom: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '4px' }}>
+                          <div style={{ color: '#9ca3af' }}>Entry</div>
+                          <div style={{ fontWeight: 700 }}>{signal.entry_price?.toFixed(5)}</div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '4px' }}>
+                          <div style={{ color: '#ef4444' }}>SL</div>
+                          <div style={{ fontWeight: 700, color: '#ef4444' }}>{signal.sl?.toFixed(5)}</div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                          <div style={{ color: '#10b981' }}>TP</div>
+                          <div style={{ fontWeight: 700, color: '#10b981' }}>{signal.tp?.toFixed(5)}</div>
+                        </div>
+                      </div>
+
+                      {/* Key Metrics */}
+                      <div style={{ fontSize: '14px', color: '#d1d5db', marginBottom: '12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                          <Target size={14} color="#06b6d4" />
+                          <span>Risk:Reward <strong>{signal.risk_reward}</strong></span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                          <Clock size={14} color="#a855f7" />
+                          <span>Hold Time: <strong>{holdTime}</strong></span>
+                        </div>
+                        {signal.sentiment?.overall && (
+                          <div style={{ fontSize: '13px', color: '#9ca3af' }}>
+                            Sentiment: <strong>{signal.sentiment.overall.toUpperCase()}</strong>
+                            {signal.sentiment_score && <span> ({signal.sentiment_score > 0 ? '+' : ''}{signal.sentiment_score})</span>}
+                          </div>
+                        )}
+                      </div>
+
+                      <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px' }}>
+                        {signal.session && `📍 ${signal.session} session`}
+                        {signal.metadata?.market_state && ` • ${signal.metadata.market_state}`}
+                      </div>
+
+                      {/* Expand Toggle */}
+                      <button onClick={() => toggleExpand(signalId)} style={{ width: '100%', padding: '12px', background: '#111827', border: '1px solid #374151', borderRadius: '10px', color: '#9ca3af', cursor: 'pointer', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.3s' }}>
+                        {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        {isExpanded ? 'Hide Details' : 'Show Details'}
+                      </button>
+
+                      {/* Expanded Details */}
+                      {isExpanded && (
+                        <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #374151', animation: 'fadeIn 0.3s ease' }}>
+                          {/* Score Breakdown */}
+                          <div style={{ marginBottom: '20px' }}>
+                            <div style={{ fontSize: '14px', fontWeight: 700, marginBottom: '12px', color: '#f9fafb' }}>📊 Score Breakdown ({signal.score} total)</div>
+                            <div style={{ fontSize: '13px', color: '#d1d5db', lineHeight: 1.8 }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                                <span>• Technical</span>
+                                <span style={{ fontWeight: 600 }}>+{signal.technical_score || signal.score - (signal.sentiment_score || 0)}</span>
+                              </div>
+                              {signal.sentiment_score !== undefined && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                                  <span>• Sentiment</span>
+                                  <span style={{ fontWeight: 600, color: signal.sentiment_score > 0 ? '#10b981' : '#ef4444' }}>{signal.sentiment_score > 0 ? '+' : ''}{signal.sentiment_score}</span>
+                                </div>
+                              )}
+                              {signal.volume_ratio && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                                  <span>• Volume Bonus</span>
+                                  <span style={{ fontWeight: 600 }}>{signal.volume_ratio > 1.5 ? '+10' : signal.volume_ratio > 1.2 ? '+5' : '+3'}</span>
+                                </div>
+                              )}
+                              {signal.session && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                  <span>• Session Alignment</span>
+                                  <span style={{ fontWeight: 600 }}>+5</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Technical Indicators */}
+                          <div style={{ marginBottom: '20px' }}>
+                            <div style={{ fontSize: '14px', fontWeight: 700, marginBottom: '12px', color: '#f9fafb' }}>📈 Technical Indicators</div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                              {signal.rsi && (
+                                <div style={{ background: '#111827', padding: '12px', borderRadius: '10px', border: '1px solid #374151' }}>
+                                  <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}>RSI</div>
+                                  <div style={{ fontSize: '16px', fontWeight: 700 }}>{signal.rsi.toFixed(1)}</div>
+                                  <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '2px' }}>{signal.rsi < 40 ? 'Oversold' : signal.rsi > 60 ? 'Overbought' : 'Neutral'}</div>
+                                </div>
+                              )}
+                              {signal.adx && (
+                                <div style={{ background: '#111827', padding: '12px', borderRadius: '10px', border: '1px solid #374151' }}>
+                                  <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}>ADX</div>
+                                  <div style={{ fontSize: '16px', fontWeight: 700 }}>{signal.adx.toFixed(1)}</div>
+                                  <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '2px' }}>{signal.adx > 25 ? 'Strong Trend' : signal.adx > 20 ? 'Trending' : 'Weak Trend'}</div>
+                                </div>
+                              )}
+                              {signal.atr && (
+                                <div style={{ background: '#111827', padding: '12px', borderRadius: '10px', border: '1px solid #374151' }}>
+                                  <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}>ATR</div>
+                                  <div style={{ fontSize: '16px', fontWeight: 700 }}>{signal.atr.toFixed(5)}</div>
+                                  <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '2px' }}>Volatility</div>
+                                </div>
+                              )}
+                              {signal.volume_ratio && (
+                                <div style={{ background: '#111827', padding: '12px', borderRadius: '10px', border: '1px solid #374151' }}>
+                                  <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}>Volume</div>
+                                  <div style={{ fontSize: '16px', fontWeight: 700 }}>{signal.volume_ratio.toFixed(2)}x</div>
+                                  <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '2px' }}>{signal.volume_ratio > 1.5 ? 'Very High' : signal.volume_ratio > 1.2 ? 'High' : 'Normal'}</div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Sentiment Details */}
+                          {signal.sentiment && (
+                            <div style={{ marginBottom: '20px' }}>
+                              <div style={{ fontSize: '14px', fontWeight: 700, marginBottom: '12px', color: '#f9fafb' }}>📰 Sentiment Analysis</div>
+                              <div style={{ fontSize: '13px', color: '#d1d5db', lineHeight: 1.8 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                                  <span>Overall Sentiment</span>
+                                  <span style={{ fontWeight: 700, color: signal.sentiment.overall === 'bullish' ? '#10b981' : signal.sentiment.overall === 'bearish' ? '#ef4444' : '#9ca3af' }}>{signal.sentiment.overall?.toUpperCase()}</span>
+                                </div>
+                                {signal.sentiment.news_count !== undefined && (
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                                    <span>News Articles</span>
+                                    <span style={{ fontWeight: 600 }}>{signal.sentiment.news_count}</span>
+                                  </div>
+                                )}
+                                {signal.sentiment.positive !== undefined && signal.sentiment.negative !== undefined && (
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                                    <span>Positive / Negative</span>
+                                    <span style={{ fontWeight: 600 }}>{signal.sentiment.positive} / {signal.sentiment.negative}</span>
+                                  </div>
+                                )}
+                                {signal.sentiment.sources && (
+                                  <div style={{ marginTop: '8px', fontSize: '12px', color: '#6b7280' }}>Sources: NewsAPI ({signal.sentiment.sources.newsapi || 0}), Marketaux ({signal.sentiment.sources.marketaux || 0})</div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Signal Metadata */}
+                          {signal.metadata && (
+                            <div>
+                              <div style={{ fontSize: '14px', fontWeight: 700, marginBottom: '12px', color: '#f9fafb' }}>ℹ️ Signal Info</div>
+                              <div style={{ fontSize: '13px', color: '#d1d5db', lineHeight: 1.8 }}>
+                                {signal.metadata.signal_type && <div style={{ marginBottom: '6px' }}>Type: <strong>{signal.metadata.signal_type.replace(/-/g, ' ').toUpperCase()}</strong></div>}
+                                {signal.metadata.market_state && <div style={{ marginBottom: '6px' }}>Market: <strong>{signal.metadata.market_state}</strong></div>}
+                                {signal.metadata.timeframe && <div style={{ marginBottom: '6px' }}>Timeframe: <strong>{signal.metadata.timeframe}</strong></div>}
+                                {signal.metadata.valid_for_minutes && <div style={{ marginBottom: '6px' }}>Valid for: <strong>{signal.metadata.valid_for_minutes} minutes</strong></div>}
+                                {signal.metadata.generated_at && <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '8px' }}>Generated: {new Date(signal.metadata.generated_at).toLocaleString()}</div>}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
+
+          <style>{`
+            @keyframes pulse {
+              50% {
+                opacity: 0;
+                transform: scale(1.5);
+              }
+            }
+            @keyframes fadeIn {
+              from {
+                opacity: 0;
+                transform: translateY(-10px);
+              }
+              to {
+                opacity: 1;
+                transform: translateY(0);
+              }
+            }
+            button:hover {
+              opacity: 0.8;
+            }
+            @media (max-width: 768px) {
+              nav {
+                padding: 16px 20px !important;
+              }
+              [style*="gridTemplateColumns"] {
+                grid-template-columns: 1fr !important;
+              }
+            }
+          `}</style>
         </div>
+      );
+    };
 
-        {/* Mode Selector */}
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '32px' }}>
-          {Object.keys(MODES).map(mode => (
-            <button
-              key={mode}
-              onClick={() => handleModeChange(mode)}
-              style={{
-                flex: 1,
-                padding: '16px 24px',
-                border: currentMode === mode ? 'none' : '2px solid #374151',
-                borderRadius: '16px',
-                background: currentMode === mode ? 
-                  'linear-gradient(135deg, #3b82f6, #a855f7)' : '#1f2937',
-                color: '#f9fafb',
-                cursor: 'pointer',
-                transition: 'all 0.3s',
-                fontSize: '14px',
-                fontWeight: 600,
-                boxShadow: currentMode === mode ? '0 10px 40px rgba(59, 130, 246, 0.4)' : 'none'
-              }}
-            >
-              <div>{mode.charAt(0).toUpperCase() + mode.slice(1)}</div>
-              <div style={{ fontSize: '11px', opacity: 0.7, marginTop: '4px' }}>
-                {mode === 'conservative' ? 'Score ≥50 • ADX ≥20' : 'Score ≥30 • ADX ≥15'}
-              </div>
-            </button>
-          ))}
-        </div>
-
-        {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '32px' }}>
-          {[
-            { label: 'Active Signals', value: filteredSignals.length, color: '#3b82f6' },
-            { label: 'Win Rate', value: `${(data.stats?.win_rate || 0).toFixed(1)}%`, color: '#10b981' },
-            { label: 'Total Pips', value: (data.stats?.total_pips || 0).toFixed(1), color: '#f59e0b' },
-            { label: 'Daily Pips', value: (data.risk_management?.daily_pips || 0).toFixed(1), color: '#06b6d4' }
-          ].map(stat => (
-            <div key={stat.label} style={{
-              background: '#111827',
-              border: '1px solid #374151',
-              borderRadius: '20px',
-              padding: '24px',
-              transition: 'all 0.3s'
-            }}>
-              <div style={{ fontSize: '12px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: '8px' }}>
-                {stat.label}
-              </div>
-              <div style={{ fontSize: '32px', fontWeight: 900, letterSpacing: '-1px', color: stat.color }}>
-                {stat.value}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Signals Grid */}
-        {filteredSignals.length === 0 ? (
-          <div style={{
-            background: '#111827',
-            border: '1px solid #374151',
-            borderRadius: '20px',
-            padding: '60px 40px',
-            textAlign: 'center'
-          }}>
-            <div style={{ fontSize: '48px', marginBottom: '20px' }}>💤</div>
-            <div style={{ fontSize: '24px', fontWeight: 700, marginBottom: '16px' }}>No Signals Right Now</div>
-            <div style={{ fontSize: '16px', color: '#9ca3af', lineHeight: 1.6, maxWidth: '500px', margin: '0 auto' }}>
-              Market conditions don't meet quality standards in <strong>{currentMode.toUpperCase()}</strong> mode:
-              <div style={{ marginTop: '16px', textAlign: 'left' }}>
-                • ADX below {MODES[currentMode].minADX} on most pairs<br/>
-                • Volume below average threshold<br/>
-                • Choppy price action detected
-              </div>
-              <div style={{ marginTop: '20px' }}>
-                Try switching to {currentMode === 'conservative' ? 'AGGRESSIVE' : 'CONSERVATIVE'} mode or wait for clearer opportunities.
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '20px' }}>
-            {filteredSignals.map(signal => {
-              const signalId = getSignalId(signal);
-              const freshnessData = getFreshnessData(signal);
-              const isExpanded = expandedSignals.has(signalId);
-              const isPrimary = primarySignal === signalId;
-              const holdTime = getHoldTime(signal);
-              const confidence = getConfidenceLabel(signal);
-              const dir = signal.direction.toLowerCase();
-
-              return (
-                <div
-                  key={signalId}
-                  style={{
-                    background: '#1f2937',
-                    borderRadius: '16px',
-                    padding: '20px',
-                    borderLeft: `4px solid ${dir === 'buy' ? '#10b981' : '#ef4444'}`,
-                    transition: 'all 0.3s',
-                    opacity: isPrimary ? 1 : (primarySignal && !isPrimary ? 0.6 : freshnessData.opacity),
-                    transform: isPrimary ? 'scale(1.02)' : 'scale(1)',
-                    boxShadow: isPrimary ? '0 20px 60px rgba(59, 130, 246, 0.3)' : 'none'
-                  }}
-                >
-                  {/* Header */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <div style={{ fontSize: '20px', fontWeight: 800 }}>{signal.pair}</div>
-                      <div style={{
-                        padding: '4px 10px',
-                        borderRadius: '10px',
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        background: dir === 'buy' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                        color: dir === 'buy' ? '#10b981' : '#ef4444',
-                        border: `2px solid ${dir === 'buy' ? '#10b981' : '#ef4444'}`
-                      }}>
-                        {signal.direction}
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      <button
-                        onClick={() => togglePrimary(signalId)}
-                        style={{
-                          background: 'transparent',
-                          border: 'none',
-                          cursor: 'pointer',
-                          padding: '4px'
-                        }}
-                      >
-                        <Star size={20} fill={isPrimary ? '#f59e0b' : 'none'} color={isPrimary ? '#f59e0b' : '#6b7280'} />
-                      </button>
-                      <div style={{
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        color: freshnessData.color,
-                        padding: '4px 8px',
-                        borderRadius: '8px',
-                        background: `${freshnessData.color}20`
-                      }}>
-                        {freshnessData.status} ({Math.floor(freshnessData.ageMinutes)}m)
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Confidence */}
-                  <div style={{ marginBottom: '16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                      <div style={{ fontSize: '16px', fontWeight: 700 }}>{confidence}</div>
-                      <div style={{ fontSize: '18px', fontWeight: 800 }}>{signal.score}</div>
-                    </div>
-                    <div style={{
-                      height: '8px',
-                      borderRadius: '4px',
-                      background: '#111827',
-                      overflow: 'hidden'
-                    }}>
-                      <div style={{
-                        width: `${signal.score}%`,
-                        height: '100%',
-                        background: getConfidenceGradient(signal.score),
-                        transition: 'width 0.5s ease'
-                      }} />
-                    </div>
-                  </div>
-
-                  {/* Price Action */}
-                  <div style={{
-                    background: '#111827',
-                    borderRadius: '12px',
-                    padding: '16px',
-                    marginBottom: '12px'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '4px' }}>
-                      <div style={{ color: '#9ca3af' }}>Entry</div>
-                      <div style={{ fontWeight: 700 }}>{signal.entry_price?.toFixed(5)}</div>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '4px' }}>
-                      <div style={{ color: '#ef4444' }}>SL</div>
-                      <div style={{ fontWeight: 700, color: '#ef4444' }}>{signal.sl?.toFixed(5)}</div>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-                      <div style={{ color: '#10b981' }}>TP</div>
-                      <div style={{ fontWeight: 700, color: '#10b981' }}>{signal.tp?.toFixed(5)}</div>
-                    </div>
-                  </div>
-
-                  {/* Key Metrics */}
-                  <div style={{ fontSize: '14px', color: '#d1d5db', marginBottom: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-                      <Target size={14} color="#06b6d4" />
-                      <span>Risk:Reward <strong>{signal.risk_reward}</strong></span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-                      <Clock size={14} color="#a855f7" />
-                      <span>Hold Time: <strong>{holdTime}</strong></span>
-                    </div>
-                    {signal.sentiment?.overall && (
-                      <div style={{ fontSize: '13px', color: '#9ca3af' }}>
-                        Sentiment: <strong>{signal.sentiment.overall.toUpperCase()}</strong>
-                        {signal.sentiment_score && <span> ({signal.sentiment_score > 0 ? '+' : ''}{signal.sentiment_score})</span>}
-                      </div>
-                    )}
-                  </div>
-
-                  <div style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px' }}>
-                    {signal.session && `📍 ${signal.session} session`}
-                    {signal.metadata?.market_state && ` • ${signal.metadata.market_state}`}
-                  </div>
-
-                  {/* Expand Toggle */}
-                  <button
-                    onClick={() => toggleExpand(signalId)}
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      background: '#111827',
-                      border: '1px solid #374151',
-                      borderRadius: '10px',
-                      color: '#9ca3af',
-                      cursor: 'pointer',
-                      fontSize: '13px',
-                      fontWeight: 600,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      transition: 'all 0.3s'
-                    }}
-                  >
-                    {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                    {isExpanded ? 'Hide Details' : 'Show Details'}
-                  </button>
-
-                  {/* Expanded Details */}
-                  {isExpanded && (
-                    <div style={{
-                      marginTop: '16px',
-                      paddingTop: '16px',
-                      borderTop: '1px solid #374151',
-                      animation: 'fadeIn 0.3s ease'
-                    }}>
-                      {/* Score Breakdown */}
-                      <div style={{ marginBottom: '20px' }}>
-                        <div style={{ fontSize: '14px', fontWeight: 700, marginBottom: '12px', color: '#f9fafb' }}>
-                          📊 Score Breakdown ({signal.score} total)
-                        </div>
-                        <div style={{ fontSize: '13px', color: '#d1d5db', lineHeight: 1.8 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                            <span>• Technical</span>
-                            <span style={{ fontWeight: 600 }}>+{signal.technical_score || signal.score - (signal.sentiment_score || 0)}</span>
-                          </div>
-                          {signal.sentiment_score !== undefined && (
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                              <span>• Sentiment</span>
-                              <span style={{ fontWeight: 600, color: signal.sentiment_score > 0 ? '#10b981' : '#ef4444' }}>
-                                {signal.sentiment_score > 0 ? '+' : ''}{signal.sentiment_score}
-                              </span>
-                            </div>
-                          )}
-                          {signal.volume_ratio && (
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                              <span>• Volume Bonus</span>
-                              <span style={{ fontWeight: 600 }}>
-                                {signal.volume_ratio > 1.5 ? '+10' : signal.volume_ratio > 1.2 ? '+5' : '+3'}
-                              </span>
-                            </div>
-                          )}
-                          {signal.session && (
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                              <span>• Session Alignment</span>
-                              <span style={{ fontWeight: 600 }}>+5</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Technical Indicators */}
-                      <div style={{ marginBottom: '20px' }}>
-                        <div style={{ fontSize: '14px', fontWeight: 700, marginBottom: '12px', color: '#f9fafb' }}>
-                          📈 Technical Indicators
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                          {signal.rsi && (
-                            <div style={{ background: '#111827', padding: '12px', borderRadius: '10px', border: '1px solid #374151' }}>
-                              <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}>RSI</div>
-                              <div style={{ fontSize: '16px', fontWeight: 700 }}>{signal.rsi.toFixed(1)}</div>
-                              <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '2px' }}>
-                                {signal.rsi < 40 ? 'Oversold' : signal.rsi > 60 ? 'Overbought' : 'Neutral'}
-                              </div>
-                            </div>
-                          )}
-                          {signal.adx && (
-                            <div style={{ background: '#111827', padding: '12px', borderRadius: '10px', border: '1px solid #374151' }}>
-                              <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}>ADX</div>
-                              <div style={{ fontSize: '16px', fontWeight: 700 }}>{signal.adx.toFixed(1)}</div>
-                              <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '2px' }}>
-                                {signal.adx > 25 ? 'Strong Trend' : signal.adx > 20 ? 'Trending' : 'Weak Trend'}
-                              </div>
-                            </div>
-                          )}
-                          {signal.atr && (
-                            <div style={{ background: '#111827', padding: '12px', borderRadius: '10px', border: '1px solid #374151' }}>
-                              <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}>ATR</div>
-                              <div style={{ fontSize: '16px', fontWeight: 700 }}>{signal.atr.toFixed(5)}</div>
-                              <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '2px' }}>Volatility</div>
-                            </div>
-                          )}
-                          {signal.volume_ratio && (
-                            <div style={{ background: '#111827', padding: '12px', borderRadius: '10px', border: '1px solid #374151' }}>
-                              <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '4px' }}>Volume</div>
-                              <div style={{ fontSize: '16px', fontWeight: 700 }}>{signal.volume_ratio.toFixed(2)}x</div>
-                              <div style={{ fontSize: '10px', color: '#9ca3af', marginTop: '2px' }}>
-                                {signal.volume_ratio > 1.5 ? 'Very High' : signal.volume_ratio > 1.2 ? 'High' : 'Normal'}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Sentiment Details */}
-                      {signal.sentiment && (
-                        <div style={{ marginBottom: '20px' }}>
-                          <div style={{ fontSize: '14px', fontWeight: 700, marginBottom: '12px', color: '#f9fafb' }}>
-                            📰 Sentiment Analysis
-                          </div>
-                          <div style={{ fontSize: '13px', color: '#d1d5db', lineHeight: 1.8 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                              <span>Overall Sentiment</span>
-                              <span style={{ 
-                                fontWeight: 700,
-                                color: signal.sentiment.overall === 'bullish' ? '#10b981' : 
-                                       signal.sentiment.overall === 'bearish' ? '#ef4444' : '#9ca3af'
-                              }}>
-                                {signal.sentiment.overall?.toUpperCase()}
-                              </span>
-                            </div>
-                            {signal.sentiment.news_count !== undefined && (
-                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                                <span>News Articles</span>
-                                <span style={{ fontWeight: 600 }}>{signal.sentiment.news_count}</span>
-                              </div>
-                            )}
-                            {signal.sentiment.positive !== undefined && signal.sentiment.negative !== undefined && (
-                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                                <span>Positive / Negative</span>
-                                <span style={{ fontWeight: 600 }}>
-                                  {signal.sentiment.positive} / {signal.sentiment.negative}
-                                </span>
-                              </div>
-                            )}
-                            {signal.sentiment.sources && (
-                              <div style={{ marginTop: '8px', fontSize: '12px', color: '#6b7280' }}>
-                                Sources: NewsAPI ({signal.sentiment.sources.newsapi || 0}), 
-                                Marketaux ({signal.sentiment.sources.marketaux || 0})
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Signal Metadata */}
-                      {signal.metadata && (
-                        <div>
-                          <div style={{ fontSize: '14px', fontWeight: 700, marginBottom: '12px', color: '#f9fafb' }}>
-                            ℹ️ Signal Info
-                          </div>
-                          <div style={{ fontSize: '13px', color: '#d1d5db', lineHeight: 1.8 }}>
-                            {signal.metadata.signal_type && (
-                              <div style={{ marginBottom: '6px' }}>
-                                Type: <strong>{signal.metadata.signal_type.replace(/-/g, ' ').toUpperCase()}</strong>
-                              </div>
-                            )}
-                            {signal.metadata.market_state && (
-                              <div style={{ marginBottom: '6px' }}>
-                                Market: <strong>{signal.metadata.market_state}</strong>
-                              </div>
-                            )}
-                            {signal.metadata.timeframe && (
-                              <div style={{ marginBottom: '6px' }}>
-                                Timeframe: <strong>{signal.metadata.timeframe}</strong>
-                              </div>
-                            )}
-                            {signal.metadata.valid_for_minutes && (
-                              <div style={{ marginBottom: '6px' }}>
-                                Valid for: <strong>{signal.metadata.valid_for_minutes} minutes</strong>
-                              </div>
-                            )}
-                            {signal.metadata.generated_at && (
-                              <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '8px' }}>
-                                Generated: {new Date(signal.metadata.generated_at).toLocaleString()}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      <style>{`
-        @keyframes pulse {
-          50% {
-            opacity: 0;
-            transform: scale(1.5);
-          }
-        }
-        
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        button:hover {
-          opacity: 0.8;
-        }
-        
-        @media (max-width: 768px) {
-          nav {
-            padding: 16px 20px !important;
-          }
-          
-          .container {
-            padding: 24px 20px !important;
-          }
-          
-          [style*="gridTemplateColumns"] {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
-    </div>
-  );
-};
-
-export default TradeBeaconElite;
+    ReactDOM.render(<TradeBeaconElite />, document.getElementById('root'));
+  </script>
+</body>
+</html>

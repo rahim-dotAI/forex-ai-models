@@ -57,7 +57,9 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install holidays jq
+          pip install holidays
+          # Install jq as system package (not Python package)
+          sudo apt-get update && sudo apt-get install -y jq
       
       # Optional mode override (manual / API trigger)
       - name: ⚙️ Apply mode override
@@ -81,17 +83,19 @@ jobs:
             "settings": {
               "aggressive": {
                 "threshold": 30,
-                "min_adx": null,
+                "min_adx": 15,
                 "rsi_oversold": 45,
                 "rsi_overbought": 55,
-                "min_volume_ratio": 0.8
+                "min_volume_ratio": 0.8,
+                "volume_penalty": 5
               },
               "conservative": {
                 "threshold": 50,
                 "min_adx": 20,
                 "rsi_oversold": 35,
                 "rsi_overbought": 65,
-                "min_volume_ratio": 1.2
+                "min_volume_ratio": 1.0,
+                "volume_penalty": 10
               }
             }
           }
@@ -126,7 +130,7 @@ jobs:
           MARKETAUX_API_KEY: ${{ secrets.MARKETAUX_API_KEY }}
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
         run: |
-          echo "🤖 Running Trade Beacon with Sentiment Analysis..."
+          echo "🤖 Running Trade Beacon..."
           python ${{ env.ENTRY_SCRIPT }}
       
       - name: ⏭️ Skip message
@@ -134,26 +138,38 @@ jobs:
         run: |
           echo "⏭️ Skipping run: ${{ steps.market.outputs.status }}"
       
-      # 🔑 CRITICAL: Commit dashboard & signals with file locking
+      # 🔑 CRITICAL: Commit dashboard & signals with improved error handling
       - name: 💾 Commit dashboard & signals
         if: steps.market.outputs.skip != 'true'
         run: |
-          # File-based locking mechanism
+          # File-based locking mechanism with proper cleanup
           LOCK_FILE=".github/.trade-beacon.lock"
+          LOCK_ACQUIRED=0
+          
+          # Cleanup function
+          cleanup_lock() {
+            if [ $LOCK_ACQUIRED -eq 1 ]; then
+              rmdir "$LOCK_FILE" 2>/dev/null || true
+              echo "🔓 Lock released"
+            fi
+          }
+          
+          # Set trap for cleanup on exit
+          trap cleanup_lock EXIT INT TERM
           
           # Wait for lock (max 2 minutes)
           echo "🔒 Acquiring lock..."
           for i in {1..24}; do
             if mkdir "$LOCK_FILE" 2>/dev/null; then
               echo "✅ Lock acquired"
-              trap "rmdir '$LOCK_FILE' 2>/dev/null || true" EXIT
+              LOCK_ACQUIRED=1
               break
             fi
             echo "⏳ Waiting for lock... (attempt $i/24)"
             sleep 5
           done
           
-          if [ ! -d "$LOCK_FILE" ]; then
+          if [ $LOCK_ACQUIRED -eq 0 ]; then
             echo "❌ Failed to acquire lock after 2 minutes"
             exit 1
           fi
@@ -162,10 +178,10 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git config user.name "Trade Beacon Bot"
           
-          # Stage changes first
-          git add -f signal_state/dashboard_state.json signal_state/signal_history.json signal_state/health.json signal_state/last_run.txt signal_state/last_success.txt signals.csv config.json 2>/dev/null || true
+          # Stage changes
+          git add -f signal_state/*.json signals.csv config.json 2>/dev/null || true
           
-          # Commit changes if any exist (before pulling)
+          # Commit if changes exist
           if ! git diff --staged --quiet; then
             TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M UTC')
             git commit -m "📊 Trade Beacon update ${TIMESTAMP} [skip ci]" || {
@@ -175,105 +191,86 @@ jobs:
             echo "ℹ️ No changes to commit"
           fi
           
-          # Pull latest changes with merge strategy (not rebase) to avoid conflicts
-          echo "🔄 Pulling latest changes..."
+          # Pull and merge latest changes
+          echo "🔄 Syncing with remote..."
           MAX_RETRIES=5
+          
           for i in $(seq 1 $MAX_RETRIES); do
-            # Fetch first
-            git fetch origin main
+            git fetch origin main || {
+              echo "⚠️ Fetch failed, retrying..."
+              sleep 2
+              continue
+            }
             
-            # Try to merge (not rebase)
-            if git merge origin/main --no-edit -m "Auto-merge: Sync with remote [skip ci]"; then
-              echo "✅ Successfully merged latest changes"
+            if git merge origin/main --no-edit -m "Auto-merge: Sync [skip ci]"; then
+              echo "✅ Merged successfully"
               break
             else
-              # Check if it's a merge conflict
+              # Handle merge conflicts
               if git diff --name-only --diff-filter=U | grep -q .; then
-                echo "⚠️ Merge conflict detected, resolving automatically..."
+                echo "⚠️ Resolving conflicts..."
                 
-                # For generated files, always keep our version
+                # Keep our version of generated files
                 git checkout --ours signal_state/ 2>/dev/null || true
                 git checkout --ours signals.csv 2>/dev/null || true
                 git checkout --ours config.json 2>/dev/null || true
                 
-                # Stage resolved files
                 git add signal_state/ signals.csv config.json 2>/dev/null || true
-                
-                # Complete the merge
-                git commit -m "Auto-merge: Resolved conflicts (keeping local changes) [skip ci]" || true
+                git commit -m "Auto-merge: Resolved conflicts [skip ci]" || true
                 echo "✅ Conflicts resolved"
                 break
               else
-                # Different error, retry
                 if [ $i -lt $MAX_RETRIES ]; then
                   WAIT=$((2 ** i))
-                  echo "⚠️ Merge failed, retrying in ${WAIT}s... (attempt $i/$MAX_RETRIES)"
+                  echo "⚠️ Merge failed, retrying in ${WAIT}s..."
                   sleep $WAIT
                   git merge --abort 2>/dev/null || true
                 else
-                  echo "❌ Failed to merge after $MAX_RETRIES attempts"
+                  echo "❌ Merge failed after $MAX_RETRIES attempts"
                   git merge --abort 2>/dev/null || true
-                  # Release lock before exit
-                  rmdir "$LOCK_FILE" 2>/dev/null || true
                   exit 1
                 fi
               fi
             fi
           done
           
-          # Push with retry logic and force-with-lease as fallback
+          # Push changes with retry
           echo "🔄 Pushing changes..."
           for i in $(seq 1 5); do
             if git push origin main; then
-              echo "✅ Dashboard updated and pushed successfully"
+              echo "✅ Pushed successfully"
               break
             else
               if [ $i -lt 5 ]; then
                 WAIT=$((2 ** i))
-                echo "⚠️ Push failed, retrying in ${WAIT}s... (attempt $i/5)"
+                echo "⚠️ Push failed, retrying in ${WAIT}s..."
                 sleep $WAIT
                 
-                # Try to pull and merge before next push attempt
+                # Re-sync before retry
                 git fetch origin main
-                git merge origin/main --no-edit -m "Auto-merge: Retry sync [skip ci]" || {
+                git merge origin/main --no-edit -m "Auto-merge: Retry [skip ci]" || {
                   git merge --abort 2>/dev/null || true
                 }
               else
-                # Last resort: force push with lease (safe force push)
-                echo "⚠️ Standard push failed, attempting force-with-lease..."
+                echo "⚠️ Standard push failed, trying force-with-lease..."
                 if git push --force-with-lease origin main; then
-                  echo "✅ Force-pushed successfully (this should be rare)"
+                  echo "✅ Force-pushed (this should be rare)"
                 else
-                  echo "❌ Failed to push after all attempts"
-                  # Release lock before exit
-                  rmdir "$LOCK_FILE" 2>/dev/null || true
+                  echo "❌ All push attempts failed"
                   exit 1
                 fi
               fi
             fi
           done
-          
-          # Release lock (trap will also handle this)
-          rmdir "$LOCK_FILE" 2>/dev/null || true
-          echo "🔓 Lock released"
       
       - name: 📦 Upload artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: trade-beacon-artifacts-${{ github.run_number }}
+          name: trade-beacon-${{ github.run_number }}
           path: |
             signal_state/
             signals.csv
             config.json
-            *.log
           retention-days: 7
           if-no-files-found: ignore
-      
-      # Cleanup old artifacts (optional - keeps workflow runs clean)
-      - name: 🧹 Cleanup old workflow runs
-        if: always()
-        continue-on-error: true
-        run: |
-          echo "Note: GitHub automatically deletes artifacts after retention period"
-          echo "Manual cleanup via: gh run list --limit 100 | gh run delete"

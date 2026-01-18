@@ -57,7 +57,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install holidays
           # Install jq as system package (not Python package)
           sudo apt-get update && sudo apt-get install -y jq
       
@@ -130,7 +129,7 @@ jobs:
           MARKETAUX_API_KEY: ${{ secrets.MARKETAUX_API_KEY }}
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
         run: |
-          echo "🤖 Running Trade Beacon..."
+          echo "🤖 Running Trade Beacon v2.0..."
           python ${{ env.ENTRY_SCRIPT }}
       
       - name: ⏭️ Skip message
@@ -149,7 +148,7 @@ jobs:
           # Cleanup function
           cleanup_lock() {
             if [ $LOCK_ACQUIRED -eq 1 ]; then
-              rmdir "$LOCK_FILE" 2>/dev/null || true
+              rm -rf "$LOCK_FILE" 2>/dev/null || true
               echo "🔓 Lock released"
             fi
           }
@@ -184,7 +183,7 @@ jobs:
           # Commit if changes exist
           if ! git diff --staged --quiet; then
             TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M UTC')
-            git commit -m "📊 Trade Beacon update ${TIMESTAMP} [skip ci]" || {
+            git commit -m "📊 Trade Beacon v2.0 update ${TIMESTAMP} [skip ci]" || {
               echo "⚠️ Commit failed, continuing..."
             }
           else
@@ -267,7 +266,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: trade-beacon-${{ github.run_number }}
+          name: trade-beacon-v2-${{ github.run_number }}
           path: |
             signal_state/
             signals.csv

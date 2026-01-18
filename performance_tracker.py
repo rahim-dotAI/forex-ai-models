@@ -106,9 +106,15 @@ class PerformanceTracker:
     
     def add_signal(self, signal: Dict):
         """Add a new signal to tracking"""
-        # Check if signal already exists (avoid duplicates)
-        signal_id = f"{signal['pair']}_{signal['timestamp']}"
+        # ✅ FIX: Use backend-generated signal_id if available
+        signal_id = signal.get('signal_id')
         
+        # Fallback to old format if signal_id not present (backward compatibility)
+        if not signal_id:
+            signal_id = f"{signal['pair']}_{signal['timestamp']}"
+            log.warning(f"⚠️ Signal missing signal_id, using fallback: {signal_id}")
+        
+        # Check if signal already exists (avoid duplicates)
         existing = next(
             (s for s in self.history["signals"] if s.get("id") == signal_id),
             None
@@ -133,11 +139,15 @@ class PerformanceTracker:
             "pips": 0.0,
             "closed_at": None,
             "closed_price": None,
-            "risk_reward": signal.get("risk_reward", 0.0)
+            "risk_reward": signal.get("risk_reward", 0.0),
+            # ✅ NEW: Store additional metadata
+            "hold_time": signal.get("hold_time"),
+            "eligible_modes": signal.get("eligible_modes", []),
+            "session": signal.get("session")
         }
         
         self.history["signals"].append(tracked_signal)
-        log.info(f"✅ Added signal to tracking: {signal['pair']} {signal['direction']}")
+        log.info(f"✅ Added signal to tracking: {signal['pair']} {signal['direction']} (ID: {signal_id})")
         self._save_history()
     
     def check_signals(self):

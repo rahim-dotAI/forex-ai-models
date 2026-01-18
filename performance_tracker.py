@@ -8,9 +8,40 @@ import logging
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional
+from functools import wraps
+import time
 import yfinance as yf
 
 log = logging.getLogger("performance-tracker")
+
+
+# =========================
+# RETRY DECORATOR (matching trade_beacon.py)
+# =========================
+def retry_with_backoff(max_retries=3, backoff_factor=5):
+    """Retry decorator with exponential backoff for rate limits"""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            for attempt in range(max_retries):
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    error_msg = str(e).lower()
+                    if "rate limit" in error_msg or "429" in error_msg or "too many requests" in error_msg:
+                        if attempt < max_retries - 1:
+                            wait_time = (2 ** attempt) * backoff_factor
+                            log.warning(f"⚠️ Rate limited, waiting {wait_time}s... (attempt {attempt + 1}/{max_retries})")
+                            time.sleep(wait_time)
+                        else:
+                            log.error(f"❌ Rate limit exceeded after {max_retries} attempts")
+                            raise
+                    else:
+                        # Non-rate-limit error, raise immediately
+                        raise
+            raise Exception(f"Failed after {max_retries} attempts")
+        return wrapper
+    return decorator
 
 
 class PerformanceTracker:
@@ -124,25 +155,32 @@ class PerformanceTracker:
         self._calculate_stats()
         self._save_history()
     
+    @retry_with_backoff(max_retries=3, backoff_factor=5)
+    def _download_price_data(self, pair_symbol: str):
+        """Download price data with retry logic"""
+        df = yf.download(
+            pair_symbol,
+            period="1d",
+            interval="1m",
+            progress=False,
+            auto_adjust=True,
+            threads=False
+        )
+        return df
+    
     def _check_signal_outcome(self, signal: Dict):
         """Check if a signal hit TP or SL"""
         pair_symbol = signal["pair"] + "=X"
         
         try:
-            # Get recent price data
-            df = yf.download(
-                pair_symbol,
-                period="1d",
-                interval="1m",
-                progress=False,
-                auto_adjust=True
-            )
+            # Get recent price data with retry logic
+            df = self._download_price_data(pair_symbol)
             
             if df.empty:
                 log.warning(f"⚠️ No data for {signal['pair']}")
                 return
             
-            # FIXED: Use squeeze() consistently with trade_beacon.py
+            # Use squeeze() consistently with trade_beacon.py
             close = df["Close"].squeeze()
             high = df["High"].squeeze()
             low = df["Low"].squeeze()
@@ -209,9 +247,13 @@ class PerformanceTracker:
     
     def _calculate_pips(self, pair: str, entry: float, exit: float, direction: str) -> float:
         """
-        Calculate pips based on pair type
-        FIXED: Now correctly handles SELL trades by inverting difference
+        Calculate pips based on pair type with validation
         """
+        # Validate prices
+        if entry <= 0 or exit <= 0:
+            log.error(f"Invalid prices: entry={entry}, exit={exit}")
+            return 0.0
+        
         # JPY pairs: 1 pip = 0.01
         if "JPY" in pair:
             pip_value = 0.01
@@ -221,12 +263,15 @@ class PerformanceTracker:
         
         diff = exit - entry
         
-        # CRITICAL FIX: For SELL, profit is when price goes DOWN
-        # So we need to invert the difference
+        # For SELL, profit is when price goes DOWN
         if direction == "SELL":
             diff = -diff
         
         pips = diff / pip_value
+        
+        # Sanity check - unlikely to have 1000+ pip moves
+        if abs(pips) > 1000:
+            log.warning(f"⚠️ Suspicious pip value: {pips:.1f} for {pair} (entry={entry}, exit={exit}, direction={direction})")
         
         return pips
     

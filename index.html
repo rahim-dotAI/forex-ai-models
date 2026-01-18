@@ -129,10 +129,29 @@ const API_URLS = [
   'https://raw.githubusercontent.com/rahim-dotAI/forex-ai-models/main/signal_state/dashboard_state.json'
 ];
 
+// ✅ FIXED MODE SETTINGS - NOW MATCH BACKEND CONFIG EXACTLY
 const MODES = {
-  conservative: {threshold:75,minADX:25,minVolumeRatio:1.1,rsiOversold:40,rsiOverbought:60},
-  balanced: {threshold:65,minADX:20,minVolumeRatio:1.0,rsiOversold:35,rsiOverbought:65},
-  aggressive: {threshold:55,minADX:null,minVolumeRatio:0.9,rsiOversold:30,rsiOverbought:70}
+  conservative: {
+    threshold: 50,        // ← FIXED from 75
+    minADX: 20,          // ← FIXED from 25
+    minVolumeRatio: 1.0,
+    rsiOversold: 35,
+    rsiOverbought: 65
+  },
+  balanced: {
+    threshold: 40,
+    minADX: 17,
+    minVolumeRatio: 0.9,
+    rsiOversold: 40,
+    rsiOverbought: 60
+  },
+  aggressive: {
+    threshold: 30,        // ← FIXED from 55
+    minADX: 15,          // ← FIXED from null
+    minVolumeRatio: 0.8,
+    rsiOversold: 45,
+    rsiOverbought: 55
+  }
 };
 
 let currentMode = localStorage.getItem('mode') || 'balanced';

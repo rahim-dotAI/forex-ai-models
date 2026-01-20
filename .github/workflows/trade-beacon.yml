@@ -1,15 +1,11 @@
 name: Trade Beacon v2.0.3 - AI Forex Signal Generator
 
 on:
-  # Scheduled runs every 15 minutes during market hours (Mon-Fri)
+  # Scheduled runs every 15 minutes during market hours (Mon-Fri, UTC)
   schedule:
-    - cron: "*/15 * * * 1-5"   # Every 15 minutes, Mon–Fri (UTC)
+    - cron: "*/15 14-21 * * 1-5"  # Adjust UTC hours for your market
   
-  # External trigger from cron-job.org for reliability
-  repository_dispatch:
-    types: [trade-signal-check]
-  
-  # Manual execution with full configuration
+  # Manual execution with inputs
   workflow_dispatch:
     inputs:
       mode:
@@ -37,141 +33,88 @@ env:
   ENTRY_SCRIPT: "trade_beacon.py"
   PERFORMANCE_SCRIPT: "performance_tracker.py"
 
-# CRITICAL: Prevent concurrent runs to avoid race conditions
 concurrency:
   group: trade-beacon-v2-${{ github.workflow }}
-  cancel-in-progress: false  # Wait for previous run to complete
+  cancel-in-progress: false
 
 jobs:
   forex-signal-generation:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    
+
     steps:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-      
+
       - name: 🐍 Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
-      
+
       - name: 📦 Install dependencies
         run: |
+          set -e
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          
-          # Install system dependencies
           sudo apt-get update && sudo apt-get install -y jq
-          
           echo "✅ Dependencies installed"
           pip list
-      
-      # Apply mode override for manual/API triggers
+
       - name: ⚙️ Configure trading parameters
-        if: github.event.inputs.mode != 'default' && github.event.inputs.mode != ''
         run: |
+          set -e
           MODE="${{ github.event.inputs.mode }}"
-          SENTIMENT="${{ github.event.inputs.sentiment }}"
+          [ -z "$MODE" ] && MODE="default"
+          
+          # Proper boolean conversion
+          SENTIMENT=$( [ "${{ github.event.inputs.sentiment }}" = "true" ] && echo true || echo false )
           
           echo "🎯 Configuring Trade Beacon v2.0.3"
           echo "   Mode: $MODE"
           echo "   Sentiment Analysis: $SENTIMENT"
           
           if [ -f config.json ]; then
-            # Update existing config
             jq --arg mode "$MODE" --argjson sentiment "$SENTIMENT" \
                '.mode = $mode | .use_sentiment = $sentiment' \
                config.json > tmp.json && mv tmp.json config.json
           else
-            # Create new config with v2.0.3 structure
+            # Write default config
             cat > config.json << 'EOF'
-          {
-            "mode": "aggressive",
-            "use_sentiment": false,
-            "settings": {
-              "aggressive": {
-                "threshold": 48,
-                "min_adx": 20,
-                "rsi_oversold": 35,
-                "rsi_overbought": 65,
-                "min_volume_ratio": 1.1,
-                "volume_penalty": 10,
-                "min_risk_reward": 1.5,
-                "atr_stop_multiplier": 2.5,
-                "atr_target_multiplier": 5.0,
-                "max_correlated_signals": 2,
-                "max_signal_age_minutes": 60
-              },
-              "conservative": {
-                "threshold": 58,
-                "min_adx": 25,
-                "rsi_oversold": 30,
-                "rsi_overbought": 70,
-                "min_volume_ratio": 1.3,
-                "volume_penalty": 15,
-                "min_risk_reward": 2.0,
-                "atr_stop_multiplier": 3.0,
-                "atr_target_multiplier": 6.0,
-                "max_correlated_signals": 1,
-                "max_signal_age_minutes": 45
-              }
-            },
-            "advanced": {
-              "enable_session_filtering": true,
-              "enable_correlation_filter": true,
-              "enable_performance_optimization": true,
-              "cache_ttl_minutes": 5,
-              "parallel_workers": 5,
-              "session_bonuses": {
-                "ASIAN": {
-                  "JPY_pairs": 5,
-                  "AUD_NZD_pairs": 5,
-                  "other": 0
-                },
-                "EUROPEAN": {
-                  "EUR_GBP_pairs": 5,
-                  "EUR_GBP_crosses": 3,
-                  "other": 0
-                },
-                "OVERLAP": {
-                  "all_major_pairs": 3
-                },
-                "US": {
-                  "USD_majors": 5,
-                  "other": 0
-                }
-              },
-              "validation": {
-                "max_price_change_pct": 0.05,
-                "max_signal_age_seconds": 300,
-                "min_sl_pips": {
-                  "JPY_pairs": 15,
-                  "other": 10
-                },
-                "max_spread_ratio": 0.3
-              }
-            },
-            "risk_management": {
-              "max_daily_risk_pips": 200,
-              "max_open_positions": 5,
-              "max_correlated_exposure": 2,
-              "stop_trading_on_drawdown_pips": 150
-            },
-            "performance_tuning": {
-              "auto_adjust_thresholds": false,
-              "min_trades_for_optimization": 30,
-              "optimization_interval_days": 7,
-              "target_win_rate": 0.55
-            }
-          }
-          EOF
-            
+{
+  "mode": "aggressive",
+  "use_sentiment": false,
+  "settings": {
+    "aggressive": {"threshold":48,"min_adx":20,"rsi_oversold":35,"rsi_overbought":65,"min_volume_ratio":1.1,"volume_penalty":10,"min_risk_reward":1.5,"atr_stop_multiplier":2.5,"atr_target_multiplier":5.0,"max_correlated_signals":2,"max_signal_age_minutes":60},
+    "conservative": {"threshold":58,"min_adx":25,"rsi_oversold":30,"rsi_overbought":70,"min_volume_ratio":1.3,"volume_penalty":15,"min_risk_reward":2.0,"atr_stop_multiplier":3.0,"atr_target_multiplier":6.0,"max_correlated_signals":1,"max_signal_age_minutes":45}
+  },
+  "advanced": {
+    "enable_session_filtering": true,
+    "enable_correlation_filter": true,
+    "enable_performance_optimization": true,
+    "cache_ttl_minutes": 5,
+    "parallel_workers": 5,
+    "session_bonuses": {
+      "ASIAN": {"JPY_pairs":5,"AUD_NZD_pairs":5,"other":0},
+      "EUROPEAN": {"EUR_GBP_pairs":5,"EUR_GBP_crosses":3,"other":0},
+      "OVERLAP": {"all_major_pairs":3},
+      "US": {"USD_majors":5,"other":0}
+    },
+    "validation": {
+      "max_price_change_pct":0.05,
+      "max_signal_age_seconds":300,
+      "min_sl_pips":{"JPY_pairs":15,"other":10},
+      "max_spread_ratio":0.3
+    }
+  },
+  "risk_management":{"max_daily_risk_pips":200,"max_open_positions":5,"max_correlated_exposure":2,"stop_trading_on_drawdown_pips":150},
+  "performance_tuning":{"auto_adjust_thresholds":false,"min_trades_for_optimization":30,"optimization_interval_days":7,"target_win_rate":0.55}
+}
+EOF
             # Apply manual override
             jq --arg mode "$MODE" --argjson sentiment "$SENTIMENT" \
                '.mode = $mode | .use_sentiment = $sentiment' \
@@ -179,77 +122,51 @@ jobs:
           fi
           
           echo "📄 Active configuration:"
-          cat config.json | jq '.'
-      
+          jq '.' config.json
+
       - name: 📅 Validate market hours
         id: market
         run: |
+          set -e
           python << 'EOF'
-          import datetime
-          import holidays
-          import os
-          import sys
-          
-          # Check if force run is enabled
-          force_run = "${{ github.event.inputs.force_run }}" == "true"
-          
-          if force_run:
-              print("⚡ Force run enabled - bypassing market hours check")
-              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-                  f.write("skip=false\n")
-                  f.write("status=Force run enabled\n")
-              sys.exit(0)
-          
-          today = datetime.date.today()
-          us_holidays = holidays.US()
-          
-          # Check if weekend
-          is_weekend = today.weekday() >= 5
-          
-          # Check if US holiday
-          is_holiday = today in us_holidays
-          
-          # Determine if we should skip
-          should_skip = is_weekend or is_holiday
-          
-          if should_skip:
-              if is_weekend:
-                  status = f"Weekend ({today.strftime('%A')})"
-              else:
-                  status = f"US Holiday: {us_holidays.get(today)}"
-              print(f"⏭️ Skipping: {status}")
-          else:
-              status = f"Market open ({today.strftime('%A, %B %d, %Y')})"
-              print(f"✅ {status}")
-          
-          # Write outputs
-          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-              f.write(f"skip={'true' if should_skip else 'false'}\n")
-              f.write(f"status={status}\n")
-          EOF
-      
+import datetime, holidays, os, sys
+force_run = "${{ github.event.inputs.force_run }}" == "true"
+if force_run:
+    with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+        f.write("skip=false\nstatus=Force run enabled\n")
+    sys.exit(0)
+
+today = datetime.date.today()
+us_holidays = holidays.US()
+is_weekend = today.weekday() >= 5
+is_holiday = today in us_holidays
+should_skip = is_weekend or is_holiday
+status = f"Weekend ({today.strftime('%A')})" if is_weekend else f"US Holiday: {us_holidays.get(today)}" if is_holiday else f"Market open ({today.strftime('%A, %B %d, %Y')})"
+with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+    f.write(f"skip={'true' if should_skip else 'false'}\n")
+    f.write(f"status={status}\n")
+EOF
+
       - name: 🔍 Pre-run diagnostics
         if: steps.market.outputs.skip != 'true'
         run: |
+          set -e
           echo "🔍 System Diagnostics:"
           echo "   Python: $(python --version)"
           echo "   Date: $(date -u)"
           echo "   Config exists: $([ -f config.json ] && echo 'Yes' || echo 'No')"
-          
           if [ -f signal_state/signal_history.json ]; then
-            echo "   Signal history exists: Yes"
             SIGNAL_COUNT=$(jq '.signals | length' signal_state/signal_history.json 2>/dev/null || echo "0")
             echo "   Tracked signals: $SIGNAL_COUNT"
           else
             echo "   Signal history exists: No"
           fi
-          
           echo ""
           echo "📊 Configuration:"
           if [ -f config.json ]; then
             jq -r '"   Mode: \(.mode)\n   Sentiment: \(.use_sentiment)\n   Threshold (aggressive): \(.settings.aggressive.threshold)\n   Threshold (conservative): \(.settings.conservative.threshold)"' config.json
           fi
-      
+
       - name: 🤖 Execute Trade Beacon v2.0.3
         if: steps.market.outputs.skip != 'true'
         env:
@@ -258,51 +175,41 @@ jobs:
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
           HUGGINGFACE_API_KEY: ${{ secrets.HUGGINGFACE_API_KEY }}
         run: |
-          echo "════════════════════════════════════════════════════════════════"
+          set -e
+          echo "═════════════════════════════════════════════════════"
           echo "🚀 Trade Beacon v2.0.3 - Signal Generator"
-          echo "════════════════════════════════════════════════════════════════"
-          echo ""
-          
+          echo "═════════════════════════════════════════════════════"
           python ${{ env.ENTRY_SCRIPT }}
           EXIT_CODE=$?
-          
-          echo ""
-          echo "════════════════════════════════════════════════════════════════"
-          
-          if [ $EXIT_CODE -eq 0 ]; then
-            echo "✅ Trade Beacon completed successfully"
-          else
+          echo "═════════════════════════════════════════════════════"
+          if [ $EXIT_CODE -ne 0 ]; then
             echo "❌ Trade Beacon exited with code $EXIT_CODE"
             exit $EXIT_CODE
           fi
-      
+          echo "✅ Trade Beacon completed successfully"
+
       - name: 📊 Run performance analysis
         if: steps.market.outputs.skip != 'true'
         continue-on-error: true
         run: |
+          set -e
           echo "📊 Analyzing performance metrics..."
-          
           if [ -f ${{ env.PERFORMANCE_SCRIPT }} ]; then
-            python ${{ env.PERFORMANCE_SCRIPT }} || {
-              echo "⚠️ Performance analysis failed, continuing..."
-            }
+            python ${{ env.PERFORMANCE_SCRIPT }} || echo "⚠️ Performance analysis failed"
           else
             echo "⚠️ Performance tracker not found"
           fi
-      
+
       - name: ⏭️ Skip notification
         if: steps.market.outputs.skip == 'true'
         run: |
-          echo "════════════════════════════════════════════════════════════════"
           echo "⏭️ Run skipped: ${{ steps.market.outputs.status }}"
-          echo "════════════════════════════════════════════════════════════════"
-      
+
       - name: 🔍 Validate outputs
         if: steps.market.outputs.skip != 'true'
         run: |
+          set -e
           echo "🔍 Validating generated files..."
-          
-          # Check dashboard state
           if [ -f signal_state/dashboard_state.json ]; then
             echo "✅ Dashboard state generated"
             SIGNAL_COUNT=$(jq '.active_signals' signal_state/dashboard_state.json)
@@ -311,183 +218,50 @@ jobs:
             echo "❌ Dashboard state missing"
             exit 1
           fi
-          
-          # Check health file
-          if [ -f signal_state/health.json ]; then
-            echo "✅ Health check generated"
-            STATUS=$(jq -r '.status' signal_state/health.json)
-            echo "   System status: $STATUS"
-          else
-            echo "⚠️ Health check missing"
-          fi
-          
-          # Check signal history
-          if [ -f signal_state/signal_history.json ]; then
-            echo "✅ Signal history exists"
-          else
-            echo "⚠️ Signal history missing (may be first run)"
-          fi
-      
-      # CRITICAL: Commit and push with advanced conflict resolution
+          [ -f signal_state/health.json ] && echo "✅ Health check generated" || echo "⚠️ Health check missing"
+          [ -f signal_state/signal_history.json ] && echo "✅ Signal history exists" || echo "⚠️ Signal history missing"
+
       - name: 💾 Commit signals and dashboard
         if: steps.market.outputs.skip != 'true'
         run: |
-          # ══════════════════════════════════════════════════════════
-          # File-based locking with automatic cleanup
-          # ══════════════════════════════════════════════════════════
+          set -e
           LOCK_FILE=".github/.trade-beacon-v2.lock"
           LOCK_ACQUIRED=0
-          MAX_LOCK_WAIT=120  # 2 minutes
-          
-          cleanup_lock() {
-            if [ $LOCK_ACQUIRED -eq 1 ]; then
-              rm -rf "$LOCK_FILE" 2>/dev/null || true
-              echo "🔓 Lock released"
-            fi
-          }
-          
-          trap cleanup_lock EXIT INT TERM
-          
-          # Acquire lock
-          echo "🔒 Acquiring commit lock..."
+          trap 'rm -rf "$LOCK_FILE" 2>/dev/null || true' EXIT INT TERM
           for i in $(seq 1 24); do
             if mkdir "$LOCK_FILE" 2>/dev/null; then
-              echo "✅ Lock acquired"
               LOCK_ACQUIRED=1
+              echo "🔒 Lock acquired"
               break
             fi
-            echo "⏳ Waiting for lock (attempt $i/24)..."
+            echo "⏳ Waiting for lock ($i/24)..."
             sleep 5
           done
-          
-          if [ $LOCK_ACQUIRED -eq 0 ]; then
-            echo "❌ Failed to acquire lock after ${MAX_LOCK_WAIT}s"
-            exit 1
-          fi
-          
-          # ══════════════════════════════════════════════════════════
-          # Configure Git identity
-          # ══════════════════════════════════════════════════════════
+          [ $LOCK_ACQUIRED -eq 1 ] || { echo "❌ Failed to acquire lock"; exit 1; }
+
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "Trade Beacon Bot v2.0.3"
-          
-          # ══════════════════════════════════════════════════════════
-          # Stage changes
-          # ══════════════════════════════════════════════════════════
-          echo "📦 Staging changes..."
-          git add -f signal_state/*.json 2>/dev/null || true
-          git add -f signals.csv 2>/dev/null || true
-          git add -f config.json 2>/dev/null || true
-          
-          # ══════════════════════════════════════════════════════════
-          # Commit if changes exist
-          # ══════════════════════════════════════════════════════════
+
+          git add -f signal_state/*.json signals.csv config.json 2>/dev/null || true
           if ! git diff --staged --quiet; then
             TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
             MODE=$(jq -r '.mode // "unknown"' config.json 2>/dev/null || echo "unknown")
             SIGNALS=$(jq '.active_signals // 0' signal_state/dashboard_state.json 2>/dev/null || echo "0")
-            
-            COMMIT_MSG="📊 Trade Beacon v2.0.3 | ${MODE} mode | ${SIGNALS} signals | ${TIMESTAMP}
-
-[skip ci]"
-            
-            git commit -m "$COMMIT_MSG" || {
-              echo "⚠️ Commit failed, continuing..."
-            }
-            echo "✅ Changes committed"
+            git commit -m "📊 Trade Beacon v2.0.3 | ${MODE} mode | ${SIGNALS} signals | ${TIMESTAMP} [skip ci]" || echo "⚠️ Commit failed"
           else
             echo "ℹ️ No changes to commit"
           fi
-          
-          # ══════════════════════════════════════════════════════════
-          # Sync with remote (with conflict resolution)
-          # ══════════════════════════════════════════════════════════
-          echo "🔄 Syncing with remote..."
-          MAX_SYNC_RETRIES=5
-          
-          for attempt in $(seq 1 $MAX_SYNC_RETRIES); do
-            echo "   Sync attempt $attempt/$MAX_SYNC_RETRIES..."
-            
-            # Fetch latest
-            if ! git fetch origin main; then
-              echo "⚠️ Fetch failed, retrying..."
-              sleep 2
-              continue
-            fi
-            
-            # Attempt merge
+
+          # Sync and push
+          for attempt in $(seq 1 5); do
+            git fetch origin main
             if git merge origin/main --no-edit -m "Auto-merge: Sync v2.0.3 [skip ci]"; then
-              echo "✅ Merged successfully"
               break
-            else
-              # Handle conflicts
-              if git diff --name-only --diff-filter=U | grep -q .; then
-                echo "⚠️ Resolving merge conflicts..."
-                
-                # Keep our version of generated files (they're authoritative)
-                git checkout --ours signal_state/ 2>/dev/null || true
-                git checkout --ours signals.csv 2>/dev/null || true
-                
-                # Keep their version of config (manual changes take precedence)
-                git checkout --theirs config.json 2>/dev/null || true
-                
-                git add signal_state/ signals.csv config.json 2>/dev/null || true
-                
-                if git commit -m "Auto-resolve: Trade Beacon v2.0.3 conflicts [skip ci]"; then
-                  echo "✅ Conflicts resolved"
-                  break
-                fi
-              else
-                # Non-conflict merge failure
-                if [ $attempt -lt $MAX_SYNC_RETRIES ]; then
-                  BACKOFF=$((2 ** attempt))
-                  echo "⚠️ Merge failed, retrying in ${BACKOFF}s..."
-                  git merge --abort 2>/dev/null || true
-                  sleep $BACKOFF
-                else
-                  echo "❌ Merge failed after $MAX_SYNC_RETRIES attempts"
-                  git merge --abort 2>/dev/null || true
-                  exit 1
-                fi
-              fi
             fi
+            sleep $((2**attempt))
           done
-          
-          # ══════════════════════════════════════════════════════════
-          # Push changes with exponential backoff
-          # ══════════════════════════════════════════════════════════
-          echo "📤 Pushing changes..."
-          MAX_PUSH_RETRIES=5
-          
-          for attempt in $(seq 1 $MAX_PUSH_RETRIES); do
-            echo "   Push attempt $attempt/$MAX_PUSH_RETRIES..."
-            
-            if git push origin main; then
-              echo "✅ Changes pushed successfully"
-              break
-            else
-              if [ $attempt -lt $MAX_PUSH_RETRIES ]; then
-                BACKOFF=$((2 ** attempt))
-                echo "⚠️ Push failed, retrying in ${BACKOFF}s..."
-                sleep $BACKOFF
-                
-                # Re-sync before retry
-                git fetch origin main
-                git merge origin/main --no-edit -m "Auto-merge: Push retry [skip ci]" || {
-                  git merge --abort 2>/dev/null || true
-                }
-              else
-                echo "⚠️ Standard push failed, attempting force-with-lease..."
-                if git push --force-with-lease origin main; then
-                  echo "✅ Force-pushed successfully (this should be rare)"
-                else
-                  echo "❌ All push attempts exhausted"
-                  exit 1
-                fi
-              fi
-            fi
-          done
-      
+          git push origin main || git push --force-with-lease origin main
+
       - name: 📦 Upload workflow artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -499,37 +273,27 @@ jobs:
             config.json
           retention-days: 7
           if-no-files-found: warn
-      
+
       - name: 📊 Workflow summary
         if: always()
         run: |
           echo "## 📊 Trade Beacon v2.0.3 - Workflow Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          
           if [ "${{ steps.market.outputs.skip }}" == "true" ]; then
             echo "**Status:** ⏭️ Skipped" >> $GITHUB_STEP_SUMMARY
             echo "**Reason:** ${{ steps.market.outputs.status }}" >> $GITHUB_STEP_SUMMARY
           else
             echo "**Status:** ✅ Completed" >> $GITHUB_STEP_SUMMARY
-            
             if [ -f signal_state/dashboard_state.json ]; then
               MODE=$(jq -r '.mode // "unknown"' signal_state/dashboard_state.json)
               SIGNALS=$(jq '.active_signals // 0' signal_state/dashboard_state.json)
               WIN_RATE=$(jq '.stats.win_rate // 0' signal_state/dashboard_state.json)
               TOTAL_PIPS=$(jq '.stats.total_pips // 0' signal_state/dashboard_state.json)
-              
               echo "**Mode:** $MODE" >> $GITHUB_STEP_SUMMARY
               echo "**Active Signals:** $SIGNALS" >> $GITHUB_STEP_SUMMARY
               echo "**Win Rate:** ${WIN_RATE}%" >> $GITHUB_STEP_SUMMARY
               echo "**Total Pips:** $TOTAL_PIPS" >> $GITHUB_STEP_SUMMARY
             fi
-            
-            if [ -f signal_state/health.json ]; then
-              HEALTH=$(jq -r '.status // "unknown"' signal_state/health.json)
-              echo "**System Health:** $HEALTH" >> $GITHUB_STEP_SUMMARY
-            fi
+            [ -f signal_state/health.json ] && HEALTH=$(jq -r '.status // "unknown"' signal_state/health.json) && echo "**System Health:** $HEALTH" >> $GITHUB_STEP_SUMMARY
           fi
-          
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Workflow:** #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Workflow Run:** #${{ github.run_number }}" >> $GITHUB_STEP_SUMMARY
           echo "**Timestamp:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY

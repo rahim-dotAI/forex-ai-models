@@ -1,13 +1,14 @@
 """
-Trade Beacon v2.0 - Forex Signal Generator
+Trade Beacon v2.0.1 - Forex Signal Generator
 ==========================================
 
-CRITICAL FIXES APPLIED:
+CRITICAL FIXES APPLIED (v2.0.1):
+- Fixed volume penalty logic (was adding to wrong direction)
+- Raised aggressive threshold from 35 to 45
+- Added signal validation layer to reject broken signals
 - Fixed indicator data shape handling (ensure_series)
 - Proper spread handling in entry prices
 - Robust error handling for yfinance inconsistencies
-- Sentiment can be cleanly disabled
-- Backend intelligence for signal metadata
 
 This is a SIGNAL GENERATOR ONLY - no trade execution logic.
 """
@@ -167,22 +168,22 @@ def retry_with_backoff(max_retries=3, backoff_factor=5):
 def load_config():
     config_path = Path("config.json")
     if not config_path.exists():
-        log.warning("⚠️ config.json not found, using aggressive defaults")
+        log.warning("⚠️ config.json not found, using defaults with FIXED threshold")
         return {
             "mode": "aggressive",
-            "use_sentiment": False,  # Disabled by default until fixed
+            "use_sentiment": False,
             "settings": {
                 "aggressive": {
-                    "threshold": 30,
-                    "min_adx": 15,
-                    "rsi_oversold": 45,
-                    "rsi_overbought": 55,
-                    "min_volume_ratio": 0.8,
+                    "threshold": 45,  # ✅ FIXED from 35
+                    "min_adx": 18,
+                    "rsi_oversold": 40,
+                    "rsi_overbought": 60,
+                    "min_volume_ratio": 0.9,
                     "volume_penalty": 5
                 },
                 "conservative": {
                     "threshold": 50,
-                    "min_adx": 20,
+                    "min_adx": 22,
                     "rsi_oversold": 35,
                     "rsi_overbought": 65,
                     "min_volume_ratio": 1.0,
@@ -204,6 +205,11 @@ def load_config():
     if mode not in config.get("settings", {}):
         log.error(f"❌ Settings missing for mode '{mode}'")
         raise ValueError(f"Config incomplete for mode: {mode}")
+    
+    # ✅ ENFORCE MINIMUM THRESHOLD
+    if config["settings"]["aggressive"]["threshold"] < 45:
+        log.warning(f"⚠️ Aggressive threshold too low, raising to 45")
+        config["settings"]["aggressive"]["threshold"] = 45
     
     log.info(f"✅ Config loaded: mode={mode}, sentiment={config.get('use_sentiment', False)}")
     return config
@@ -269,12 +275,64 @@ USE_SENTIMENT = CONFIG.get("use_sentiment", False) and validate_api_keys()
 SETTINGS = CONFIG["settings"][MODE]
 
 SIGNAL_THRESHOLD = SETTINGS["threshold"]
-MIN_ADX = SETTINGS.get("min_adx", 15)
+MIN_ADX = SETTINGS.get("min_adx", 18)
 ADX_STRONG = 25
-RSI_OVERSOLD = SETTINGS.get("rsi_oversold", 45)
-RSI_OVERBOUGHT = SETTINGS.get("rsi_overbought", 55)
-MIN_VOLUME_RATIO = SETTINGS.get("min_volume_ratio", 0.8)
+RSI_OVERSOLD = SETTINGS.get("rsi_oversold", 40)
+RSI_OVERBOUGHT = SETTINGS.get("rsi_overbought", 60)
+MIN_VOLUME_RATIO = SETTINGS.get("min_volume_ratio", 0.9)
 VOLUME_PENALTY = SETTINGS.get("volume_penalty", 5)
+
+# =========================
+# SIGNAL VALIDATION (NEW v2.0.1)
+# =========================
+def validate_signal_quality(signal: Dict) -> Tuple[bool, List[str]]:
+    """
+    Final quality check before emitting signal.
+    Rejects clearly broken or untradable signals.
+    
+    Returns: (is_valid, list_of_warnings)
+    """
+    warnings = []
+    
+    # Check 1: Valid stop loss distance
+    sl_distance = abs(signal['entry_price'] - signal['sl'])
+    if sl_distance == 0:
+        warnings.append("Zero stop loss distance")
+        return False, warnings
+    
+    # Check 2: Spread vs Stop Loss ratio (reject if spread > 30% of SL)
+    spread = signal['spread']
+    spread_ratio = spread / sl_distance if sl_distance > 0 else 1
+    
+    if spread_ratio > 0.3:
+        warnings.append(f"High spread ratio: {spread_ratio:.1%} of SL")
+        return False, warnings
+    
+    # Check 3: Realistic ATR values
+    if signal['atr'] <= 0 or signal['atr'] > 0.01:
+        warnings.append(f"Invalid ATR: {signal['atr']}")
+        return False, warnings
+    
+    # Check 4: Minimum pip distance
+    if "JPY" in signal['pair']:
+        min_sl_pips = 15
+        pip_value = 0.01
+    else:
+        min_sl_pips = 10
+        pip_value = 0.0001
+    
+    sl_pips = sl_distance / pip_value
+    if sl_pips < min_sl_pips:
+        warnings.append(f"Stop too tight: {sl_pips:.1f} pips < {min_sl_pips}")
+        return False, warnings
+    
+    # Check 5: Risk-reward sanity
+    if signal['risk_reward'] < 1.0:
+        warnings.append(f"Poor R:R: {signal['risk_reward']:.2f}")
+        return False, warnings
+    
+    return True, warnings
+
 
 # =========================
 # BACKEND INTELLIGENCE FUNCTIONS
@@ -1038,7 +1096,7 @@ def generate_signal(pair: str) -> dict | None:
         elif e12 < e26:
             bear += 10
     
-    # Volume handling - penalty not rejection
+    # ✅ FIXED: Volume handling - penalty reduces confidence in current direction
     if volume_ratio >= MIN_VOLUME_RATIO:
         if volume_ratio > 1.5:
             bonus = 10
@@ -1052,11 +1110,12 @@ def generate_signal(pair: str) -> dict | None:
         else:
             bear += bonus
     else:
+        # ✅ CRITICAL FIX: Low volume reduces confidence in current direction
         penalty = VOLUME_PENALTY
         if e12 > e26:
-            bear += penalty
+            bull -= penalty  # Reduce bullish confidence
         else:
-            bull += penalty
+            bear -= penalty  # Reduce bearish confidence
     
     # Session bonus
     session = get_market_session()
@@ -1085,14 +1144,13 @@ def generate_signal(pair: str) -> dict | None:
     # Get spread for this pair
     spread = get_spread(pair)
     
-    # ✅ FIX: Entry price uses mid-price (spread is informational only)
-    # Execution engines handle spread - signal generators do not
+    # ✅ Entry price uses mid-price (spread is informational only)
     entry_price = current_price
     
     # ATR-based dynamic stops
     if direction == "BUY":
-        sl = entry_price - (2.5 * atr)  # ✅ Widened from 1.5x to 2.5x
-        tp = entry_price + (5.0 * atr)  # ✅ Widened from 2.5x to 5.0x
+        sl = entry_price - (2.5 * atr)
+        tp = entry_price + (5.0 * atr)
     else:
         sl = entry_price + (2.5 * atr)
         tp = entry_price - (5.0 * atr)
@@ -1125,7 +1183,7 @@ def generate_signal(pair: str) -> dict | None:
     clean_pair = pair.replace("=X", "")
     signal_id = f"{clean_pair}_{now.strftime('%Y%m%d_%H%M%S')}"
 
-    return {
+    signal = {
         # Unique identifier
         "signal_id": signal_id,
         
@@ -1144,7 +1202,7 @@ def generate_signal(pair: str) -> dict | None:
         "sl": round(sl, 5),
         "tp": round(tp, 5),
         "risk_reward": round(risk_reward, 2),
-        "spread": round(spread, 5),  # ✅ Informational only
+        "spread": round(spread, 5),
         "timestamp": now.isoformat(),
         
         # Backend intelligence
@@ -1161,9 +1219,21 @@ def generate_signal(pair: str) -> dict | None:
             "generated_at": now.isoformat(),
             "expires_at": expires_at.isoformat(),
             "session_active": session,
-            "signal_generator_version": "2.0.0"
+            "signal_generator_version": "2.0.1"
         }
     }
+    
+    # ✅ NEW v2.0.1: Validate signal quality before returning
+    is_valid, warnings = validate_signal_quality(signal)
+    
+    if not is_valid:
+        log.info(f"❌ {pair} | Signal rejected: {', '.join(warnings)}")
+        return None
+    
+    if warnings:
+        log.debug(f"⚠️ {pair} | Signal warnings: {', '.join(warnings)}")
+    
+    return signal
 
 # =========================
 # CORRELATION FILTER
@@ -1367,7 +1437,7 @@ def write_dashboard_state(signals: list, successful_downloads: int, newsapi_call
             "last_update": datetime.now(timezone.utc).isoformat(),
             "data_sources_available": successful_downloads > 0,
             "sentiment_available": newsapi_calls > 0 or marketaux_calls > 0,
-            "version": "2.0.0"
+            "version": "2.0.1"
         }
     }
 
@@ -1418,7 +1488,7 @@ def write_health_check(signals: list, successful_downloads: int, newsapi_calls: 
             "mode": MODE,
             "pairs_monitored": len(PAIRS),
             "last_success": datetime.now(timezone.utc).isoformat() if status == "ok" else None,
-            "version": "2.0.0"
+            "version": "2.0.1"
         }
     }
     
@@ -1489,9 +1559,9 @@ def main():
         return
 
     sentiment_status = "ON" if USE_SENTIMENT else "OFF"
-    log.info(f"🚀 Starting Trade Beacon v2.0 - Mode={MODE} | Sentiment={sentiment_status}")
+    log.info(f"🚀 Starting Trade Beacon v2.0.1 - Mode={MODE} | Sentiment={sentiment_status}")
     log.info(f"📊 Monitoring {len(PAIRS)} pairs: {', '.join([p.replace('=X', '') for p in PAIRS])}")
-    log.info(f"💰 Features: Spread-aware pricing | Backend intelligence | Unique signal IDs")
+    log.info(f"💰 Features: Signal validation | Volume penalty fix | Threshold=45")
     
     active = []
     successful_downloads = 0
@@ -1514,7 +1584,7 @@ def main():
                     active.append(sig)
                     successful_downloads += 1
                     log.info(f"✅ {pair.replace('=X', '')} - Signal generated "
-                            f"(RR: {sig['risk_reward']:.2f}, Hold: {sig['hold_time']}, "
+                            f"(Score: {sig['score']}, RR: {sig['risk_reward']:.2f}, "
                             f"Modes: {', '.join(sig['eligible_modes'])})")
                 else:
                     successful_downloads += 1
@@ -1545,7 +1615,7 @@ def main():
         log.info("📄 signals.csv written")
         
         print("\n" + "="*80)
-        print(f"🎯 {MODE.upper()} SIGNALS {'+ SENTIMENT' if USE_SENTIMENT else ''} (v2.0):")
+        print(f"🎯 {MODE.upper()} SIGNALS {'+ SENTIMENT' if USE_SENTIMENT else ''} (v2.0.1):")
         print("="*80)
         
         display_cols = ["signal_id", "pair", "direction", "score", "confidence", 
@@ -1557,7 +1627,7 @@ def main():
         log.info("✅ No strong signals this cycle")
     
     mark_success()
-    log.info("✅ Run completed successfully - Trade Beacon v2.0")
+    log.info("✅ Run completed successfully - Trade Beacon v2.0.1")
 
 
 if __name__ == "__main__":

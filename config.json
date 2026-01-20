@@ -12,8 +12,7 @@
       "min_risk_reward": 1.5,
       "atr_stop_multiplier": 2.5,
       "atr_target_multiplier": 5.0,
-      "max_correlated_signals": 2,
-      "max_signal_age_minutes": 60
+      "max_correlated_signals": 2
     },
     "conservative": {
       "threshold": 55,
@@ -25,8 +24,7 @@
       "min_risk_reward": 2.0,
       "atr_stop_multiplier": 3.0,
       "atr_target_multiplier": 6.0,
-      "max_correlated_signals": 1,
-      "max_signal_age_minutes": 45
+      "max_correlated_signals": 1
     }
   },
   "advanced": {
@@ -59,7 +57,7 @@
     },
     "validation": {
       "max_price_change_pct": 0.05,
-      "max_signal_age_seconds": 300,
+      "max_signal_age_seconds": 600,
       "min_sl_pips": {
         "JPY_pairs": 12,
         "other": 7

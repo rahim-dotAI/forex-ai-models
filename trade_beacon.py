@@ -1,14 +1,14 @@
 """
-Trade Beacon v2.0.2 - Forex Signal Generator
+Trade Beacon v2.0.3 - Forex Signal Generator (COMPLETE ENHANCED VERSION)
 ==========================================
 
-CRITICAL FIXES APPLIED (v2.0.2):
-- Fixed successful_downloads counter (now tracks actual download success)
-- Fixed ATR validation for JPY pairs (pair-specific max ATR)
-- Fixed spread validation (capped to prevent false rejections)
-- Fixed volume penalty logic (was adding to wrong direction)
-- Raised aggressive threshold from 35 to 45
-- Added signal validation layer to reject broken signals
+ENHANCEMENTS (v2.0.3):
+- Configurable ATR multipliers and risk-reward minimums
+- Enhanced signal validation (stale signals, unrealistic prices)
+- Dynamic session bonuses from config
+- Risk management limits (max positions, daily risk, correlation)
+- Performance-based optimization support
+- Mode-specific parameter loading
 
 This is a SIGNAL GENERATOR ONLY - no trade execution logic.
 """
@@ -101,12 +101,12 @@ SPREADS = {
 
 # Correlation pairs (to avoid double exposure)
 CORRELATED_PAIRS = [
-    {"EURUSD", "GBPUSD"},  # Both have EUR/GBP exposure
-    {"EURUSD", "EURGBP"},
-    {"GBPUSD", "EURGBP"},
-    {"USDJPY", "EURJPY"},  # JPY exposure
-    {"USDJPY", "GBPJPY"},
-    {"EURJPY", "GBPJPY"},
+    {"EURUSD=X", "GBPUSD=X"},  # Both have EUR/GBP exposure
+    {"EURUSD=X", "EURGBP=X"},
+    {"GBPUSD=X", "EURGBP=X"},
+    {"USDJPY=X", "EURJPY=X"},  # JPY exposure
+    {"USDJPY=X", "GBPJPY=X"},
+    {"EURJPY=X", "GBPJPY=X"},
 ]
 
 INTERVAL = "15m"
@@ -168,29 +168,8 @@ def retry_with_backoff(max_retries=3, backoff_factor=5):
 def load_config():
     config_path = Path("config.json")
     if not config_path.exists():
-        log.warning("⚠️ config.json not found, using defaults with FIXED threshold")
-        return {
-            "mode": "aggressive",
-            "use_sentiment": False,
-            "settings": {
-                "aggressive": {
-                    "threshold": 45,  # ✅ FIXED from 35
-                    "min_adx": 18,
-                    "rsi_oversold": 40,
-                    "rsi_overbought": 60,
-                    "min_volume_ratio": 0.9,
-                    "volume_penalty": 5
-                },
-                "conservative": {
-                    "threshold": 50,
-                    "min_adx": 22,
-                    "rsi_oversold": 35,
-                    "rsi_overbought": 65,
-                    "min_volume_ratio": 1.0,
-                    "volume_penalty": 10
-                }
-            }
-        }
+        log.warning("⚠️ config.json not found, using enhanced defaults")
+        return _default_config()
     
     with open(config_path, 'r') as f:
         config = json.load(f)
@@ -208,11 +187,68 @@ def load_config():
     
     # ✅ ENFORCE MINIMUM THRESHOLD
     if config["settings"]["aggressive"]["threshold"] < 45:
-        log.warning(f"⚠️ Aggressive threshold too low, raising to 45")
-        config["settings"]["aggressive"]["threshold"] = 45
+        log.warning(f"⚠️ Aggressive threshold too low, raising to 48")
+        config["settings"]["aggressive"]["threshold"] = 48
     
     log.info(f"✅ Config loaded: mode={mode}, sentiment={config.get('use_sentiment', False)}")
     return config
+
+def _default_config():
+    """Enhanced default configuration"""
+    return {
+        "mode": "aggressive",
+        "use_sentiment": False,
+        "settings": {
+            "aggressive": {
+                "threshold": 48,
+                "min_adx": 20,
+                "rsi_oversold": 35,
+                "rsi_overbought": 65,
+                "min_volume_ratio": 1.1,
+                "volume_penalty": 10,
+                "min_risk_reward": 1.5,
+                "atr_stop_multiplier": 2.5,
+                "atr_target_multiplier": 5.0,
+                "max_correlated_signals": 2,
+                "max_signal_age_minutes": 60
+            },
+            "conservative": {
+                "threshold": 58,
+                "min_adx": 25,
+                "rsi_oversold": 30,
+                "rsi_overbought": 70,
+                "min_volume_ratio": 1.3,
+                "volume_penalty": 15,
+                "min_risk_reward": 2.0,
+                "atr_stop_multiplier": 3.0,
+                "atr_target_multiplier": 6.0,
+                "max_correlated_signals": 1,
+                "max_signal_age_minutes": 45
+            }
+        },
+        "advanced": {
+            "enable_session_filtering": True,
+            "enable_correlation_filter": True,
+            "cache_ttl_minutes": 5,
+            "session_bonuses": {
+                "ASIAN": {"JPY_pairs": 5, "AUD_NZD_pairs": 5, "other": 0},
+                "EUROPEAN": {"EUR_GBP_pairs": 5, "EUR_GBP_crosses": 3, "other": 0},
+                "OVERLAP": {"all_major_pairs": 3},
+                "US": {"USD_majors": 5, "other": 0}
+            },
+            "validation": {
+                "max_price_change_pct": 0.05,
+                "max_signal_age_seconds": 300,
+                "min_sl_pips": {"JPY_pairs": 15, "other": 10},
+                "max_spread_ratio": 0.3
+            }
+        },
+        "risk_management": {
+            "max_daily_risk_pips": 200,
+            "max_open_positions": 5,
+            "max_correlated_exposure": 2
+        }
+    }
 
 # =========================
 # API KEY VALIDATION
@@ -274,29 +310,25 @@ MODE = CONFIG["mode"]
 USE_SENTIMENT = CONFIG.get("use_sentiment", False) and validate_api_keys()
 SETTINGS = CONFIG["settings"][MODE]
 
-SIGNAL_THRESHOLD = SETTINGS["threshold"]
-MIN_ADX = SETTINGS.get("min_adx", 18)
-ADX_STRONG = 25
-RSI_OVERSOLD = SETTINGS.get("rsi_oversold", 40)
-RSI_OVERBOUGHT = SETTINGS.get("rsi_overbought", 60)
-MIN_VOLUME_RATIO = SETTINGS.get("min_volume_ratio", 0.9)
-VOLUME_PENALTY = SETTINGS.get("volume_penalty", 5)
-
 # =========================
-# SIGNAL VALIDATION (v2.0.2 - ENHANCED)
+# ENHANCED SIGNAL VALIDATION (v2.0.3)
 # =========================
-def validate_signal_quality(signal: Dict) -> Tuple[bool, List[str]]:
+def validate_signal_quality(signal: Dict, config: Dict) -> Tuple[bool, List[str]]:
     """
-    Final quality check before emitting signal.
-    Rejects clearly broken or untradable signals.
+    Enhanced quality check before emitting signal.
     
-    v2.0.2 fixes:
-    - Pair-specific ATR validation (JPY pairs can have higher ATR)
-    - Capped spread impact to prevent false rejections
+    v2.0.3 improvements:
+    - Configurable validation thresholds
+    - Unrealistic price change detection
+    - Stale signal filtering
+    - Mode-specific validation
     
     Returns: (is_valid, list_of_warnings)
     """
     warnings = []
+    validation_config = config.get("advanced", {}).get("validation", {})
+    mode = config.get("mode", "aggressive")
+    mode_settings = config["settings"][mode]
     
     # Check 1: Valid stop loss distance
     sl_distance = abs(signal['entry_price'] - signal['sl'])
@@ -304,35 +336,36 @@ def validate_signal_quality(signal: Dict) -> Tuple[bool, List[str]]:
         warnings.append("Zero stop loss distance")
         return False, warnings
     
-    # Check 2: Spread vs Stop Loss ratio (with capped spread to prevent false rejections)
-    # ✅ FIX v2.0.2: Cap spread impact since we use fixed estimates, not live spreads
+    # Check 2: Spread vs Stop Loss ratio (capped)
     spread = signal['spread']
-    effective_spread = min(spread, sl_distance * 0.25)  # Cap at 25% of SL
+    effective_spread = min(spread, sl_distance * 0.25)
     spread_ratio = effective_spread / sl_distance if sl_distance > 0 else 1
     
-    if spread_ratio > 0.3:
-        warnings.append(f"High spread ratio: {spread_ratio:.1%} of SL")
+    max_spread_ratio = validation_config.get("max_spread_ratio", 0.3)
+    if spread_ratio > max_spread_ratio:
+        warnings.append(f"High spread ratio: {spread_ratio:.1%} of SL (max: {max_spread_ratio:.1%})")
         return False, warnings
     
-    # Check 3: Realistic ATR values (pair-specific)
-    # ✅ FIX v2.0.2: JPY pairs have higher ATR values
+    # Check 3: Pair-specific ATR validation
     if "JPY" in signal['pair']:
-        max_atr = 1.0  # JPY pairs can have much higher ATR
+        max_atr = 1.0
         min_atr = 0.001
     else:
-        max_atr = 0.01  # Non-JPY pairs
+        max_atr = 0.01
         min_atr = 0.00001
     
     if signal['atr'] <= min_atr or signal['atr'] > max_atr:
         warnings.append(f"Invalid ATR: {signal['atr']} (range: {min_atr}-{max_atr})")
         return False, warnings
     
-    # Check 4: Minimum pip distance
+    # Check 4: Minimum pip distance (configurable)
+    min_sl_pips_config = validation_config.get("min_sl_pips", {})
+    
     if "JPY" in signal['pair']:
-        min_sl_pips = 15
+        min_sl_pips = min_sl_pips_config.get("JPY_pairs", 15)
         pip_value = 0.01
     else:
-        min_sl_pips = 10
+        min_sl_pips = min_sl_pips_config.get("other", 10)
         pip_value = 0.0001
     
     sl_pips = sl_distance / pip_value
@@ -340,9 +373,31 @@ def validate_signal_quality(signal: Dict) -> Tuple[bool, List[str]]:
         warnings.append(f"Stop too tight: {sl_pips:.1f} pips < {min_sl_pips}")
         return False, warnings
     
-    # Check 5: Risk-reward sanity
-    if signal['risk_reward'] < 1.0:
-        warnings.append(f"Poor R:R: {signal['risk_reward']:.2f}")
+    # Check 5: Risk-reward sanity (mode-specific)
+    min_rr = mode_settings.get("min_risk_reward", 1.5)
+    if signal['risk_reward'] < min_rr:
+        warnings.append(f"Poor R:R: {signal['risk_reward']:.2f} < {min_rr}")
+        return False, warnings
+    
+    # Check 6: NEW - Unrealistic price change detection
+    max_price_change = validation_config.get("max_price_change_pct", 0.05)
+    price_change_pct = abs(signal['tp'] - signal['sl']) / signal['entry_price']
+    
+    if price_change_pct > max_price_change:
+        warnings.append(f"Unrealistic TP/SL spread: {price_change_pct:.1%} > {max_price_change:.1%}")
+        return False, warnings
+    
+    # Check 7: NEW - Stale signal detection
+    max_age = validation_config.get("max_signal_age_seconds", 300)
+    try:
+        signal_time = datetime.fromisoformat(signal['timestamp'].replace('Z', '+00:00'))
+        signal_age = (datetime.now(timezone.utc) - signal_time).total_seconds()
+        
+        if signal_age > max_age:
+            warnings.append(f"Stale signal: {signal_age/60:.1f} minutes old (max: {max_age/60:.1f})")
+            return False, warnings
+    except Exception as e:
+        warnings.append(f"Invalid timestamp: {e}")
         return False, warnings
     
     return True, warnings
@@ -363,7 +418,8 @@ def calculate_hold_time(risk_reward: float, atr: float) -> str:
     return "SHORT"
 
 
-def calculate_eligible_modes(score: int, adx: float, volume_ratio: float, rsi: float) -> List[str]:
+def calculate_eligible_modes(score: int, adx: float, volume_ratio: float, 
+                            rsi: float, config: Dict) -> List[str]:
     """
     Determine which modes this signal qualifies for.
     Frontend will filter based on this instead of re-calculating.
@@ -371,7 +427,7 @@ def calculate_eligible_modes(score: int, adx: float, volume_ratio: float, rsi: f
     modes = []
     
     # Conservative criteria
-    conservative_settings = CONFIG["settings"]["conservative"]
+    conservative_settings = config["settings"]["conservative"]
     if (score >= conservative_settings["threshold"] and
         adx >= conservative_settings["min_adx"] and
         volume_ratio >= conservative_settings["min_volume_ratio"] and
@@ -379,7 +435,7 @@ def calculate_eligible_modes(score: int, adx: float, volume_ratio: float, rsi: f
         modes.append("conservative")
     
     # Aggressive criteria
-    aggressive_settings = CONFIG["settings"]["aggressive"]
+    aggressive_settings = config["settings"]["aggressive"]
     if (score >= aggressive_settings["threshold"] and
         adx >= aggressive_settings["min_adx"] and
         volume_ratio >= aggressive_settings["min_volume_ratio"] and
@@ -468,30 +524,47 @@ def get_market_session() -> str:
     else:
         return "LATE_US"
 
-def get_session_bonus(pair: str, session: str) -> int:
-    """Apply session-based scoring bonus"""
-    bonus = 0
+
+def calculate_dynamic_session_bonus(pair: str, session: str, config: Dict) -> int:
+    """
+    Calculate session bonus based on config and pair characteristics.
     
+    Replaces hardcoded get_session_bonus() with configurable version.
+    """
+    if not config.get("advanced", {}).get("enable_session_filtering", True):
+        return 0
+    
+    session_config = config.get("advanced", {}).get("session_bonuses", {})
+    
+    if session not in session_config:
+        return 0
+    
+    bonuses = session_config[session]
+    
+    # Determine pair category
     if session == "ASIAN":
         if "JPY" in pair:
-            bonus = 5
-        elif pair in ["AUDUSD=X", "NZDUSD=X"]:
-            bonus = 5
+            return bonuses.get("JPY_pairs", 0)
+        elif any(curr in pair for curr in ["AUD", "NZD"]):
+            return bonuses.get("AUD_NZD_pairs", 0)
+        return bonuses.get("other", 0)
     
     elif session in ["EUROPEAN", "OVERLAP"]:
-        if pair in ["EURUSD=X", "GBPUSD=X", "EURGBP=X"]:
-            bonus = 5
-        elif "EUR" in pair or "GBP" in pair:
-            bonus = 3
-    
-    elif session == "OVERLAP":
-        bonus += 3
+        if any(curr in pair for curr in ["EUR", "GBP"]) and pair not in ["EURUSD", "GBPUSD"]:
+            return bonuses.get("EUR_GBP_crosses", 0)
+        elif any(curr in pair for curr in ["EUR", "GBP"]):
+            return bonuses.get("EUR_GBP_pairs", 0)
+        elif session == "OVERLAP":
+            return bonuses.get("all_major_pairs", 0)
+        return bonuses.get("other", 0)
     
     elif session == "US":
-        if pair in ["EURUSD=X", "GBPUSD=X", "USDCAD=X"]:
-            bonus = 5
+        if "USD" in pair and pair in ["EURUSD", "GBPUSD", "USDCAD"]:
+            return bonuses.get("USD_majors", 0)
+        return bonuses.get("other", 0)
     
-    return bonus
+    return 0
+
 
 # =========================
 # SENTIMENT MODEL HEALTH PERSISTENCE
@@ -554,6 +627,7 @@ class ModelHealthTracker:
         if failed_time:
             return failed_time + timedelta(hours=self.cooldown_hours)
         return datetime.now(timezone.utc)
+
 
 # =========================
 # IMPROVED SENTIMENT ANALYSIS WITH THREAD SAFETY
@@ -964,8 +1038,6 @@ def download(pair: str) -> Tuple[pd.DataFrame, bool]:
     """
     Download data with TTL-based caching
     
-    v2.0.2: Returns (dataframe, success_flag) to properly track download success
-    
     Returns:
         Tuple of (DataFrame, bool) where bool indicates successful download
     """
@@ -1049,13 +1121,17 @@ def get_signal_type(e12: float, e26: float, e200: float, rsi: float) -> str:
         return "breakout"
 
 # =========================
-# ENHANCED SIGNAL ENGINE WITH BACKEND INTELLIGENCE
+# ENHANCED SIGNAL ENGINE WITH CONFIGURABLE PARAMETERS
 # =========================
 def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
     """
-    Generate trading signal with full backend intelligence
+    Generate trading signal with configurable parameters from config.
     
-    v2.0.2: Returns (signal, download_success) to properly track data availability
+    v2.0.3 enhancements:
+    - ATR multipliers from config
+    - Mode-specific minimum R:R
+    - Dynamic session bonuses
+    - Enhanced validation
     
     Returns:
         Tuple of (signal_dict or None, bool) where bool indicates download success
@@ -1094,9 +1170,10 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
         log.warning(f"⚠️ {pair} indicators incomplete, skipping")
         return None, download_success
 
-    # ADX filter
-    if a < MIN_ADX:
-        log.info(f"❌ {pair} | ADX too low ({a:.1f} < {MIN_ADX})")
+    # ADX filter (from config)
+    min_adx = SETTINGS.get("min_adx", 20)
+    if a < min_adx:
+        log.info(f"❌ {pair} | ADX too low ({a:.1f} < {min_adx})")
         return None, download_success
 
     bull = bear = 0
@@ -1108,31 +1185,37 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
         bear += 40
 
     # RSI Context (20-30 points)
+    rsi_oversold = SETTINGS.get("rsi_oversold", 35)
+    rsi_overbought = SETTINGS.get("rsi_overbought", 65)
+    
     if MODE == "conservative":
-        if r < RSI_OVERSOLD:
+        if r < rsi_oversold:
             bull += 30
-        elif r > RSI_OVERBOUGHT:
+        elif r > rsi_overbought:
             bear += 30
     else:
-        if r < RSI_OVERSOLD:
+        if r < rsi_oversold:
             bull += 20
-        elif r > RSI_OVERBOUGHT:
+        elif r > rsi_overbought:
             bear += 20
 
     # ADX Trend Strength (10-20 points)
-    if a > ADX_STRONG:
+    if a > 25:  # Strong trend
         if e12 > e26:
             bull += 20
         elif e12 < e26:
             bear += 20
-    elif a > MIN_ADX:
+    elif a > min_adx:
         if e12 > e26:
             bull += 10
         elif e12 < e26:
             bear += 10
     
-    # ✅ FIXED: Volume handling - penalty reduces confidence in current direction
-    if volume_ratio >= MIN_VOLUME_RATIO:
+    # ✅ Volume handling
+    min_volume_ratio = SETTINGS.get("min_volume_ratio", 1.0)
+    volume_penalty = SETTINGS.get("volume_penalty", 10)
+    
+    if volume_ratio >= min_volume_ratio:
         if volume_ratio > 1.5:
             bonus = 10
         elif volume_ratio > 1.2:
@@ -1145,16 +1228,17 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
         else:
             bear += bonus
     else:
-        # ✅ CRITICAL FIX: Low volume reduces confidence in current direction
-        penalty = VOLUME_PENALTY
+        # Low volume reduces confidence in current direction
         if e12 > e26:
-            bull -= penalty  # Reduce bullish confidence
+            bull -= volume_penalty
         else:
-            bear -= penalty  # Reduce bearish confidence
+            bear -= volume_penalty
     
-    # Session bonus
+    # ✅ Dynamic session bonus (from config)
     session = get_market_session()
-    session_bonus = get_session_bonus(pair, session)
+    clean_pair = pair.replace("=X", "")
+    session_bonus = calculate_dynamic_session_bonus(clean_pair, session, CONFIG)
+    
     if e12 > e26:
         bull += session_bonus
     else:
@@ -1162,7 +1246,9 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
 
     diff = abs(bull - bear)
 
-    if diff < SIGNAL_THRESHOLD:
+    # Threshold check (from config)
+    threshold = SETTINGS.get("threshold", 48)
+    if diff < threshold:
         return None, download_success
 
     direction = "BUY" if bull > bear else "SELL"
@@ -1182,22 +1268,26 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
     # ✅ Entry price uses mid-price (spread is informational only)
     entry_price = current_price
     
-    # ATR-based dynamic stops
+    # ✅ ATR-based dynamic stops (NOW CONFIGURABLE)
+    atr_stop_mult = SETTINGS.get("atr_stop_multiplier", 2.5)
+    atr_target_mult = SETTINGS.get("atr_target_multiplier", 5.0)
+    
     if direction == "BUY":
-        sl = entry_price - (2.5 * atr)
-        tp = entry_price + (5.0 * atr)
+        sl = entry_price - (atr_stop_mult * atr)
+        tp = entry_price + (atr_target_mult * atr)
     else:
-        sl = entry_price + (2.5 * atr)
-        tp = entry_price - (5.0 * atr)
+        sl = entry_price + (atr_stop_mult * atr)
+        tp = entry_price - (atr_target_mult * atr)
     
     # Calculate actual risk-reward ratio
     risk = abs(entry_price - sl)
     reward = abs(tp - entry_price)
     risk_reward = reward / risk if risk > 0 else 0
     
-    # Minimum RR filter
-    if risk_reward < 1.5:
-        log.info(f"❌ {pair} | Poor risk-reward ({risk_reward:.2f} < 1.5)")
+    # ✅ Mode-specific minimum RR filter (from config)
+    min_rr = SETTINGS.get("min_risk_reward", 1.5)
+    if risk_reward < min_rr:
+        log.info(f"❌ {pair} | Poor risk-reward ({risk_reward:.2f} < {min_rr})")
         return None, download_success
     
     # Calculate signal metadata
@@ -1206,16 +1296,15 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
     
     # Generate timestamp and expiration
     now = datetime.now(timezone.utc)
-    valid_for_minutes = 60
+    valid_for_minutes = SETTINGS.get("max_signal_age_minutes", 60)
     expires_at = now + timedelta(minutes=valid_for_minutes)
     
     # Calculate backend intelligence
     hold_time = calculate_hold_time(risk_reward, atr)
-    eligible_modes = calculate_eligible_modes(diff, a, volume_ratio, r)
+    eligible_modes = calculate_eligible_modes(diff, a, volume_ratio, r, CONFIG)
     freshness = calculate_signal_freshness(now)
     
     # Generate unique signal ID
-    clean_pair = pair.replace("=X", "")
     signal_id = f"{clean_pair}_{now.strftime('%Y%m%d_%H%M%S')}"
 
     signal = {
@@ -1254,12 +1343,14 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
             "generated_at": now.isoformat(),
             "expires_at": expires_at.isoformat(),
             "session_active": session,
-            "signal_generator_version": "2.0.2"
+            "signal_generator_version": "2.0.3",
+            "atr_stop_multiplier": atr_stop_mult,
+            "atr_target_multiplier": atr_target_mult
         }
     }
     
-    # ✅ v2.0.2: Validate signal quality before returning
-    is_valid, warnings = validate_signal_quality(signal)
+    # ✅ v2.0.3: Enhanced validation with config
+    is_valid, warnings = validate_signal_quality(signal, CONFIG)
     
     if not is_valid:
         log.info(f"❌ {pair} | Signal rejected: {', '.join(warnings)}")
@@ -1271,39 +1362,95 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
     return signal, download_success
 
 # =========================
-# CORRELATION FILTER
+# ENHANCED CORRELATION FILTER
 # =========================
-def filter_correlated_signals(signals: List[Dict]) -> List[Dict]:
-    """Remove correlated signals to avoid double exposure"""
+def filter_correlated_signals_enhanced(signals: List[Dict], max_correlated: int = 2) -> List[Dict]:
+    """
+    Enhanced correlation filter with configurable limits.
+    """
     if len(signals) <= 1:
         return signals
     
     filtered = []
-    pairs_taken = set()
+    correlation_groups = {}
     
     sorted_signals = sorted(signals, key=lambda x: x['score'], reverse=True)
     
     for signal in sorted_signals:
         pair = f"{signal['pair']}=X"
         
-        is_correlated = False
-        for taken_pair in pairs_taken:
-            for corr_group in CORRELATED_PAIRS:
-                if pair in corr_group and taken_pair in corr_group:
-                    is_correlated = True
-                    log.info(f"⚠️ Skipping {signal['pair']} (correlated with {taken_pair.replace('=X', '')})")
-                    break
-            if is_correlated:
+        # Find which correlation group this pair belongs to
+        assigned_group = None
+        for corr_group in CORRELATED_PAIRS:
+            if pair in corr_group:
+                group_key = frozenset(corr_group)
+                assigned_group = group_key
                 break
         
-        if not is_correlated:
+        if assigned_group:
+            # Check if we've hit the limit for this group
+            count = correlation_groups.get(assigned_group, 0)
+            if count < max_correlated:
+                filtered.append(signal)
+                correlation_groups[assigned_group] = count + 1
+            else:
+                log.info(f"⚠️ Skipping {signal['pair']} (correlation group limit: {max_correlated})")
+        else:
+            # Not in any correlation group, always include
             filtered.append(signal)
-            pairs_taken.add(pair)
     
     if len(filtered) < len(signals):
-        log.info(f"🔗 Correlation filter: {len(signals)} → {len(filtered)} signals")
+        log.info(f"🔗 Enhanced correlation filter: {len(signals)} → {len(filtered)} signals")
     
     return filtered
+
+
+def check_risk_limits(signals: List[Dict], config: Dict) -> Tuple[List[Dict], List[str]]:
+    """
+    Filter signals based on risk management rules.
+    
+    Returns: (filtered_signals, warnings)
+    """
+    risk_config = config.get("risk_management", {})
+    warnings = []
+    
+    # Check 1: Max open positions
+    max_positions = risk_config.get("max_open_positions", 5)
+    if len(signals) > max_positions:
+        warnings.append(f"Limiting to {max_positions} positions (had {len(signals)})")
+        signals = sorted(signals, key=lambda x: x['score'], reverse=True)[:max_positions]
+    
+    # Check 2: Max daily risk
+    max_daily_risk = risk_config.get("max_daily_risk_pips", 200)
+    total_risk_pips = 0
+    
+    filtered = []
+    for signal in signals:
+        entry = signal.get('entry_price', 0)
+        sl = signal.get('sl', 0)
+        pair = signal.get('pair', '')
+        
+        if entry > 0 and sl > 0:
+            pip_value = 0.01 if "JPY" in pair else 0.0001
+            risk_pips = abs(entry - sl) / pip_value
+            
+            if total_risk_pips + risk_pips <= max_daily_risk:
+                filtered.append(signal)
+                total_risk_pips += risk_pips
+            else:
+                warnings.append(f"Skipped {pair} - would exceed daily risk limit ({total_risk_pips:.1f}/{max_daily_risk} pips)")
+        else:
+            filtered.append(signal)
+    
+    # Check 3: Max correlated exposure
+    mode = config.get("mode", "aggressive")
+    max_correlated = config["settings"][mode].get("max_correlated_signals", 2)
+    
+    if config.get("advanced", {}).get("enable_correlation_filter", True):
+        filtered = filter_correlated_signals_enhanced(filtered, max_correlated)
+    
+    return filtered, warnings
+
 
 # =========================
 # SENTIMENT ENHANCEMENT
@@ -1351,8 +1498,9 @@ def enhance_with_sentiment(signals: List[Dict], news_agg: NewsAggregator) -> Lis
         signal['sentiment_score'] = adjustment
         
         # Re-validate against threshold after sentiment
-        if signal['score'] < SIGNAL_THRESHOLD:
-            log.info(f"❌ {pair} | Signal too weak after sentiment ({signal['score']} < {SIGNAL_THRESHOLD})")
+        threshold = SETTINGS.get("threshold", 48)
+        if signal['score'] < threshold:
+            log.info(f"❌ {pair} | Signal too weak after sentiment ({signal['score']} < {threshold})")
             continue
         
         # Recalculate eligible modes after sentiment adjustment
@@ -1360,7 +1508,8 @@ def enhance_with_sentiment(signals: List[Dict], news_agg: NewsAggregator) -> Lis
             signal['score'],
             signal['adx'],
             signal['volume_ratio'],
-            signal['rsi']
+            signal['rsi'],
+            CONFIG
         )
         
         # Update confidence based on combined score
@@ -1472,7 +1621,7 @@ def write_dashboard_state(signals: list, successful_downloads: int, newsapi_call
             "last_update": datetime.now(timezone.utc).isoformat(),
             "data_sources_available": successful_downloads > 0,
             "sentiment_available": newsapi_calls > 0 or marketaux_calls > 0,
-            "version": "2.0.2"
+            "version": "2.0.3"
         }
     }
 
@@ -1523,7 +1672,7 @@ def write_health_check(signals: list, successful_downloads: int, newsapi_calls: 
             "mode": MODE,
             "pairs_monitored": len(PAIRS),
             "last_success": datetime.now(timezone.utc).isoformat() if status == "ok" else None,
-            "version": "2.0.1"
+            "version": "2.0.3"
         }
     }
     
@@ -1594,9 +1743,9 @@ def main():
         return
 
     sentiment_status = "ON" if USE_SENTIMENT else "OFF"
-    log.info(f"🚀 Starting Trade Beacon v2.0.2 - Mode={MODE} | Sentiment={sentiment_status}")
+    log.info(f"🚀 Starting Trade Beacon v2.0.3 - Mode={MODE} | Sentiment={sentiment_status}")
     log.info(f"📊 Monitoring {len(PAIRS)} pairs: {', '.join([p.replace('=X', '') for p in PAIRS])}")
-    log.info(f"💰 Features: Download tracking | JPY ATR fix | Spread cap validation")
+    log.info(f"💰 Features: Configurable ATR | Enhanced validation | Risk limits")
     
     active = []
     successful_downloads = 0
@@ -1616,7 +1765,7 @@ def main():
             try:
                 sig, download_ok = future.result()
                 
-                # ✅ FIX v2.0.2: Properly track download success
+                # ✅ Track download success
                 if download_ok:
                     successful_downloads += 1
                 
@@ -1633,9 +1782,13 @@ def main():
             except Exception as e:
                 log.error(f"❌ {pair.replace('=X', '')} failed: {e}")
 
-    if len(active) > 1:
-        active = filter_correlated_signals(active)
+    # ✅ Apply risk management filters
+    if active:
+        active, risk_warnings = check_risk_limits(active, CONFIG)
+        for warning in risk_warnings:
+            log.warning(f"⚠️ Risk Management: {warning}")
 
+    # ✅ Sentiment enhancement
     if USE_SENTIMENT and active:
         try:
             news_agg = NewsAggregator()
@@ -1656,7 +1809,7 @@ def main():
         log.info("📄 signals.csv written")
         
         print("\n" + "="*80)
-        print(f"🎯 {MODE.upper()} SIGNALS {'+ SENTIMENT' if USE_SENTIMENT else ''} (v2.0.2):")
+        print(f"🎯 {MODE.upper()} SIGNALS {'+ SENTIMENT' if USE_SENTIMENT else ''} (v2.0.3):")
         print("="*80)
         
         display_cols = ["signal_id", "pair", "direction", "score", "confidence", 
@@ -1668,7 +1821,7 @@ def main():
         log.info("✅ No strong signals this cycle")
     
     mark_success()
-    log.info("✅ Run completed successfully - Trade Beacon v2.0.2")
+    log.info("✅ Run completed successfully - Trade Beacon v2.0.3")
 
 
 if __name__ == "__main__":

@@ -3,11 +3,11 @@
   "use_sentiment": false,
   "settings": {
     "aggressive": {
-      "threshold": 42,           // ⬇️ Lower from 48
-      "min_adx": 15,             // ⬇️ Lower from 20
+      "threshold": 42,
+      "min_adx": 15,
       "rsi_oversold": 35,
       "rsi_overbought": 65,
-      "min_volume_ratio": 1.0,   // ⬇️ Lower from 1.1
+      "min_volume_ratio": 1.0,
       "volume_penalty": 10,
       "min_risk_reward": 1.5,
       "atr_stop_multiplier": 2.5,
@@ -16,11 +16,11 @@
       "max_signal_age_minutes": 60
     },
     "conservative": {
-      "threshold": 55,           // ⬇️ Lower from 58
-      "min_adx": 22,             // ⬇️ Lower from 25
+      "threshold": 55,
+      "min_adx": 22,
       "rsi_oversold": 30,
       "rsi_overbought": 70,
-      "min_volume_ratio": 1.2,   // ⬇️ Lower from 1.3
+      "min_volume_ratio": 1.2,
       "volume_penalty": 15,
       "min_risk_reward": 2.0,
       "atr_stop_multiplier": 3.0,
@@ -36,18 +36,33 @@
     "cache_ttl_minutes": 5,
     "parallel_workers": 5,
     "session_bonuses": {
-      "ASIAN": {"JPY_pairs": 5, "AUD_NZD_pairs": 5, "other": 0},
-      "EUROPEAN": {"EUR_GBP_pairs": 5, "EUR_GBP_crosses": 3, "other": 0},
-      "OVERLAP": {"all_major_pairs": 3},
-      "US": {"USD_majors": 5, "other": 0},
-      "LATE_US": {"all_major_pairs": 0}  // ✨ NEW: No bonus for late hours
+      "ASIAN": {
+        "JPY_pairs": 5,
+        "AUD_NZD_pairs": 5,
+        "other": 0
+      },
+      "EUROPEAN": {
+        "EUR_GBP_pairs": 5,
+        "EUR_GBP_crosses": 3,
+        "other": 0
+      },
+      "OVERLAP": {
+        "all_major_pairs": 3
+      },
+      "US": {
+        "USD_majors": 5,
+        "other": 0
+      },
+      "LATE_US": {
+        "all_major_pairs": 0
+      }
     },
     "validation": {
       "max_price_change_pct": 0.05,
       "max_signal_age_seconds": 300,
       "min_sl_pips": {
-        "JPY_pairs": 12,         // ⬇️ Lower from 15
-        "other": 7               // ⬇️ Lower from 10 (allows 8.5 pip stops)
+        "JPY_pairs": 12,
+        "other": 7
       },
       "max_spread_ratio": 0.3
     }

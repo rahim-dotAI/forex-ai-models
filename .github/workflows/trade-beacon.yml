@@ -31,6 +31,11 @@ on:
         required: false
         type: boolean
         default: false
+      reset_performance:
+        description: 'Reset Performance History (DANGER)'
+        required: false
+        type: boolean
+        default: false
 
 env:
   PYTHON_VERSION: "3.10"
@@ -64,8 +69,8 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          # Install jq for JSON manipulation
-          sudo apt-get update && sudo apt-get install -y jq
+          # Install system utilities (jq for JSON, bc for calculations)
+          sudo apt-get update && sudo apt-get install -y jq bc
       
       - name: 📋 Verify system files
         run: |
@@ -220,6 +225,17 @@ jobs:
         run: |
           echo "🚀 Starting Trade Beacon v2.0.3..."
           echo "⏰ Execution time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          
+          # Optional: Reset performance history if requested
+          if [ "${{ github.event.inputs.reset_performance }}" = "true" ]; then
+            echo "⚠️  RESETTING PERFORMANCE HISTORY..."
+            python3 << 'EOF'
+          from performance_tracker import PerformanceTracker
+          tracker = PerformanceTracker()
+          tracker.reset_stats(backup=True)
+          print("✅ Performance history reset (backup created)")
+          EOF
+          fi
           
           python ${{ env.ENTRY_SCRIPT }} || {
             EXIT_CODE=$?
@@ -470,17 +486,24 @@ jobs:
           fi
           
           if [ -f signal_state/signal_history.json ]; then
-            TOTAL_TRADES=$(jq '.stats.total_trades' signal_state/signal_history.json 2>/dev/null || echo "0")
-            WIN_RATE=$(jq '.stats.win_rate' signal_state/signal_history.json 2>/dev/null || echo "0")
-            TOTAL_PIPS=$(jq '.stats.total_pips' signal_state/signal_history.json 2>/dev/null || echo "0")
-            WINS=$(jq '.stats.wins' signal_state/signal_history.json 2>/dev/null || echo "0")
-            LOSSES=$(jq '.stats.losses' signal_state/signal_history.json 2>/dev/null || echo "0")
+            TOTAL_TRADES=$(jq '.stats.total_trades // 0' signal_state/signal_history.json 2>/dev/null)
+            WIN_RATE=$(jq '.stats.win_rate // 0' signal_state/signal_history.json 2>/dev/null)
+            TOTAL_PIPS=$(jq '.stats.total_pips // 0' signal_state/signal_history.json 2>/dev/null)
+            WINS=$(jq '.stats.winning_trades // 0' signal_state/signal_history.json 2>/dev/null)
+            LOSSES=$(jq '.stats.losing_trades // 0' signal_state/signal_history.json 2>/dev/null)
             
             echo "📈 PERFORMANCE METRICS:"
             echo "   Total Trades: $TOTAL_TRADES"
             echo "   Wins: $WINS | Losses: $LOSSES"
             echo "   Win Rate: $WIN_RATE%"
             echo "   Total Pips: $TOTAL_PIPS"
+            
+            # Performance alert if win rate is low
+            if (( $(echo "$WIN_RATE < 40" | bc -l 2>/dev/null || echo 0) )); then
+              echo ""
+              echo "   ⚠️  WARNING: Low win rate detected!"
+              echo "   💡 Consider: Raising threshold or enabling optimization"
+            fi
             echo ""
           fi
           
@@ -502,6 +525,58 @@ jobs:
           
           echo "⏰ Completed: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      
+      - name: 🔧 Auto-optimization trigger
+        if: |
+          success() && 
+          steps.market.outputs.skip != 'true' &&
+          github.event.schedule != ''
+        run: |
+          echo "🔍 Checking if optimization is needed..."
+          
+          if [ -f signal_state/signal_history.json ]; then
+            WIN_RATE=$(jq '.stats.win_rate // 0' signal_state/signal_history.json 2>/dev/null)
+            TOTAL_TRADES=$(jq '.stats.total_trades // 0' signal_state/signal_history.json 2>/dev/null)
+            
+            # Trigger optimization if:
+            # 1. Win rate < 45% AND we have at least 50 trades
+            # 2. OR it's been 7 days since last optimization
+            
+            NEEDS_OPTIMIZATION=0
+            
+            if (( $(echo "$WIN_RATE < 45 && $TOTAL_TRADES > 50" | bc -l 2>/dev/null || echo 0) )); then
+              echo "⚠️  Win rate is low ($WIN_RATE%) - optimization recommended"
+              NEEDS_OPTIMIZATION=1
+            fi
+            
+            # Check last optimization date
+            if [ -f signal_state/optimization_report.json ]; then
+              LAST_OPT=$(jq -r '.analysis_timestamp' signal_state/optimization_report.json 2>/dev/null || echo "")
+              if [ -n "$LAST_OPT" ]; then
+                DAYS_SINCE=$(python3 -c "
+          from datetime import datetime, timezone
+          last = datetime.fromisoformat('$LAST_OPT'.replace('Z', '+00:00'))
+          now = datetime.now(timezone.utc)
+          print((now - last).days)
+                " 2>/dev/null || echo "999")
+                
+                if [ "$DAYS_SINCE" -ge 7 ]; then
+                  echo "📅 Last optimization was $DAYS_SINCE days ago - running optimization"
+                  NEEDS_OPTIMIZATION=1
+                fi
+              fi
+            else
+              echo "📋 No previous optimization found - running first optimization"
+              NEEDS_OPTIMIZATION=1
+            fi
+            
+            if [ $NEEDS_OPTIMIZATION -eq 1 ]; then
+              echo "🚀 Triggering optimization..."
+              python3 performance_tracker.py || echo "⚠️  Optimization failed (non-critical)"
+            else
+              echo "✅ No optimization needed (WR: $WIN_RATE%, Trades: $TOTAL_TRADES)"
+            fi
+          fi
 
   # Separate job for weekly cleanup
   weekly-maintenance:

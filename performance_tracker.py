@@ -16,9 +16,9 @@ import json
 import logging
 import time
 from pathlib import Path
-from datetime import datetime, timezone, timedelta
-from typing import Dict, List
+from datetime import datetime, timezone
 from functools import wraps
+from typing import Dict
 
 import pandas as pd
 import yfinance as yf
@@ -51,14 +51,6 @@ def retry_with_backoff(max_retries=3, backoff_factor=5):
     return decorator
 
 # ==========================================================
-# HELPERS
-# ==========================================================
-def ensure_series(data):
-    if isinstance(data, pd.DataFrame):
-        data = data.iloc[:, 0]
-    return data.squeeze()
-
-# ==========================================================
 # PERFORMANCE OPTIMIZER (ADVISORY)
 # ==========================================================
 class PerformanceOptimizer:
@@ -87,20 +79,14 @@ class PerformanceOptimizer:
         }
 
     def _best_sessions(self, data):
-        ranked = []
-        for s, d in data.items():
-            if d["trades"] >= 5:
-                ranked.append((s, d["win_rate"]))
+        ranked = [(s, d["win_rate"]) for s, d in data.items() if d["trades"] >= 5]
         ranked.sort(key=lambda x: x[1], reverse=True)
         return [s for s, _ in ranked[:3]]
 
     def _best_pairs(self, data):
-        ranked = []
-        for p, d in data.items():
-            if d["trades"] >= 5:
-                ranked.append((p, d["win_rate"], d["pips"]))
+        ranked = [(p, d["win_rate"], d["pips"]) for p, d in data.items() if d["trades"] >= 5]
         ranked.sort(key=lambda x: (x[1], x[2]), reverse=True)
-        return [p for p, _, _ in ranked if _ >= 55]
+        return [p for p, wr, _ in ranked if wr >= 55]
 
     def _best_confidence(self, data):
         for level in ["EXCELLENT", "STRONG", "GOOD"]:
@@ -176,7 +162,6 @@ class PerformanceTracker:
     def _load(self):
         if not self.history_file.exists():
             return self._empty()
-
         try:
             with open(self.history_file) as f:
                 data = json.load(f)
@@ -201,7 +186,7 @@ class PerformanceTracker:
         with open(self.history_file, "w") as f:
             json.dump(self.history, f, indent=2)
 
-    # ---------------- CONFIDENCE NORMALIZATION ----------------
+    # ---------------- CONFIDENCE BUCKET ----------------
     @staticmethod
     def _confidence_bucket(score: float) -> str:
         if score >= 85:
@@ -338,6 +323,22 @@ class PerformanceTracker:
 
     def get_optimization_report(self):
         return PerformanceOptimizer(self).get_optimal_parameters()
+
+
+# ==========================================================
+# LEGACY WRAPPER FOR TRADE_BEACON.PY
+# ==========================================================
+def track_performance(signals=None, risk_management=None):
+    """
+    Legacy wrapper for trade_beacon.py compatibility.
+    Uses PerformanceTracker internally.
+    """
+    tracker = PerformanceTracker()
+    if signals:
+        for sig in signals:
+            tracker.add_signal(sig)
+        tracker.check_signals()
+    return tracker.get_stats()
 
 
 # ==========================================================

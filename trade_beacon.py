@@ -9,6 +9,8 @@ ENHANCEMENTS (v2.0.3):
 - Risk management limits (max positions, daily risk, correlation)
 - Performance-based optimization support
 - Mode-specific parameter loading
+- IMPROVED: Robust error handling for performance tracking
+- IMPROVED: Safe dictionary access patterns
 
 This is a SIGNAL GENERATOR ONLY - no trade execution logic.
 """
@@ -1543,7 +1545,7 @@ def enhance_with_sentiment(signals: List[Dict], news_agg: NewsAggregator) -> Lis
     return enhanced
 
 # =========================
-# ENHANCED DASHBOARD WRITER
+# ENHANCED DASHBOARD WRITER WITH ROBUST ERROR HANDLING
 # =========================
 def calculate_daily_pips(signals: List[Dict]) -> float:
     """Calculate total pips from today's signals"""
@@ -1566,11 +1568,29 @@ def calculate_daily_pips(signals: List[Dict]) -> float:
 
 
 def write_dashboard_state(signals: list, successful_downloads: int, newsapi_calls: int = 0, marketaux_calls: int = 0):
-    """Write comprehensive dashboard state with backend intelligence"""
+    """
+    Write comprehensive dashboard state with backend intelligence.
+    
+    v2.0.3 IMPROVEMENTS:
+    - Robust error handling for performance tracking
+    - Safe dictionary access with fallbacks
+    - Prevents KeyError crashes in CI/CD
+    """
     
     session = get_market_session()
-    performance = track_performance(signals)
     daily_pips = calculate_daily_pips(signals)
+    
+    # ✅ ENHANCED: Safe performance tracking with error handling
+    try:
+        performance = track_performance(signals)
+    except Exception as e:
+        log.error(f"⚠️ Performance tracking failed: {e}")
+        performance = {"stats": {}, "analytics": {}, "risk_management": {}}
+    
+    # ✅ ENHANCED: Defensive dictionary access with fallbacks
+    stats = performance.get("stats", {}) or {}
+    analytics = performance.get("analytics", {}) or {}
+    risk_mgmt = performance.get("risk_management", {}) or {}
     
     # Calculate market state (frontend will trust this)
     market_volatility = calculate_market_volatility(signals)
@@ -1602,20 +1622,25 @@ def write_dashboard_state(signals: list, successful_downloads: int, newsapi_call
             }
         },
         
+        # ✅ ENHANCED: Safe stats access with .get() and defaults
         "stats": {
-            "total_trades": performance["stats"].get("total_trades", 0),
-            "win_rate": performance["stats"].get("win_rate", 0),
-            "total_pips": performance["stats"].get("total_pips", 0),
-            "wins": performance["stats"].get("wins", 0),
-            "losses": performance["stats"].get("losses", 0)
+            "total_trades": stats.get("total_trades", 0),
+            "win_rate": stats.get("win_rate", 0),
+            "total_pips": stats.get("total_pips", 0),
+            "wins": stats.get("wins", 0),
+            "losses": stats.get("losses", 0)
         },
         
+        # ✅ ENHANCED: Safe risk management access
         "risk_management": {
             "daily_pips": daily_pips,
-            "total_risk_pips": performance["risk_management"].get("total_risk_pips", 0),
-            "max_drawdown": performance["risk_management"].get("max_drawdown", 0),
-            "average_risk_reward": performance["risk_management"].get("average_risk_reward", 0)
+            "total_risk_pips": risk_mgmt.get("total_risk_pips", 0),
+            "max_drawdown": risk_mgmt.get("max_drawdown", 0),
+            "average_risk_reward": risk_mgmt.get("average_risk_reward", 0)
         },
+        
+        # ✅ ENHANCED: Include analytics if available
+        "analytics": analytics,
         
         "system": {
             "last_update": datetime.now(timezone.utc).isoformat(),
@@ -1634,11 +1659,11 @@ def write_dashboard_state(signals: list, successful_downloads: int, newsapi_call
     
     log.info(f"📊 Dashboard written to {output_file}")
     
-    stats = performance["stats"]
-    if stats["total_trades"] > 0:
-        log.info(f"📈 Performance: {stats['total_trades']} trades | "
-                f"Win Rate: {stats['win_rate']}% | "
-                f"Total Pips: {stats['total_pips']} | "
+    # ✅ ENHANCED: Safe stats logging
+    if stats.get("total_trades", 0) > 0:
+        log.info(f"📈 Performance: {stats.get('total_trades', 0)} trades | "
+                f"Win Rate: {stats.get('win_rate', 0)}% | "
+                f"Total Pips: {stats.get('total_pips', 0)} | "
                 f"Daily Pips: {daily_pips}")
     
     write_health_check(signals, successful_downloads, newsapi_calls, marketaux_calls)

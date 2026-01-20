@@ -1,213 +1,24 @@
 {
-  "timestamp": "2026-01-20T03:46:11.418017+00:00",
-  "active_signals": 4,
-  "session": "ASIAN",
+  "timestamp": "2026-01-20T21:31:44.409354+00:00",
+  "active_signals": 0,
+  "session": "LATE_US",
   "mode": "aggressive",
-  "sentiment_enabled": true,
+  "sentiment_enabled": false,
   "market_state": {
-    "volatility": "HIGH",
-    "sentiment_bias": "BULLISH",
-    "session": "ASIAN",
+    "volatility": "CALM",
+    "sentiment_bias": "MIXED",
+    "session": "LATE_US",
     "trending_pairs": []
   },
-  "signals": [
-    {
-      "signal_id": "NZDUSD_20260120_034609",
-      "pair": "NZDUSD",
-      "direction": "BUY",
-      "score": 48,
-      "technical_score": 48,
-      "sentiment_score": 0,
-      "confidence": "MODERATE",
-      "rsi": 77.9,
-      "adx": 37.7,
-      "atr": 0.00036,
-      "volume_ratio": 1.0,
-      "session": "ASIAN",
-      "entry_price": 0.58238,
-      "sl": 0.58184,
-      "tp": 0.58327,
-      "risk_reward": 1.67,
-      "spread": 0.0002,
-      "timestamp": "2026-01-20T03:46:09.531126+00:00",
-      "hold_time": "SHORT",
-      "eligible_modes": [],
-      "freshness": {
-        "status": "FRESH",
-        "age_minutes": 0.0,
-        "confidence_decay": 100.0
-      },
-      "metadata": {
-        "signal_type": "momentum",
-        "market_state": "TRENDING_MODERATE",
-        "timeframe": "15m",
-        "valid_for_minutes": 60,
-        "generated_at": "2026-01-20T03:46:09.531126+00:00",
-        "expires_at": "2026-01-20T04:46:09.531126+00:00",
-        "session_active": "ASIAN",
-        "signal_generator_version": "2.0.0"
-      },
-      "sentiment": {
-        "overall": "neutral",
-        "adjustment": 0,
-        "original_score": 48,
-        "news_count": 3,
-        "sources": {
-          "newsapi": 0,
-          "marketaux": 3
-        }
-      }
-    },
-    {
-      "signal_id": "AUDUSD_20260120_034609",
-      "pair": "AUDUSD",
-      "direction": "BUY",
-      "score": 48,
-      "technical_score": 48,
-      "sentiment_score": 0,
-      "confidence": "MODERATE",
-      "rsi": 73.2,
-      "adx": 30.6,
-      "atr": 0.00028,
-      "volume_ratio": 1.0,
-      "session": "ASIAN",
-      "entry_price": 0.6729,
-      "sl": 0.67248,
-      "tp": 0.6736,
-      "risk_reward": 1.67,
-      "spread": 0.00018,
-      "timestamp": "2026-01-20T03:46:09.681246+00:00",
-      "hold_time": "SHORT",
-      "eligible_modes": [],
-      "freshness": {
-        "status": "FRESH",
-        "age_minutes": 0.0,
-        "confidence_decay": 100.0
-      },
-      "metadata": {
-        "signal_type": "momentum",
-        "market_state": "TRENDING_MODERATE",
-        "timeframe": "15m",
-        "valid_for_minutes": 60,
-        "generated_at": "2026-01-20T03:46:09.681246+00:00",
-        "expires_at": "2026-01-20T04:46:09.681246+00:00",
-        "session_active": "ASIAN",
-        "signal_generator_version": "2.0.0"
-      },
-      "sentiment": {
-        "overall": "neutral",
-        "adjustment": 0,
-        "original_score": 48,
-        "news_count": 3,
-        "sources": {
-          "newsapi": 0,
-          "marketaux": 3
-        }
-      }
-    },
-    {
-      "signal_id": "USDJPY_20260120_034609",
-      "pair": "USDJPY",
-      "direction": "SELL",
-      "score": 38,
-      "technical_score": 38,
-      "sentiment_score": 0,
-      "confidence": "MODERATE",
-      "rsi": 44.0,
-      "adx": 24.2,
-      "atr": 0.10041,
-      "volume_ratio": 1.0,
-      "session": "ASIAN",
-      "entry_price": 157.95,
-      "sl": 158.10061,
-      "tp": 157.69899,
-      "risk_reward": 1.67,
-      "spread": 0.002,
-      "timestamp": "2026-01-20T03:46:09.566807+00:00",
-      "hold_time": "SWING",
-      "eligible_modes": [],
-      "freshness": {
-        "status": "FRESH",
-        "age_minutes": 0.0,
-        "confidence_decay": 100.0
-      },
-      "metadata": {
-        "signal_type": "trend-continuation",
-        "market_state": "TRENDING_MODERATE",
-        "timeframe": "15m",
-        "valid_for_minutes": 60,
-        "generated_at": "2026-01-20T03:46:09.566807+00:00",
-        "expires_at": "2026-01-20T04:46:09.566807+00:00",
-        "session_active": "ASIAN",
-        "signal_generator_version": "2.0.0"
-      },
-      "sentiment": {
-        "overall": "neutral",
-        "adjustment": 0,
-        "original_score": 38,
-        "news_count": 3,
-        "sources": {
-          "newsapi": 0,
-          "marketaux": 3
-        }
-      }
-    },
-    {
-      "signal_id": "GBPUSD_20260120_034609",
-      "pair": "GBPUSD",
-      "direction": "BUY",
-      "score": 33,
-      "technical_score": 33,
-      "sentiment_score": 0,
-      "confidence": "MODERATE",
-      "rsi": 67.3,
-      "adx": 21.9,
-      "atr": 0.00042,
-      "volume_ratio": 1.0,
-      "session": "ASIAN",
-      "entry_price": 1.34381,
-      "sl": 1.34318,
-      "tp": 1.34485,
-      "risk_reward": 1.67,
-      "spread": 0.0002,
-      "timestamp": "2026-01-20T03:46:09.639418+00:00",
-      "hold_time": "SHORT",
-      "eligible_modes": [],
-      "freshness": {
-        "status": "FRESH",
-        "age_minutes": 0.0,
-        "confidence_decay": 100.0
-      },
-      "metadata": {
-        "signal_type": "momentum",
-        "market_state": "TRENDING_MODERATE",
-        "timeframe": "15m",
-        "valid_for_minutes": 60,
-        "generated_at": "2026-01-20T03:46:09.639418+00:00",
-        "expires_at": "2026-01-20T04:46:09.639418+00:00",
-        "session_active": "ASIAN",
-        "signal_generator_version": "2.0.0"
-      },
-      "sentiment": {
-        "overall": "neutral",
-        "adjustment": 0,
-        "original_score": 33,
-        "news_count": 3,
-        "sources": {
-          "newsapi": 0,
-          "marketaux": 3
-        }
-      }
-    }
-  ],
+  "signals": [],
   "api_usage": {
     "yfinance": {
       "successful_downloads": 10
     },
     "sentiment": {
-      "enabled": true,
-      "newsapi": 1,
-      "marketaux": 1
+      "enabled": false,
+      "newsapi": 0,
+      "marketaux": 0
     }
   },
   "stats": {
@@ -218,15 +29,15 @@
     "losses": 900
   },
   "risk_management": {
-    "daily_pips": 2536.4,
-    "total_risk_pips": 31.0,
-    "max_drawdown": 3078.7,
-    "average_risk_reward": 1.67
+    "daily_pips": 0,
+    "total_risk_pips": 0.0,
+    "max_drawdown": 0.0,
+    "average_risk_reward": 0.0
   },
   "system": {
-    "last_update": "2026-01-20T03:46:11.418036+00:00",
+    "last_update": "2026-01-20T21:31:44.409363+00:00",
     "data_sources_available": true,
-    "sentiment_available": true,
-    "version": "2.0.0"
+    "sentiment_available": false,
+    "version": "2.0.3"
   }
 }

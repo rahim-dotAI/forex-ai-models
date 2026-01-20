@@ -2,10 +2,11 @@
 Performance Tracking System for Trade Beacon v2.0.3
 Tracks signal outcomes, calculates win rate, pips, and performance stats
 
-UPDATES (v2.0.3):
+ENHANCEMENTS (v2.0.3):
 - Exact daily pips attribution using candle timestamp
 - exit_index tracks which candle closed the signal
-- Minor cleanup for High/Low access
+- Performance-based optimization support
+- Enhanced analytics and recommendations
 - All v2.0.2 fixes retained
 """
 
@@ -13,7 +14,7 @@ import json
 import logging
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
-from typing import Dict, List
+from typing import Dict, List, Optional, Tuple
 from functools import wraps
 import time
 import pandas as pd
@@ -56,6 +57,265 @@ def ensure_series(data):
     if isinstance(data, pd.DataFrame):
         data = data.iloc[:, 0]
     return data.squeeze()
+
+# =========================
+# PERFORMANCE OPTIMIZER
+# =========================
+class PerformanceOptimizer:
+    """
+    Analyze historical performance and suggest optimal parameters.
+    """
+    
+    def __init__(self, tracker):
+        self.tracker = tracker
+        self.min_trades_for_optimization = 30
+    
+    def get_optimal_parameters(self) -> Dict:
+        """
+        Suggest optimal parameters based on historical performance.
+        
+        Returns recommendations for:
+        - Best trading sessions
+        - Minimum confidence levels
+        - Best-performing pairs
+        - Optimal risk-reward ratios
+        """
+        closed_signals = [s for s in self.tracker.history["signals"] 
+                         if s["status"] in ["WIN", "LOSS"]]
+        
+        if len(closed_signals) < self.min_trades_for_optimization:
+            log.warning(f"⚠️ Need {self.min_trades_for_optimization} trades for optimization "
+                       f"(have {len(closed_signals)})")
+            return self._default_recommendations()
+        
+        analytics = self.tracker.get_analytics()
+        
+        # Find best-performing sessions
+        best_sessions = self._analyze_sessions(analytics.get("by_session", {}))
+        
+        # Find optimal confidence threshold
+        best_confidence = self._analyze_confidence(analytics.get("by_confidence", {}))
+        
+        # Find best pairs
+        best_pairs = self._analyze_pairs(analytics.get("by_pair", {}))
+        
+        # Analyze risk-reward performance
+        rr_analysis = self._analyze_risk_reward(closed_signals)
+        
+        # Calculate suggested threshold adjustment
+        threshold_adjustment = self._suggest_threshold_adjustment(closed_signals)
+        
+        return {
+            "recommended_sessions": best_sessions,
+            "min_confidence": best_confidence,
+            "optimal_pairs": best_pairs,
+            "risk_reward_insights": rr_analysis,
+            "threshold_adjustment": threshold_adjustment,
+            "total_trades_analyzed": len(closed_signals),
+            "analysis_timestamp": datetime.now(timezone.utc).isoformat()
+        }
+    
+    def _analyze_sessions(self, session_data: Dict) -> List[str]:
+        """Identify best-performing trading sessions."""
+        if not session_data:
+            return ["EUROPEAN", "OVERLAP"]  # Default recommendation
+        
+        session_performance = []
+        for session, stats in session_data.items():
+            win_rate = stats.get("win_rate", 0)
+            trades = stats.get("trades", 0)
+            avg_pips = stats.get("pips", 0) / trades if trades > 0 else 0
+            
+            # Weight by both win rate and trade count
+            score = (win_rate * 0.6) + (min(trades, 20) * 2)  # Cap trade count bonus
+            
+            session_performance.append({
+                "session": session,
+                "win_rate": win_rate,
+                "trades": trades,
+                "avg_pips": avg_pips,
+                "score": score
+            })
+        
+        # Sort by composite score
+        session_performance.sort(key=lambda x: x['score'], reverse=True)
+        
+        # Recommend top sessions with >50% win rate
+        recommended = [s['session'] for s in session_performance 
+                      if s['win_rate'] > 50 and s['trades'] >= 5]
+        
+        return recommended[:3] if recommended else ["EUROPEAN", "OVERLAP"]
+    
+    def _analyze_confidence(self, confidence_data: Dict) -> str:
+        """Determine minimum viable confidence level."""
+        if not confidence_data:
+            return "GOOD"
+        
+        confidence_levels = ["MODERATE", "GOOD", "STRONG", "EXCELLENT"]
+        
+        for level in reversed(confidence_levels):
+            stats = confidence_data.get(level, {})
+            win_rate = stats.get("win_rate", 0)
+            trades = stats.get("trades", 0)
+            
+            # Require 55%+ win rate with at least 5 trades
+            if win_rate >= 55 and trades >= 5:
+                return level
+        
+        return "GOOD"  # Conservative default
+    
+    def _analyze_pairs(self, pair_data: Dict) -> List[str]:
+        """Identify consistently profitable pairs."""
+        if not pair_data:
+            return []
+        
+        pair_performance = []
+        for pair, stats in pair_data.items():
+            win_rate = stats.get("win_rate", 0)
+            trades = stats.get("trades", 0)
+            total_pips = stats.get("pips", 0)
+            
+            # Only consider pairs with sufficient data
+            if trades >= 5:
+                pair_performance.append({
+                    "pair": pair,
+                    "win_rate": win_rate,
+                    "trades": trades,
+                    "total_pips": total_pips,
+                    "avg_pips": total_pips / trades
+                })
+        
+        # Sort by win rate, then by average pips
+        pair_performance.sort(key=lambda x: (x['win_rate'], x['avg_pips']), reverse=True)
+        
+        # Recommend pairs with >55% win rate
+        optimal = [p['pair'] for p in pair_performance if p['win_rate'] > 55]
+        
+        return optimal
+    
+    def _analyze_risk_reward(self, signals: List[Dict]) -> Dict:
+        """Analyze performance across different R:R ratios."""
+        rr_buckets = {
+            "1.0-1.5": [],
+            "1.5-2.0": [],
+            "2.0-2.5": [],
+            "2.5+": []
+        }
+        
+        for signal in signals:
+            rr = signal.get("risk_reward", 0)
+            is_win = signal["status"] == "WIN"
+            
+            if rr < 1.5:
+                rr_buckets["1.0-1.5"].append(is_win)
+            elif rr < 2.0:
+                rr_buckets["1.5-2.0"].append(is_win)
+            elif rr < 2.5:
+                rr_buckets["2.0-2.5"].append(is_win)
+            else:
+                rr_buckets["2.5+"].append(is_win)
+        
+        analysis = {}
+        best_rr_range = None
+        best_win_rate = 0
+        
+        for rr_range, outcomes in rr_buckets.items():
+            if not outcomes:
+                continue
+            
+            wins = sum(outcomes)
+            total = len(outcomes)
+            win_rate = (wins / total) * 100
+            
+            analysis[rr_range] = {
+                "trades": total,
+                "wins": wins,
+                "win_rate": round(win_rate, 1)
+            }
+            
+            if win_rate > best_win_rate and total >= 5:
+                best_win_rate = win_rate
+                best_rr_range = rr_range
+        
+        return {
+            "by_range": analysis,
+            "recommended_range": best_rr_range or "1.5-2.0",
+            "recommended_min_rr": 1.5 if best_rr_range == "1.0-1.5" else 2.0
+        }
+    
+    def _suggest_threshold_adjustment(self, signals: List[Dict]) -> Dict:
+        """
+        Suggest threshold adjustment based on performance.
+        
+        If win rate is too low, suggest raising threshold.
+        If win rate is excellent but few signals, suggest lowering.
+        """
+        total = len(signals)
+        wins = sum(1 for s in signals if s["status"] == "WIN")
+        win_rate = (wins / total) * 100 if total > 0 else 0
+        
+        # Count signals per day to gauge signal frequency
+        if total > 0:
+            first_signal = min(signals, key=lambda x: x.get("timestamp", ""))
+            last_signal = max(signals, key=lambda x: x.get("timestamp", ""))
+            
+            try:
+                first_time = datetime.fromisoformat(first_signal["timestamp"].replace("Z", "+00:00"))
+                last_time = datetime.fromisoformat(last_signal["timestamp"].replace("Z", "+00:00"))
+                days = max(1, (last_time - first_time).days)
+                signals_per_day = total / days
+            except:
+                signals_per_day = 1
+        else:
+            signals_per_day = 0
+        
+        if win_rate < 50:
+            return {
+                "action": "RAISE",
+                "amount": 5,
+                "reason": f"Win rate too low ({win_rate:.1f}%)",
+                "current_win_rate": round(win_rate, 1),
+                "signals_per_day": round(signals_per_day, 1)
+            }
+        elif win_rate > 65 and signals_per_day < 1:
+            return {
+                "action": "LOWER",
+                "amount": 3,
+                "reason": f"Excellent win rate ({win_rate:.1f}%) but few signals",
+                "current_win_rate": round(win_rate, 1),
+                "signals_per_day": round(signals_per_day, 1)
+            }
+        else:
+            return {
+                "action": "MAINTAIN",
+                "amount": 0,
+                "reason": f"Performance balanced (WR: {win_rate:.1f}%, SPD: {signals_per_day:.1f})",
+                "current_win_rate": round(win_rate, 1),
+                "signals_per_day": round(signals_per_day, 1)
+            }
+    
+    def _default_recommendations(self) -> Dict:
+        """Return default recommendations when insufficient data."""
+        return {
+            "recommended_sessions": ["EUROPEAN", "OVERLAP", "US"],
+            "min_confidence": "GOOD",
+            "optimal_pairs": [],
+            "risk_reward_insights": {
+                "by_range": {},
+                "recommended_range": "1.5-2.0",
+                "recommended_min_rr": 1.5
+            },
+            "threshold_adjustment": {
+                "action": "MAINTAIN",
+                "amount": 0,
+                "reason": "Insufficient data for optimization",
+                "current_win_rate": 0,
+                "signals_per_day": 0
+            },
+            "total_trades_analyzed": 0,
+            "analysis_timestamp": datetime.now(timezone.utc).isoformat()
+        }
+
 
 # =========================
 # PERFORMANCE TRACKER
@@ -402,6 +662,66 @@ class PerformanceTracker:
         self._save_history()
         log.info("🔄 Performance stats reset")
 
+    # =========================
+    # OPTIMIZATION REPORT (NEW in v2.0.3)
+    # =========================
+    def get_optimization_report(self) -> Dict:
+        """Generate optimization recommendations."""
+        optimizer = PerformanceOptimizer(self)
+        return optimizer.get_optimal_parameters()
+
+    def print_optimization_report(self):
+        """Print formatted optimization report to console."""
+        report = self.get_optimization_report()
+        
+        print("\n" + "="*80)
+        print("📊 PERFORMANCE OPTIMIZATION REPORT")
+        print("="*80)
+        
+        print(f"\n📈 Analysis based on {report['total_trades_analyzed']} completed trades")
+        
+        # Threshold adjustment
+        threshold = report['threshold_adjustment']
+        print(f"\n🎯 THRESHOLD RECOMMENDATION: {threshold['action']}")
+        print(f"   Reason: {threshold['reason']}")
+        if threshold['action'] != "MAINTAIN":
+            print(f"   Suggested adjustment: {threshold['action']} by {threshold['amount']} points")
+        print(f"   Current win rate: {threshold['current_win_rate']}%")
+        print(f"   Signals per day: {threshold['signals_per_day']}")
+        
+        # Best sessions
+        print(f"\n⏰ RECOMMENDED SESSIONS:")
+        if report['recommended_sessions']:
+            for session in report['recommended_sessions']:
+                print(f"   • {session}")
+        else:
+            print("   • Insufficient data")
+        
+        # Best pairs
+        print(f"\n💱 TOP PERFORMING PAIRS:")
+        if report['optimal_pairs']:
+            for pair in report['optimal_pairs'][:5]:
+                print(f"   • {pair}")
+        else:
+            print("   • Insufficient data")
+        
+        # Risk-reward analysis
+        rr_insights = report['risk_reward_insights']
+        print(f"\n⚖️ RISK-REWARD ANALYSIS:")
+        print(f"   Recommended range: {rr_insights['recommended_range']}")
+        print(f"   Recommended minimum R:R: {rr_insights['recommended_min_rr']}")
+        
+        if rr_insights['by_range']:
+            print("\n   Performance by R:R range:")
+            for rr_range, stats in rr_insights['by_range'].items():
+                print(f"   • {rr_range}: {stats['win_rate']}% WR ({stats['trades']} trades)")
+        
+        # Confidence level
+        print(f"\n🎖️ RECOMMENDED MINIMUM CONFIDENCE: {report['min_confidence']}")
+        
+        print("\n" + "="*80 + "\n")
+
+
 # =========================
 # STANDALONE TRACKER FUNCTION
 # =========================
@@ -429,3 +749,12 @@ def track_performance(signals: List[Dict]) -> Dict:
             "average_risk_reward": risk_metrics["average_risk_reward"]
         }
     }
+
+
+# =========================
+# STANDALONE OPTIMIZATION SCRIPT
+# =========================
+if __name__ == "__main__":
+    """Run this file directly to generate optimization report"""
+    tracker = PerformanceTracker()
+    tracker.print_optimization_report()

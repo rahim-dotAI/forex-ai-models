@@ -1,3 +1,17 @@
+"""
+Trade Beacon v2.0 - Forex Signal Generator
+==========================================
+
+CRITICAL FIXES APPLIED:
+- Fixed indicator data shape handling (ensure_series)
+- Proper spread handling in entry prices
+- Robust error handling for yfinance inconsistencies
+- Sentiment can be cleanly disabled
+- Backend intelligence for signal metadata
+
+This is a SIGNAL GENERATOR ONLY - no trade execution logic.
+"""
+
 import logging
 import sys
 import json
@@ -100,6 +114,26 @@ MIN_ROWS = 220
 CACHE_TTL_SECONDS = 300  # 5 minutes
 
 # =========================
+# DATA SHAPE HELPER (CRITICAL FIX)
+# =========================
+def ensure_series(data):
+    """
+    Robustly convert yfinance data to 1D Series.
+    Fixes "Data must be 1-dimensional" errors.
+    
+    Args:
+        data: pandas DataFrame or Series from yfinance
+    
+    Returns:
+        1D pandas Series
+    """
+    if isinstance(data, pd.DataFrame):
+        # Take first column if multi-column
+        data = data.iloc[:, 0]
+    return data.squeeze()
+
+
+# =========================
 # RETRY DECORATOR WITH EXPONENTIAL BACKOFF
 # =========================
 def retry_with_backoff(max_retries=3, backoff_factor=5):
@@ -136,7 +170,7 @@ def load_config():
         log.warning("⚠️ config.json not found, using aggressive defaults")
         return {
             "mode": "aggressive",
-            "use_sentiment": True,
+            "use_sentiment": False,  # Disabled by default until fixed
             "settings": {
                 "aggressive": {
                     "threshold": 30,
@@ -171,7 +205,7 @@ def load_config():
         log.error(f"❌ Settings missing for mode '{mode}'")
         raise ValueError(f"Config incomplete for mode: {mode}")
     
-    log.info(f"✅ Config loaded: mode={mode}, sentiment={config.get('use_sentiment', True)}")
+    log.info(f"✅ Config loaded: mode={mode}, sentiment={config.get('use_sentiment', False)}")
     return config
 
 # =========================
@@ -231,7 +265,7 @@ def validate_api_keys():
 
 CONFIG = load_config()
 MODE = CONFIG["mode"]
-USE_SENTIMENT = CONFIG.get("use_sentiment", True) and validate_api_keys()
+USE_SENTIMENT = CONFIG.get("use_sentiment", False) and validate_api_keys()
 SETTINGS = CONFIG["settings"][MODE]
 
 SIGNAL_THRESHOLD = SETTINGS["threshold"]
@@ -243,7 +277,7 @@ MIN_VOLUME_RATIO = SETTINGS.get("min_volume_ratio", 0.8)
 VOLUME_PENALTY = SETTINGS.get("volume_penalty", 5)
 
 # =========================
-# ✅ NEW: HELPER FUNCTIONS FOR BACKEND INTELLIGENCE
+# BACKEND INTELLIGENCE FUNCTIONS
 # =========================
 def calculate_hold_time(risk_reward: float, atr: float) -> str:
     """
@@ -930,7 +964,7 @@ def get_signal_type(e12: float, e26: float, e200: float, rsi: float) -> str:
         return "breakout"
 
 # =========================
-# ✅ ENHANCED SIGNAL ENGINE WITH BACKEND INTELLIGENCE
+# ENHANCED SIGNAL ENGINE WITH BACKEND INTELLIGENCE
 # =========================
 def generate_signal(pair: str) -> dict | None:
     """Generate trading signal with full backend intelligence"""
@@ -940,10 +974,11 @@ def generate_signal(pair: str) -> dict | None:
         return None
     
     try:
-        close = df["Close"].squeeze()
-        high = df["High"].squeeze()
-        low = df["Low"].squeeze()
-        volume = df["Volume"].squeeze()
+        # ✅ CRITICAL FIX: Use ensure_series for robust data handling
+        close = ensure_series(df["Close"])
+        high = ensure_series(df["High"])
+        low = ensure_series(df["Low"])
+        volume = ensure_series(df["Volume"])
 
         e12 = last(ema(close, 12))
         e26 = last(ema(close, 26))
@@ -1050,15 +1085,17 @@ def generate_signal(pair: str) -> dict | None:
     # Get spread for this pair
     spread = get_spread(pair)
     
-    # ATR-based dynamic stops with spread adjustment
+    # ✅ FIX: Entry price uses mid-price (spread is informational only)
+    # Execution engines handle spread - signal generators do not
+    entry_price = current_price
+    
+    # ATR-based dynamic stops
     if direction == "BUY":
-        entry_price = current_price + (spread / 2)
-        sl = entry_price - (1.5 * atr)
-        tp = entry_price + (2.5 * atr)
+        sl = entry_price - (2.5 * atr)  # ✅ Widened from 1.5x to 2.5x
+        tp = entry_price + (5.0 * atr)  # ✅ Widened from 2.5x to 5.0x
     else:
-        entry_price = current_price - (spread / 2)
-        sl = entry_price + (1.5 * atr)
-        tp = entry_price - (2.5 * atr)
+        sl = entry_price + (2.5 * atr)
+        tp = entry_price - (5.0 * atr)
     
     # Calculate actual risk-reward ratio
     risk = abs(entry_price - sl)
@@ -1079,17 +1116,17 @@ def generate_signal(pair: str) -> dict | None:
     valid_for_minutes = 60
     expires_at = now + timedelta(minutes=valid_for_minutes)
     
-    # ✅ NEW: Calculate backend intelligence
+    # Calculate backend intelligence
     hold_time = calculate_hold_time(risk_reward, atr)
     eligible_modes = calculate_eligible_modes(diff, a, volume_ratio, r)
     freshness = calculate_signal_freshness(now)
     
-    # ✅ NEW: Generate unique signal ID
+    # Generate unique signal ID
     clean_pair = pair.replace("=X", "")
     signal_id = f"{clean_pair}_{now.strftime('%Y%m%d_%H%M%S')}"
 
     return {
-        # ✅ NEW: Unique identifier
+        # Unique identifier
         "signal_id": signal_id,
         
         "pair": clean_pair,
@@ -1107,10 +1144,10 @@ def generate_signal(pair: str) -> dict | None:
         "sl": round(sl, 5),
         "tp": round(tp, 5),
         "risk_reward": round(risk_reward, 2),
-        "spread": round(spread, 5),
+        "spread": round(spread, 5),  # ✅ Informational only
         "timestamp": now.isoformat(),
         
-        # ✅ NEW: Backend intelligence
+        # Backend intelligence
         "hold_time": hold_time,
         "eligible_modes": eligible_modes,
         "freshness": freshness,
@@ -1213,7 +1250,7 @@ def enhance_with_sentiment(signals: List[Dict], news_agg: NewsAggregator) -> Lis
             log.info(f"❌ {pair} | Signal too weak after sentiment ({signal['score']} < {SIGNAL_THRESHOLD})")
             continue
         
-        # ✅ NEW: Recalculate eligible modes after sentiment adjustment
+        # Recalculate eligible modes after sentiment adjustment
         signal['eligible_modes'] = calculate_eligible_modes(
             signal['score'],
             signal['adx'],
@@ -1252,7 +1289,7 @@ def enhance_with_sentiment(signals: List[Dict], news_agg: NewsAggregator) -> Lis
     return enhanced
 
 # =========================
-# ✅ ENHANCED DASHBOARD WRITER
+# ENHANCED DASHBOARD WRITER
 # =========================
 def calculate_daily_pips(signals: List[Dict]) -> float:
     """Calculate total pips from today's signals"""
@@ -1281,7 +1318,7 @@ def write_dashboard_state(signals: list, successful_downloads: int, newsapi_call
     performance = track_performance(signals)
     daily_pips = calculate_daily_pips(signals)
     
-    # ✅ NEW: Calculate market state (frontend will trust this)
+    # Calculate market state (frontend will trust this)
     market_volatility = calculate_market_volatility(signals)
     market_sentiment = calculate_market_sentiment(signals)
 
@@ -1292,7 +1329,7 @@ def write_dashboard_state(signals: list, successful_downloads: int, newsapi_call
         "mode": MODE,
         "sentiment_enabled": USE_SENTIMENT,
         
-        # ✅ NEW: Market state for frontend
+        # Market state for frontend
         "market_state": {
             "volatility": market_volatility,
             "sentiment_bias": market_sentiment,

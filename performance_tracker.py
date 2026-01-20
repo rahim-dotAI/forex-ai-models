@@ -1,6 +1,12 @@
 """
-Performance Tracking System for Trade Beacon
+Performance Tracking System for Trade Beacon v2.0
 Tracks signal outcomes, calculates win rate, pips, and performance stats
+
+CRITICAL FIXES APPLIED:
+- Only evaluates price data AFTER signal generation
+- Blocks same-candle evaluation (minimum 15-minute age)
+- Fixes 24-hour historical lookback bug
+- Adds robust data shape handling
 """
 
 import json
@@ -10,6 +16,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional
 from functools import wraps
 import time
+import pandas as pd
 import yfinance as yf
 
 log = logging.getLogger("performance-tracker")
@@ -44,26 +51,40 @@ def retry_with_backoff(max_retries=3, backoff_factor=5):
     return decorator
 
 
+# =========================
+# DATA SHAPE HELPER
+# =========================
+def ensure_series(data):
+    """
+    Robustly convert yfinance data to 1D Series
+    Handles multi-column DataFrames and shape inconsistencies
+    """
+    if isinstance(data, pd.DataFrame):
+        data = data.iloc[:, 0]
+    return data.squeeze()
+
+
 class PerformanceTracker:
+    """
+    Track forex signal performance with proper post-signal evaluation
+    
+    Key Features:
+    - Minimum 15-minute age before evaluation
+    - Only checks price data AFTER signal generation
+    - Prevents false losses from historical data
+    - Calculates accurate win rate and pip statistics
+    """
+    
     def __init__(self, history_file: str = "signal_state/signal_history.json"):
         self.history_file = Path(history_file)
         self.history_file.parent.mkdir(exist_ok=True)
         self.history = self._load_history()
+        self.min_age_minutes = 15  # Match signal timeframe
     
     def _load_history(self) -> Dict:
         """Load signal history from file"""
         if not self.history_file.exists():
-            return {
-                "signals": [],
-                "stats": {
-                    "total_trades": 0,
-                    "winning_trades": 0,
-                    "losing_trades": 0,
-                    "total_pips": 0.0,
-                    "win_rate": 0.0
-                },
-                "daily": {}
-            }
+            return self._empty_history()
         
         try:
             with open(self.history_file, 'r') as f:
@@ -72,6 +93,11 @@ class PerformanceTracker:
             # Validate structure
             if not isinstance(data.get("signals"), list):
                 raise ValueError("Invalid history structure")
+            
+            # Validate version compatibility
+            version = data.get("version", "1.0.0")
+            if version != "2.0.0":
+                log.warning(f"⚠️ History version {version} != 2.0.0 - stats may be from old system")
             
             return data
             
@@ -84,21 +110,31 @@ class PerformanceTracker:
                 self.history_file.rename(backup)
                 log.warning(f"Backed up corrupted file to {backup}")
             
-            return {
-                "signals": [],
-                "stats": {
-                    "total_trades": 0,
-                    "winning_trades": 0,
-                    "losing_trades": 0,
-                    "total_pips": 0.0,
-                    "win_rate": 0.0
-                },
-                "daily": {}
+            return self._empty_history()
+    
+    def _empty_history(self) -> Dict:
+        """Return empty history structure"""
+        return {
+            "version": "2.0.0",
+            "signals": [],
+            "stats": {
+                "total_trades": 0,
+                "winning_trades": 0,
+                "losing_trades": 0,
+                "total_pips": 0.0,
+                "win_rate": 0.0
+            },
+            "daily": {},
+            "metadata": {
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "last_updated": datetime.now(timezone.utc).isoformat()
             }
+        }
     
     def _save_history(self):
         """Save signal history to file"""
         try:
+            self.history["metadata"]["last_updated"] = datetime.now(timezone.utc).isoformat()
             with open(self.history_file, 'w') as f:
                 json.dump(self.history, f, indent=2)
         except Exception as e:
@@ -106,7 +142,7 @@ class PerformanceTracker:
     
     def add_signal(self, signal: Dict):
         """Add a new signal to tracking"""
-        # ✅ FIX: Use backend-generated signal_id if available
+        # Use backend-generated signal_id if available
         signal_id = signal.get('signal_id')
         
         # Fallback to old format if signal_id not present (backward compatibility)
@@ -121,7 +157,7 @@ class PerformanceTracker:
         )
         
         if existing:
-            log.info(f"Signal {signal_id} already tracked")
+            log.debug(f"Signal {signal_id} already tracked")
             return
         
         tracked_signal = {
@@ -140,10 +176,12 @@ class PerformanceTracker:
             "closed_at": None,
             "closed_price": None,
             "risk_reward": signal.get("risk_reward", 0.0),
-            # ✅ NEW: Store additional metadata
+            # Store additional metadata
             "hold_time": signal.get("hold_time"),
             "eligible_modes": signal.get("eligible_modes", []),
-            "session": signal.get("session")
+            "session": signal.get("session"),
+            "atr": signal.get("atr", 0.0),
+            "spread": signal.get("spread", 0.0)
         }
         
         self.history["signals"].append(tracked_signal)
@@ -167,11 +205,22 @@ class PerformanceTracker:
         self._save_history()
     
     @retry_with_backoff(max_retries=3, backoff_factor=5)
-    def _download_price_data(self, pair_symbol: str):
-        """Download price data with retry logic"""
+    def _download_price_data(self, pair_symbol: str, start_time: datetime):
+        """
+        Download price data with retry logic
+        
+        CRITICAL FIX: Only downloads data AFTER signal generation
+        
+        Args:
+            pair_symbol: Ticker symbol (e.g., "USDJPY=X")
+            start_time: Signal generation timestamp
+        
+        Returns:
+            DataFrame with price data from start_time onward
+        """
         df = yf.download(
             pair_symbol,
-            period="1d",
+            start=start_time,  # ✅ FIX: Only from signal time forward
             interval="1m",
             progress=False,
             auto_adjust=True,
@@ -180,32 +229,63 @@ class PerformanceTracker:
         return df
     
     def _check_signal_outcome(self, signal: Dict):
-        """Check if a signal hit TP or SL"""
+        """
+        Check if a signal hit TP or SL
+        
+        CRITICAL FIXES APPLIED:
+        1. Minimum age requirement (15 minutes)
+        2. Only evaluates price data AFTER signal generation
+        3. Filters out any pre-signal data
+        4. Uses robust data shape handling
+        """
         pair_symbol = signal["pair"] + "=X"
         
         try:
-            # Get recent price data with retry logic
-            df = self._download_price_data(pair_symbol)
+            # ✅ FIX 1: Parse signal timestamp
+            signal_time = datetime.fromisoformat(
+                signal["timestamp"].replace("Z", "+00:00")
+            )
             
-            if df.empty:
-                log.warning(f"⚠️ No data for {signal['pair']}")
+            # ✅ FIX 2: Do NOT evaluate brand-new signals
+            age_minutes = (datetime.now(timezone.utc) - signal_time).total_seconds() / 60
+            
+            if age_minutes < self.min_age_minutes:
+                log.debug(f"⏳ {signal['pair']} too young ({age_minutes:.1f}m < {self.min_age_minutes}m), skipping")
                 return
             
-            # Use squeeze() consistently with trade_beacon.py
-            close = df["Close"].squeeze()
-            high = df["High"].squeeze()
-            low = df["Low"].squeeze()
+            # ✅ FIX 3: Download ONLY data after signal time
+            df = self._download_price_data(pair_symbol, signal_time)
             
-            current_price = float(close.iloc[-1]) if len(close) > 0 else 0.0
-            high_price = float(high.max()) if len(high) > 0 else 0.0
-            low_price = float(low.min()) if len(low) > 0 else 0.0
+            if df.empty:
+                log.warning(f"⚠️ No data for {signal['pair']} after signal time")
+                return
+            
+            # ✅ FIX 4: Ensure we only have post-signal data
+            df = df[df.index >= signal_time]
+            
+            if len(df) == 0:
+                log.debug(f"⏳ {signal['pair']} no post-signal data yet")
+                return
+            
+            # ✅ FIX 5: Use robust data shape handling
+            close = ensure_series(df["Close"])
+            high = ensure_series(df["High"])
+            low = ensure_series(df["Low"])
+            
+            if len(close) == 0 or len(high) == 0 or len(low) == 0:
+                log.warning(f"⚠️ Empty price data for {signal['pair']}")
+                return
+            
+            current_price = float(close.iloc[-1])
+            high_price = float(high.max())  # Now only checks POST-signal highs
+            low_price = float(low.min())    # Now only checks POST-signal lows
             
             direction = signal["direction"]
             entry = signal["entry_price"]
             tp = signal["tp"]
             sl = signal["sl"]
             
-            # Check if TP or SL was hit
+            # Check if TP or SL was hit (in post-signal data only)
             if direction == "BUY":
                 if high_price >= tp:
                     # TP Hit - WIN
@@ -217,6 +297,8 @@ class PerformanceTracker:
                     pips = self._calculate_pips(signal['pair'], entry, sl, direction)
                     self._close_signal(signal, "LOSS", sl, pips)
                     log.info(f"❌ LOSS: {signal['pair']} BUY - SL hit at {sl} ({pips:.1f} pips)")
+                else:
+                    log.debug(f"📊 {signal['pair']} BUY still open (current: {current_price:.5f})")
             
             else:  # SELL
                 if low_price <= tp:
@@ -229,12 +311,13 @@ class PerformanceTracker:
                     pips = self._calculate_pips(signal['pair'], entry, sl, direction)
                     self._close_signal(signal, "LOSS", sl, pips)
                     log.info(f"❌ LOSS: {signal['pair']} SELL - SL hit at {sl} ({pips:.1f} pips)")
+                else:
+                    log.debug(f"📊 {signal['pair']} SELL still open (current: {current_price:.5f})")
             
             # Check if signal is too old (7 days) - mark as EXPIRED
-            signal_time = datetime.fromisoformat(signal["timestamp"].replace("Z", "+00:00"))
-            if datetime.now(timezone.utc) - signal_time > timedelta(days=7):
+            if age_minutes > (7 * 24 * 60):
                 self._close_signal(signal, "EXPIRED", current_price, 0.0)
-                log.info(f"⏰ EXPIRED: {signal['pair']} {direction} - Too old")
+                log.info(f"⏰ EXPIRED: {signal['pair']} {direction} - Too old ({age_minutes/60/24:.1f} days)")
         
         except Exception as e:
             log.error(f"Error checking {signal['pair']}: {e}")
@@ -250,15 +333,29 @@ class PerformanceTracker:
         # Update daily stats
         today = datetime.now(timezone.utc).date().isoformat()
         if today not in self.history["daily"]:
-            self.history["daily"][today] = {"pips": 0.0, "trades": 0}
+            self.history["daily"][today] = {"pips": 0.0, "trades": 0, "wins": 0, "losses": 0}
         
-        if outcome in ["WIN", "LOSS"]:
+        if outcome == "WIN":
             self.history["daily"][today]["pips"] += pips
             self.history["daily"][today]["trades"] += 1
+            self.history["daily"][today]["wins"] += 1
+        elif outcome == "LOSS":
+            self.history["daily"][today]["pips"] += pips  # pips will be negative
+            self.history["daily"][today]["trades"] += 1
+            self.history["daily"][today]["losses"] += 1
     
     def _calculate_pips(self, pair: str, entry: float, exit: float, direction: str) -> float:
         """
         Calculate pips based on pair type with validation
+        
+        Args:
+            pair: Currency pair (e.g., "USDJPY")
+            entry: Entry price
+            exit: Exit price
+            direction: "BUY" or "SELL"
+        
+        Returns:
+            Pip value (positive for profit, negative for loss)
         """
         # Validate prices
         if entry <= 0 or exit <= 0:
@@ -280,11 +377,12 @@ class PerformanceTracker:
         
         pips = diff / pip_value
         
-        # Sanity check - unlikely to have 1000+ pip moves
+        # Sanity check - unlikely to have 1000+ pip moves in short timeframe
         if abs(pips) > 1000:
-            log.warning(f"⚠️ Suspicious pip value: {pips:.1f} for {pair} (entry={entry}, exit={exit}, direction={direction})")
+            log.warning(f"⚠️ Suspicious pip value: {pips:.1f} for {pair} "
+                       f"(entry={entry}, exit={exit}, direction={direction})")
         
-        return pips
+        return round(pips, 1)
     
     def _calculate_stats(self):
         """Calculate overall statistics"""
@@ -317,7 +415,8 @@ class PerformanceTracker:
             "win_rate": round(win_rate, 1)
         }
         
-        log.info(f"📊 Stats: {len(closed_signals)} trades | Win Rate: {win_rate:.1f}% | Total Pips: {total_pips:.1f}")
+        log.info(f"📊 Stats: {len(closed_signals)} trades | "
+                f"Win Rate: {win_rate:.1f}% | Total Pips: {total_pips:.1f}")
     
     def get_stats(self) -> Dict:
         """Get current statistics"""
@@ -392,7 +491,7 @@ class PerformanceTracker:
         if not closed_signals:
             return 0.0
         
-        # Sort by timestamp
+        # Sort by closed timestamp
         sorted_signals = sorted(
             closed_signals, 
             key=lambda x: x.get("closed_at", x.get("timestamp", ""))
@@ -430,11 +529,34 @@ class PerformanceTracker:
         removed = before_count - after_count
         
         if removed > 0:
-            log.info(f"🧹 Cleaned up {removed} old signals")
+            log.info(f"🧹 Cleaned up {removed} old signals (>{days} days)")
             self._save_history()
+    
+    def reset_stats(self, backup: bool = True):
+        """
+        Reset all performance statistics
+        
+        Args:
+            backup: Whether to backup existing data before reset
+        """
+        if backup and self.history_file.exists():
+            backup_file = self.history_file.with_name(
+                f"signal_history_backup_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.json"
+            )
+            with open(self.history_file, 'r') as f:
+                data = f.read()
+            with open(backup_file, 'w') as f:
+                f.write(data)
+            log.info(f"📦 Backed up old stats to {backup_file}")
+        
+        self.history = self._empty_history()
+        self._save_history()
+        log.info("🔄 Performance stats reset")
 
 
-# Standalone function for easy integration
+# =========================
+# STANDALONE FUNCTION
+# =========================
 def track_performance(signals: List[Dict]) -> Dict:
     """
     Track signals and return updated statistics
@@ -477,3 +599,51 @@ def track_performance(signals: List[Dict]) -> Dict:
             "average_risk_reward": risk_metrics["average_risk_reward"]
         }
     }
+
+
+# =========================
+# CLI UTILITY (OPTIONAL)
+# =========================
+if __name__ == "__main__":
+    """
+    Standalone CLI for performance tracker management
+    
+    Usage:
+        python performance_tracker.py --check    # Check open signals
+        python performance_tracker.py --stats    # Show stats
+        python performance_tracker.py --reset    # Reset (with backup)
+    """
+    import sys
+    
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s | %(levelname)s | %(message)s"
+    )
+    
+    tracker = PerformanceTracker()
+    
+    if "--check" in sys.argv:
+        tracker.check_signals()
+    elif "--stats" in sys.argv:
+        stats = tracker.get_stats()
+        print("\n" + "="*50)
+        print("📊 PERFORMANCE STATISTICS")
+        print("="*50)
+        print(f"Total Trades: {stats['total_trades']}")
+        print(f"Win Rate: {stats['win_rate']}%")
+        print(f"Total Pips: {stats['total_pips']}")
+        print(f"Wins: {stats['winning_trades']}")
+        print(f"Losses: {stats['losing_trades']}")
+        print("="*50 + "\n")
+    elif "--reset" in sys.argv:
+        confirm = input("⚠️  Reset all stats? This will backup existing data. (yes/no): ")
+        if confirm.lower() == 'yes':
+            tracker.reset_stats(backup=True)
+            print("✅ Stats reset complete")
+        else:
+            print("❌ Reset cancelled")
+    else:
+        print("Usage:")
+        print("  python performance_tracker.py --check   # Check open signals")
+        print("  python performance_tracker.py --stats   # Show statistics")
+        print("  python performance_tracker.py --reset   # Reset stats (with backup)")

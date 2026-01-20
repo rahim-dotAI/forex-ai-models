@@ -1,36 +1,36 @@
 {
-  "timestamp": "2026-01-20T00:31:25.601015+00:00",
-  "active_signals": 1,
+  "timestamp": "2026-01-20T00:46:12.622524+00:00",
+  "active_signals": 2,
   "session": "ASIAN",
   "mode": "aggressive",
   "sentiment_enabled": true,
   "market_state": {
-    "volatility": "HIGH",
+    "volatility": "CALM",
     "sentiment_bias": "BULLISH",
     "session": "ASIAN",
     "trending_pairs": []
   },
   "signals": [
     {
-      "signal_id": "USDJPY_20260120_003124",
-      "pair": "USDJPY",
+      "signal_id": "AUDUSD_20260120_004611",
+      "pair": "AUDUSD",
       "direction": "BUY",
-      "score": 58,
-      "technical_score": 58,
+      "score": 68,
+      "technical_score": 68,
       "sentiment_score": 0,
-      "confidence": "GOOD",
-      "rsi": 54.2,
-      "adx": 22.8,
-      "atr": 0.07204,
+      "confidence": "STRONG",
+      "rsi": 48.6,
+      "adx": 33.0,
+      "atr": 0.00019,
       "volume_ratio": 1.0,
       "session": "ASIAN",
-      "entry_price": 158.16,
-      "sl": 158.05194,
-      "tp": 158.3401,
+      "entry_price": 0.67146,
+      "sl": 0.67117,
+      "tp": 0.67194,
       "risk_reward": 1.67,
-      "spread": 0.002,
-      "timestamp": "2026-01-20T00:31:24.441425+00:00",
-      "hold_time": "SWING",
+      "spread": 0.00018,
+      "timestamp": "2026-01-20T00:46:11.490143+00:00",
+      "hold_time": "SHORT",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -45,8 +45,58 @@
         "market_state": "TRENDING_MODERATE",
         "timeframe": "15m",
         "valid_for_minutes": 60,
-        "generated_at": "2026-01-20T00:31:24.441425+00:00",
-        "expires_at": "2026-01-20T01:31:24.441425+00:00",
+        "generated_at": "2026-01-20T00:46:11.490143+00:00",
+        "expires_at": "2026-01-20T01:46:11.490143+00:00",
+        "session_active": "ASIAN",
+        "signal_generator_version": "2.0.0"
+      },
+      "sentiment": {
+        "overall": "neutral",
+        "adjustment": 0,
+        "original_score": 68,
+        "news_count": 3,
+        "sources": {
+          "newsapi": 0,
+          "marketaux": 3
+        }
+      }
+    },
+    {
+      "signal_id": "NZDUSD_20260120_004611",
+      "pair": "NZDUSD",
+      "direction": "BUY",
+      "score": 58,
+      "technical_score": 58,
+      "sentiment_score": 0,
+      "confidence": "GOOD",
+      "rsi": 49.5,
+      "adx": 23.5,
+      "atr": 0.00021,
+      "volume_ratio": 1.0,
+      "session": "ASIAN",
+      "entry_price": 0.57944,
+      "sl": 0.57912,
+      "tp": 0.57998,
+      "risk_reward": 1.67,
+      "spread": 0.0002,
+      "timestamp": "2026-01-20T00:46:11.583489+00:00",
+      "hold_time": "SHORT",
+      "eligible_modes": [
+        "conservative",
+        "aggressive"
+      ],
+      "freshness": {
+        "status": "FRESH",
+        "age_minutes": 0.0,
+        "confidence_decay": 100.0
+      },
+      "metadata": {
+        "signal_type": "trend-continuation",
+        "market_state": "TRENDING_MODERATE",
+        "timeframe": "15m",
+        "valid_for_minutes": 60,
+        "generated_at": "2026-01-20T00:46:11.583489+00:00",
+        "expires_at": "2026-01-20T01:46:11.583489+00:00",
         "session_active": "ASIAN",
         "signal_generator_version": "2.0.0"
       },
@@ -73,20 +123,20 @@
     }
   },
   "stats": {
-    "total_trades": 1201,
+    "total_trades": 1203,
     "win_rate": 28.3,
-    "total_pips": -2725.7,
+    "total_pips": -2731.8,
     "wins": 340,
-    "losses": 861
+    "losses": 863
   },
   "risk_management": {
-    "daily_pips": 1801.0,
-    "total_risk_pips": 10.8,
+    "daily_pips": 10.2,
+    "total_risk_pips": 6.1,
     "max_drawdown": 3078.7,
     "average_risk_reward": 1.67
   },
   "system": {
-    "last_update": "2026-01-20T00:31:25.601037+00:00",
+    "last_update": "2026-01-20T00:46:12.622538+00:00",
     "data_sources_available": true,
     "sentiment_available": true,
     "version": "2.0.0"

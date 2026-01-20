@@ -4,7 +4,12 @@ Performance Tracking System for Trade Beacon v2.0.4-FINAL
 Tracks signal outcomes, calculates win rate, pips, drawdown,
 and produces advisory optimization insights.
 
-Ready-to-drop for full compatibility with trade_beacon.py v2.0.4-FINAL
+ALIGNMENTS (v2.0.4):
+- Version consistency with engine
+- Signal age aligned to 10 minutes (600s)
+- Numeric confidence → labeled buckets
+- Advisory-only optimization (no auto mutation)
+- Always returns 'stats' and 'analytics'
 """
 
 import json
@@ -20,7 +25,9 @@ import yfinance as yf
 
 log = logging.getLogger("performance-tracker")
 
-# ================= RETRY DECORATOR =================
+# ==========================================================
+# RETRY DECORATOR
+# ==========================================================
 def retry_with_backoff(max_retries=3, backoff_factor=5):
     def decorator(func):
         @wraps(func)
@@ -43,14 +50,17 @@ def retry_with_backoff(max_retries=3, backoff_factor=5):
         return wrapper
     return decorator
 
-# ================= PERFORMANCE OPTIMIZER =================
+# ==========================================================
+# PERFORMANCE OPTIMIZER (ADVISORY)
+# ==========================================================
 class PerformanceOptimizer:
     def __init__(self, tracker):
         self.tracker = tracker
         self.min_trades = 30
 
     def get_optimal_parameters(self) -> Dict:
-        closed = [s for s in self.tracker.history["signals"] if s["status"] in ("WIN", "LOSS")]
+        closed = [s for s in self.tracker.history["signals"]
+                  if s["status"] in ("WIN", "LOSS")]
 
         if len(closed) < self.min_trades:
             return self._default()
@@ -138,7 +148,9 @@ class PerformanceOptimizer:
             "analysis_timestamp": datetime.now(timezone.utc).isoformat()
         }
 
-# ================= PERFORMANCE TRACKER =================
+# ==========================================================
+# PERFORMANCE TRACKER
+# ==========================================================
 class PerformanceTracker:
     def __init__(self, history_file="signal_state/signal_history.json"):
         self.history_file = Path(history_file)
@@ -146,6 +158,7 @@ class PerformanceTracker:
         self.min_age_minutes = 10
         self.history = self._load()
 
+    # ---------------- LOAD / SAVE ----------------
     def _load(self):
         if not self.history_file.exists():
             return self._empty()
@@ -153,6 +166,10 @@ class PerformanceTracker:
             with open(self.history_file) as f:
                 data = json.load(f)
             data["version"] = "2.0.4"
+            # Ensure keys exist
+            data.setdefault("signals", [])
+            data.setdefault("stats", {})
+            data.setdefault("analytics", {"by_pair": {}, "by_session": {}, "by_confidence": {}})
             return data
         except Exception:
             return self._empty()
@@ -175,12 +192,7 @@ class PerformanceTracker:
 
     # ---------------- CONFIDENCE BUCKET ----------------
     @staticmethod
-    def _confidence_bucket(score) -> str:
-        """Fixed: handles string or numeric confidence values"""
-        try:
-            score = float(score)
-        except (TypeError, ValueError):
-            score = 0.0
+    def _confidence_bucket(score: float) -> str:
         if score >= 85:
             return "EXCELLENT"
         if score >= 70:
@@ -194,6 +206,7 @@ class PerformanceTracker:
         sid = signal.get("signal_id") or f"{signal['pair']}_{signal['timestamp']}"
         if any(s["id"] == sid for s in self.history["signals"]):
             return
+
         self.history["signals"].append({
             "id": sid,
             "pair": signal["pair"],
@@ -232,11 +245,14 @@ class PerformanceTracker:
         age = (datetime.now(timezone.utc) - ts).total_seconds() / 60
         if age < self.min_age_minutes:
             return
+
         df = self._download(s["pair"], ts)
         if df.empty:
             return
+
         entry, sl, tp = s["entry_price"], s["sl"], s["tp"]
         pip = 0.01 if "JPY" in s["pair"] else 0.0001
+
         for idx, r in df.iterrows():
             hi, lo = r["High"], r["Low"]
             if s["direction"] == "BUY":
@@ -259,7 +275,9 @@ class PerformanceTracker:
         s["closed_at"] = datetime.now(timezone.utc).isoformat()
         s["pips"] = round(pips, 1)
         s["exit_index"] = str(idx)
+
         day = pd.Timestamp(idx).date().isoformat()
+        self.history.setdefault("daily", {})
         self.history["daily"].setdefault(day, {"pips": 0, "trades": 0})
         self.history["daily"][day]["pips"] += s["pips"]
         self.history["daily"][day]["trades"] += 1
@@ -283,6 +301,7 @@ class PerformanceTracker:
         for s in self.history["signals"]:
             if s["status"] not in ("WIN", "LOSS"):
                 continue
+
             for key, val in [
                 ("by_pair", s["pair"]),
                 ("by_session", s.get("session", "UNKNOWN")),
@@ -293,9 +312,11 @@ class PerformanceTracker:
                 d["trades"] += 1
                 d["pips"] += s["pips"]
                 d["wins" if s["status"] == "WIN" else "losses"] += 1
+
         for group in analytics.values():
             for d in group.values():
                 d["win_rate"] = round(d["wins"] / d["trades"] * 100, 1) if d["trades"] else 0
+
         self.history["analytics"] = analytics
 
     # ---------------- PUBLIC ----------------
@@ -308,16 +329,24 @@ class PerformanceTracker:
     def get_optimization_report(self):
         return PerformanceOptimizer(self).get_optimal_parameters()
 
-# ================= LEGACY WRAPPER =================
+# ==========================================================
+# LEGACY WRAPPER FOR TRADE_BEACON.PY
+# ==========================================================
 def track_performance(signals=None, risk_management=None):
+    """
+    Drop-in wrapper for trade_beacon.py.
+    Ensures 'stats' and 'analytics' always exist.
+    """
     tracker = PerformanceTracker()
     if signals:
         for sig in signals:
             tracker.add_signal(sig)
         tracker.check_signals()
-    return tracker.get_stats()
+    return {"stats": tracker.get_stats(), "analytics": tracker.get_analytics()}
 
-# ================= STANDALONE =================
+# ==========================================================
+# STANDALONE
+# ==========================================================
 if __name__ == "__main__":
     tracker = PerformanceTracker()
     report = tracker.get_optimization_report()

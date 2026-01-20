@@ -1,76 +1,35 @@
 {
-  "timestamp": "2026-01-20T23:31:04.381291+00:00",
-  "active_signals": 3,
+  "timestamp": "2026-01-20T23:45:53.796331+00:00",
+  "active_signals": 1,
   "session": "LATE_US",
   "mode": "aggressive",
   "sentiment_enabled": false,
   "market_state": {
-    "volatility": "HIGH",
+    "volatility": "CALM",
     "sentiment_bias": "BULLISH",
     "session": "LATE_US",
     "trending_pairs": []
   },
   "signals": [
     {
-      "signal_id": "EURJPY_20260120_233104",
-      "pair": "EURJPY",
-      "direction": "BUY",
-      "score": 53,
-      "technical_score": 53,
-      "sentiment_score": 0,
-      "confidence": "GOOD",
-      "rsi": 60.4,
-      "adx": 19.0,
-      "atr": 0.09639,
-      "volume_ratio": 1.0,
-      "session": "LATE_US",
-      "entry_price": 185.46001,
-      "sl": 185.21902,
-      "tp": 185.94198,
-      "risk_reward": 2.0,
-      "spread": 0.002,
-      "timestamp": "2026-01-20T23:31:04.310549+00:00",
-      "hold_time": "SWING",
-      "eligible_modes": [
-        "aggressive"
-      ],
-      "freshness": {
-        "status": "FRESH",
-        "age_minutes": 0.0,
-        "confidence_decay": 100.0
-      },
-      "metadata": {
-        "signal_type": "momentum",
-        "market_state": "CONSOLIDATING",
-        "timeframe": "15m",
-        "valid_for_minutes": 60,
-        "generated_at": "2026-01-20T23:31:04.310549+00:00",
-        "expires_at": "2026-01-21T00:31:04.310549+00:00",
-        "session_active": "LATE_US",
-        "signal_generator_version": "2.0.3",
-        "atr_stop_multiplier": 2.5,
-        "atr_target_multiplier": 5.0
-      }
-    },
-    {
-      "signal_id": "EURGBP_20260120_233104",
+      "signal_id": "EURGBP_20260120_234553",
       "pair": "EURGBP",
       "direction": "BUY",
       "score": 53,
       "technical_score": 53,
       "sentiment_score": 0,
       "confidence": "GOOD",
-      "rsi": 56.3,
-      "adx": 24.9,
-      "atr": 0.00044,
+      "rsi": 57.2,
+      "adx": 23.0,
+      "atr": 0.00042,
       "volume_ratio": 1.0,
       "session": "LATE_US",
-      "entry_price": 0.87227,
-      "sl": 0.87116,
-      "tp": 0.87449,
+      "entry_price": 0.87233,
+      "sl": 0.87128,
+      "tp": 0.87443,
       "risk_reward": 2.0,
       "spread": 0.00015,
-      "timestamp": "2026-01-20T23:31:04.377438+00:00",
+      "timestamp": "2026-01-20T23:45:53.643314+00:00",
       "hold_time": "INTRADAY",
       "eligible_modes": [
         "aggressive"
@@ -85,49 +44,8 @@
         "market_state": "TRENDING_MODERATE",
         "timeframe": "15m",
         "valid_for_minutes": 60,
-        "generated_at": "2026-01-20T23:31:04.377438+00:00",
-        "expires_at": "2026-01-21T00:31:04.377438+00:00",
-        "session_active": "LATE_US",
-        "signal_generator_version": "2.0.3",
-        "atr_stop_multiplier": 2.5,
-        "atr_target_multiplier": 5.0
-      }
-    },
-    {
-      "signal_id": "GBPJPY_20260120_233104",
-      "pair": "GBPJPY",
-      "direction": "BUY",
-      "score": 53,
-      "technical_score": 53,
-      "sentiment_score": 0,
-      "confidence": "GOOD",
-      "rsi": 60.4,
-      "adx": 19.0,
-      "atr": 0.09639,
-      "volume_ratio": 1.0,
-      "session": "LATE_US",
-      "entry_price": 185.46001,
-      "sl": 185.21902,
-      "tp": 185.94198,
-      "risk_reward": 2.0,
-      "spread": 0.003,
-      "timestamp": "2026-01-20T23:31:04.377813+00:00",
-      "hold_time": "SWING",
-      "eligible_modes": [
-        "aggressive"
-      ],
-      "freshness": {
-        "status": "FRESH",
-        "age_minutes": 0.0,
-        "confidence_decay": 100.0
-      },
-      "metadata": {
-        "signal_type": "momentum",
-        "market_state": "CONSOLIDATING",
-        "timeframe": "15m",
-        "valid_for_minutes": 60,
-        "generated_at": "2026-01-20T23:31:04.377813+00:00",
-        "expires_at": "2026-01-21T00:31:04.377813+00:00",
+        "generated_at": "2026-01-20T23:45:53.643314+00:00",
+        "expires_at": "2026-01-21T00:45:53.643314+00:00",
         "session_active": "LATE_US",
         "signal_generator_version": "2.0.3",
         "atr_stop_multiplier": 2.5,
@@ -147,20 +65,24 @@
   },
   "stats": {
     "total_trades": 0,
-    "win_rate": 0,
-    "total_pips": 0,
+    "win_rate": 0.0,
+    "total_pips": 0.0,
     "wins": 0,
     "losses": 0
   },
   "risk_management": {
-    "daily_pips": 9661.6,
+    "daily_pips": 21.0,
     "total_risk_pips": 0,
     "max_drawdown": 0,
     "average_risk_reward": 0
   },
-  "analytics": {},
+  "analytics": {
+    "by_pair": {},
+    "by_session": {},
+    "by_confidence": {}
+  },
   "system": {
-    "last_update": "2026-01-20T23:31:04.381307+00:00",
+    "last_update": "2026-01-20T23:45:53.796341+00:00",
     "data_sources_available": true,
     "sentiment_available": false,
     "version": "2.0.3"

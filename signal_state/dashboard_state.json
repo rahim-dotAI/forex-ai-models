@@ -1,76 +1,35 @@
 {
-  "timestamp": "2026-01-21T03:01:17.478763+00:00",
-  "active_signals": 3,
+  "timestamp": "2026-01-21T03:15:57.216267+00:00",
+  "active_signals": 2,
   "session": "ASIAN",
   "mode": "aggressive",
   "sentiment_enabled": false,
   "market_state": {
-    "volatility": "HIGH",
-    "sentiment_bias": "BEARISH",
+    "volatility": "CALM",
+    "sentiment_bias": "BULLISH",
     "session": "ASIAN",
     "trending_pairs": []
   },
   "signals": [
     {
-      "signal_id": "USDJPY_20260121_030113",
-      "pair": "USDJPY",
-      "direction": "SELL",
+      "signal_id": "NZDUSD_20260121_031552",
+      "pair": "NZDUSD",
+      "direction": "BUY",
       "score": 58,
       "technical_score": 58,
       "sentiment_score": 0,
       "confidence": "GOOD",
-      "rsi": 39.4,
-      "adx": 19.8,
-      "atr": 0.10014,
+      "rsi": 44.8,
+      "adx": 16.6,
+      "atr": 0.0006,
       "volume_ratio": 1.0,
       "session": "ASIAN",
-      "entry_price": 157.911,
-      "sl": 158.16134,
-      "tp": 157.4103,
-      "risk_reward": 2.0,
-      "spread": 0.002,
-      "timestamp": "2026-01-21T03:01:13.633962+00:00",
-      "hold_time": "SWING",
-      "eligible_modes": [
-        "aggressive"
-      ],
-      "freshness": {
-        "status": "FRESH",
-        "age_minutes": 0.0,
-        "confidence_decay": 100.0
-      },
-      "metadata": {
-        "signal_type": "momentum",
-        "market_state": "CONSOLIDATING",
-        "timeframe": "15m",
-        "valid_for_minutes": 60,
-        "generated_at": "2026-01-21T03:01:13.633962+00:00",
-        "expires_at": "2026-01-21T04:01:13.633962+00:00",
-        "session_active": "ASIAN",
-        "signal_generator_version": "2.0.3",
-        "atr_stop_multiplier": 2.5,
-        "atr_target_multiplier": 5.0
-      }
-    },
-    {
-      "signal_id": "USDCHF_20260121_030113",
-      "pair": "USDCHF",
-      "direction": "SELL",
-      "score": 53,
-      "technical_score": 53,
-      "sentiment_score": 0,
-      "confidence": "GOOD",
-      "rsi": 50.2,
-      "adx": 22.4,
-      "atr": 0.00056,
-      "volume_ratio": 1.0,
-      "session": "ASIAN",
-      "entry_price": 0.78977,
-      "sl": 0.79117,
-      "tp": 0.78697,
+      "entry_price": 1.34407,
+      "sl": 1.34258,
+      "tp": 1.34705,
       "risk_reward": 2.0,
       "spread": 0.0002,
-      "timestamp": "2026-01-21T03:01:13.823657+00:00",
+      "timestamp": "2026-01-21T03:15:52.309109+00:00",
       "hold_time": "INTRADAY",
       "eligible_modes": [
         "aggressive"
@@ -82,11 +41,11 @@
       },
       "metadata": {
         "signal_type": "trend-continuation",
-        "market_state": "TRENDING_MODERATE",
+        "market_state": "CONSOLIDATING",
         "timeframe": "15m",
         "valid_for_minutes": 60,
-        "generated_at": "2026-01-21T03:01:13.823657+00:00",
-        "expires_at": "2026-01-21T04:01:13.823657+00:00",
+        "generated_at": "2026-01-21T03:15:52.309109+00:00",
+        "expires_at": "2026-01-21T04:15:52.309109+00:00",
         "session_active": "ASIAN",
         "signal_generator_version": "2.0.3",
         "atr_stop_multiplier": 2.5,
@@ -94,24 +53,24 @@
       }
     },
     {
-      "signal_id": "EURGBP_20260121_030113",
+      "signal_id": "EURGBP_20260121_031552",
       "pair": "EURGBP",
       "direction": "BUY",
       "score": 53,
       "technical_score": 53,
       "sentiment_score": 0,
       "confidence": "GOOD",
-      "rsi": 54.8,
+      "rsi": 47.7,
       "adx": 15.4,
       "atr": 0.00032,
       "volume_ratio": 1.0,
       "session": "ASIAN",
-      "entry_price": 0.8722,
-      "sl": 0.8714,
-      "tp": 0.87381,
+      "entry_price": 0.87192,
+      "sl": 0.87112,
+      "tp": 0.87352,
       "risk_reward": 2.0,
       "spread": 0.00015,
-      "timestamp": "2026-01-21T03:01:13.975373+00:00",
+      "timestamp": "2026-01-21T03:15:52.780730+00:00",
       "hold_time": "INTRADAY",
       "eligible_modes": [
         "aggressive"
@@ -126,8 +85,8 @@
         "market_state": "CONSOLIDATING",
         "timeframe": "15m",
         "valid_for_minutes": 60,
-        "generated_at": "2026-01-21T03:01:13.975373+00:00",
-        "expires_at": "2026-01-21T04:01:13.975373+00:00",
+        "generated_at": "2026-01-21T03:15:52.780730+00:00",
+        "expires_at": "2026-01-21T04:15:52.780730+00:00",
         "session_active": "ASIAN",
         "signal_generator_version": "2.0.3",
         "atr_stop_multiplier": 2.5,
@@ -146,14 +105,14 @@
     }
   },
   "stats": {
-    "total_trades": 9,
-    "win_rate": 33.3,
-    "total_pips": 9.7,
+    "total_trades": 10,
+    "win_rate": 30.0,
+    "total_pips": -2.4,
     "wins": 3,
-    "losses": 6
+    "losses": 7
   },
   "risk_management": {
-    "daily_pips": 5051.1,
+    "daily_pips": 45.8,
     "total_risk_pips": 0,
     "max_drawdown": 0,
     "average_risk_reward": 0
@@ -187,29 +146,36 @@
         "pips": -25.5,
         "trades": 1,
         "win_rate": 0.0
+      },
+      "EURUSD": {
+        "wins": 0,
+        "losses": 1,
+        "pips": -12.1,
+        "trades": 1,
+        "win_rate": 0.0
       }
     },
     "by_session": {
       "ASIAN": {
         "wins": 3,
-        "losses": 6,
-        "pips": 9.699999999999998,
-        "trades": 9,
-        "win_rate": 33.3
+        "losses": 7,
+        "pips": -2.399999999999997,
+        "trades": 10,
+        "win_rate": 30.0
       }
     },
     "by_confidence": {
       "MODERATE": {
         "wins": 3,
-        "losses": 6,
-        "pips": 9.699999999999998,
-        "trades": 9,
-        "win_rate": 33.3
+        "losses": 7,
+        "pips": -2.399999999999997,
+        "trades": 10,
+        "win_rate": 30.0
       }
     }
   },
   "system": {
-    "last_update": "2026-01-21T03:01:17.478776+00:00",
+    "last_update": "2026-01-21T03:15:57.216279+00:00",
     "data_sources_available": true,
     "sentiment_available": false,
     "version": "2.0.3"

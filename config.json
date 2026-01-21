@@ -1,6 +1,6 @@
 {
   "mode": "aggressive",
-  "use_sentiment": false,
+  "use_sentiment": true,
   "settings": {
     "aggressive": {
       "threshold": 42,
@@ -62,19 +62,58 @@
         "JPY_pairs": 12,
         "other": 7
       },
-      "max_spread_ratio": 0.3
+      "max_spread_ratio": 0.3,
+      "require_direction": true,
+      "reject_missing_pips": true
     }
   },
   "risk_management": {
     "max_daily_risk_pips": 200,
     "max_open_positions": 5,
     "max_correlated_exposure": 2,
-    "stop_trading_on_drawdown_pips": 150
+    "stop_trading_on_drawdown_pips": 150,
+    "equity_protection": {
+      "enable": true,
+      "max_consecutive_losses": 4,
+      "pause_minutes_after_hit": 60
+    }
+  },
+  "performance_tracking": {
+    "enable": true,
+    "history_file": "signal_state/signal_history.json",
+    "idempotency": {
+      "enabled": true,
+      "scope": "daily"
+    },
+    "equity_curve": {
+      "enabled": true,
+      "max_points": 1000
+    },
+    "analytics": {
+      "track_by_pair": true,
+      "track_by_confidence": true,
+      "track_by_session": true
+    },
+    "exports": {
+      "enable_csv": true,
+      "csv_path": "performance_export.csv"
+    }
   },
   "performance_tuning": {
-    "auto_adjust_thresholds": false,
+    "auto_adjust_thresholds": true,
     "min_trades_for_optimization": 30,
     "optimization_interval_days": 7,
-    "target_win_rate": 0.55
+    "target_win_rate": 0.55,
+    "optimization_inputs": {
+      "use_expectancy": true,
+      "use_win_rate": true,
+      "use_avg_rr": true,
+      "min_expectancy": 0.1
+    }
+  },
+  "logging": {
+    "performance_level": "INFO",
+    "log_equity_updates": true,
+    "log_duplicate_signals": true
   }
 }

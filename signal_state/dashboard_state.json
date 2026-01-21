@@ -1,16 +1,58 @@
 {
-  "timestamp": "2026-01-21T04:01:13.073935+00:00",
-  "active_signals": 0,
+  "timestamp": "2026-01-21T04:16:02.712657+00:00",
+  "active_signals": 1,
   "session": "ASIAN",
   "mode": "aggressive",
   "sentiment_enabled": false,
   "market_state": {
-    "volatility": "CALM",
-    "sentiment_bias": "MIXED",
+    "volatility": "HIGH",
+    "sentiment_bias": "BEARISH",
     "session": "ASIAN",
     "trending_pairs": []
   },
-  "signals": [],
+  "signals": [
+    {
+      "signal_id": "USDJPY_20260121_041557",
+      "pair": "USDJPY",
+      "direction": "SELL",
+      "score": 58,
+      "technical_score": 58,
+      "sentiment_score": 0,
+      "confidence": "GOOD",
+      "rsi": 45.9,
+      "adx": 15.9,
+      "atr": 0.09842,
+      "volume_ratio": 1.0,
+      "session": "ASIAN",
+      "entry_price": 158.0,
+      "sl": 158.24605,
+      "tp": 157.5079,
+      "risk_reward": 2.0,
+      "spread": 0.002,
+      "timestamp": "2026-01-21T04:15:57.581244+00:00",
+      "hold_time": "SWING",
+      "eligible_modes": [
+        "aggressive"
+      ],
+      "freshness": {
+        "status": "FRESH",
+        "age_minutes": 0.0,
+        "confidence_decay": 100.0
+      },
+      "metadata": {
+        "signal_type": "trend-continuation",
+        "market_state": "CONSOLIDATING",
+        "timeframe": "15m",
+        "valid_for_minutes": 60,
+        "generated_at": "2026-01-21T04:15:57.581244+00:00",
+        "expires_at": "2026-01-21T05:15:57.581244+00:00",
+        "session_active": "ASIAN",
+        "signal_generator_version": "2.0.3",
+        "atr_stop_multiplier": 2.5,
+        "atr_target_multiplier": 5.0
+      }
+    }
+  ],
   "api_usage": {
     "yfinance": {
       "successful_downloads": 10
@@ -22,14 +64,14 @@
     }
   },
   "stats": {
-    "total_trades": 10,
-    "win_rate": 30.0,
-    "total_pips": -2.4,
+    "total_trades": 21,
+    "win_rate": 14.3,
+    "total_pips": -160.0,
     "wins": 3,
-    "losses": 7
+    "losses": 18
   },
   "risk_management": {
-    "daily_pips": 0,
+    "daily_pips": 4921.0,
     "total_risk_pips": 0,
     "max_drawdown": 0,
     "average_risk_reward": 0
@@ -38,10 +80,10 @@
     "by_pair": {
       "USDCHF": {
         "wins": 2,
-        "losses": 3,
-        "pips": 56.099999999999994,
-        "trades": 5,
-        "win_rate": 40.0
+        "losses": 8,
+        "pips": -20.0,
+        "trades": 10,
+        "win_rate": 20.0
       },
       "USDJPY": {
         "wins": 0,
@@ -66,8 +108,22 @@
       },
       "EURUSD": {
         "wins": 0,
+        "losses": 3,
+        "pips": -37.4,
+        "trades": 3,
+        "win_rate": 0.0
+      },
+      "GBPUSD": {
+        "wins": 0,
+        "losses": 3,
+        "pips": -41.3,
+        "trades": 3,
+        "win_rate": 0.0
+      },
+      "NZDUSD": {
+        "wins": 0,
         "losses": 1,
-        "pips": -12.1,
+        "pips": -14.9,
         "trades": 1,
         "win_rate": 0.0
       }
@@ -75,24 +131,24 @@
     "by_session": {
       "ASIAN": {
         "wins": 3,
-        "losses": 7,
-        "pips": -2.399999999999997,
-        "trades": 10,
-        "win_rate": 30.0
+        "losses": 18,
+        "pips": -159.99999999999997,
+        "trades": 21,
+        "win_rate": 14.3
       }
     },
     "by_confidence": {
       "MODERATE": {
         "wins": 3,
-        "losses": 7,
-        "pips": -2.399999999999997,
-        "trades": 10,
-        "win_rate": 30.0
+        "losses": 18,
+        "pips": -159.99999999999997,
+        "trades": 21,
+        "win_rate": 14.3
       }
     }
   },
   "system": {
-    "last_update": "2026-01-21T04:01:13.073942+00:00",
+    "last_update": "2026-01-21T04:16:02.712672+00:00",
     "data_sources_available": true,
     "sentiment_available": false,
     "version": "2.0.3"

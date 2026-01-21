@@ -1233,7 +1233,16 @@ def get_performance_summary() -> Dict:
         log.error(f"⚠️ Could not get performance summary: {e}")
         return {"stats": {}, "analytics": {}, "equity": {}}
 
-def write_dashboard_state(signals: list, successful_downloads: int, newsapi_calls: int = 0, marketaux_calls: int = 0):
+def write_dashboard_state(signals: list, successful_downloads: int, newsapi_calls: int = 0, marketaux_calls: int = 0,
+                          config: Dict = None, mode: str = None, settings: Dict = None):
+    """
+    Write dashboard state with config parameters instead of using globals.
+    """
+    # Use provided parameters or fall back to globals
+    current_config = config if config is not None else CONFIG
+    current_mode = mode if mode is not None else MODE
+    current_settings = settings if settings is not None else SETTINGS
+    
     session = get_market_session()
     daily_pips = calculate_daily_pips(signals)
     
@@ -1246,16 +1255,16 @@ def write_dashboard_state(signals: list, successful_downloads: int, newsapi_call
     market_volatility = calculate_market_volatility(signals)
     market_sentiment = calculate_market_sentiment(signals)
     
-    can_trade, pause_reason = check_equity_protection(CONFIG)
+    can_trade, pause_reason = check_equity_protection(current_config)
 
     dashboard_data = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "active_signals": len(signals),
         "session": session,
-        "mode": MODE,
+        "mode": current_mode,
         "sentiment_enabled": USE_SENTIMENT,
         "equity_protection": {
-            "enabled": CONFIG.get("risk_management", {}).get("equity_protection", {}).get("enable", True),
+            "enabled": current_config.get("risk_management", {}).get("equity_protection", {}).get("enable", True),
             "can_trade": can_trade,
             "pause_reason": pause_reason if not can_trade else None
         },
@@ -1288,8 +1297,8 @@ def write_dashboard_state(signals: list, successful_downloads: int, newsapi_call
         "risk_management": {
             "daily_pips": daily_pips,
             "total_risk_pips": sum(abs(s.get('entry_price', 0) - s.get('sl', 0)) * 10000 for s in signals),
-            "max_daily_risk": CONFIG.get("risk_management", {}).get("max_daily_risk_pips", 200),
-            "max_positions": CONFIG.get("risk_management", {}).get("max_open_positions", 5)
+            "max_daily_risk": current_config.get("risk_management", {}).get("max_daily_risk_pips", 200),
+            "max_positions": current_config.get("risk_management", {}).get("max_open_positions", 5)
         },
         "analytics": analytics,
         "equity_curve": equity.get("curve", []),
@@ -1298,7 +1307,7 @@ def write_dashboard_state(signals: list, successful_downloads: int, newsapi_call
             "data_sources_available": successful_downloads > 0,
             "sentiment_available": newsapi_calls > 0 or marketaux_calls > 0,
             "performance_tracking_enabled": PERFORMANCE_TRACKER is not None,
-            "optimization_enabled": CONFIG.get("performance_tuning", {}).get("auto_adjust_thresholds", False),
+            "optimization_enabled": current_config.get("performance_tuning", {}).get("auto_adjust_thresholds", False),
             "version": "2.0.4"
         }
     }
@@ -1318,9 +1327,9 @@ def write_dashboard_state(signals: list, successful_downloads: int, newsapi_call
                 f"Total Pips: {stats.get('total_pips', 0):.1f} | "
                 f"Expectancy: {stats.get('expectancy', 0):.2f}")
     
-    write_health_check(signals, successful_downloads, newsapi_calls, marketaux_calls, can_trade, pause_reason)
+    write_health_check(signals, successful_downloads, newsapi_calls, marketaux_calls, can_trade, pause_reason, current_mode)
 
-def write_health_check(signals: list, successful_downloads: int, newsapi_calls: int, marketaux_calls: int, can_trade: bool, pause_reason: str):
+def write_health_check(signals: list, successful_downloads: int, newsapi_calls: int, marketaux_calls: int, can_trade: bool, pause_reason: str, mode: str):
     status = "ok"
     issues = []
     
@@ -1348,7 +1357,7 @@ def write_health_check(signals: list, successful_downloads: int, newsapi_calls: 
             "marketaux": "ok" if marketaux_calls > 0 else ("disabled" if not USE_SENTIMENT else "error")
         },
         "system_info": {
-            "mode": MODE,
+            "mode": mode,
             "pairs_monitored": len(PAIRS),
             "last_success": datetime.now(timezone.utc).isoformat() if status == "ok" else None,
             "performance_tracking": PERFORMANCE_TRACKER is not None,
@@ -1425,7 +1434,8 @@ def main():
     can_trade, pause_reason = check_equity_protection(CONFIG)
     if not can_trade:
         log.warning(f"⏸️ {pause_reason}")
-        write_dashboard_state([], 0, 0, 0)
+        # Pass the current config/mode/settings to dashboard
+        write_dashboard_state([], 0, 0, 0, CONFIG, MODE, SETTINGS)
         return
     
     # ✅ OPTION 1 IMPLEMENTATION: Use local variables instead of reassigning globals
@@ -1508,23 +1518,9 @@ def main():
 
     log.info(f"\n✅ Cycle complete | Active signals: {len(active)}")
     
-    # Use current_mode for dashboard display
-    temp_mode = current_mode
-    temp_settings = current_settings
-    
-    # Temporarily update global for dashboard functions that need it
-    global MODE, SETTINGS
-    original_mode = MODE
-    original_settings = SETTINGS
-    
-    try:
-        MODE = temp_mode
-        SETTINGS = temp_settings
-        write_dashboard_state(active, successful_downloads, newsapi_calls, marketaux_calls)
-    finally:
-        # Restore original values
-        MODE = original_mode
-        SETTINGS = original_settings
+    # ✅ FIXED: Pass current_mode and current_settings to dashboard function
+    write_dashboard_state(active, successful_downloads, newsapi_calls, marketaux_calls, 
+                          optimized_config, current_mode, current_settings)
 
     if active:
         df = pd.DataFrame(active)

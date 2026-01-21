@@ -1,4 +1,4 @@
-name: Trade Beacon v2.0.4-FINAL – Forex Signal Generator
+name: Trade Beacon v2.0.5.1 – Forex Signal Generator
 
 on:
   # Run every 15 minutes (session control handled in Python)
@@ -71,8 +71,8 @@ jobs:
           mkdir -p signal_state
           echo "✅ System verified"
 
-      # v2.0.4 CONFIGURATION
-      - name: ⚙️ Apply v2.0.4 configuration
+      # v2.0.5.1 CONFIGURATION
+      - name: ⚙️ Apply v2.0.5.1 configuration
         if: github.event.inputs.mode != 'default' && github.event.inputs.mode != ''
         run: |
           MODE="${{ github.event.inputs.mode }}"
@@ -86,22 +86,23 @@ jobs:
           .settings.aggressive.min_volume_ratio = 1.0 |
           .settings.conservative.threshold = 55 |
           .settings.conservative.min_adx = 22 |
+          .settings.conservative.min_volume_ratio = 1.2 |
           .advanced.validation.max_signal_age_seconds = 600 |
           .advanced.validation.min_sl_pips = {"JPY_pairs":12,"other":7} |
           .advanced.session_bonuses.LATE_US = {"all_major_pairs":0}
           ' config.json > tmp.json && mv tmp.json config.json
 
-          echo "📄 v2.0.4 configuration applied"
+          echo "📄 v2.0.5.1 configuration applied"
           jq '.' config.json
 
-      - name: 🤖 Run Trade Beacon v2.0.4-FINAL
+      - name: 🤖 Run Trade Beacon v2.0.5.1
         env:
           newsapi_key: ${{ secrets.newsapi_key }}
           MARKETAUX_API_KEY: ${{ secrets.MARKETAUX_API_KEY }}
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
           HUGGINGFACE_API_KEY: ${{ secrets.HUGGINGFACE_API_KEY }}
         run: |
-          echo "🚀 Trade Beacon v2.0.4-FINAL"
+          echo "🚀 Trade Beacon v2.0.5.1"
           python ${{ env.ENTRY_SCRIPT }}
 
       - name: 📊 Optional Performance Optimization
@@ -116,12 +117,12 @@ jobs:
 
       - name: 💾 Commit state
         run: |
-          git config user.name "Trade Beacon v2.0.4"
+          git config user.name "Trade Beacon v2.0.5.1"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git add signal_state/*.json signals.csv config.json || true
           if ! git diff --staged --quiet; then
-            git commit -m "📊 Trade Beacon v2.0.4-FINAL | Signals update [skip ci]"
+            git commit -m "📊 Trade Beacon v2.0.5.1 | Signals update [skip ci]"
             git push origin main
           else
             echo "ℹ️ No changes to commit"
@@ -130,7 +131,7 @@ jobs:
       - name: 📦 Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: trade-beacon-v2.0.4-run-${{ github.run_number }}
+          name: trade-beacon-v2.0.5.1-run-${{ github.run_number }}
           path: |
             signal_state/
             signals.csv

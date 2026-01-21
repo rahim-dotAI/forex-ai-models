@@ -125,6 +125,94 @@
       50% { opacity: 0.3; transform: scale(1.5); }
     }
 
+    /* Trade Ticker */
+    .trade-ticker {
+      background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+      position: relative;
+      height: 48px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .ticker-track {
+      width: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .ticker-content {
+      display: flex;
+      gap: 40px;
+      animation: scroll 60s linear infinite;
+      white-space: nowrap;
+    }
+    
+    @keyframes scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    
+    .ticker-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 20px;
+      background: var(--bg-card);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      font-weight: 600;
+      min-width: fit-content;
+    }
+    
+    .ticker-item.win {
+      border-left: 3px solid var(--success);
+      background: linear-gradient(90deg, rgba(16, 185, 129, 0.1), transparent);
+    }
+    
+    .ticker-item.loss {
+      border-left: 3px solid var(--danger);
+      background: linear-gradient(90deg, rgba(239, 68, 68, 0.1), transparent);
+    }
+    
+    .ticker-pair {
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+    
+    .ticker-pips {
+      font-weight: 900;
+      font-family: 'Courier New', monospace;
+    }
+    
+    .ticker-pips.positive {
+      color: var(--success);
+    }
+    
+    .ticker-pips.negative {
+      color: var(--danger);
+    }
+    
+    .ticker-badge {
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    
+    .ticker-badge.win {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--success);
+    }
+    
+    .ticker-badge.loss {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+    }
+
     .container {
       max-width: 1920px;
       margin: 0 auto;
@@ -685,9 +773,15 @@
     <div class="nav-container">
       <div class="logo">
         <div class="logo-icon">📊</div>
-        <div>Trade<span style="background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Beacon</span></div>
+        <div>
+          Trade<span style="background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Beacon</span>
+          <span style="font-size: 11px; color: var(--text-muted); font-weight: 500; margin-left: 8px;">v2.0.4</span>
+        </div>
       </div>
       <div class="nav-controls">
+        <div style="font-size: 12px; color: var(--text-secondary); margin-right: 12px;">
+          Made with ❤️ by <span style="color: var(--accent-blue); font-weight: 700;">Rahim</span>
+        </div>
         <div class="status-badge status-live" id="status">
           <div class="status-dot"></div>
           <span>LOADING</span>
@@ -695,6 +789,13 @@
       </div>
     </div>
   </nav>
+
+  <!-- Trade Ticker -->
+  <div class="trade-ticker" id="tradeTicker">
+    <div class="ticker-track">
+      <div class="ticker-content" id="tickerContent"></div>
+    </div>
+  </div>
 
   <div class="container">
     <div id="app">
@@ -805,12 +906,16 @@
             <div class="empty-title">No Active Signals</div>
             <div class="empty-message">Trade Beacon v2.0.4 did not generate any signals at this time. Check back soon!</div>
           </div>`;
+        updateTicker([]);
         return;
       }
 
       const signals = filterSignalsByMode(data.signals);
       const stats = data.stats || {};
       const riskMgmt = data.risk_management || {};
+
+      // Update ticker with recent trades
+      updateTicker(data.signals);
 
       let html = `
         <!-- Hero Stats -->
@@ -1030,6 +1135,48 @@
       currentMode = mode;
       localStorage.setItem('tradeBeaconMode', mode);
       render();
+    }
+
+    function updateTicker(signals) {
+      const tickerContent = document.getElementById('tickerContent');
+      if (!signals || signals.length === 0) {
+        tickerContent.innerHTML = '<div class="ticker-item"><span>No recent trades today</span></div>';
+        return;
+      }
+
+      // Get today's closed trades
+      const today = new Date().toDateString();
+      const todayTrades = signals.filter(s => {
+        if (!s.closed_at && !s.timestamp) return false;
+        const tradeDate = new Date(s.closed_at || s.timestamp).toDateString();
+        return tradeDate === today && s.status && s.status !== 'OPEN';
+      });
+
+      if (todayTrades.length === 0) {
+        tickerContent.innerHTML = '<div class="ticker-item"><span>⏳ No completed trades today yet</span></div>';
+        return;
+      }
+
+      // Create ticker items (duplicate for seamless loop)
+      const items = todayTrades.map(trade => {
+        const isWin = trade.status === 'WIN';
+        const pips = trade.pips || calculatePips(trade.entry_price, trade.exit_price || (isWin ? trade.tp : trade.sl), trade.pair);
+        const direction = trade.direction === 'BUY' ? '📈' : '📉';
+        
+        return `
+          <div class="ticker-item ${isWin ? 'win' : 'loss'}">
+            <span>${direction}</span>
+            <span class="ticker-pair">${trade.pair}</span>
+            <span class="ticker-pips ${pips >= 0 ? 'positive' : 'negative'}">
+              ${pips >= 0 ? '+' : ''}${pips.toFixed(1)} pips
+            </span>
+            <span class="ticker-badge ${isWin ? 'win' : 'loss'}">${trade.status}</span>
+          </div>
+        `;
+      }).join('');
+
+      // Duplicate content for seamless loop
+      tickerContent.innerHTML = items + items;
     }
 
     fetchData();

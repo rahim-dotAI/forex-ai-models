@@ -1,17 +1,22 @@
 {
-  "status": "ok",
-  "last_run": "2026-01-21T04:16:02.713239+00:00",
-  "signal_count": 1,
-  "issues": [],
+  "status": "error",
+  "last_run": "2026-01-21T23:01:30.781911+00:00",
+  "signal_count": 0,
+  "issues": [
+    "Trading paused for 60.0 more minutes due to consecutive losses",
+    "No market data available"
+  ],
+  "can_trade": false,
   "api_status": {
-    "yfinance": "ok",
-    "newsapi": "disabled",
-    "marketaux": "disabled"
+    "yfinance": "error",
+    "newsapi": "error",
+    "marketaux": "error"
   },
   "system_info": {
     "mode": "aggressive",
     "pairs_monitored": 10,
-    "last_success": "2026-01-21T04:16:02.713247+00:00",
-    "version": "2.0.3"
+    "last_success": null,
+    "performance_tracking": true,
+    "version": "2.0.4"
   }
 }

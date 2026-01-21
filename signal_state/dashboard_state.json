@@ -1,64 +1,27 @@
 {
-  "timestamp": "2026-01-21T04:16:02.712657+00:00",
-  "active_signals": 1,
-  "session": "ASIAN",
+  "timestamp": "2026-01-21T23:01:30.781407+00:00",
+  "active_signals": 0,
+  "session": "LATE_US",
   "mode": "aggressive",
-  "sentiment_enabled": false,
+  "sentiment_enabled": true,
+  "equity_protection": {
+    "enabled": true,
+    "can_trade": false,
+    "pause_reason": "Trading paused for 60.0 more minutes due to consecutive losses"
+  },
   "market_state": {
-    "volatility": "HIGH",
-    "sentiment_bias": "BEARISH",
-    "session": "ASIAN",
+    "volatility": "CALM",
+    "sentiment_bias": "MIXED",
+    "session": "LATE_US",
     "trending_pairs": []
   },
-  "signals": [
-    {
-      "signal_id": "USDJPY_20260121_041557",
-      "pair": "USDJPY",
-      "direction": "SELL",
-      "score": 58,
-      "technical_score": 58,
-      "sentiment_score": 0,
-      "confidence": "GOOD",
-      "rsi": 45.9,
-      "adx": 15.9,
-      "atr": 0.09842,
-      "volume_ratio": 1.0,
-      "session": "ASIAN",
-      "entry_price": 158.0,
-      "sl": 158.24605,
-      "tp": 157.5079,
-      "risk_reward": 2.0,
-      "spread": 0.002,
-      "timestamp": "2026-01-21T04:15:57.581244+00:00",
-      "hold_time": "SWING",
-      "eligible_modes": [
-        "aggressive"
-      ],
-      "freshness": {
-        "status": "FRESH",
-        "age_minutes": 0.0,
-        "confidence_decay": 100.0
-      },
-      "metadata": {
-        "signal_type": "trend-continuation",
-        "market_state": "CONSOLIDATING",
-        "timeframe": "15m",
-        "valid_for_minutes": 60,
-        "generated_at": "2026-01-21T04:15:57.581244+00:00",
-        "expires_at": "2026-01-21T05:15:57.581244+00:00",
-        "session_active": "ASIAN",
-        "signal_generator_version": "2.0.3",
-        "atr_stop_multiplier": 2.5,
-        "atr_target_multiplier": 5.0
-      }
-    }
-  ],
+  "signals": [],
   "api_usage": {
     "yfinance": {
-      "successful_downloads": 10
+      "successful_downloads": 0
     },
     "sentiment": {
-      "enabled": false,
+      "enabled": true,
       "newsapi": 0,
       "marketaux": 0
     }
@@ -68,13 +31,16 @@
     "win_rate": 14.3,
     "total_pips": -160.0,
     "wins": 3,
-    "losses": 18
+    "losses": 18,
+    "avg_win": 0.0,
+    "avg_loss": 0.0,
+    "expectancy": 0.0
   },
   "risk_management": {
-    "daily_pips": 4921.0,
+    "daily_pips": 0,
     "total_risk_pips": 0,
-    "max_drawdown": 0,
-    "average_risk_reward": 0
+    "max_daily_risk": 200,
+    "max_positions": 5
   },
   "analytics": {
     "by_pair": {
@@ -147,10 +113,13 @@
       }
     }
   },
+  "equity_curve": [],
   "system": {
-    "last_update": "2026-01-21T04:16:02.712672+00:00",
-    "data_sources_available": true,
+    "last_update": "2026-01-21T23:01:30.781424+00:00",
+    "data_sources_available": false,
     "sentiment_available": false,
-    "version": "2.0.3"
+    "performance_tracking_enabled": true,
+    "optimization_enabled": true,
+    "version": "2.0.4"
   }
 }

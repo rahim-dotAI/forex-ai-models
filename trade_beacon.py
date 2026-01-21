@@ -1429,7 +1429,8 @@ def main():
         return
     
     # ✅ FIX 2 & FIX 3: Global config AND mode update after optimization
-    global CONFIG, SETTINGS, MODE
+    # Removed: global CONFIG, SETTINGS, MODE (OPTION A - Variables are already module-level)
+    
     if CONFIG.get("performance_tuning", {}).get("auto_adjust_thresholds", False):
         CONFIG = optimize_thresholds_if_needed(CONFIG)
         MODE = CONFIG["mode"]  # Re-sync MODE in case optimization changed it

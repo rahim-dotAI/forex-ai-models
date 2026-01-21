@@ -81,10 +81,10 @@
       "confidence": "MODERATE",
       "session": "ASIAN",
       "timestamp": "2026-01-21T00:15:56.718706+00:00",
-      "status": "OPEN",
-      "pips": 0.0,
-      "closed_at": null,
-      "exit_index": null
+      "status": "LOSS",
+      "pips": -11.2,
+      "closed_at": "2026-01-21T00:31:02.364933+00:00",
+      "exit_index": "2026-01-21 00:16:00+00:00"
     },
     {
       "id": "USDJPY_20260121_001556",
@@ -102,23 +102,103 @@
       "pips": 0.0,
       "closed_at": null,
       "exit_index": null
+    },
+    {
+      "id": "USDCHF_20260121_003101",
+      "pair": "USDCHF",
+      "direction": "SELL",
+      "entry_price": 0.79028,
+      "sl": 0.79194,
+      "tp": 0.78696,
+      "risk_reward": 2.0,
+      "confidence_score": 0.0,
+      "confidence": "MODERATE",
+      "session": "ASIAN",
+      "timestamp": "2026-01-21T00:31:01.680407+00:00",
+      "status": "OPEN",
+      "pips": 0.0,
+      "closed_at": null,
+      "exit_index": null
+    },
+    {
+      "id": "EURGBP_20260121_003101",
+      "pair": "EURGBP",
+      "direction": "BUY",
+      "entry_price": 0.87228,
+      "sl": 0.87119,
+      "tp": 0.87446,
+      "risk_reward": 2.0,
+      "confidence_score": 0.0,
+      "confidence": "MODERATE",
+      "session": "ASIAN",
+      "timestamp": "2026-01-21T00:31:01.833225+00:00",
+      "status": "OPEN",
+      "pips": 0.0,
+      "closed_at": null,
+      "exit_index": null
+    },
+    {
+      "id": "USDCAD_20260121_003101",
+      "pair": "USDCAD",
+      "direction": "BUY",
+      "entry_price": 0.87228,
+      "sl": 0.87119,
+      "tp": 0.87446,
+      "risk_reward": 2.0,
+      "confidence_score": 0.0,
+      "confidence": "MODERATE",
+      "session": "ASIAN",
+      "timestamp": "2026-01-21T00:31:01.880063+00:00",
+      "status": "OPEN",
+      "pips": 0.0,
+      "closed_at": null,
+      "exit_index": null
     }
   ],
   "stats": {
-    "total_trades": 0,
+    "total_trades": 1,
     "wins": 0,
-    "losses": 0,
+    "losses": 1,
     "win_rate": 0.0,
-    "total_pips": 0.0
+    "total_pips": -11.2
   },
-  "daily": {},
+  "daily": {
+    "2026-01-21": {
+      "pips": -11.2,
+      "trades": 1
+    }
+  },
   "analytics": {
-    "by_pair": {},
-    "by_session": {},
-    "by_confidence": {}
+    "by_pair": {
+      "USDCHF": {
+        "wins": 0,
+        "losses": 1,
+        "pips": -11.2,
+        "trades": 1,
+        "win_rate": 0.0
+      }
+    },
+    "by_session": {
+      "ASIAN": {
+        "wins": 0,
+        "losses": 1,
+        "pips": -11.2,
+        "trades": 1,
+        "win_rate": 0.0
+      }
+    },
+    "by_confidence": {
+      "MODERATE": {
+        "wins": 0,
+        "losses": 1,
+        "pips": -11.2,
+        "trades": 1,
+        "win_rate": 0.0
+      }
+    }
   },
   "metadata": {
     "created_at": "2026-01-20T21:39:26.281471+00:00",
-    "last_updated": "2026-01-21T00:15:56.929865+00:00"
+    "last_updated": "2026-01-21T00:31:02.431006+00:00"
   }
 }

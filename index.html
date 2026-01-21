@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trade Beacon v2.0.4 - Pro Dashboard</title>
+  <title>Trade Beacon v2.0.5.1 - Pro Dashboard</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
@@ -106,10 +106,16 @@
       box-shadow: 0 0 20px var(--glow-green);
     }
     
-    .status-stale {
+    .status-paused {
       background: rgba(245, 158, 11, 0.15);
       color: var(--warning);
       border: 2px solid var(--warning);
+    }
+    
+    .status-stale {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+      border: 2px solid var(--danger);
     }
     
     .status-dot {
@@ -125,92 +131,42 @@
       50% { opacity: 0.3; transform: scale(1.5); }
     }
 
-    /* Trade Ticker */
-    .trade-ticker {
-      background: linear-gradient(135deg, var(--bg-secondary), var(--bg-tertiary));
-      border-bottom: 1px solid var(--border);
-      overflow: hidden;
-      position: relative;
-      height: 48px;
+    /* Alert Banner for Equity Protection */
+    .alert-banner {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(239, 68, 68, 0.2));
+      border: 2px solid var(--warning);
+      border-radius: 16px;
+      padding: 20px 28px;
+      margin-bottom: 24px;
       display: flex;
       align-items: center;
+      gap: 16px;
+      animation: slideDown 0.4s ease;
     }
     
-    .ticker-track {
-      width: 100%;
-      overflow: hidden;
-      position: relative;
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     
-    .ticker-content {
-      display: flex;
-      gap: 40px;
-      animation: scroll 60s linear infinite;
-      white-space: nowrap;
+    .alert-icon {
+      font-size: 32px;
     }
     
-    @keyframes scroll {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
+    .alert-content {
+      flex: 1;
     }
     
-    .ticker-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 8px 20px;
-      background: var(--bg-card);
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      font-size: 13px;
-      font-weight: 600;
-      min-width: fit-content;
-    }
-    
-    .ticker-item.win {
-      border-left: 3px solid var(--success);
-      background: linear-gradient(90deg, rgba(16, 185, 129, 0.1), transparent);
-    }
-    
-    .ticker-item.loss {
-      border-left: 3px solid var(--danger);
-      background: linear-gradient(90deg, rgba(239, 68, 68, 0.1), transparent);
-    }
-    
-    .ticker-pair {
+    .alert-title {
+      font-size: 18px;
       font-weight: 800;
-      color: var(--text-primary);
+      margin-bottom: 4px;
+      color: var(--warning);
     }
     
-    .ticker-pips {
-      font-weight: 900;
-      font-family: 'Courier New', monospace;
-    }
-    
-    .ticker-pips.positive {
-      color: var(--success);
-    }
-    
-    .ticker-pips.negative {
-      color: var(--danger);
-    }
-    
-    .ticker-badge {
-      padding: 2px 8px;
-      border-radius: 6px;
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-    
-    .ticker-badge.win {
-      background: rgba(16, 185, 129, 0.2);
-      color: var(--success);
-    }
-    
-    .ticker-badge.loss {
-      background: rgba(239, 68, 68, 0.2);
-      color: var(--danger);
+    .alert-message {
+      font-size: 14px;
+      color: var(--text-secondary);
     }
 
     .container {
@@ -775,7 +731,7 @@
         <div class="logo-icon">📊</div>
         <div>
           Trade<span style="background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Beacon</span>
-          <span style="font-size: 11px; color: var(--text-muted); font-weight: 500; margin-left: 8px;">v2.0.4</span>
+          <span style="font-size: 11px; color: var(--text-muted); font-weight: 500; margin-left: 8px;">v2.0.5.1</span>
         </div>
       </div>
       <div class="nav-controls">
@@ -790,18 +746,11 @@
     </div>
   </nav>
 
-  <!-- Trade Ticker -->
-  <div class="trade-ticker" id="tradeTicker">
-    <div class="ticker-track">
-      <div class="ticker-content" id="tickerContent"></div>
-    </div>
-  </div>
-
   <div class="container">
     <div id="app">
       <div class="loading">
         <div class="spinner"></div>
-        <div style="font-size: 20px; font-weight: 700; color: var(--text-secondary);">Loading Trade Beacon v2.0.4...</div>
+        <div style="font-size: 20px; font-weight: 700; color: var(--text-secondary);">Loading Trade Beacon v2.0.5.1...</div>
       </div>
     </div>
   </div>
@@ -862,9 +811,17 @@
           });
           if (!response.ok) continue;
           const json = await response.json();
-          if (json && json.signals) {
+          if (json && json.signals !== undefined) {
             data = json;
-            updateStatus('LIVE');
+            
+            // ✅ NEW: Check equity protection status
+            const equityProtection = data.equity_protection || {};
+            if (equityProtection.enabled && !equityProtection.can_trade) {
+              updateStatus('PAUSED');
+            } else {
+              updateStatus('LIVE');
+            }
+            
             render();
             return;
           }
@@ -878,8 +835,12 @@
 
     function updateStatus(status) {
       const statusEl = document.getElementById('status');
-      const isLive = status === 'LIVE';
-      statusEl.className = `status-badge ${isLive ? 'status-live' : 'status-stale'}`;
+      const classMap = {
+        'LIVE': 'status-live',
+        'PAUSED': 'status-paused',
+        'STALE': 'status-stale'
+      };
+      statusEl.className = `status-badge ${classMap[status] || 'status-stale'}`;
       statusEl.innerHTML = `<div class="status-dot"></div><span>${status}</span>`;
     }
 
@@ -899,14 +860,23 @@
 
     function render() {
       const app = document.getElementById('app');
+      
+      // ✅ NEW: Check equity protection and show alert banner
+      const equityProtection = data.equity_protection || {};
+      const isPaused = equityProtection.enabled && !equityProtection.can_trade;
+      
+      if (isPaused) {
+        app.innerHTML = renderPausedState(equityProtection.pause_reason);
+        return;
+      }
+      
       if (!data || !data.signals || data.signals.length === 0) {
         app.innerHTML = `
           <div class="empty-state">
             <div class="empty-icon">📉</div>
             <div class="empty-title">No Active Signals</div>
-            <div class="empty-message">Trade Beacon v2.0.4 did not generate any signals at this time. Check back soon!</div>
+            <div class="empty-message">Trade Beacon v2.0.5.1 did not generate any signals at this time. Check back soon!</div>
           </div>`;
-        updateTicker([]);
         return;
       }
 
@@ -914,8 +884,8 @@
       const stats = data.stats || {};
       const riskMgmt = data.risk_management || {};
 
-      // Update ticker with recent trades
-      updateTicker(data.signals);
+      // 🆕 Fallback for expectancy_per_trade
+      const expectancy = stats.expectancy_per_trade ?? stats.expectancy ?? 0;
 
       let html = `
         <!-- Hero Stats -->
@@ -930,7 +900,7 @@
           
           <div class="hero-card">
             <div class="hero-label">Win Rate</div>
-            <div class="hero-value">${stats.win_rate || 0}%</div>
+            <div class="hero-value">${(stats.win_rate || 0).toFixed(1)}%</div>
             <div class="hero-subtitle">
               <span class="${stats.win_rate >= 50 ? 'change-positive' : 'change-negative'}">
                 ${stats.wins || 0}W / ${stats.losses || 0}L
@@ -940,7 +910,7 @@
           
           <div class="hero-card">
             <div class="hero-label">Total Pips</div>
-            <div class="hero-value">${stats.total_pips || 0}</div>
+            <div class="hero-value">${(stats.total_pips || 0).toFixed(1)}</div>
             <div class="hero-subtitle">
               <span class="${(stats.total_pips || 0) >= 0 ? 'change-positive' : 'change-negative'}">
                 ${stats.total_trades || 0} total trades
@@ -949,10 +919,20 @@
           </div>
           
           <div class="hero-card">
-            <div class="hero-label">Daily Risk</div>
-            <div class="hero-value">${riskMgmt.daily_pips || 0}</div>
+            <div class="hero-label">Expectancy</div>
+            <div class="hero-value">${(expectancy || 0).toFixed(2)}</div>
             <div class="hero-subtitle">
-              <span>pips exposed today</span>
+              <span class="${(expectancy || 0) >= 0 ? 'change-positive' : 'change-negative'}">
+                pips per trade
+              </span>
+            </div>
+          </div>
+          
+          <div class="hero-card">
+            <div class="hero-label">Daily Risk</div>
+            <div class="hero-value">${(riskMgmt.daily_pips || 0).toFixed(1)}</div>
+            <div class="hero-subtitle">
+              <span>/ ${riskMgmt.max_daily_risk || 200} max pips</span>
             </div>
           </div>
         </div>
@@ -1010,6 +990,7 @@
                 <div class="meta-badge">📈 RSI: ${signal.rsi?.toFixed(1) || '-'}</div>
                 <div class="meta-badge">📉 Vol: ${signal.volume_ratio?.toFixed(2) || '-'}x</div>
                 <div class="meta-badge">⏱️ ${signal.session || '-'}</div>
+                ${signal.hold_time ? `<div class="meta-badge">⏳ ${signal.hold_time}</div>` : ''}
               </div>
 
               <div class="confidence-section">
@@ -1074,6 +1055,72 @@
       app.innerHTML = html;
     }
 
+    function renderPausedState(reason) {
+      const stats = data?.stats || {};
+      const expectancy = stats.expectancy_per_trade ?? stats.expectancy ?? 0;
+      
+      return `
+        <div class="alert-banner">
+          <div class="alert-icon">⏸️</div>
+          <div class="alert-content">
+            <div class="alert-title">Trading Paused - Equity Protection Active</div>
+            <div class="alert-message">${reason || 'System paused due to consecutive losses'}</div>
+          </div>
+        </div>
+
+        <div class="hero-stats">
+          <div class="hero-card">
+            <div class="hero-label">Status</div>
+            <div class="hero-value" style="font-size: 32px;">PAUSED</div>
+            <div class="hero-subtitle">
+              <span>Equity protection enabled</span>
+            </div>
+          </div>
+          
+          <div class="hero-card">
+            <div class="hero-label">Win Rate</div>
+            <div class="hero-value">${(stats.win_rate || 0).toFixed(1)}%</div>
+            <div class="hero-subtitle">
+              <span class="${stats.win_rate >= 50 ? 'change-positive' : 'change-negative'}">
+                ${stats.wins || 0}W / ${stats.losses || 0}L
+              </span>
+            </div>
+          </div>
+          
+          <div class="hero-card">
+            <div class="hero-label">Total Pips</div>
+            <div class="hero-value">${(stats.total_pips || 0).toFixed(1)}</div>
+            <div class="hero-subtitle">
+              <span class="${(stats.total_pips || 0) >= 0 ? 'change-positive' : 'change-negative'}">
+                ${stats.total_trades || 0} total trades
+              </span>
+            </div>
+          </div>
+          
+          <div class="hero-card">
+            <div class="hero-label">Expectancy</div>
+            <div class="hero-value">${(expectancy || 0).toFixed(2)}</div>
+            <div class="hero-subtitle">
+              <span class="${(expectancy || 0) >= 0 ? 'change-positive' : 'change-negative'}">
+                pips per trade
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="empty-state">
+          <div class="empty-icon">🛡️</div>
+          <div class="empty-title">Trading Temporarily Paused</div>
+          <div class="empty-message">
+            The system has automatically paused signal generation to protect your account after detecting consecutive losses.
+            Trading will resume automatically once the cooldown period expires.
+          </div>
+        </div>
+
+        ${renderRecentTrades()}
+      `;
+    }
+
     function renderRecentTrades() {
       if (!data || !data.signals) return '';
       
@@ -1095,12 +1142,13 @@
                 <th>Exit</th>
                 <th>Pips</th>
                 <th>Status</th>
+                <th>Confidence</th>
                 <th>Time</th>
               </tr>
             </thead>
             <tbody>
               ${recentTrades.map(trade => {
-                const pips = calculatePips(trade.entry_price, trade.exit_price || trade.tp, trade.pair);
+                const pips = trade.pips || calculatePips(trade.entry_price, trade.exit_price || (trade.status === 'WIN' ? trade.tp : trade.sl), trade.pair);
                 const statusClass = trade.status === 'WIN' ? 'trade-win' : trade.status === 'LOSS' ? 'trade-loss' : 'trade-open';
                 
                 return `
@@ -1108,9 +1156,12 @@
                     <td><strong>${trade.pair}</strong></td>
                     <td>${trade.direction}</td>
                     <td>${formatPrice(trade.entry_price)}</td>
-                    <td>${formatPrice(trade.exit_price || trade.tp)}</td>
-                    <td>${pips.toFixed(1)}</td>
+                    <td>${formatPrice(trade.exit_price || (trade.status === 'WIN' ? trade.tp : trade.sl))}</td>
+                    <td style="color: ${pips >= 0 ? 'var(--success)' : 'var(--danger)'}; font-weight: 700;">
+                      ${pips >= 0 ? '+' : ''}${pips.toFixed(1)}
+                    </td>
                     <td class="${statusClass}">${trade.status || 'OPEN'}</td>
+                    <td style="color: ${confidenceColor(trade.confidence)}">${trade.confidence || '-'}</td>
                     <td>${formatTime(trade.closed_at || trade.timestamp)}</td>
                   </tr>
                 `;
@@ -1135,48 +1186,6 @@
       currentMode = mode;
       localStorage.setItem('tradeBeaconMode', mode);
       render();
-    }
-
-    function updateTicker(signals) {
-      const tickerContent = document.getElementById('tickerContent');
-      if (!signals || signals.length === 0) {
-        tickerContent.innerHTML = '<div class="ticker-item"><span>No recent trades today</span></div>';
-        return;
-      }
-
-      // Get today's closed trades
-      const today = new Date().toDateString();
-      const todayTrades = signals.filter(s => {
-        if (!s.closed_at && !s.timestamp) return false;
-        const tradeDate = new Date(s.closed_at || s.timestamp).toDateString();
-        return tradeDate === today && s.status && s.status !== 'OPEN';
-      });
-
-      if (todayTrades.length === 0) {
-        tickerContent.innerHTML = '<div class="ticker-item"><span>⏳ No completed trades today yet</span></div>';
-        return;
-      }
-
-      // Create ticker items (duplicate for seamless loop)
-      const items = todayTrades.map(trade => {
-        const isWin = trade.status === 'WIN';
-        const pips = trade.pips || calculatePips(trade.entry_price, trade.exit_price || (isWin ? trade.tp : trade.sl), trade.pair);
-        const direction = trade.direction === 'BUY' ? '📈' : '📉';
-        
-        return `
-          <div class="ticker-item ${isWin ? 'win' : 'loss'}">
-            <span>${direction}</span>
-            <span class="ticker-pair">${trade.pair}</span>
-            <span class="ticker-pips ${pips >= 0 ? 'positive' : 'negative'}">
-              ${pips >= 0 ? '+' : ''}${pips.toFixed(1)} pips
-            </span>
-            <span class="ticker-badge ${isWin ? 'win' : 'loss'}">${trade.status}</span>
-          </div>
-        `;
-      }).join('');
-
-      // Duplicate content for seamless loop
-      tickerContent.innerHTML = items + items;
     }
 
     fetchData();

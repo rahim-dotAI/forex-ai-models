@@ -1428,19 +1428,29 @@ def main():
         write_dashboard_state([], 0, 0, 0)
         return
     
-    # ✅ FIX 2 & FIX 3: Global config AND mode update after optimization
-    # Removed: global CONFIG, SETTINGS, MODE (OPTION A - Variables are already module-level)
+    # ✅ OPTION 1 IMPLEMENTATION: Use local variables instead of reassigning globals
+    # Get the current config
+    current_config = CONFIG
+    current_mode = MODE
+    current_settings = SETTINGS
     
-    if CONFIG.get("performance_tuning", {}).get("auto_adjust_thresholds", False):
-        CONFIG = optimize_thresholds_if_needed(CONFIG)
-        MODE = CONFIG["mode"]  # Re-sync MODE in case optimization changed it
-        SETTINGS = CONFIG["settings"][MODE]
+    # Apply optimization if needed (returns a new config, doesn't modify global)
+    if current_config.get("performance_tuning", {}).get("auto_adjust_thresholds", False):
+        optimized_config = optimize_thresholds_if_needed(current_config)
+        
+        # Use optimized values for this run only
+        current_mode = optimized_config["mode"]
+        current_settings = optimized_config["settings"][current_mode]
+        
+        log.info(f"⚙️ Using optimized thresholds: {current_settings.get('threshold')}")
+    else:
+        optimized_config = current_config
 
     sentiment_status = "ON" if USE_SENTIMENT else "OFF"
-    log.info(f"🚀 Starting Trade Beacon v2.0.4 - Mode={MODE} | Sentiment={sentiment_status}")
+    log.info(f"🚀 Starting Trade Beacon v2.0.4 - Mode={current_mode} | Sentiment={sentiment_status}")
     log.info(f"📊 Monitoring {len(PAIRS)} pairs: {', '.join([p.replace('=X', '') for p in PAIRS])}")
     log.info(f"💰 Features: Performance Optimization | Equity Protection | Risk Limits")
-    log.info(f"🎯 Threshold: {SETTINGS.get('threshold')} | Min ADX: {SETTINGS.get('min_adx')} | Min R:R: {SETTINGS.get('min_risk_reward')}")
+    log.info(f"🎯 Threshold: {current_settings.get('threshold')} | Min ADX: {current_settings.get('min_adx')} | Min R:R: {current_settings.get('min_risk_reward')}")
     
     active = []
     successful_downloads = 0
@@ -1452,7 +1462,7 @@ def main():
 
     log.info("🔍 Analyzing pairs in parallel...")
     
-    max_workers = CONFIG.get("advanced", {}).get("parallel_workers", 5)
+    max_workers = optimized_config.get("advanced", {}).get("parallel_workers", 5)
     
     with ThreadPoolExecutor(max_workers=min(max_workers, len(PAIRS))) as executor:
         futures = {executor.submit(generate_signal, pair): pair for pair in PAIRS}
@@ -1478,9 +1488,9 @@ def main():
             except Exception as e:
                 log.error(f"❌ {pair.replace('=X', '')} failed: {e}")
 
-    # Apply risk management filters
+    # Apply risk management filters using the optimized config
     if active:
-        active, risk_warnings = check_risk_limits(active, CONFIG)
+        active, risk_warnings = check_risk_limits(active, optimized_config)
         for warning in risk_warnings:
             log.warning(f"⚠️ Risk Management: {warning}")
 
@@ -1497,7 +1507,24 @@ def main():
             log.info("⚠️ Continuing with technical signals only")
 
     log.info(f"\n✅ Cycle complete | Active signals: {len(active)}")
-    write_dashboard_state(active, successful_downloads, newsapi_calls, marketaux_calls)
+    
+    # Use current_mode for dashboard display
+    temp_mode = current_mode
+    temp_settings = current_settings
+    
+    # Temporarily update global for dashboard functions that need it
+    global MODE, SETTINGS
+    original_mode = MODE
+    original_settings = SETTINGS
+    
+    try:
+        MODE = temp_mode
+        SETTINGS = temp_settings
+        write_dashboard_state(active, successful_downloads, newsapi_calls, marketaux_calls)
+    finally:
+        # Restore original values
+        MODE = original_mode
+        SETTINGS = original_settings
 
     if active:
         df = pd.DataFrame(active)
@@ -1505,7 +1532,7 @@ def main():
         log.info("📄 signals.csv written")
         
         print("\n" + "="*80)
-        print(f"🎯 {MODE.upper()} SIGNALS {'+ SENTIMENT' if USE_SENTIMENT else ''} (v2.0.4):")
+        print(f"🎯 {current_mode.upper()} SIGNALS {'+ SENTIMENT' if USE_SENTIMENT else ''} (v2.0.4):")
         print("="*80)
         
         display_cols = ["signal_id", "pair", "direction", "score", "confidence", 

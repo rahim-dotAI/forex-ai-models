@@ -1,16 +1,14 @@
 """
-Trade Beacon v2.0.3 - Forex Signal Generator (COMPLETE ENHANCED VERSION)
+Trade Beacon v2.0.4 - Forex Signal Generator (PERFORMANCE-OPTIMIZED VERSION)
 ==========================================
 
-ENHANCEMENTS (v2.0.3):
-- Configurable ATR multipliers and risk-reward minimums
-- Enhanced signal validation (stale signals, unrealistic prices)
-- Dynamic session bonuses from config
-- Risk management limits (max positions, daily risk, correlation)
-- Performance-based optimization support
-- Mode-specific parameter loading
-- IMPROVED: Robust error handling for performance tracking
-- IMPROVED: Safe dictionary access patterns
+ENHANCEMENTS (v2.0.4):
+- Performance-based threshold optimization
+- Equity protection with consecutive loss tracking
+- Enhanced validation with direction requirement
+- Improved config alignment with performance tracker
+- Auto-pause on drawdown limits
+- Better logging for performance tracking
 
 This is a SIGNAL GENERATOR ONLY - no trade execution logic.
 """
@@ -35,7 +33,7 @@ from ta.momentum import RSIIndicator
 from ta.volatility import AverageTrueRange
 
 # Import performance tracker
-from performance_tracker import track_performance
+from performance_tracker import PerformanceTracker
 
 # =========================
 # SIGNAL GENERATOR MODE - CRITICAL SAFEGUARD
@@ -165,7 +163,7 @@ def retry_with_backoff(max_retries=3, backoff_factor=5):
     return decorator
 
 # =========================
-# LOAD DYNAMIC CONFIG
+# LOAD DYNAMIC CONFIG WITH PERFORMANCE OPTIMIZATION
 # =========================
 def load_config():
     config_path = Path("config.json")
@@ -187,68 +185,107 @@ def load_config():
         log.error(f"❌ Settings missing for mode '{mode}'")
         raise ValueError(f"Config incomplete for mode: {mode}")
     
-    # ✅ ENFORCE MINIMUM THRESHOLD
-    if config["settings"]["aggressive"]["threshold"] < 45:
-        log.warning(f"⚠️ Aggressive threshold too low, raising to 48")
-        config["settings"]["aggressive"]["threshold"] = 48
+    # ✅ NEW: Validate performance tracking config
+    perf_config = config.get("performance_tracking", {})
+    if perf_config.get("enable", True):
+        log.info(f"✅ Performance tracking enabled: {perf_config.get('history_file', 'signal_state/signal_history.json')}")
     
-    log.info(f"✅ Config loaded: mode={mode}, sentiment={config.get('use_sentiment', False)}")
+    log.info(f"✅ Config loaded: mode={mode}, sentiment={config.get('use_sentiment', False)}, "
+             f"performance_optimization={config.get('advanced', {}).get('enable_performance_optimization', False)}")
     return config
 
 def _default_config():
-    """Enhanced default configuration"""
+    """Enhanced default configuration matching new structure"""
     return {
         "mode": "aggressive",
         "use_sentiment": False,
         "settings": {
             "aggressive": {
-                "threshold": 48,
-                "min_adx": 20,
+                "threshold": 42,
+                "min_adx": 15,
                 "rsi_oversold": 35,
                 "rsi_overbought": 65,
-                "min_volume_ratio": 1.1,
+                "min_volume_ratio": 1.0,
                 "volume_penalty": 10,
                 "min_risk_reward": 1.5,
                 "atr_stop_multiplier": 2.5,
                 "atr_target_multiplier": 5.0,
-                "max_correlated_signals": 2,
-                "max_signal_age_minutes": 60
+                "max_correlated_signals": 2
             },
             "conservative": {
-                "threshold": 58,
-                "min_adx": 25,
+                "threshold": 55,
+                "min_adx": 22,
                 "rsi_oversold": 30,
                 "rsi_overbought": 70,
-                "min_volume_ratio": 1.3,
+                "min_volume_ratio": 1.2,
                 "volume_penalty": 15,
                 "min_risk_reward": 2.0,
                 "atr_stop_multiplier": 3.0,
                 "atr_target_multiplier": 6.0,
-                "max_correlated_signals": 1,
-                "max_signal_age_minutes": 45
+                "max_correlated_signals": 1
             }
         },
         "advanced": {
             "enable_session_filtering": True,
             "enable_correlation_filter": True,
+            "enable_performance_optimization": True,
             "cache_ttl_minutes": 5,
+            "parallel_workers": 5,
             "session_bonuses": {
                 "ASIAN": {"JPY_pairs": 5, "AUD_NZD_pairs": 5, "other": 0},
                 "EUROPEAN": {"EUR_GBP_pairs": 5, "EUR_GBP_crosses": 3, "other": 0},
                 "OVERLAP": {"all_major_pairs": 3},
-                "US": {"USD_majors": 5, "other": 0}
+                "US": {"USD_majors": 5, "other": 0},
+                "LATE_US": {"all_major_pairs": 0}
             },
             "validation": {
                 "max_price_change_pct": 0.05,
-                "max_signal_age_seconds": 300,
-                "min_sl_pips": {"JPY_pairs": 15, "other": 10},
-                "max_spread_ratio": 0.3
+                "max_signal_age_seconds": 600,
+                "min_sl_pips": {"JPY_pairs": 12, "other": 7},
+                "max_spread_ratio": 0.3,
+                "require_direction": True,
+                "reject_missing_pips": True
             }
         },
         "risk_management": {
             "max_daily_risk_pips": 200,
             "max_open_positions": 5,
-            "max_correlated_exposure": 2
+            "max_correlated_exposure": 2,
+            "stop_trading_on_drawdown_pips": 150,
+            "equity_protection": {
+                "enable": True,
+                "max_consecutive_losses": 4,
+                "pause_minutes_after_hit": 60
+            }
+        },
+        "performance_tracking": {
+            "enable": True,
+            "history_file": "signal_state/signal_history.json",
+            "idempotency": {"enabled": True, "scope": "daily"},
+            "equity_curve": {"enabled": True, "max_points": 1000},
+            "analytics": {
+                "track_by_pair": True,
+                "track_by_confidence": True,
+                "track_by_session": False
+            },
+            "exports": {"enable_csv": True, "csv_path": "performance_export.csv"}
+        },
+        "performance_tuning": {
+            "auto_adjust_thresholds": False,
+            "min_trades_for_optimization": 30,
+            "optimization_interval_days": 7,
+            "target_win_rate": 0.55,
+            "optimization_inputs": {
+                "use_expectancy": True,
+                "use_win_rate": True,
+                "use_avg_rr": True,
+                "min_expectancy": 0.1
+            }
+        },
+        "logging": {
+            "performance_level": "INFO",
+            "log_equity_updates": True,
+            "log_duplicate_signals": True
         }
     }
 
@@ -312,18 +349,28 @@ MODE = CONFIG["mode"]
 USE_SENTIMENT = CONFIG.get("use_sentiment", False) and validate_api_keys()
 SETTINGS = CONFIG["settings"][MODE]
 
+# ✅ NEW: Initialize performance tracker
+PERFORMANCE_TRACKER = None
+if CONFIG.get("performance_tracking", {}).get("enable", True):
+    try:
+        history_file = CONFIG["performance_tracking"].get("history_file", "signal_state/signal_history.json")
+        PERFORMANCE_TRACKER = PerformanceTracker(history_file=history_file)
+        log.info("✅ Performance tracker initialized")
+    except Exception as e:
+        log.error(f"⚠️ Could not initialize performance tracker: {e}")
+        PERFORMANCE_TRACKER = None
+
 # =========================
-# ENHANCED SIGNAL VALIDATION (v2.0.3)
+# ENHANCED SIGNAL VALIDATION (v2.0.4)
 # =========================
 def validate_signal_quality(signal: Dict, config: Dict) -> Tuple[bool, List[str]]:
     """
     Enhanced quality check before emitting signal.
     
-    v2.0.3 improvements:
-    - Configurable validation thresholds
-    - Unrealistic price change detection
-    - Stale signal filtering
-    - Mode-specific validation
+    v2.0.4 improvements:
+    - Direction validation requirement
+    - Missing pips rejection
+    - Stricter validation from config
     
     Returns: (is_valid, list_of_warnings)
     """
@@ -331,6 +378,13 @@ def validate_signal_quality(signal: Dict, config: Dict) -> Tuple[bool, List[str]
     validation_config = config.get("advanced", {}).get("validation", {})
     mode = config.get("mode", "aggressive")
     mode_settings = config["settings"][mode]
+    
+    # ✅ NEW: Check 0 - Direction requirement
+    if validation_config.get("require_direction", True):
+        direction = signal.get('direction')
+        if direction not in ("BUY", "SELL"):
+            warnings.append(f"Invalid or missing direction: {direction}")
+            return False, warnings
     
     # Check 1: Valid stop loss distance
     sl_distance = abs(signal['entry_price'] - signal['sl'])
@@ -364,13 +418,19 @@ def validate_signal_quality(signal: Dict, config: Dict) -> Tuple[bool, List[str]
     min_sl_pips_config = validation_config.get("min_sl_pips", {})
     
     if "JPY" in signal['pair']:
-        min_sl_pips = min_sl_pips_config.get("JPY_pairs", 15)
+        min_sl_pips = min_sl_pips_config.get("JPY_pairs", 12)
         pip_value = 0.01
     else:
-        min_sl_pips = min_sl_pips_config.get("other", 10)
+        min_sl_pips = min_sl_pips_config.get("other", 7)
         pip_value = 0.0001
     
     sl_pips = sl_distance / pip_value
+    
+    # ✅ NEW: Reject missing pips if configured
+    if validation_config.get("reject_missing_pips", True) and sl_pips < 1:
+        warnings.append(f"Missing or invalid pip calculation: {sl_pips:.1f}")
+        return False, warnings
+    
     if sl_pips < min_sl_pips:
         warnings.append(f"Stop too tight: {sl_pips:.1f} pips < {min_sl_pips}")
         return False, warnings
@@ -381,7 +441,7 @@ def validate_signal_quality(signal: Dict, config: Dict) -> Tuple[bool, List[str]
         warnings.append(f"Poor R:R: {signal['risk_reward']:.2f} < {min_rr}")
         return False, warnings
     
-    # Check 6: NEW - Unrealistic price change detection
+    # Check 6: Unrealistic price change detection
     max_price_change = validation_config.get("max_price_change_pct", 0.05)
     price_change_pct = abs(signal['tp'] - signal['sl']) / signal['entry_price']
     
@@ -389,8 +449,8 @@ def validate_signal_quality(signal: Dict, config: Dict) -> Tuple[bool, List[str]
         warnings.append(f"Unrealistic TP/SL spread: {price_change_pct:.1%} > {max_price_change:.1%}")
         return False, warnings
     
-    # Check 7: NEW - Stale signal detection
-    max_age = validation_config.get("max_signal_age_seconds", 300)
+    # Check 7: Stale signal detection
+    max_age = validation_config.get("max_signal_age_seconds", 600)
     try:
         signal_time = datetime.fromisoformat(signal['timestamp'].replace('Z', '+00:00'))
         signal_age = (datetime.now(timezone.utc) - signal_time).total_seconds()
@@ -564,6 +624,9 @@ def calculate_dynamic_session_bonus(pair: str, session: str, config: Dict) -> in
         if "USD" in pair and pair in ["EURUSD", "GBPUSD", "USDCAD"]:
             return bonuses.get("USD_majors", 0)
         return bonuses.get("other", 0)
+    
+    elif session == "LATE_US":
+        return bonuses.get("all_major_pairs", 0)
     
     return 0
 
@@ -1123,16 +1186,187 @@ def get_signal_type(e12: float, e26: float, e200: float, rsi: float) -> str:
         return "breakout"
 
 # =========================
+# ✅ NEW: EQUITY PROTECTION CHECK
+# =========================
+def check_equity_protection(config: Dict) -> Tuple[bool, str]:
+    """
+    Check if trading should be paused due to consecutive losses.
+    
+    Returns: (should_continue, reason)
+    """
+    equity_config = config.get("risk_management", {}).get("equity_protection", {})
+    
+    if not equity_config.get("enable", True):
+        return True, ""
+    
+    if not PERFORMANCE_TRACKER:
+        return True, ""
+    
+    max_consecutive_losses = equity_config.get("max_consecutive_losses", 4)
+    pause_minutes = equity_config.get("pause_minutes_after_hit", 60)
+    
+    # Check for pause file
+    pause_file = Path("signal_state/trading_paused.json")
+    if pause_file.exists():
+        try:
+            with open(pause_file, 'r') as f:
+                pause_data = json.load(f)
+                paused_until = datetime.fromisoformat(pause_data.get("paused_until"))
+                
+                if datetime.now(timezone.utc) < paused_until:
+                    remaining = (paused_until - datetime.now(timezone.utc)).total_seconds() / 60
+                    return False, f"Trading paused for {remaining:.1f} more minutes due to consecutive losses"
+                else:
+                    # Pause expired, remove file
+                    pause_file.unlink()
+        except Exception as e:
+            log.warning(f"⚠️ Could not read pause file: {e}")
+            pause_file.unlink()
+    
+    # Check recent consecutive losses
+    signals = PERFORMANCE_TRACKER.history.get("signals", [])
+    recent_closed = [s for s in signals if s.get("status") in ("WIN", "LOSS")][-10:]
+    
+    if not recent_closed:
+        return True, ""
+    
+    consecutive_losses = 0
+    for signal in reversed(recent_closed):
+        if signal.get("status") == "LOSS":
+            consecutive_losses += 1
+        else:
+            break
+    
+    if consecutive_losses >= max_consecutive_losses:
+        # Create pause file
+        paused_until = datetime.now(timezone.utc) + timedelta(minutes=pause_minutes)
+        pause_data = {
+            "paused_at": datetime.now(timezone.utc).isoformat(),
+            "paused_until": paused_until.isoformat(),
+            "reason": f"{consecutive_losses} consecutive losses",
+            "consecutive_losses": consecutive_losses
+        }
+        
+        pause_file.parent.mkdir(exist_ok=True)
+        with open(pause_file, 'w') as f:
+            json.dump(pause_data, f, indent=2)
+        
+        return False, f"Trading paused for {pause_minutes} minutes after {consecutive_losses} consecutive losses"
+    
+    return True, ""
+
+
+# =========================
+# ✅ NEW: PERFORMANCE-BASED THRESHOLD OPTIMIZATION
+# =========================
+def optimize_thresholds_if_needed(config: Dict) -> Dict:
+    """
+    Automatically adjust thresholds based on performance history.
+    
+    Returns: Updated config (or original if no optimization needed)
+    """
+    tuning_config = config.get("performance_tuning", {})
+    
+    if not tuning_config.get("auto_adjust_thresholds", False):
+        return config
+    
+    if not PERFORMANCE_TRACKER:
+        log.info("⚙️ Performance tracker not available, skipping optimization")
+        return config
+    
+    stats = PERFORMANCE_TRACKER.history.get("stats", {})
+    total_trades = stats.get("total_trades", 0)
+    min_trades = tuning_config.get("min_trades_for_optimization", 30)
+    
+    if total_trades < min_trades:
+        log.info(f"⚙️ Not enough trades for optimization ({total_trades}/{min_trades})")
+        return config
+    
+    # Check if optimization is due
+    last_optimization_file = Path("signal_state/last_optimization.json")
+    if last_optimization_file.exists():
+        try:
+            with open(last_optimization_file, 'r') as f:
+                last_opt = json.load(f)
+                last_opt_time = datetime.fromisoformat(last_opt.get("timestamp"))
+                days_since = (datetime.now(timezone.utc) - last_opt_time).days
+                
+                interval_days = tuning_config.get("optimization_interval_days", 7)
+                if days_since < interval_days:
+                    log.info(f"⚙️ Optimization not due yet ({days_since}/{interval_days} days)")
+                    return config
+        except Exception:
+            pass
+    
+    # Run optimization
+    log.info("⚙️ Running threshold optimization...")
+    
+    win_rate = stats.get("win_rate", 0) / 100
+    expectancy = stats.get("expectancy", 0)
+    target_win_rate = tuning_config.get("target_win_rate", 0.55)
+    min_expectancy = tuning_config.get("optimization_inputs", {}).get("min_expectancy", 0.1)
+    
+    mode = config.get("mode", "aggressive")
+    current_threshold = config["settings"][mode]["threshold"]
+    
+    # Determine adjustment
+    adjustment = 0
+    
+    if expectancy < min_expectancy:
+        # Too many losing trades, raise threshold
+        adjustment = 3
+        reason = f"Low expectancy ({expectancy:.2f} < {min_expectancy})"
+    elif win_rate < target_win_rate - 0.05:
+        # Win rate too low, raise threshold
+        adjustment = 2
+        reason = f"Low win rate ({win_rate:.1%} vs target {target_win_rate:.1%})"
+    elif win_rate > target_win_rate + 0.10 and expectancy > min_expectancy * 2:
+        # Performing very well, can lower threshold for more signals
+        adjustment = -2
+        reason = f"Excellent performance (WR: {win_rate:.1%}, Exp: {expectancy:.2f})"
+    
+    if adjustment != 0:
+        new_threshold = current_threshold + adjustment
+        
+        # Safety bounds
+        if mode == "aggressive":
+            new_threshold = max(38, min(52, new_threshold))
+        else:
+            new_threshold = max(50, min(65, new_threshold))
+        
+        config["settings"][mode]["threshold"] = new_threshold
+        
+        log.info(f"✅ Threshold optimized: {current_threshold} → {new_threshold} ({reason})")
+        
+        # Save optimization record
+        opt_record = {
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "mode": mode,
+            "old_threshold": current_threshold,
+            "new_threshold": new_threshold,
+            "reason": reason,
+            "stats": stats
+        }
+        
+        last_optimization_file.parent.mkdir(exist_ok=True)
+        with open(last_optimization_file, 'w') as f:
+            json.dump(opt_record, f, indent=2)
+    else:
+        log.info("✅ Current thresholds are optimal, no adjustment needed")
+    
+    return config
+
+
+# =========================
 # ENHANCED SIGNAL ENGINE WITH CONFIGURABLE PARAMETERS
 # =========================
 def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
     """
     Generate trading signal with configurable parameters from config.
     
-    v2.0.3 enhancements:
-    - ATR multipliers from config
-    - Mode-specific minimum R:R
-    - Dynamic session bonuses
+    v2.0.4 enhancements:
+    - Equity protection checks
+    - Performance-based optimization support
     - Enhanced validation
     
     Returns:
@@ -1173,7 +1407,7 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
         return None, download_success
 
     # ADX filter (from config)
-    min_adx = SETTINGS.get("min_adx", 20)
+    min_adx = SETTINGS.get("min_adx", 15)
     if a < min_adx:
         log.info(f"❌ {pair} | ADX too low ({a:.1f} < {min_adx})")
         return None, download_success
@@ -1249,7 +1483,7 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
     diff = abs(bull - bear)
 
     # Threshold check (from config)
-    threshold = SETTINGS.get("threshold", 48)
+    threshold = SETTINGS.get("threshold", 42)
     if diff < threshold:
         return None, download_success
 
@@ -1298,7 +1532,7 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
     
     # Generate timestamp and expiration
     now = datetime.now(timezone.utc)
-    valid_for_minutes = SETTINGS.get("max_signal_age_minutes", 60)
+    valid_for_minutes = CONFIG.get("advanced", {}).get("validation", {}).get("max_signal_age_seconds", 600) / 60
     expires_at = now + timedelta(minutes=valid_for_minutes)
     
     # Calculate backend intelligence
@@ -1312,6 +1546,7 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
     signal = {
         # Unique identifier
         "signal_id": signal_id,
+        "id": signal_id,  # ✅ NEW: Add 'id' for performance tracker compatibility
         
         "pair": clean_pair,
         "direction": direction,
@@ -1330,6 +1565,7 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
         "risk_reward": round(risk_reward, 2),
         "spread": round(spread, 5),
         "timestamp": now.isoformat(),
+        "status": "OPEN",  # ✅ NEW: Add status for tracking
         
         # Backend intelligence
         "hold_time": hold_time,
@@ -1345,13 +1581,13 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
             "generated_at": now.isoformat(),
             "expires_at": expires_at.isoformat(),
             "session_active": session,
-            "signal_generator_version": "2.0.3",
+            "signal_generator_version": "2.0.4",
             "atr_stop_multiplier": atr_stop_mult,
             "atr_target_multiplier": atr_target_mult
         }
     }
     
-    # ✅ v2.0.3: Enhanced validation with config
+    # ✅ v2.0.4: Enhanced validation with config
     is_valid, warnings = validate_signal_quality(signal, CONFIG)
     
     if not is_valid:
@@ -1451,6 +1687,16 @@ def check_risk_limits(signals: List[Dict], config: Dict) -> Tuple[List[Dict], Li
     if config.get("advanced", {}).get("enable_correlation_filter", True):
         filtered = filter_correlated_signals_enhanced(filtered, max_correlated)
     
+    # ✅ NEW: Check 4 - Drawdown protection
+    stop_on_drawdown = risk_config.get("stop_trading_on_drawdown_pips", 150)
+    if PERFORMANCE_TRACKER:
+        stats = PERFORMANCE_TRACKER.history.get("stats", {})
+        total_pips = stats.get("total_pips", 0)
+        
+        if total_pips < -stop_on_drawdown:
+            warnings.append(f"⚠️ Trading halted: Drawdown limit reached ({total_pips:.1f} pips)")
+            return [], warnings
+    
     return filtered, warnings
 
 
@@ -1500,7 +1746,7 @@ def enhance_with_sentiment(signals: List[Dict], news_agg: NewsAggregator) -> Lis
         signal['sentiment_score'] = adjustment
         
         # Re-validate against threshold after sentiment
-        threshold = SETTINGS.get("threshold", 48)
+        threshold = SETTINGS.get("threshold", 42)
         if signal['score'] < threshold:
             log.info(f"❌ {pair} | Signal too weak after sentiment ({signal['score']} < {threshold})")
             continue
@@ -1567,34 +1813,50 @@ def calculate_daily_pips(signals: List[Dict]) -> float:
     return round(daily_pips, 1)
 
 
+def get_performance_summary() -> Dict:
+    """
+    Get performance summary from tracker with error handling.
+    
+    Returns empty dict on error.
+    """
+    if not PERFORMANCE_TRACKER:
+        return {"stats": {}, "analytics": {}, "risk_management": {}}
+    
+    try:
+        return PERFORMANCE_TRACKER.get_dashboard_summary()
+    except Exception as e:
+        log.error(f"⚠️ Could not get performance summary: {e}")
+        return {"stats": {}, "analytics": {}, "risk_management": {}}
+
+
 def write_dashboard_state(signals: list, successful_downloads: int, newsapi_calls: int = 0, marketaux_calls: int = 0):
     """
     Write comprehensive dashboard state with backend intelligence.
     
-    v2.0.3 IMPROVEMENTS:
+    v2.0.4 IMPROVEMENTS:
     - Robust error handling for performance tracking
     - Safe dictionary access with fallbacks
-    - Prevents KeyError crashes in CI/CD
+    - Equity protection status
+    - Optimization history
     """
     
     session = get_market_session()
     daily_pips = calculate_daily_pips(signals)
     
     # ✅ ENHANCED: Safe performance tracking with error handling
-    try:
-        performance = track_performance(signals)
-    except Exception as e:
-        log.error(f"⚠️ Performance tracking failed: {e}")
-        performance = {"stats": {}, "analytics": {}, "risk_management": {}}
+    performance = get_performance_summary()
     
     # ✅ ENHANCED: Defensive dictionary access with fallbacks
     stats = performance.get("stats", {}) or {}
     analytics = performance.get("analytics", {}) or {}
-    risk_mgmt = performance.get("risk_management", {}) or {}
+    equity = performance.get("equity", {}) or {}
     
     # Calculate market state (frontend will trust this)
     market_volatility = calculate_market_volatility(signals)
     market_sentiment = calculate_market_sentiment(signals)
+    
+    # ✅ NEW: Check equity protection status
+    can_trade, pause_reason = check_equity_protection(CONFIG)
 
     dashboard_data = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -1602,6 +1864,13 @@ def write_dashboard_state(signals: list, successful_downloads: int, newsapi_call
         "session": session,
         "mode": MODE,
         "sentiment_enabled": USE_SENTIMENT,
+        
+        # ✅ NEW: Equity protection status
+        "equity_protection": {
+            "enabled": CONFIG.get("risk_management", {}).get("equity_protection", {}).get("enable", True),
+            "can_trade": can_trade,
+            "pause_reason": pause_reason if not can_trade else None
+        },
         
         # Market state for frontend
         "market_state": {
@@ -1628,25 +1897,33 @@ def write_dashboard_state(signals: list, successful_downloads: int, newsapi_call
             "win_rate": stats.get("win_rate", 0),
             "total_pips": stats.get("total_pips", 0),
             "wins": stats.get("wins", 0),
-            "losses": stats.get("losses", 0)
+            "losses": stats.get("losses", 0),
+            "avg_win": stats.get("avg_win", 0),
+            "avg_loss": stats.get("avg_loss", 0),
+            "expectancy": stats.get("expectancy", 0)
         },
         
         # ✅ ENHANCED: Safe risk management access
         "risk_management": {
             "daily_pips": daily_pips,
-            "total_risk_pips": risk_mgmt.get("total_risk_pips", 0),
-            "max_drawdown": risk_mgmt.get("max_drawdown", 0),
-            "average_risk_reward": risk_mgmt.get("average_risk_reward", 0)
+            "total_risk_pips": sum(abs(s.get('entry_price', 0) - s.get('sl', 0)) * 10000 for s in signals),
+            "max_daily_risk": CONFIG.get("risk_management", {}).get("max_daily_risk_pips", 200),
+            "max_positions": CONFIG.get("risk_management", {}).get("max_open_positions", 5)
         },
         
         # ✅ ENHANCED: Include analytics if available
         "analytics": analytics,
         
+        # ✅ NEW: Equity curve
+        "equity_curve": equity.get("curve", []),
+        
         "system": {
             "last_update": datetime.now(timezone.utc).isoformat(),
             "data_sources_available": successful_downloads > 0,
             "sentiment_available": newsapi_calls > 0 or marketaux_calls > 0,
-            "version": "2.0.3"
+            "performance_tracking_enabled": PERFORMANCE_TRACKER is not None,
+            "optimization_enabled": CONFIG.get("performance_tuning", {}).get("auto_adjust_thresholds", False),
+            "version": "2.0.4"
         }
     }
 
@@ -1662,24 +1939,28 @@ def write_dashboard_state(signals: list, successful_downloads: int, newsapi_call
     # ✅ ENHANCED: Safe stats logging
     if stats.get("total_trades", 0) > 0:
         log.info(f"📈 Performance: {stats.get('total_trades', 0)} trades | "
-                f"Win Rate: {stats.get('win_rate', 0)}% | "
-                f"Total Pips: {stats.get('total_pips', 0)} | "
-                f"Daily Pips: {daily_pips}")
+                f"Win Rate: {stats.get('win_rate', 0):.1f}% | "
+                f"Total Pips: {stats.get('total_pips', 0):.1f} | "
+                f"Expectancy: {stats.get('expectancy', 0):.2f}")
     
-    write_health_check(signals, successful_downloads, newsapi_calls, marketaux_calls)
+    write_health_check(signals, successful_downloads, newsapi_calls, marketaux_calls, can_trade, pause_reason)
 
 
-def write_health_check(signals: list, successful_downloads: int, newsapi_calls: int, marketaux_calls: int):
+def write_health_check(signals: list, successful_downloads: int, newsapi_calls: int, marketaux_calls: int, can_trade: bool, pause_reason: str):
     """Write health check file for monitoring"""
     
     status = "ok"
     issues = []
     
+    if not can_trade:
+        status = "paused"
+        issues.append(pause_reason)
+    
     if successful_downloads == 0:
         status = "error"
         issues.append("No market data available")
     
-    if len(signals) == 0 and successful_downloads > 0:
+    if len(signals) == 0 and successful_downloads > 0 and can_trade:
         status = "warning"
         issues.append("No signals generated")
     
@@ -1688,6 +1969,7 @@ def write_health_check(signals: list, successful_downloads: int, newsapi_calls: 
         "last_run": datetime.now(timezone.utc).isoformat(),
         "signal_count": len(signals),
         "issues": issues,
+        "can_trade": can_trade,
         "api_status": {
             "yfinance": "ok" if successful_downloads > 0 else "error",
             "newsapi": "ok" if newsapi_calls > 0 else ("disabled" if not USE_SENTIMENT else "error"),
@@ -1697,7 +1979,8 @@ def write_health_check(signals: list, successful_downloads: int, newsapi_calls: 
             "mode": MODE,
             "pairs_monitored": len(PAIRS),
             "last_success": datetime.now(timezone.utc).isoformat() if status == "ok" else None,
-            "version": "2.0.3"
+            "performance_tracking": PERFORMANCE_TRACKER is not None,
+            "version": "2.0.4"
         }
     }
     
@@ -1709,6 +1992,8 @@ def write_health_check(signals: list, successful_downloads: int, newsapi_calls: 
     
     if status == "ok":
         log.info("✅ System health: OK")
+    elif status == "paused":
+        log.warning(f"⏸️ System health: PAUSED - {', '.join(issues)}")
     elif status == "warning":
         log.warning(f"⚠️ System health: WARNING - {', '.join(issues)}")
     else:
@@ -1766,11 +2051,25 @@ def mark_success():
 def main():
     if not in_execution_window():
         return
+    
+    # ✅ NEW: Check equity protection before starting
+    can_trade, pause_reason = check_equity_protection(CONFIG)
+    if not can_trade:
+        log.warning(f"⏸️ {pause_reason}")
+        write_dashboard_state([], 0, 0, 0)
+        return
+    
+    # ✅ NEW: Optimize thresholds if enabled
+    global CONFIG, SETTINGS
+    if CONFIG.get("performance_tuning", {}).get("auto_adjust_thresholds", False):
+        CONFIG = optimize_thresholds_if_needed(CONFIG)
+        SETTINGS = CONFIG["settings"][MODE]
 
     sentiment_status = "ON" if USE_SENTIMENT else "OFF"
-    log.info(f"🚀 Starting Trade Beacon v2.0.3 - Mode={MODE} | Sentiment={sentiment_status}")
+    log.info(f"🚀 Starting Trade Beacon v2.0.4 - Mode={MODE} | Sentiment={sentiment_status}")
     log.info(f"📊 Monitoring {len(PAIRS)} pairs: {', '.join([p.replace('=X', '') for p in PAIRS])}")
-    log.info(f"💰 Features: Configurable ATR | Enhanced validation | Risk limits")
+    log.info(f"💰 Features: Performance Optimization | Equity Protection | Risk Limits")
+    log.info(f"🎯 Threshold: {SETTINGS.get('threshold')} | Min ADX: {SETTINGS.get('min_adx')} | Min R:R: {SETTINGS.get('min_risk_reward')}")
     
     active = []
     successful_downloads = 0
@@ -1782,7 +2081,9 @@ def main():
 
     log.info("🔍 Analyzing pairs in parallel...")
     
-    with ThreadPoolExecutor(max_workers=min(5, len(PAIRS))) as executor:
+    max_workers = CONFIG.get("advanced", {}).get("parallel_workers", 5)
+    
+    with ThreadPoolExecutor(max_workers=min(max_workers, len(PAIRS))) as executor:
         futures = {executor.submit(generate_signal, pair): pair for pair in PAIRS}
         
         for future in as_completed(futures):
@@ -1834,7 +2135,7 @@ def main():
         log.info("📄 signals.csv written")
         
         print("\n" + "="*80)
-        print(f"🎯 {MODE.upper()} SIGNALS {'+ SENTIMENT' if USE_SENTIMENT else ''} (v2.0.3):")
+        print(f"🎯 {MODE.upper()} SIGNALS {'+ SENTIMENT' if USE_SENTIMENT else ''} (v2.0.4):")
         print("="*80)
         
         display_cols = ["signal_id", "pair", "direction", "score", "confidence", 
@@ -1846,7 +2147,7 @@ def main():
         log.info("✅ No strong signals this cycle")
     
     mark_success()
-    log.info("✅ Run completed successfully - Trade Beacon v2.0.3")
+    log.info("✅ Run completed successfully - Trade Beacon v2.0.4")
 
 
 if __name__ == "__main__":

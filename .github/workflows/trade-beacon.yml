@@ -40,11 +40,12 @@ concurrency:
   group: trade-beacon-v2-${{ github.workflow }}
   cancel-in-progress: false
 
+permissions:
+  contents: write
+
 jobs:
   forex-trading:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
       - name: 📥 Checkout repository
@@ -70,7 +71,6 @@ jobs:
           mkdir -p signal_state
           echo "✅ System verified"
 
-      # ✅ NEW: Performance history reset (if requested)
       - name: 🗑️ Reset performance history
         if: github.event.inputs.reset_performance == 'true'
         run: |
@@ -79,7 +79,6 @@ jobs:
           rm -f signal_state/last_optimization.json
           echo "✅ Performance history cleared"
 
-      # ✅ UPDATED: v2.0.6 configuration with new parameters
       - name: ⚙️ Apply v2.0.6 configuration
         if: github.event.inputs.mode != 'default' && github.event.inputs.mode != ''
         run: |
@@ -118,7 +117,6 @@ jobs:
           echo "📄 v2.0.6 configuration applied"
           jq '.' config.json
 
-      # ✅ NEW: Pre-run signal resolution
       - name: 🔄 Resolve previous signals
         run: |
           echo "🔍 Checking for signals to resolve..."
@@ -149,7 +147,6 @@ jobs:
             echo "⚠️ backtest.py not found"
           fi
 
-      # ✅ NEW: Enhanced validation
       - name: 🔍 Validate outputs
         run: |
           echo "📊 Validating dashboard state..."
@@ -158,14 +155,12 @@ jobs:
           echo "🏥 Validating health status..."
           jq '.status, .signal_count, .system_info.version' signal_state/health.json
           
-          # Check for performance tracking
           if [ -f signal_state/signal_history.json ]; then
             RESOLVED=$(jq '.stats.total_resolved // 0' signal_state/signal_history.json)
             TOTAL=$(jq '.signals | length' signal_state/signal_history.json)
             echo "📈 Performance: $RESOLVED resolved / $TOTAL total signals"
           fi
 
-      # ✅ NEW: Performance summary
       - name: 📈 Display performance summary
         if: always()
         run: |
@@ -187,17 +182,14 @@ jobs:
             echo "ℹ️ No performance history available yet"
           fi
 
-      # ✅ UPDATED: Commit state (NO PUSH)
       - name: 💾 Commit state (local only)
         run: |
           git config user.name "Trade Beacon v2.0.6"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Add all relevant files
           git add signal_state/*.json signals.csv config.json || true
           
           if ! git diff --staged --quiet; then
-            # Generate commit message with stats
             SIGNAL_COUNT=$(jq '.active_signals // 0' signal_state/dashboard_state.json 2>/dev/null || echo "0")
             RESOLVED=$(jq '.stats.total_resolved // 0' signal_state/signal_history.json 2>/dev/null || echo "0")
             
@@ -207,7 +199,19 @@ jobs:
             echo "ℹ️ No changes to commit"
           fi
 
-      # ✅ UPDATED: Better artifact organization
+      - name: 🚀 Push changes (ONLY if committed)
+        run: |
+          if git rev-parse --verify HEAD >/dev/null 2>&1; then
+            if git diff --cached --quiet; then
+              echo "ℹ️ No new commits to push"
+            else
+              git push origin HEAD:main
+              echo "✅ Changes pushed to repo"
+            fi
+          else
+            echo "ℹ️ No commit history found yet"
+          fi
+
       - name: 📦 Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -218,7 +222,6 @@ jobs:
             config.json
           retention-days: 7
 
-      # ✅ NEW: Failure notification
       - name: 🚨 Notify on failure
         if: failure()
         run: |

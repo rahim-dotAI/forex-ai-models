@@ -1,24 +1,179 @@
 {
-  "timestamp": "2026-01-22T08:15:56.641510+00:00",
-  "active_signals": 0,
-  "session": "EUROPEAN",
+  "timestamp": "2026-01-22T13:01:23.341333+00:00",
+  "active_signals": 3,
+  "session": "OVERLAP",
   "mode": "aggressive",
   "sentiment_enabled": true,
   "equity_protection": {
     "enabled": true,
-    "can_trade": false,
-    "pause_reason": "Trading paused for 15.2 more minutes due to consecutive losses"
+    "can_trade": true,
+    "pause_reason": null
   },
   "market_state": {
     "volatility": "CALM",
-    "sentiment_bias": "MIXED",
-    "session": "EUROPEAN",
-    "trending_pairs": []
+    "sentiment_bias": "BULLISH",
+    "session": "OVERLAP",
+    "trending_pairs": [
+      "USDCHF",
+      "USDCAD",
+      "EURGBP"
+    ]
   },
-  "signals": [],
+  "signals": [
+    {
+      "signal_id": "USDCHF_BUY_87169_OVERLAP_20260122",
+      "id": "USDCHF_BUY_87169_OVERLAP_20260122",
+      "pair": "USDCHF",
+      "direction": "BUY",
+      "score": 48,
+      "technical_score": 48,
+      "sentiment_score": 0,
+      "confidence": "WEAK",
+      "rsi": 60.1,
+      "adx": 25.2,
+      "atr": 0.0006,
+      "volume_ratio": 1.0,
+      "session": "OVERLAP",
+      "entry_price": 0.8717,
+      "sl": 0.87021,
+      "tp": 0.87468,
+      "risk_reward": 2.0,
+      "spread": 0.0002,
+      "timestamp": "2026-01-22T13:01:19.033164+00:00",
+      "status": "OPEN",
+      "hold_time": "INTRADAY",
+      "eligible_modes": [
+        "aggressive"
+      ],
+      "freshness": {
+        "status": "FRESH",
+        "age_minutes": 0.0,
+        "confidence_decay": 100.0
+      },
+      "metadata": {
+        "signal_type": "momentum",
+        "market_state": "TRENDING_STRONG",
+        "timeframe": "15m",
+        "valid_for_minutes": 10.0,
+        "generated_at": "2026-01-22T13:01:19.033164+00:00",
+        "expires_at": "2026-01-22T13:11:19.033164+00:00",
+        "session_active": "OVERLAP",
+        "signal_generator_version": "2.0.6",
+        "atr_stop_multiplier": 2.5,
+        "atr_target_multiplier": 5.0
+      },
+      "sentiment": {
+        "overall": "neutral",
+        "adjustment": 0,
+        "original_score": 48,
+        "news_count": 0,
+        "sources": {}
+      }
+    },
+    {
+      "signal_id": "USDCAD_BUY_87169_OVERLAP_20260122",
+      "id": "USDCAD_BUY_87169_OVERLAP_20260122",
+      "pair": "USDCAD",
+      "direction": "BUY",
+      "score": 48,
+      "technical_score": 48,
+      "sentiment_score": 0,
+      "confidence": "WEAK",
+      "rsi": 60.1,
+      "adx": 25.2,
+      "atr": 0.0006,
+      "volume_ratio": 1.0,
+      "session": "OVERLAP",
+      "entry_price": 0.8717,
+      "sl": 0.87021,
+      "tp": 0.87468,
+      "risk_reward": 2.0,
+      "spread": 0.0002,
+      "timestamp": "2026-01-22T13:01:19.056758+00:00",
+      "status": "OPEN",
+      "hold_time": "INTRADAY",
+      "eligible_modes": [
+        "aggressive"
+      ],
+      "freshness": {
+        "status": "FRESH",
+        "age_minutes": 0.0,
+        "confidence_decay": 100.0
+      },
+      "metadata": {
+        "signal_type": "momentum",
+        "market_state": "TRENDING_STRONG",
+        "timeframe": "15m",
+        "valid_for_minutes": 10.0,
+        "generated_at": "2026-01-22T13:01:19.056758+00:00",
+        "expires_at": "2026-01-22T13:11:19.056758+00:00",
+        "session_active": "OVERLAP",
+        "signal_generator_version": "2.0.6",
+        "atr_stop_multiplier": 2.5,
+        "atr_target_multiplier": 5.0
+      },
+      "sentiment": {
+        "overall": "neutral",
+        "adjustment": 0,
+        "original_score": 48,
+        "news_count": 0,
+        "sources": {}
+      }
+    },
+    {
+      "signal_id": "EURGBP_BUY_87169_OVERLAP_20260122",
+      "id": "EURGBP_BUY_87169_OVERLAP_20260122",
+      "pair": "EURGBP",
+      "direction": "BUY",
+      "score": 45,
+      "technical_score": 45,
+      "sentiment_score": 0,
+      "confidence": "WEAK",
+      "rsi": 60.1,
+      "adx": 25.2,
+      "atr": 0.0006,
+      "volume_ratio": 1.0,
+      "session": "OVERLAP",
+      "entry_price": 0.8717,
+      "sl": 0.87021,
+      "tp": 0.87468,
+      "risk_reward": 2.0,
+      "spread": 0.00015,
+      "timestamp": "2026-01-22T13:01:18.830985+00:00",
+      "status": "OPEN",
+      "hold_time": "INTRADAY",
+      "eligible_modes": [
+        "aggressive"
+      ],
+      "freshness": {
+        "status": "FRESH",
+        "age_minutes": 0.0,
+        "confidence_decay": 100.0
+      },
+      "metadata": {
+        "signal_type": "momentum",
+        "market_state": "TRENDING_STRONG",
+        "timeframe": "15m",
+        "valid_for_minutes": 10.0,
+        "generated_at": "2026-01-22T13:01:18.830985+00:00",
+        "expires_at": "2026-01-22T13:11:18.830985+00:00",
+        "session_active": "OVERLAP",
+        "signal_generator_version": "2.0.6",
+        "atr_stop_multiplier": 2.5,
+        "atr_target_multiplier": 5.0
+      },
+      "sentiment": {
+        "overall": "neutral",
+        "adjustment": 0,
+        "original_score": 45,
+        "news_count": 0,
+        "sources": {}
+      }
+    }
+  ],
   "api_usage": {
     "yfinance": {
-      "successful_downloads": 0
+      "successful_downloads": 10
     },
     "sentiment": {
       "enabled": true,
@@ -32,13 +187,13 @@
     "total_pips": -160.0,
     "wins": 3,
     "losses": 18,
-    "avg_win": 0.0,
-    "avg_loss": 0.0,
-    "expectancy": 0.0
+    "avg_win": 0,
+    "avg_loss": 0,
+    "expectancy": 0
   },
   "risk_management": {
-    "daily_pips": 0,
-    "total_risk_pips": 0,
+    "theoretical_max_pips": 89.4,
+    "total_risk_pips": 44.69999999999974,
     "max_daily_risk": 200,
     "max_positions": 5
   },
@@ -115,11 +270,13 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-01-22T08:15:56.641527+00:00",
-    "data_sources_available": false,
+    "last_update": "2026-01-22T13:01:23.341347+00:00",
+    "data_sources_available": true,
     "sentiment_available": false,
     "performance_tracking_enabled": true,
-    "optimization_enabled": true,
-    "version": "2.0.4"
+    "optimization_enabled": false,
+    "signal_only_mode": true,
+    "volume_scoring_enabled": false,
+    "version": "2.0.6"
   }
 }

@@ -187,8 +187,8 @@ jobs:
             echo "ℹ️ No performance history available yet"
           fi
 
-      # ✅ UPDATED: Commit with better messaging
-      - name: 💾 Commit state
+      # ✅ UPDATED: Commit state (NO PUSH)
+      - name: 💾 Commit state (local only)
         run: |
           git config user.name "Trade Beacon v2.0.6"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -202,8 +202,7 @@ jobs:
             RESOLVED=$(jq '.stats.total_resolved // 0' signal_state/signal_history.json 2>/dev/null || echo "0")
             
             git commit -m "📊 Trade Beacon v2.0.6 | Signals: $SIGNAL_COUNT active, $RESOLVED resolved [skip ci]"
-            git push origin main
-            echo "✅ Changes committed and pushed"
+            echo "✅ Changes committed locally (not pushed)"
           else
             echo "ℹ️ No changes to commit"
           fi

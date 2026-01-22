@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-01-22T13:16:00.522370+00:00",
-  "active_signals": 1,
+  "timestamp": "2026-01-22T13:31:12.900015+00:00",
+  "active_signals": 2,
   "session": "OVERLAP",
   "mode": "aggressive",
-  "sentiment_enabled": true,
+  "sentiment_enabled": false,
   "equity_protection": {
     "enabled": true,
     "can_trade": true,
@@ -11,33 +11,34 @@
   },
   "market_state": {
     "volatility": "CALM",
-    "sentiment_bias": "BEARISH",
+    "sentiment_bias": "MIXED",
     "session": "OVERLAP",
     "trending_pairs": [
-      "USDCHF"
+      "USDCHF",
+      "EURUSD"
     ]
   },
   "signals": [
     {
-      "signal_id": "USDCHF_SELL_79271_OVERLAP_20260122",
-      "id": "USDCHF_SELL_79271_OVERLAP_20260122",
+      "signal_id": "USDCHF_SELL_79250_OVERLAP_20260122",
+      "id": "USDCHF_SELL_79250_OVERLAP_20260122",
       "pair": "USDCHF",
       "direction": "SELL",
       "score": 48,
       "technical_score": 48,
       "sentiment_score": 0,
       "confidence": "WEAK",
-      "rsi": 38.7,
-      "adx": 29.1,
-      "atr": 0.00055,
+      "rsi": 39.1,
+      "adx": 30.9,
+      "atr": 0.00059,
       "volume_ratio": 1.0,
       "session": "OVERLAP",
-      "entry_price": 0.79271,
-      "sl": 0.79408,
-      "tp": 0.78996,
+      "entry_price": 0.79251,
+      "sl": 0.79398,
+      "tp": 0.78957,
       "risk_reward": 2.0,
       "spread": 0.0002,
-      "timestamp": "2026-01-22T13:15:55.739793+00:00",
+      "timestamp": "2026-01-22T13:31:08.207401+00:00",
       "status": "OPEN",
       "hold_time": "INTRADAY",
       "eligible_modes": [
@@ -53,19 +54,55 @@
         "market_state": "TRENDING_STRONG",
         "timeframe": "15m",
         "valid_for_minutes": 10.0,
-        "generated_at": "2026-01-22T13:15:55.739793+00:00",
-        "expires_at": "2026-01-22T13:25:55.739793+00:00",
+        "generated_at": "2026-01-22T13:31:08.207401+00:00",
+        "expires_at": "2026-01-22T13:41:08.207401+00:00",
         "session_active": "OVERLAP",
         "signal_generator_version": "2.0.6",
         "atr_stop_multiplier": 2.5,
         "atr_target_multiplier": 5.0
+      }
+    },
+    {
+      "signal_id": "EURUSD_BUY_117123_OVERLAP_20260122",
+      "id": "EURUSD_BUY_117123_OVERLAP_20260122",
+      "pair": "EURUSD",
+      "direction": "BUY",
+      "score": 45,
+      "technical_score": 45,
+      "sentiment_score": 0,
+      "confidence": "WEAK",
+      "rsi": 64.1,
+      "adx": 27.9,
+      "atr": 0.00052,
+      "volume_ratio": 1.0,
+      "session": "OVERLAP",
+      "entry_price": 1.17123,
+      "sl": 1.16992,
+      "tp": 1.17386,
+      "risk_reward": 2.0,
+      "spread": 0.00015,
+      "timestamp": "2026-01-22T13:31:07.870710+00:00",
+      "status": "OPEN",
+      "hold_time": "INTRADAY",
+      "eligible_modes": [
+        "aggressive"
+      ],
+      "freshness": {
+        "status": "FRESH",
+        "age_minutes": 0.0,
+        "confidence_decay": 100.0
       },
-      "sentiment": {
-        "overall": "neutral",
-        "adjustment": 0,
-        "original_score": 48,
-        "news_count": 0,
-        "sources": {}
+      "metadata": {
+        "signal_type": "momentum",
+        "market_state": "TRENDING_STRONG",
+        "timeframe": "15m",
+        "valid_for_minutes": 10.0,
+        "generated_at": "2026-01-22T13:31:07.870710+00:00",
+        "expires_at": "2026-01-22T13:41:07.870710+00:00",
+        "session_active": "OVERLAP",
+        "signal_generator_version": "2.0.6",
+        "atr_stop_multiplier": 2.5,
+        "atr_target_multiplier": 5.0
       }
     }
   ],
@@ -74,7 +111,7 @@
       "successful_downloads": 10
     },
     "sentiment": {
-      "enabled": true,
+      "enabled": false,
       "newsapi": 0,
       "marketaux": 0
     }
@@ -90,8 +127,8 @@
     "expectancy": 0
   },
   "risk_management": {
-    "theoretical_max_pips": 27.5,
-    "total_risk_pips": 13.699999999999823,
+    "theoretical_max_pips": 55.7,
+    "total_risk_pips": 27.79999999999894,
     "max_daily_risk": 200,
     "max_positions": 5
   },
@@ -168,7 +205,7 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-01-22T13:16:00.522390+00:00",
+    "last_update": "2026-01-22T13:31:12.900038+00:00",
     "data_sources_available": true,
     "sentiment_available": false,
     "performance_tracking_enabled": true,

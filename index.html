@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trade Beacon v2.0.5.1 - Pro Dashboard</title>
+  <title>Trade Beacon v2.0.6 - Pro Dashboard</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -40,7 +40,6 @@
       overflow-x: hidden;
     }
 
-    /* Navigation */
     .nav {
       position: sticky;
       top: 0;
@@ -131,7 +130,6 @@
       50% { opacity: 0.3; transform: scale(1.5); }
     }
 
-    /* Alert Banner for Equity Protection */
     .alert-banner {
       background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(239, 68, 68, 0.2));
       border: 2px solid var(--warning);
@@ -175,7 +173,6 @@
       padding: 32px;
     }
 
-    /* Hero Stats */
     .hero-stats {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -253,7 +250,6 @@
       font-weight: 700;
     }
 
-    /* Mode Selector */
     .mode-selector {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -347,7 +343,6 @@
       font-weight: 700;
     }
 
-    /* Signals Grid */
     .section-header {
       display: flex;
       justify-content: space-between;
@@ -568,7 +563,6 @@
       color: var(--text-muted);
     }
 
-    /* Recent Trades Section */
     .recent-trades {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -731,7 +725,7 @@
         <div class="logo-icon">📊</div>
         <div>
           Trade<span style="background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Beacon</span>
-          <span style="font-size: 11px; color: var(--text-muted); font-weight: 500; margin-left: 8px;">v2.0.5.1</span>
+          <span style="font-size: 11px; color: var(--text-muted); font-weight: 500; margin-left: 8px;">v2.0.6</span>
         </div>
       </div>
       <div class="nav-controls">
@@ -750,7 +744,7 @@
     <div id="app">
       <div class="loading">
         <div class="spinner"></div>
-        <div style="font-size: 20px; font-weight: 700; color: var(--text-secondary);">Loading Trade Beacon v2.0.5.1...</div>
+        <div style="font-size: 20px; font-weight: 700; color: var(--text-secondary);">Loading Trade Beacon v2.0.6...</div>
       </div>
     </div>
   </div>
@@ -765,17 +759,32 @@
       'https://raw.githubusercontent.com/rahim-dotAI/forex-ai-models/main/signal_state/dashboard_state.json'
     ];
 
+    // ✅ UPDATED: v2.0.6 Config (matches corrected config.json)
     const CONFIG = {
-      aggressive: { threshold: 42, min_adx: 15, rsi_oversold: 35, rsi_overbought: 65, min_volume_ratio: 1.0, min_risk_reward: 1.5 },
-      conservative: { threshold: 55, min_adx: 22, rsi_oversold: 30, rsi_overbought: 70, min_volume_ratio: 1.2, min_risk_reward: 2.0 }
+      aggressive: { 
+        threshold: 60, 
+        min_adx: 20, 
+        rsi_oversold: 30, 
+        rsi_overbought: 70, 
+        min_volume_ratio: 1.0, 
+        min_risk_reward: 2.0 
+      },
+      conservative: { 
+        threshold: 70, 
+        min_adx: 22, 
+        rsi_oversold: 25, 
+        rsi_overbought: 75, 
+        min_volume_ratio: 1.0, 
+        min_risk_reward: 2.5 
+      }
     };
 
     function confidenceColor(level) {
       const colors = {
-        EXCELLENT: 'var(--success)',
+        VERY_STRONG: 'var(--success)',
         STRONG: 'var(--accent-blue)',
-        GOOD: 'var(--warning)',
-        MODERATE: 'var(--text-muted)'
+        MODERATE: 'var(--warning)',
+        WEAK: 'var(--text-muted)'
       };
       return colors[level] || 'var(--text-secondary)';
     }
@@ -814,7 +823,7 @@
           if (json && json.signals !== undefined) {
             data = json;
 
-            // ✅ NEW: Check equity protection status
+            // ✅ Check equity protection status
             const equityProtection = data.equity_protection || {};
             if (equityProtection.enabled && !equityProtection.can_trade) {
               updateStatus('PAUSED');
@@ -852,7 +861,6 @@
         }
         if (signal.score < config.threshold) return false;
         if (signal.adx != null && signal.adx < config.min_adx) return false;
-        if (signal.rsi != null && (signal.rsi < config.rsi_oversold || signal.rsi > config.rsi_overbought)) return false;
         if (signal.risk_reward != null && signal.risk_reward < config.min_risk_reward) return false;
         return true;
       });
@@ -861,7 +869,6 @@
     function render() {
       const app = document.getElementById('app');
 
-      // ✅ NEW: Check equity protection and show alert banner
       const equityProtection = data.equity_protection || {};
       const isPaused = equityProtection.enabled && !equityProtection.can_trade;
 
@@ -875,7 +882,7 @@
           <div class="empty-state">
             <div class="empty-icon">📉</div>
             <div class="empty-title">No Active Signals</div>
-            <div class="empty-message">Trade Beacon v2.0.5.1 did not generate any signals at this time. Check back soon!</div>
+            <div class="empty-message">Trade Beacon v2.0.6 did not generate any signals at this time. Check back in 15 minutes!</div>
           </div>`;
         return;
       }
@@ -883,42 +890,26 @@
       const signals = filterSignalsByMode(data.signals);
       const stats = data.stats || {};
       const riskMgmt = data.risk_management || {};
+      const system = data.system || {};
 
-      // 🆕 Fallback for expectancy_per_trade
       const expectancy = stats.expectancy_per_trade ?? stats.expectancy ?? 0;
+      const totalResolved = stats.total_resolved ?? stats.total_trades ?? 0;
 
-      // 🆕 VALIDATION DATA
-      const validation = data.validation || {};
-      const validated = validation.validated || false;
-      const sampleSize = validation.trades || 0;
-
-      const validationStatus = () => {
-        if (sampleSize < 50) return 'INSUFFICIENT DATA';
-        if (!validated) return 'NOT VALIDATED';
-        return 'VALIDATED';
-      };
-
-      const validationColor = () => {
-        const status = validationStatus();
-        if (status === 'VALIDATED') return 'var(--success)';
-        if (status === 'NOT VALIDATED') return 'var(--warning)';
-        return 'var(--danger)';
-      };
-
-      const showWarning = () => {
-        return expectancy < 0 || validationStatus() !== 'VALIDATED';
-      };
+      // ✅ NEW: Statistical validation check
+      const isValidated = totalResolved >= 100;
+      const showWarning = expectancy < 0.5 || !isValidated;
 
       let html = `
-        <!-- VALIDATION ALERT -->
-        ${showWarning() ? `
+        ${showWarning ? `
           <div class="alert-banner">
             <div class="alert-icon">⚠️</div>
             <div class="alert-content">
-              <div class="alert-title">Statistical Validation Required</div>
+              <div class="alert-title">Signal-Only Mode - Not Statistically Validated</div>
               <div class="alert-message">
-                This system is not statistically validated for live trading yet.
-                Please run backtest or paper trade to confirm the edge before risking capital.
+                ${totalResolved < 100 ? 
+                  `Need ${100 - totalResolved} more resolved trades for statistical validation. ` : 
+                  ''}${expectancy < 0.5 ? 'Expectancy below 0.5 pips/trade. ' : ''}
+                This is a signal generator only - backtest before live trading.
               </div>
             </div>
           </div>
@@ -930,7 +921,7 @@
             <div class="hero-label">Active Signals</div>
             <div class="hero-value">${signals.length}</div>
             <div class="hero-subtitle">
-              <span>${data.mode || 'aggressive'} mode</span>
+              <span>${data.mode || 'aggressive'} mode • v${system.version || '2.0.6'}</span>
             </div>
           </div>
 
@@ -945,11 +936,11 @@
           </div>
 
           <div class="hero-card">
-            <div class="hero-label">Total Pips</div>
+            <div class="hero-label">Total Pips (Realized)</div>
             <div class="hero-value">${(stats.total_pips || 0).toFixed(1)}</div>
             <div class="hero-subtitle">
               <span class="${(stats.total_pips || 0) >= 0 ? 'change-positive' : 'change-negative'}">
-                ${stats.total_trades || 0} total trades
+                ${totalResolved} resolved trades
               </span>
             </div>
           </div>
@@ -958,52 +949,17 @@
             <div class="hero-label">Expectancy</div>
             <div class="hero-value">${(expectancy || 0).toFixed(2)}</div>
             <div class="hero-subtitle">
-              <span class="${(expectancy || 0) >= 0 ? 'change-positive' : 'change-negative'}">
-                pips per trade
+              <span class="${(expectancy || 0) >= 0.5 ? 'change-positive' : 'change-negative'}">
+                pips per trade ${isValidated ? '✓' : '(unvalidated)'}
               </span>
             </div>
           </div>
 
           <div class="hero-card">
-            <div class="hero-label">Daily Risk</div>
-            <div class="hero-value">${(riskMgmt.daily_pips || 0).toFixed(1)}</div>
+            <div class="hero-label">Theoretical Max Pips</div>
+            <div class="hero-value">${(riskMgmt.theoretical_max_pips || 0).toFixed(1)}</div>
             <div class="hero-subtitle">
-              <span>/ ${riskMgmt.max_daily_risk || 200} max pips</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- VALIDATION SECTION -->
-        <div class="hero-stats">
-          <div class="hero-card">
-            <div class="hero-label">Validation Status</div>
-            <div class="hero-value" style="color:${validationColor()}">${validationStatus()}</div>
-            <div class="hero-subtitle">
-              <span>Trades Sample: ${sampleSize}</span>
-            </div>
-          </div>
-
-          <div class="hero-card">
-            <div class="hero-label">Profit Factor</div>
-            <div class="hero-value">${(validation.profit_factor || 0).toFixed(2)}</div>
-            <div class="hero-subtitle">
-              <span>${validation.profit_factor >= 1.5 ? 'Good' : 'Weak'}</span>
-            </div>
-          </div>
-
-          <div class="hero-card">
-            <div class="hero-label">Sharpe Ratio</div>
-            <div class="hero-value">${(validation.sharpe_ratio || 0).toFixed(2)}</div>
-            <div class="hero-subtitle">
-              <span>${validation.sharpe_ratio >= 1 ? 'Positive' : 'Negative'}</span>
-            </div>
-          </div>
-
-          <div class="hero-card">
-            <div class="hero-label">Max Drawdown</div>
-            <div class="hero-value">${(validation.max_drawdown || 0).toFixed(2)}%</div>
-            <div class="hero-subtitle">
-              <span>${validation.max_drawdown <= 20 ? 'Safe' : 'High'}</span>
+              <span>Today's signals (if all TP)</span>
             </div>
           </div>
         </div>
@@ -1031,7 +987,7 @@
                 </div>
                 <div class="mode-param">
                   <span>Volume</span>
-                  <span>${CONFIG[mode].min_volume_ratio}x</span>
+                  <span>${CONFIG[mode].min_volume_ratio}x (disabled)</span>
                 </div>
               </div>
             </div>
@@ -1129,6 +1085,7 @@
     function renderPausedState(reason) {
       const stats = data?.stats || {};
       const expectancy = stats.expectancy_per_trade ?? stats.expectancy ?? 0;
+      const totalResolved = stats.total_resolved ?? stats.total_trades ?? 0;
 
       return `
         <div class="alert-banner">
@@ -1163,7 +1120,7 @@
             <div class="hero-value">${(stats.total_pips || 0).toFixed(1)}</div>
             <div class="hero-subtitle">
               <span class="${(stats.total_pips || 0) >= 0 ? 'change-positive' : 'change-negative'}">
-                ${stats.total_trades || 0} total trades
+                ${totalResolved} resolved trades
               </span>
             </div>
           </div>
@@ -1233,7 +1190,7 @@
                     </td>
                     <td class="${statusClass}">${trade.status || 'OPEN'}</td>
                     <td style="color: ${confidenceColor(trade.confidence)}">${trade.confidence || '-'}</td>
-                    <td>${formatTime(trade.closed_at || trade.timestamp)}</td>
+                    <td>${formatTime(trade.exit_time || trade.timestamp)}</td>
                   </tr>
                 `;
               }).join('')}

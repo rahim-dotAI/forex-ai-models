@@ -1,7 +1,6 @@
-name: Trade Beacon v2.0.5.1 – Forex Signal Generator
+name: Trade Beacon v2.0.6 – Forex Signal Generator
 
 on:
-  # Run every 15 minutes (session control handled in Python)
   schedule:
     - cron: "*/15 * * * 1-5"
 
@@ -21,8 +20,8 @@ on:
         required: false
         type: boolean
         default: false
-      run_optimization:
-        description: 'Run Performance Optimization'
+      run_backtest:
+        description: 'Run Backtest (optional)'
         required: false
         type: boolean
         default: false
@@ -71,8 +70,8 @@ jobs:
           mkdir -p signal_state
           echo "✅ System verified"
 
-      # v2.0.5.1 CONFIGURATION
-      - name: ⚙️ Apply v2.0.5.1 configuration
+      # v2.0.6 CONFIGURATION
+      - name: ⚙️ Apply v2.0.6 configuration
         if: github.event.inputs.mode != 'default' && github.event.inputs.mode != ''
         run: |
           MODE="${{ github.event.inputs.mode }}"
@@ -89,26 +88,29 @@ jobs:
           .settings.conservative.min_volume_ratio = 1.2 |
           .advanced.validation.max_signal_age_seconds = 600 |
           .advanced.validation.min_sl_pips = {"JPY_pairs":12,"other":7} |
-          .advanced.session_bonuses.LATE_US = {"all_major_pairs":0}
+          .advanced.session_bonuses.LATE_US = {"all_major_pairs":0} |
+          .performance_tuning.auto_adjust_thresholds = false |
+          .performance_tracking.equity_curve = {"enabled": false}
           ' config.json > tmp.json && mv tmp.json config.json
 
-          echo "📄 v2.0.5.1 configuration applied"
+          echo "📄 v2.0.6 configuration applied"
           jq '.' config.json
 
-      - name: 🤖 Run Trade Beacon v2.0.5.1
+      - name: 🤖 Run Trade Beacon v2.0.6
         env:
           newsapi_key: ${{ secrets.newsapi_key }}
           MARKETAUX_API_KEY: ${{ secrets.MARKETAUX_API_KEY }}
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
           HUGGINGFACE_API_KEY: ${{ secrets.HUGGINGFACE_API_KEY }}
         run: |
-          echo "🚀 Trade Beacon v2.0.5.1"
+          echo "🚀 Trade Beacon v2.0.6"
           python ${{ env.ENTRY_SCRIPT }}
 
-      - name: 📊 Optional Performance Optimization
-        if: github.event.inputs.run_optimization == 'true'
+      - name: 📊 Optional Backtest (Disabled until validation)
+        if: github.event.inputs.run_backtest == 'true'
         run: |
-          python ${{ env.PERFORMANCE_SCRIPT }} || echo "⚠️ Optimization failed"
+          echo "⚠️ Backtest enabled"
+          python backtest.py || echo "⚠️ Backtest failed or not implemented"
 
       - name: 🔍 Validate outputs
         run: |
@@ -117,12 +119,12 @@ jobs:
 
       - name: 💾 Commit state
         run: |
-          git config user.name "Trade Beacon v2.0.5.1"
+          git config user.name "Trade Beacon v2.0.6"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git add signal_state/*.json signals.csv config.json || true
           if ! git diff --staged --quiet; then
-            git commit -m "📊 Trade Beacon v2.0.5.1 | Signals update [skip ci]"
+            git commit -m "📊 Trade Beacon v2.0.6 | Signals update [skip ci]"
             git push origin main
           else
             echo "ℹ️ No changes to commit"
@@ -131,7 +133,7 @@ jobs:
       - name: 📦 Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: trade-beacon-v2.0.5.1-run-${{ github.run_number }}
+          name: trade-beacon-v2.0.6-run-${{ github.run_number }}
           path: |
             signal_state/
             signals.csv

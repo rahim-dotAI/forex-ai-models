@@ -70,7 +70,16 @@ jobs:
           mkdir -p signal_state
           echo "✅ System verified"
 
-      # v2.0.6 CONFIGURATION
+      # ✅ NEW: Performance history reset (if requested)
+      - name: 🗑️ Reset performance history
+        if: github.event.inputs.reset_performance == 'true'
+        run: |
+          echo "⚠️ RESETTING PERFORMANCE HISTORY"
+          rm -f signal_state/signal_history.json
+          rm -f signal_state/last_optimization.json
+          echo "✅ Performance history cleared"
+
+      # ✅ UPDATED: v2.0.6 configuration with new parameters
       - name: ⚙️ Apply v2.0.6 configuration
         if: github.event.inputs.mode != 'default' && github.event.inputs.mode != ''
         run: |
@@ -80,21 +89,45 @@ jobs:
           jq --arg mode "$MODE" --argjson sentiment "$SENTIMENT" '
           .mode = $mode |
           .use_sentiment = $sentiment |
-          .settings.aggressive.threshold = 42 |
-          .settings.aggressive.min_adx = 15 |
+          .settings.aggressive.threshold = 60 |
+          .settings.aggressive.min_adx = 20 |
           .settings.aggressive.min_volume_ratio = 1.0 |
-          .settings.conservative.threshold = 55 |
+          .settings.aggressive.volume_penalty = 0 |
+          .settings.aggressive.min_risk_reward = 2.0 |
+          .settings.aggressive.atr_stop_multiplier = 1.8 |
+          .settings.aggressive.atr_target_multiplier = 4.0 |
+          .settings.aggressive.max_correlated_signals = 2 |
+          .settings.conservative.threshold = 70 |
           .settings.conservative.min_adx = 22 |
-          .settings.conservative.min_volume_ratio = 1.2 |
-          .advanced.validation.max_signal_age_seconds = 600 |
-          .advanced.validation.min_sl_pips = {"JPY_pairs":12,"other":7} |
+          .settings.conservative.min_volume_ratio = 1.0 |
+          .settings.conservative.volume_penalty = 0 |
+          .settings.conservative.min_risk_reward = 2.5 |
+          .settings.conservative.atr_stop_multiplier = 2.0 |
+          .settings.conservative.atr_target_multiplier = 5.0 |
+          .settings.conservative.max_correlated_signals = 1 |
+          .advanced.validation.max_signal_age_seconds = 900 |
+          .advanced.validation.min_sl_pips = {"JPY_pairs":20,"other":12} |
           .advanced.session_bonuses.LATE_US = {"all_major_pairs":0} |
           .performance_tuning.auto_adjust_thresholds = false |
-          .performance_tracking.equity_curve = {"enabled": false}
+          .performance_tracking.enable = true |
+          .performance_tracking.equity_curve.enabled = true |
+          .performance_tracking.equity_curve.max_points = 1000 |
+          .risk_management.equity_protection.enable = false
           ' config.json > tmp.json && mv tmp.json config.json
 
           echo "📄 v2.0.6 configuration applied"
           jq '.' config.json
+
+      # ✅ NEW: Pre-run signal resolution
+      - name: 🔄 Resolve previous signals
+        run: |
+          echo "🔍 Checking for signals to resolve..."
+          if [ -f signal_state/dashboard_state.json ]; then
+            OPEN_COUNT=$(jq '.signals | map(select(.status == "OPEN")) | length' signal_state/dashboard_state.json 2>/dev/null || echo "0")
+            echo "📋 Found $OPEN_COUNT open signals to check"
+          else
+            echo "ℹ️ No previous signals found"
+          fi
 
       - name: 🤖 Run Trade Beacon v2.0.6
         env:
@@ -103,33 +136,79 @@ jobs:
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
           HUGGINGFACE_API_KEY: ${{ secrets.HUGGINGFACE_API_KEY }}
         run: |
-          echo "🚀 Trade Beacon v2.0.6"
+          echo "🚀 Trade Beacon v2.0.6 - Signal Generator Mode"
           python ${{ env.ENTRY_SCRIPT }}
 
-      - name: 📊 Optional Backtest (Disabled until validation)
+      - name: 📊 Optional Backtest
         if: github.event.inputs.run_backtest == 'true'
         run: |
           echo "⚠️ Backtest enabled"
-          python backtest.py || echo "⚠️ Backtest failed or not implemented"
+          if [ -f backtest.py ]; then
+            python backtest.py || echo "⚠️ Backtest failed"
+          else
+            echo "⚠️ backtest.py not found"
+          fi
 
+      # ✅ NEW: Enhanced validation
       - name: 🔍 Validate outputs
         run: |
-          jq '.active_signals' signal_state/dashboard_state.json
-          jq '.status' signal_state/health.json
+          echo "📊 Validating dashboard state..."
+          jq '.active_signals, .stats, .system.version' signal_state/dashboard_state.json
+          
+          echo "🏥 Validating health status..."
+          jq '.status, .signal_count, .system_info.version' signal_state/health.json
+          
+          # Check for performance tracking
+          if [ -f signal_state/signal_history.json ]; then
+            RESOLVED=$(jq '.stats.total_resolved // 0' signal_state/signal_history.json)
+            TOTAL=$(jq '.signals | length' signal_state/signal_history.json)
+            echo "📈 Performance: $RESOLVED resolved / $TOTAL total signals"
+          fi
 
+      # ✅ NEW: Performance summary
+      - name: 📈 Display performance summary
+        if: always()
+        run: |
+          if [ -f signal_state/signal_history.json ]; then
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "📊 PERFORMANCE SUMMARY (v2.0.6)"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            jq -r '
+              "Total Trades: \(.stats.total_trades // 0)",
+              "Resolved: \(.stats.total_resolved // 0)",
+              "Win Rate: \(.stats.win_rate // 0)%",
+              "Total Pips: \(.stats.total_pips // 0)",
+              "Expectancy: \(.stats.expectancy // 0)",
+              "Avg Win: \(.stats.avg_win // 0) pips",
+              "Avg Loss: \(.stats.avg_loss // 0) pips"
+            ' signal_state/signal_history.json
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          else
+            echo "ℹ️ No performance history available yet"
+          fi
+
+      # ✅ UPDATED: Commit with better messaging
       - name: 💾 Commit state
         run: |
           git config user.name "Trade Beacon v2.0.6"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+          # Add all relevant files
           git add signal_state/*.json signals.csv config.json || true
+          
           if ! git diff --staged --quiet; then
-            git commit -m "📊 Trade Beacon v2.0.6 | Signals update [skip ci]"
+            # Generate commit message with stats
+            SIGNAL_COUNT=$(jq '.active_signals // 0' signal_state/dashboard_state.json 2>/dev/null || echo "0")
+            RESOLVED=$(jq '.stats.total_resolved // 0' signal_state/signal_history.json 2>/dev/null || echo "0")
+            
+            git commit -m "📊 Trade Beacon v2.0.6 | Signals: $SIGNAL_COUNT active, $RESOLVED resolved [skip ci]"
             git push origin main
+            echo "✅ Changes committed and pushed"
           else
             echo "ℹ️ No changes to commit"
           fi
 
+      # ✅ UPDATED: Better artifact organization
       - name: 📦 Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -139,3 +218,16 @@ jobs:
             signals.csv
             config.json
           retention-days: 7
+
+      # ✅ NEW: Failure notification
+      - name: 🚨 Notify on failure
+        if: failure()
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "❌ WORKFLOW FAILED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          if [ -f signal_state/health.json ]; then
+            echo "Health Status:"
+            jq '.' signal_state/health.json
+          fi
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

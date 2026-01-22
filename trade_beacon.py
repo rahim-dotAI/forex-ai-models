@@ -792,10 +792,8 @@ def main():
     mark_success()
     log.info("✅ Run completed successfully - Trade Beacon v2.0.6")
 
-
-if __name__ == "__main__":
-    main()
- GENERATOR MODE - CRITICAL SAFEGUARD
+# =========================
+# GENERATOR MODE - CRITICAL SAFEGUARD
 # =========================
 SIGNAL_ONLY_MODE = True
 

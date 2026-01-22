@@ -355,7 +355,7 @@ def check_risk_limits(signals: List[Dict], config: Dict) -> Tuple[List[Dict], Li
 # =========================
 # SENTIMENT ENHANCEMENT
 # =========================
-def enhance_with_sentiment(signals: List[Dict], news_agg: NewsAggregator) -> List[Dict]:
+def enhance_with_sentiment(signals: List[Dict], news_agg: 'NewsAggregator') -> List[Dict]:
     if not USE_SENTIMENT or not signals:
         return signals
     

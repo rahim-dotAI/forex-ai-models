@@ -40,6 +40,143 @@ from ta.volatility import AverageTrueRange
 from performance_tracker import PerformanceTracker
 
 # =========================
+# SIGNAL RESOLUTION SYSTEM (NEW)
+# =========================
+def resolve_active_signals():
+    """Check active signals and resolve them when they hit SL/TP."""
+    dashboard_file = Path("signal_state/dashboard_state.json")
+    
+    if not dashboard_file.exists():
+        log.info("📋 No previous signals to resolve")
+        return 0
+    
+    try:
+        with open(dashboard_file, 'r') as f:
+            dashboard = json.load(f)
+    except Exception as e:
+        log.error(f"❌ Could not load dashboard: {e}")
+        return 0
+    
+    signals = dashboard.get("signals", [])
+    if not signals:
+        return 0
+    
+    log.info(f"🔍 Checking {len(signals)} active signals for resolution...")
+    
+    resolved_count = 0
+    still_active = []
+    
+    for signal in signals:
+        if signal.get("status") != "OPEN":
+            still_active.append(signal)
+            continue
+        
+        pair = signal.get("pair")
+        signal_id = signal.get("signal_id")
+        direction = signal.get("direction")
+        entry = signal.get("entry_price")
+        sl = signal.get("sl")
+        tp = signal.get("tp")
+        
+        # Get current price
+        try:
+            ticker = f"{pair}=X"
+            df = yf.download(ticker, interval="1m", period="1d", progress=False, auto_adjust=True)
+            
+            if df is None or df.empty:
+                still_active.append(signal)
+                continue
+            
+            current_price = float(df["Close"].iloc[-1])
+            
+            # Check if hit SL or TP
+            outcome = None
+            exit_price = None
+            
+            if direction == "BUY":
+                if current_price <= sl:
+                    outcome = "LOSS"
+                    exit_price = sl
+                elif current_price >= tp:
+                    outcome = "WIN"
+                    exit_price = tp
+            else:  # SELL
+                if current_price >= sl:
+                    outcome = "LOSS"
+                    exit_price = sl
+                elif current_price <= tp:
+                    outcome = "WIN"
+                    exit_price = tp
+            
+            # Check expiration
+            expires_at_str = signal.get('metadata', {}).get('expires_at')
+            if expires_at_str and not outcome:
+                expires_at = datetime.fromisoformat(expires_at_str.replace('Z', '+00:00'))
+                if datetime.now(timezone.utc) > expires_at:
+                    outcome = "EXPIRED"
+                    exit_price = current_price
+            
+            if outcome:
+                # Calculate pips
+                pips = price_to_pips(pair, abs(exit_price - entry))
+                if outcome == "LOSS":
+                    pips = -pips
+                elif outcome == "EXPIRED":
+                    pips = price_to_pips(pair, exit_price - entry) if direction == "BUY" else price_to_pips(pair, entry - exit_price)
+                
+                # Record trade outcome
+                if PERFORMANCE_TRACKER:
+                    PERFORMANCE_TRACKER.record_trade(
+                        signal_id=signal_id,
+                        pair=pair,
+                        direction=direction,
+                        entry_price=entry,
+                        exit_price=exit_price,
+                        sl=sl,
+                        tp=tp,
+                        outcome=outcome,
+                        pips=pips,
+                        confidence=signal.get("confidence"),
+                        score=signal.get("score"),
+                        session=signal.get("session"),
+                        entry_time=signal.get("timestamp"),
+                        exit_time=datetime.now(timezone.utc).isoformat()
+                    )
+                    
+                    resolved_count += 1
+                    
+                    log.info(f"{'✅' if outcome == 'WIN' else '❌'} {pair} {direction} - {outcome} "
+                            f"({pips:+.1f} pips) | Entry: {entry:.5f} → Exit: {exit_price:.5f}")
+                else:
+                    # Mark as resolved even if no tracker
+                    signal["status"] = outcome
+                    still_active.append(signal)
+            else:
+                # Signal still active
+                still_active.append(signal)
+                
+                # Log status
+                price_pct = ((current_price - entry) / (tp - entry) * 100) if direction == "BUY" else ((entry - current_price) / (entry - tp) * 100)
+                log.debug(f"⏳ {pair} still active ({price_pct:.1f}% to TP | Current: {current_price:.5f}, SL: {sl:.5f}, TP: {tp:.5f})")
+                
+        except Exception as e:
+            log.error(f"❌ Error resolving {signal_id}: {e}")
+            still_active.append(signal)
+            continue
+    
+    # Update dashboard with resolved signals
+    if resolved_count > 0 or len(still_active) != len(signals):
+        dashboard["signals"] = still_active
+        try:
+            with open(dashboard_file, 'w') as f:
+                json.dump(dashboard, f, indent=2)
+            log.info(f"✅ Resolved {resolved_count} signals, {len(still_active)} still active")
+        except Exception as e:
+            log.error(f"❌ Could not update dashboard: {e}")
+    
+    return resolved_count
+
+# =========================
 # SIGNAL GENERATION (FIXED SCORING)
 # =========================
 def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
@@ -692,11 +829,20 @@ def mark_success():
         f.write(datetime.now(timezone.utc).isoformat())
 
 # =========================
-# MAIN
+# MAIN (UPDATED WITH RESOLUTION)
 # =========================
 def main():
     if not in_execution_window():
         return
+    
+    # ✅ RESOLVE PREVIOUS SIGNALS FIRST
+    if PERFORMANCE_TRACKER:
+        resolved = resolve_active_signals()
+        if resolved > 0:
+            # Wait a moment for tracker to update
+            time.sleep(1)
+    else:
+        log.info("⚠️ Performance tracker not available - skipping signal resolution")
     
     can_trade, pause_reason = check_equity_protection(CONFIG)
     if not can_trade:
@@ -707,6 +853,14 @@ def main():
     current_config = CONFIG
     current_mode = MODE
     current_settings = SETTINGS
+    
+    if current_config.get("performance_tuning", {}).get("auto_adjust_thresholds", False):
+        optimized_config = optimize_thresholds_if_needed(current_config)
+        current_mode = optimized_config["mode"]
+        current_settings = optimized_config["settings"][current_mode]
+        log.info(f"⚙️ Using optimized thresholds: {current_settings.get('threshold')}")
+    else:
+        optimized_config = current_config
     
     sentiment_status = "ON" if USE_SENTIMENT else "OFF"
     volume_status = "ENABLED" if USE_VOLUME_FOR_FX else "DISABLED"
@@ -721,9 +875,17 @@ def main():
     newsapi_calls = 0
     marketaux_calls = 0
 
+    _market_cache.clear()
+    log.info("🔄 Cache cleared for fresh data")
+
+    # Get existing signals to prevent duplicates
+    existing_signal_ids = get_existing_signals_today()
+    if existing_signal_ids:
+        log.info(f"📋 Found {len(existing_signal_ids)} existing signals today")
+
     log.info("🔍 Analyzing pairs with staggered execution...")
     
-    max_workers = current_config.get("advanced", {}).get("parallel_workers", 3)
+    max_workers = optimized_config.get("advanced", {}).get("parallel_workers", 3)
     
     with ThreadPoolExecutor(max_workers=min(max_workers, len(PAIRS))) as executor:
         futures = {executor.submit(generate_signal, pair): pair for pair in PAIRS}
@@ -737,6 +899,11 @@ def main():
                     successful_downloads += 1
                 
                 if sig:
+                    # Check for duplicate
+                    if is_duplicate_signal(sig['signal_id'], existing_signal_ids):
+                        log.info(f"⏭️ {pair.replace('=X', '')} - Duplicate signal skipped")
+                        continue
+                    
                     active.append(sig)
                     log.info(f"✅ {pair.replace('=X', '')} - Signal generated "
                             f"(Score: {sig['score']}, Confidence: {sig['confidence']}, RR: {sig['risk_reward']:.2f}, "
@@ -752,7 +919,7 @@ def main():
             time.sleep(0.5)
 
     if active:
-        active, risk_warnings = check_risk_limits(active, current_config)
+        active, risk_warnings = check_risk_limits(active, optimized_config)
         for warning in risk_warnings:
             log.warning(f"⚠️ Risk Management: {warning}")
 
@@ -770,7 +937,7 @@ def main():
     log.info(f"\n✅ Cycle complete | Active signals: {len(active)}")
     
     write_dashboard_state(active, successful_downloads, newsapi_calls, marketaux_calls, 
-                          current_config, current_mode, current_settings)
+                          optimized_config, current_mode, current_settings)
 
     if active:
         df = pd.DataFrame(active)
@@ -1599,173 +1766,6 @@ def optimize_thresholds_if_needed(config: Dict) -> Dict:
         log.info("✅ Current thresholds are optimal, no adjustment needed")
     
     return config
-
-# =========================
-# TIME-WINDOW GUARD
-# =========================
-def in_execution_window():
-    last_run_file = Path("signal_state/last_run.txt")
-    success_file = Path("signal_state/last_success.txt")
-    now = datetime.now(timezone.utc)
-
-    if last_run_file.exists():
-        with open(last_run_file, 'r') as f:
-            last_run_str = f.read().strip()
-        try:
-            last_run = datetime.fromisoformat(last_run_str)
-            
-            if success_file.exists():
-                with open(success_file, 'r') as f:
-                    last_success_str = f.read().strip()
-                try:
-                    last_success = datetime.fromisoformat(last_success_str)
-                    if now - last_success < timedelta(minutes=10):
-                        log.info(f"⏱ Already ran successfully at {last_success} - exiting")
-                        return False
-                except Exception:
-                    pass
-            else:
-                if now - last_run < timedelta(minutes=2):
-                    log.info(f"⏱ Last run failed at {last_run}, waiting for retry window (2 min)")
-                    return False
-                else:
-                    log.info(f"⚠️ Last run failed, attempting retry...")
-        except Exception:
-            pass
-
-    last_run_file.parent.mkdir(exist_ok=True)
-    with open(last_run_file, 'w') as f:
-        f.write(now.isoformat())
-    return True
-
-def mark_success():
-    success_file = Path("signal_state/last_success.txt")
-    success_file.parent.mkdir(exist_ok=True)
-    with open(success_file, 'w') as f:
-        f.write(datetime.now(timezone.utc).isoformat())
-
-# =========================
-# MAIN
-# =========================
-def main():
-    if not in_execution_window():
-        return
-    
-    can_trade, pause_reason = check_equity_protection(CONFIG)
-    if not can_trade:
-        log.warning(f"⏸️ {pause_reason}")
-        write_dashboard_state([], 0, 0, 0, CONFIG, MODE, SETTINGS)
-        return
-    
-    current_config = CONFIG
-    current_mode = MODE
-    current_settings = SETTINGS
-    
-    if current_config.get("performance_tuning", {}).get("auto_adjust_thresholds", False):
-        optimized_config = optimize_thresholds_if_needed(current_config)
-        current_mode = optimized_config["mode"]
-        current_settings = optimized_config["settings"][current_mode]
-        log.info(f"⚙️ Using optimized thresholds: {current_settings.get('threshold')}")
-    else:
-        optimized_config = current_config
-    
-    sentiment_status = "ON" if USE_SENTIMENT else "OFF"
-    volume_status = "ENABLED" if USE_VOLUME_FOR_FX else "DISABLED"
-    
-    log.info(f"🚀 Starting Trade Beacon v2.0.6 - Mode={current_mode} | Sentiment={sentiment_status}")
-    log.info(f"📊 Monitoring {len(PAIRS)} pairs: {', '.join([p.replace('=X', '') for p in PAIRS])}")
-    log.info(f"💰 Features: Real Fallback | Volume={volume_status} | Direction-Aware Correlation")
-    log.info(f"🎯 Threshold: {current_settings.get('threshold')} | Min ADX: {current_settings.get('min_adx')} | Min R:R: {current_settings.get('min_risk_reward')}")
-    
-    active = []
-    successful_downloads = 0
-    newsapi_calls = 0
-    marketaux_calls = 0
-
-    _market_cache.clear()
-    log.info("🔄 Cache cleared for fresh data")
-
-    # Get existing signals to prevent duplicates
-    existing_signal_ids = get_existing_signals_today()
-    if existing_signal_ids:
-        log.info(f"📋 Found {len(existing_signal_ids)} existing signals today")
-
-    log.info("🔍 Analyzing pairs with staggered execution...")
-    
-    max_workers = optimized_config.get("advanced", {}).get("parallel_workers", 3)
-    
-    with ThreadPoolExecutor(max_workers=min(max_workers, len(PAIRS))) as executor:
-        futures = {executor.submit(generate_signal, pair): pair for pair in PAIRS}
-        
-        for future in as_completed(futures):
-            pair = futures[future]
-            try:
-                sig, download_ok = future.result()
-                
-                if download_ok:
-                    successful_downloads += 1
-                
-                if sig:
-                    # Check for duplicate
-                    if is_duplicate_signal(sig['signal_id'], existing_signal_ids):
-                        log.info(f"⏭️ {pair.replace('=X', '')} - Duplicate signal skipped")
-                        continue
-                    
-                    active.append(sig)
-                    log.info(f"✅ {pair.replace('=X', '')} - Signal generated "
-                            f"(Score: {sig['score']}, Confidence: {sig['confidence']}, RR: {sig['risk_reward']:.2f}, "
-                            f"Modes: {', '.join(sig['eligible_modes'])})")
-                else:
-                    if download_ok:
-                        log.info(f"⏭️ {pair.replace('=X', '')} - No signal")
-                    else:
-                        log.warning(f"⚠️ {pair.replace('=X', '')} - Download failed")
-            except Exception as e:
-                log.error(f"❌ {pair.replace('=X', '')} failed: {e}")
-            
-            time.sleep(0.5)
-
-    if active:
-        active, risk_warnings = check_risk_limits(active, optimized_config)
-        for warning in risk_warnings:
-            log.warning(f"⚠️ Risk Management: {warning}")
-
-    if USE_SENTIMENT and active:
-        try:
-            news_agg = NewsAggregator()
-            active = enhance_with_sentiment(active, news_agg)
-            newsapi_calls = news_agg.newsapi_calls
-            marketaux_calls = news_agg.marketaux_calls
-            log.info("✅ Sentiment analysis complete")
-        except Exception as e:
-            log.error(f"❌ Sentiment analysis failed: {e}")
-            log.info("⚠️ Continuing with technical signals only")
-
-    log.info(f"\n✅ Cycle complete | Active signals: {len(active)}")
-    
-    write_dashboard_state(active, successful_downloads, newsapi_calls, marketaux_calls, 
-                          optimized_config, current_mode, current_settings)
-
-    if active:
-        df = pd.DataFrame(active)
-        df.to_csv("signals.csv", index=False)
-        log.info("📄 signals.csv written")
-        
-        print("\n" + "="*80)
-        print(f"🎯 {current_mode.upper()} SIGNALS {'+ SENTIMENT' if USE_SENTIMENT else ''} (v2.0.6):")
-        print("="*80)
-        
-        display_cols = ["signal_id", "pair", "direction", "score", "confidence", 
-                       "hold_time", "risk_reward", "eligible_modes"]
-        print(df[display_cols].to_string(index=False))
-        print("="*80 + "\n")
-        
-    else:
-        log.info("✅ No strong signals this cycle")
-    
-    mark_success()
-    log.info("✅ Run completed successfully - Trade Beacon v2.0.6")
-
 
 if __name__ == "__main__":
     main()

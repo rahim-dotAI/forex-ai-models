@@ -3,27 +3,27 @@
   "use_sentiment": true,
   "settings": {
     "aggressive": {
-      "threshold": 42,
-      "min_adx": 15,
-      "rsi_oversold": 35,
-      "rsi_overbought": 65,
+      "threshold": 60,
+      "min_adx": 20,
+      "rsi_oversold": 30,
+      "rsi_overbought": 70,
       "min_volume_ratio": 1.0,
-      "volume_penalty": 10,
-      "min_risk_reward": 1.5,
-      "atr_stop_multiplier": 2.5,
-      "atr_target_multiplier": 5.0,
+      "volume_penalty": 0,
+      "min_risk_reward": 2.0,
+      "atr_stop_multiplier": 1.8,
+      "atr_target_multiplier": 4.0,
       "max_correlated_signals": 2
     },
     "conservative": {
-      "threshold": 55,
+      "threshold": 70,
       "min_adx": 22,
-      "rsi_oversold": 30,
-      "rsi_overbought": 70,
-      "min_volume_ratio": 1.2,
-      "volume_penalty": 15,
-      "min_risk_reward": 2.0,
-      "atr_stop_multiplier": 3.0,
-      "atr_target_multiplier": 6.0,
+      "rsi_oversold": 25,
+      "rsi_overbought": 75,
+      "min_volume_ratio": 1.0,
+      "volume_penalty": 0,
+      "min_risk_reward": 2.5,
+      "atr_stop_multiplier": 2.0,
+      "atr_target_multiplier": 5.0,
       "max_correlated_signals": 1
     }
   },
@@ -32,23 +32,23 @@
     "enable_correlation_filter": true,
     "enable_performance_optimization": false,
     "cache_ttl_minutes": 5,
-    "parallel_workers": 5,
+    "parallel_workers": 3,
     "session_bonuses": {
       "ASIAN": {
-        "JPY_pairs": 5,
-        "AUD_NZD_pairs": 5,
+        "JPY_pairs": 3,
+        "AUD_NZD_pairs": 3,
         "other": 0
       },
       "EUROPEAN": {
-        "EUR_GBP_pairs": 5,
-        "EUR_GBP_crosses": 3,
+        "EUR_GBP_pairs": 3,
+        "EUR_GBP_crosses": 2,
         "other": 0
       },
       "OVERLAP": {
-        "all_major_pairs": 3
+        "all_major_pairs": 2
       },
       "US": {
-        "USD_majors": 5,
+        "USD_majors": 3,
         "other": 0
       },
       "LATE_US": {
@@ -56,26 +56,26 @@
       }
     },
     "validation": {
-      "max_price_change_pct": 0.05,
-      "max_signal_age_seconds": 600,
+      "max_price_change_pct": 0.03,
+      "max_signal_age_seconds": 900,
       "min_sl_pips": {
-        "JPY_pairs": 12,
-        "other": 7
+        "JPY_pairs": 20,
+        "other": 12
       },
-      "max_spread_ratio": 0.3,
+      "max_spread_ratio": 0.25,
       "require_direction": true,
       "reject_missing_pips": true
     }
   },
   "risk_management": {
-    "max_daily_risk_pips": 200,
-    "max_open_positions": 5,
-    "max_correlated_exposure": 2,
-    "stop_trading_on_drawdown_pips": 150,
+    "max_daily_risk_pips": 150,
+    "max_open_positions": 3,
+    "max_correlated_exposure": 1,
+    "stop_trading_on_drawdown_pips": 100,
     "equity_protection": {
-      "enable": true,
-      "max_consecutive_losses": 4,
-      "pause_minutes_after_hit": 60
+      "enable": false,
+      "max_consecutive_losses": 3,
+      "pause_minutes_after_hit": 120
     }
   },
   "performance_tracking": {
@@ -84,6 +84,10 @@
     "idempotency": {
       "enabled": true,
       "scope": "daily"
+    },
+    "equity_curve": {
+      "enabled": true,
+      "max_points": 1000
     },
     "analytics": {
       "track_by_pair": true,
@@ -97,19 +101,19 @@
   },
   "performance_tuning": {
     "auto_adjust_thresholds": false,
-    "min_trades_for_optimization": 30,
-    "optimization_interval_days": 7,
-    "target_win_rate": 0.55,
+    "min_trades_for_optimization": 50,
+    "optimization_interval_days": 14,
+    "target_win_rate": 0.5,
     "optimization_inputs": {
       "use_expectancy": true,
       "use_win_rate": true,
       "use_avg_rr": true,
-      "min_expectancy": 0.1
+      "min_expectancy": 0.5
     }
   },
   "logging": {
     "performance_level": "INFO",
-    "log_equity_updates": false,
+    "log_equity_updates": true,
     "log_duplicate_signals": true
   }
 }

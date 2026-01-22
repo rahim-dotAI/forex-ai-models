@@ -27,11 +27,11 @@ def safe_round(val: Any, decimals: int = 2) -> float:
     return round(safe_float(val), decimals)
 
 # ==========================================================
-# PERFORMANCE TRACKER (SIGNAL-ONLY SAFE)
+# PERFORMANCE TRACKER (WITH TRADE RESOLUTION)
 # ==========================================================
 class PerformanceTracker:
     """
-    Signal-only performance tracker.
+    Signal-only performance tracker with trade resolution support.
 
     IMPORTANT:
     - No equity assumptions
@@ -92,12 +92,15 @@ class PerformanceTracker:
 
     def _empty_stats(self) -> Dict:
         return {
+            "total_trades": 0,
             "total_resolved": 0,
             "wins": 0,
             "losses": 0,
             "win_rate": 0.0,
-            "avg_win_pips": 0.0,
-            "avg_loss_pips": 0.0,
+            "total_pips": 0.0,
+            "avg_win": 0.0,
+            "avg_loss": 0.0,
+            "expectancy": 0.0,
             "expectancy_per_trade": 0.0,
             "note": "Stats only valid after statistical validation"
         }
@@ -115,30 +118,106 @@ class PerformanceTracker:
     def register_signal(self, signal: Dict):
         """
         Registers a signal safely.
-        Status must be one of:
-        OPEN, EXPIRED, WIN, LOSS
+        Status must be one of: OPEN, EXPIRED, WIN, LOSS
         """
+        signal_id = signal.get("id") or signal.get("signal_id")
+        
+        if not signal_id:
+            raise ValueError("Signal must have deterministic id or signal_id")
 
-        if "id" not in signal:
-            raise ValueError("Signal must have deterministic id")
-
-        today = str(date.today())
-        self.history["daily"].setdefault(today, [])
-
-        if signal["id"] in self.history["daily"][today]:
-            log.info("⏭️ Signal already registered today")
+        # Check if already exists
+        existing = self._find_signal(signal_id)
+        if existing:
+            log.debug(f"⏭️ Signal {signal_id} already registered")
             return
 
-        self.history["daily"][today].append(signal["id"])
+        # Add to signals list
         self.history["signals"].append(signal)
+
+        # Track daily
+        today = str(date.today())
+        self.history["daily"].setdefault(today, [])
+        if signal_id not in self.history["daily"][today]:
+            self.history["daily"][today].append(signal_id)
 
         self._recalculate()
         self._save()
+        log.debug(f"✅ Signal {signal_id} registered")
+
+    # ==========================================================
+    # ✅ NEW: TRADE RESOLUTION
+    # ==========================================================
+    def record_trade(self, signal_id: str, pair: str, direction: str,
+                     entry_price: float, exit_price: float, sl: float, tp: float,
+                     outcome: str, pips: float, confidence: str = None,
+                     score: int = None, session: str = None,
+                     entry_time: str = None, exit_time: str = None, **kwargs):
+        """
+        Records the outcome of a trade when it hits SL/TP or expires.
+        
+        Args:
+            signal_id: Unique signal identifier
+            pair: Currency pair
+            direction: BUY or SELL
+            entry_price: Entry price
+            exit_price: Exit price
+            sl: Stop loss level
+            tp: Take profit level
+            outcome: WIN, LOSS, or EXPIRED
+            pips: Pip profit/loss (negative for losses)
+            confidence: Signal confidence level
+            score: Signal score
+            session: Market session
+            entry_time: ISO timestamp of entry
+            exit_time: ISO timestamp of exit
+        """
+        # Find existing signal or create new record
+        signal = self._find_signal(signal_id)
+        
+        if signal:
+            # Update existing signal
+            signal["status"] = outcome
+            signal["exit_price"] = exit_price
+            signal["exit_time"] = exit_time or datetime.now(timezone.utc).isoformat()
+            signal["pips"] = pips
+            log.info(f"✅ Updated signal {signal_id}: {outcome} ({pips:+.1f} pips)")
+        else:
+            # Create new record if signal wasn't registered initially
+            signal = {
+                "id": signal_id,
+                "signal_id": signal_id,
+                "pair": pair,
+                "direction": direction,
+                "entry_price": entry_price,
+                "exit_price": exit_price,
+                "sl": sl,
+                "tp": tp,
+                "status": outcome,
+                "pips": pips,
+                "confidence": confidence,
+                "score": score,
+                "session": session,
+                "timestamp": entry_time or datetime.now(timezone.utc).isoformat(),
+                "exit_time": exit_time or datetime.now(timezone.utc).isoformat()
+            }
+            self.history["signals"].append(signal)
+            log.info(f"✅ Recorded new trade {signal_id}: {outcome} ({pips:+.1f} pips)")
+        
+        self._recalculate()
+        self._save()
+
+    def _find_signal(self, signal_id: str) -> Optional[Dict]:
+        """Find a signal by ID."""
+        for signal in self.history["signals"]:
+            if signal.get("id") == signal_id or signal.get("signal_id") == signal_id:
+                return signal
+        return None
 
     # ==========================================================
     # CORE RECALCULATION (SOURCE OF TRUTH)
     # ==========================================================
     def _recalculate(self):
+        """Recalculate all statistics from resolved signals."""
         resolved = [
             s for s in self.history["signals"]
             if s.get("status") in ("WIN", "LOSS")
@@ -146,10 +225,13 @@ class PerformanceTracker:
 
         wins: List[float] = []
         losses: List[float] = []
+        total_pips = 0.0
         analytics = self._empty_analytics()
 
         for s in resolved:
             pips = safe_float(s.get("pips"))
+            total_pips += pips
+            
             pair = s.get("pair", "UNKNOWN")
             session = s.get("session", "UNKNOWN")
             confidence = s.get("confidence", "UNKNOWN")
@@ -160,20 +242,29 @@ class PerformanceTracker:
                 losses.append(abs(pips))
 
             # ---- Pair analytics
-            analytics["by_pair"].setdefault(pair, {"trades": 0, "wins": 0})
+            analytics["by_pair"].setdefault(pair, {
+                "trades": 0, "wins": 0, "total_pips": 0.0
+            })
             analytics["by_pair"][pair]["trades"] += 1
+            analytics["by_pair"][pair]["total_pips"] += pips
             if s["status"] == "WIN":
                 analytics["by_pair"][pair]["wins"] += 1
 
             # ---- Session analytics
-            analytics["by_session"].setdefault(session, {"trades": 0, "wins": 0})
+            analytics["by_session"].setdefault(session, {
+                "trades": 0, "wins": 0, "total_pips": 0.0
+            })
             analytics["by_session"][session]["trades"] += 1
+            analytics["by_session"][session]["total_pips"] += pips
             if s["status"] == "WIN":
                 analytics["by_session"][session]["wins"] += 1
 
             # ---- Confidence analytics
-            analytics["by_confidence"].setdefault(confidence, {"trades": 0, "wins": 0})
+            analytics["by_confidence"].setdefault(confidence, {
+                "trades": 0, "wins": 0, "total_pips": 0.0
+            })
             analytics["by_confidence"][confidence]["trades"] += 1
+            analytics["by_confidence"][confidence]["total_pips"] += pips
             if s["status"] == "WIN":
                 analytics["by_confidence"][confidence]["wins"] += 1
 
@@ -187,13 +278,16 @@ class PerformanceTracker:
         ) if total else 0.0
 
         self.history["stats"] = {
+            "total_trades": total,
             "total_resolved": total,
             "wins": len(wins),
             "losses": len(losses),
-            "win_rate": safe_round(win_rate),
-            "avg_win_pips": safe_round(avg_win),
-            "avg_loss_pips": safe_round(avg_loss),
-            "expectancy_per_trade": safe_round(expectancy),
+            "win_rate": safe_round(win_rate, 1),
+            "total_pips": safe_round(total_pips, 1),
+            "avg_win": safe_round(avg_win, 1),
+            "avg_loss": safe_round(avg_loss, 1),
+            "expectancy": safe_round(expectancy, 2),
+            "expectancy_per_trade": safe_round(expectancy, 2),
             "validated": total >= 100
         }
 
@@ -202,7 +296,7 @@ class PerformanceTracker:
             for data in group.values():
                 if data["trades"] > 0:
                     data["win_rate"] = safe_round(
-                        data["wins"] / data["trades"] * 100
+                        data["wins"] / data["trades"] * 100, 1
                     )
 
         self.history["analytics"] = analytics
@@ -218,6 +312,7 @@ class PerformanceTracker:
         return {
             "stats": self.history["stats"],
             "analytics": self.history["analytics"],
+            "equity": {},  # Placeholder for compatibility
             "signals_total": len(self.history["signals"]),
             "updated_at": datetime.now(timezone.utc).isoformat()
         }

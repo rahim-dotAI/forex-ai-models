@@ -30,7 +30,7 @@
   "advanced": {
     "enable_session_filtering": true,
     "enable_correlation_filter": true,
-    "enable_performance_optimization": true,
+    "enable_performance_optimization": false,
     "cache_ttl_minutes": 5,
     "parallel_workers": 5,
     "session_bonuses": {
@@ -85,10 +85,6 @@
       "enabled": true,
       "scope": "daily"
     },
-    "equity_curve": {
-      "enabled": true,
-      "max_points": 1000
-    },
     "analytics": {
       "track_by_pair": true,
       "track_by_confidence": true,
@@ -100,7 +96,7 @@
     }
   },
   "performance_tuning": {
-    "auto_adjust_thresholds": true,
+    "auto_adjust_thresholds": false,
     "min_trades_for_optimization": 30,
     "optimization_interval_days": 7,
     "target_win_rate": 0.55,
@@ -113,7 +109,7 @@
   },
   "logging": {
     "performance_level": "INFO",
-    "log_equity_updates": true,
+    "log_equity_updates": false,
     "log_duplicate_signals": true
   }
 }

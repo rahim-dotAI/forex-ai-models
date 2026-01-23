@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trade Beacon v2.0.6 - Pro Dashboard</title>
+  <title>Trade Beacon v2.0.7 - Pro Dashboard</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -96,6 +96,13 @@
       gap: 8px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
+      transition: all 0.3s ease;
+    }
+
+    .status-loading {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--accent-blue);
+      border: 2px solid var(--accent-blue);
     }
 
     .status-live {
@@ -128,6 +135,17 @@
     @keyframes pulse {
       0%, 100% { opacity: 1; transform: scale(1); }
       50% { opacity: 0.3; transform: scale(1.5); }
+    }
+
+    .source-badge {
+      font-size: 10px;
+      padding: 4px 8px;
+      border-radius: 10px;
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--accent-blue);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      font-weight: 600;
+      letter-spacing: 0.3px;
     }
 
     .alert-banner {
@@ -670,6 +688,57 @@
       to { transform: rotate(360deg); }
     }
 
+    .data-source-info {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      font-size: 11px;
+      color: var(--text-muted);
+      background: rgba(17, 24, 39, 0.8);
+      padding: 6px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+      opacity: 0.7;
+      transition: opacity 0.3s;
+    }
+
+    .data-source-info:hover {
+      opacity: 1;
+    }
+
+    .last-update {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .refresh-btn {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .refresh-btn:hover {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+    }
+
     @media (max-width: 1400px) {
       .signals-grid {
         grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
@@ -715,6 +784,12 @@
       .trades-table td {
         padding: 10px;
       }
+
+      .data-source-info,
+      .refresh-btn {
+        position: static;
+        margin-top: 16px;
+      }
     }
   </style>
 </head>
@@ -725,14 +800,14 @@
         <div class="logo-icon">📊</div>
         <div>
           Trade<span style="background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Beacon</span>
-          <span style="font-size: 11px; color: var(--text-muted); font-weight: 500; margin-left: 8px;">v2.0.6</span>
+          <span style="font-size: 11px; color: var(--text-muted); font-weight: 500; margin-left: 8px;">v2.0.7</span>
         </div>
       </div>
       <div class="nav-controls">
         <div style="font-size: 12px; color: var(--text-secondary); margin-right: 12px;">
           Made with ❤️ by <span style="color: var(--accent-blue); font-weight: 700;">Rahim</span>
         </div>
-        <div class="status-badge status-live" id="status">
+        <div class="status-badge status-loading" id="status">
           <div class="status-dot"></div>
           <span>LOADING</span>
         </div>
@@ -744,21 +819,36 @@
     <div id="app">
       <div class="loading">
         <div class="spinner"></div>
-        <div style="font-size: 20px; font-weight: 700; color: var(--text-secondary);">Loading Trade Beacon v2.0.6...</div>
+        <div style="font-size: 20px; font-weight: 700; color: var(--text-secondary);">Loading Trade Beacon v2.0.7...</div>
       </div>
     </div>
+  </div>
+
+  <div class="refresh-btn" onclick="fetchData()">
+    <span>🔄</span>
+    Refresh
+  </div>
+
+  <div class="data-source-info" id="dataSourceInfo">
+    Source: Loading...
   </div>
 
   <script>
     let data = null;
     let currentMode = localStorage.getItem('tradeBeaconMode') || 'aggressive';
+    let hasLoadedOnce = false;
+    let lastUpdateTime = null;
+    let dataSource = null;
 
-    // ✅ FIXED: Only use GitHub as data source (no local paths)
+    // ✅ FIXED: Updated API_URLS with multiple fallbacks
     const API_URLS = [
-      'https://raw.githubusercontent.com/rahim-dotAI/forex-ai-models/main/signal_state/dashboard_state.json'
+      './signal_state/dashboard_state.json',           // Try local first
+      'signal_state/dashboard_state.json',              // Try relative
+      '/signal_state/dashboard_state.json',             // Try absolute
+      'https://raw.githubusercontent.com/rahim-dotAI/forex-ai-models/main/signal_state/dashboard_state.json'  // Fallback to GitHub
     ];
 
-    // ✅ UPDATED: v2.0.6 Config (matches corrected config.json)
+    // ✅ UPDATED: v2.0.7 Config (matches corrected config.json)
     const CONFIG = {
       aggressive: { 
         threshold: 60, 
@@ -804,32 +894,63 @@
       return date.toLocaleDateString();
     }
 
+    function formatTimeShort(timestamp) {
+      if (!timestamp) return '-';
+      return new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    }
+
     function calculatePips(entry, exit, pair) {
       if (!entry || !exit) return 0;
       const pipValue = pair.includes('JPY') ? 0.01 : 0.0001;
       return Math.abs(exit - entry) / pipValue;
     }
 
+    function updateDataSourceInfo(source) {
+      const infoEl = document.getElementById('dataSourceInfo');
+      let sourceName = 'Unknown';
+      
+      if (source.includes('raw.githubusercontent')) {
+        sourceName = 'GitHub Raw (fallback)';
+      } else if (source.includes('./') || source.includes('/')) {
+        sourceName = 'GitHub Pages (primary)';
+      }
+      
+      const timeStr = lastUpdateTime ? formatTimeShort(lastUpdateTime) : '--:--';
+      infoEl.innerHTML = `Source: ${sourceName} | Updated: ${timeStr}`;
+    }
+
     async function fetchData() {
+      // Only show LOADING if this is the first attempt
+      if (!hasLoadedOnce) {
+        updateStatus('LOADING');
+      }
+      
       for (const url of API_URLS) {
         try {
-          console.log('🔄 Attempting to fetch from:', url); // Debug logging
+          console.log('🔄 Attempting to fetch from:', url);
           const response = await fetch(url + '?t=' + Date.now(), {
             cache: 'no-store',
             headers: { 'Cache-Control': 'no-cache' }
           });
+          
           if (!response.ok) {
             console.warn('❌ Failed to fetch:', url, response.status);
             continue;
           }
+          
           const json = await response.json();
           if (json && json.signals !== undefined) {
-            console.log('✅ Successfully loaded from:', url); // Debug logging
-            console.log('📊 Data timestamp:', json.timestamp); // Debug logging
-            console.log('📈 Signal count:', json.signals?.length); // Debug logging
+            console.log('✅ Successfully loaded from:', url);
+            console.log('📊 Data timestamp:', json.timestamp);
+            console.log('📈 Signal count:', json.signals?.length);
             
             data = json;
-
+            dataSource = url; // Store which source we used
+            lastUpdateTime = Date.now();
+            
+            // Update data source info
+            updateDataSourceInfo(url);
+            
             // ✅ Check equity protection status
             const equityProtection = data.equity_protection || {};
             if (equityProtection.enabled && !equityProtection.can_trade) {
@@ -837,7 +958,8 @@
             } else {
               updateStatus('LIVE');
             }
-
+            
+            hasLoadedOnce = true;
             render();
             return;
           }
@@ -845,13 +967,18 @@
           console.warn('❌ Fetch failed:', url, e);
         }
       }
-      updateStatus('STALE');
+      
+      // Only show STALE if we've never loaded successfully
+      if (!hasLoadedOnce) {
+        updateStatus('STALE');
+      }
       renderError();
     }
 
     function updateStatus(status) {
       const statusEl = document.getElementById('status');
       const classMap = {
+        'LOADING': 'status-loading',
         'LIVE': 'status-live',
         'PAUSED': 'status-paused',
         'STALE': 'status-stale'
@@ -861,6 +988,9 @@
     }
 
     function filterSignalsByMode(signals) {
+      // ✅ Safety check: ensure signals is an array
+      if (!signals || !Array.isArray(signals)) return [];
+      
       const config = CONFIG[currentMode];
       return signals.filter(signal => {
         if (signal.eligible_modes && Array.isArray(signal.eligible_modes)) {
@@ -889,7 +1019,7 @@
           <div class="empty-state">
             <div class="empty-icon">📉</div>
             <div class="empty-title">No Active Signals</div>
-            <div class="empty-message">Trade Beacon v2.0.6 did not generate any signals at this time. Check back in 15 minutes!</div>
+            <div class="empty-message">Trade Beacon v2.0.7 did not generate any signals at this time. Check back in 15 minutes!</div>
           </div>`;
         return;
       }
@@ -902,7 +1032,7 @@
       const expectancy = stats.expectancy_per_trade ?? stats.expectancy ?? 0;
       const totalResolved = stats.total_resolved ?? stats.total_trades ?? 0;
 
-      // ✅ NEW: Statistical validation check
+      // ✅ Statistical validation check
       const isValidated = totalResolved >= 100;
       const showWarning = expectancy < 0.5 || !isValidated;
 
@@ -928,7 +1058,7 @@
             <div class="hero-label">Active Signals</div>
             <div class="hero-value">${signals.length}</div>
             <div class="hero-subtitle">
-              <span>${data.mode || 'aggressive'} mode • v${system.version || '2.0.6'}</span>
+              <span>${data.mode || 'aggressive'} mode • v${system.version || '2.0.7'}</span>
             </div>
           </div>
 
@@ -1007,80 +1137,92 @@
             <span>Active Signals</span>
             <span class="signal-count">${signals.length}</span>
           </div>
+          <div class="last-update">
+            <span>🕐</span>
+            <span>Last data: ${data.timestamp ? formatTime(data.timestamp) : '--:--'}</span>
+          </div>
         </div>
 
-        <div class="signals-grid">
-          ${signals.map(signal => `
-            <div class="signal-card ${signal.direction.toLowerCase()}">
-              <div class="signal-header">
-                <div class="signal-pair">${signal.pair}</div>
-                <div class="signal-direction ${signal.direction.toLowerCase() === 'buy' ? 'direction-buy' : 'direction-sell'}">
-                  ${signal.direction}
+        ${signals.length > 0 ? `
+          <div class="signals-grid">
+            ${signals.map(signal => `
+              <div class="signal-card ${signal.direction.toLowerCase()}">
+                <div class="signal-header">
+                  <div class="signal-pair">${signal.pair}</div>
+                  <div class="signal-direction ${signal.direction.toLowerCase() === 'buy' ? 'direction-buy' : 'direction-sell'}">
+                    ${signal.direction}
+                  </div>
                 </div>
-              </div>
 
-              <div class="signal-meta">
-                <div class="meta-badge">📊 ADX: ${signal.adx?.toFixed(1) || '-'}</div>
-                <div class="meta-badge">📈 RSI: ${signal.rsi?.toFixed(1) || '-'}</div>
-                <div class="meta-badge">📉 Vol: ${signal.volume_ratio?.toFixed(2) || '-'}x</div>
-                <div class="meta-badge">⏱️ ${signal.session || '-'}</div>
-                ${signal.hold_time ? `<div class="meta-badge">⏳ ${signal.hold_time}</div>` : ''}
-              </div>
+                <div class="signal-meta">
+                  <div class="meta-badge">📊 ADX: ${signal.adx?.toFixed(1) || '-'}</div>
+                  <div class="meta-badge">📈 RSI: ${signal.rsi?.toFixed(1) || '-'}</div>
+                  <div class="meta-badge">📉 Vol: ${signal.volume_ratio?.toFixed(2) || '-'}x</div>
+                  <div class="meta-badge">⏱️ ${signal.session || '-'}</div>
+                  ${signal.hold_time ? `<div class="meta-badge">⏳ ${signal.hold_time}</div>` : ''}
+                </div>
 
-              <div class="confidence-section">
-                <div class="confidence-header">
-                  <div class="confidence-label">Confidence</div>
-                  <div class="confidence-score" style="color: ${confidenceColor(signal.confidence)}">
-                    ${signal.confidence || 'MODERATE'}
+                <div class="confidence-section">
+                  <div class="confidence-header">
+                    <div class="confidence-label">Confidence</div>
+                    <div class="confidence-score" style="color: ${confidenceColor(signal.confidence)}">
+                      ${signal.confidence || 'MODERATE'}
+                    </div>
+                  </div>
+                  <div class="confidence-bar">
+                    <div class="confidence-fill" style="width: ${signal.score || 0}%; background: ${confidenceColor(signal.confidence)};"></div>
                   </div>
                 </div>
-                <div class="confidence-bar">
-                  <div class="confidence-fill" style="width: ${signal.score || 0}%; background: ${confidenceColor(signal.confidence)};"></div>
-                </div>
-              </div>
 
-              <div class="price-grid">
-                <div class="price-row">
-                  <div class="price-label">
-                    <span>🎯</span>
-                    <span>Entry Price</span>
+                <div class="price-grid">
+                  <div class="price-row">
+                    <div class="price-label">
+                      <span>🎯</span>
+                      <span>Entry Price</span>
+                    </div>
+                    <div class="price-value entry">${formatPrice(signal.entry_price)}</div>
                   </div>
-                  <div class="price-value entry">${formatPrice(signal.entry_price)}</div>
+                  <div class="price-row">
+                    <div class="price-label">
+                      <span>✅</span>
+                      <span>Take Profit</span>
+                    </div>
+                    <div class="price-value tp">${formatPrice(signal.tp)}</div>
+                  </div>
+                  <div class="price-row">
+                    <div class="price-label">
+                      <span>🛑</span>
+                      <span>Stop Loss</span>
+                    </div>
+                    <div class="price-value sl">${formatPrice(signal.sl)}</div>
+                  </div>
+                  <div class="price-row">
+                    <div class="price-label">
+                      <span>⚡</span>
+                      <span>Risk/Reward</span>
+                    </div>
+                    <div class="price-value" style="color: ${signal.risk_reward >= 2 ? 'var(--success)' : 'var(--warning)'}">
+                      ${signal.risk_reward?.toFixed(2) || '-'}
+                    </div>
+                  </div>
                 </div>
-                <div class="price-row">
-                  <div class="price-label">
-                    <span>✅</span>
-                    <span>Take Profit</span>
-                  </div>
-                  <div class="price-value tp">${formatPrice(signal.tp)}</div>
-                </div>
-                <div class="price-row">
-                  <div class="price-label">
-                    <span>🛑</span>
-                    <span>Stop Loss</span>
-                  </div>
-                  <div class="price-value sl">${formatPrice(signal.sl)}</div>
-                </div>
-                <div class="price-row">
-                  <div class="price-label">
-                    <span>⚡</span>
-                    <span>Risk/Reward</span>
-                  </div>
-                  <div class="price-value" style="color: ${signal.risk_reward >= 2 ? 'var(--success)' : 'var(--warning)'}">
-                    ${signal.risk_reward?.toFixed(2) || '-'}
-                  </div>
-                </div>
-              </div>
 
-              <div class="signal-footer">
-                <div class="risk-reward">
-                  Score: ${signal.score || 0}
+                <div class="signal-footer">
+                  <div class="risk-reward">
+                    Score: ${signal.score || 0}
+                  </div>
+                  <div class="signal-time">${formatTime(signal.timestamp)}</div>
                 </div>
-                <div class="signal-time">${formatTime(signal.timestamp)}</div>
               </div>
-            </div>
-          `).join('')}
-        </div>
+            `).join('')}
+          </div>
+        ` : `
+          <div class="empty-state" style="padding: 40px; margin-bottom: 40px;">
+            <div class="empty-icon">🔍</div>
+            <div class="empty-title">No Signals Match Current Mode</div>
+            <div class="empty-message">Switch to a different mode or wait for new signals to be generated.</div>
+          </div>
+        `}
 
         <!-- Recent Trades -->
         ${renderRecentTrades()}
@@ -1167,7 +1309,12 @@
 
       return `
         <div class="recent-trades">
-          <div class="section-title">Recent Trades</div>
+          <div class="section-header">
+            <div class="section-title">
+              <span>Recent Trades</span>
+              <span class="signal-count">${recentTrades.length}</span>
+            </div>
+          </div>
           <table class="trades-table">
             <thead>
               <tr>
@@ -1213,7 +1360,10 @@
         <div class="empty-state">
           <div class="empty-icon">⚠️</div>
           <div class="empty-title">Unable to Load Signals</div>
-          <div class="empty-message">Please check your network connection or backend system.</div>
+          <div class="empty-message">
+            Please check your network connection or backend system.
+            ${dataSource ? `<br><small>Last tried: ${dataSource.includes('raw.githubusercontent') ? 'GitHub Raw' : 'GitHub Pages'}</small>` : ''}
+          </div>
         </div>`;
     }
 
@@ -1223,8 +1373,18 @@
       render();
     }
 
+    // Initialize
     fetchData();
+    
+    // Auto-refresh every 15 seconds
     setInterval(fetchData, 15000);
+    
+    // Update data source info periodically
+    setInterval(() => {
+      if (dataSource) {
+        updateDataSourceInfo(dataSource);
+      }
+    }, 30000);
   </script>
 </body>
 </html>

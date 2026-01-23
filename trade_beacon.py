@@ -829,7 +829,7 @@ def mark_success():
         f.write(datetime.now(timezone.utc).isoformat())
 
 # =========================
-# MAIN (UPDATED WITH RESOLUTION)
+# MAIN (UPDATED WITH CRITICAL BUG FIX)
 # =========================
 def main():
     if not in_execution_window():
@@ -844,10 +844,27 @@ def main():
     else:
         log.info("⚠️ Performance tracker not available - skipping signal resolution")
     
+    # 🔥 CRITICAL FIX: Load still-active signals from dashboard
+    existing_active_signals = []
+    dashboard_file = Path("signal_state/dashboard_state.json")
+    if dashboard_file.exists():
+        try:
+            with open(dashboard_file, "r") as f:
+                dashboard_data = json.load(f)
+                all_signals = dashboard_data.get("signals", [])
+                # Keep only OPEN signals
+                existing_active_signals = [
+                    s for s in all_signals 
+                    if s.get("status") == "OPEN"
+                ]
+                log.info(f"📋 Found {len(existing_active_signals)} still-active signals from previous cycles")
+        except Exception as e:
+            log.warning(f"⚠️ Could not load existing signals: {e}")
+    
     can_trade, pause_reason = check_equity_protection(CONFIG)
     if not can_trade:
         log.warning(f"⏸️ {pause_reason}")
-        write_dashboard_state([], 0, 0, 0, CONFIG, MODE, SETTINGS)
+        write_dashboard_state(existing_active_signals, 0, 0, 0, CONFIG, MODE, SETTINGS)
         return
     
     current_config = CONFIG
@@ -870,7 +887,7 @@ def main():
     log.info(f"💰 Features: Real Fallback | Volume={volume_status} | Direction-Aware Correlation")
     log.info(f"🎯 Threshold: {current_settings.get('threshold')} | Min ADX: {current_settings.get('min_adx')} | Min R:R: {current_settings.get('min_risk_reward')}")
     
-    active = []
+    new_signals = []
     successful_downloads = 0
     newsapi_calls = 0
     marketaux_calls = 0
@@ -879,9 +896,9 @@ def main():
     log.info("🔄 Cache cleared for fresh data")
 
     # Get existing signals to prevent duplicates
-    existing_signal_ids = get_existing_signals_today()
+    existing_signal_ids = [s.get("signal_id") for s in existing_active_signals]
     if existing_signal_ids:
-        log.info(f"📋 Found {len(existing_signal_ids)} existing signals today")
+        log.info(f"📋 Found {len(existing_signal_ids)} existing signal IDs to check for duplicates")
 
     log.info("🔍 Analyzing pairs with staggered execution...")
     
@@ -904,7 +921,7 @@ def main():
                         log.info(f"⏭️ {pair.replace('=X', '')} - Duplicate signal skipped")
                         continue
                     
-                    active.append(sig)
+                    new_signals.append(sig)
                     log.info(f"✅ {pair.replace('=X', '')} - Signal generated "
                             f"(Score: {sig['score']}, Confidence: {sig['confidence']}, RR: {sig['risk_reward']:.2f}, "
                             f"Modes: {', '.join(sig['eligible_modes'])})")
@@ -918,15 +935,15 @@ def main():
             
             time.sleep(0.5)
 
-    if active:
-        active, risk_warnings = check_risk_limits(active, optimized_config)
+    if new_signals:
+        new_signals, risk_warnings = check_risk_limits(new_signals, optimized_config)
         for warning in risk_warnings:
             log.warning(f"⚠️ Risk Management: {warning}")
 
-    if USE_SENTIMENT and active:
+    if USE_SENTIMENT and new_signals:
         try:
             news_agg = NewsAggregator()
-            active = enhance_with_sentiment(active, news_agg)
+            new_signals = enhance_with_sentiment(new_signals, news_agg)
             newsapi_calls = news_agg.newsapi_calls
             marketaux_calls = news_agg.marketaux_calls
             log.info("✅ Sentiment analysis complete")
@@ -934,13 +951,23 @@ def main():
             log.error(f"❌ Sentiment analysis failed: {e}")
             log.info("⚠️ Continuing with technical signals only")
 
-    log.info(f"\n✅ Cycle complete | Active signals: {len(active)}")
+    # 🔥 CRITICAL FIX: Combine new + existing signals
+    all_active_signals = new_signals + existing_active_signals
     
-    write_dashboard_state(active, successful_downloads, newsapi_calls, marketaux_calls, 
-                          optimized_config, current_mode, current_settings)
+    log.info(f"\n✅ Cycle complete | New signals: {len(new_signals)} | Total active: {len(all_active_signals)}")
+    
+    write_dashboard_state(
+        all_active_signals,  # ✅ Changed from just 'active'
+        successful_downloads, 
+        newsapi_calls, 
+        marketaux_calls, 
+        optimized_config, 
+        current_mode, 
+        current_settings
+    )
 
-    if active:
-        df = pd.DataFrame(active)
+    if new_signals:
+        df = pd.DataFrame(new_signals)
         df.to_csv("signals.csv", index=False)
         log.info("📄 signals.csv written")
         
@@ -952,9 +979,8 @@ def main():
                        "hold_time", "risk_reward", "eligible_modes"]
         print(df[display_cols].to_string(index=False))
         print("="*80 + "\n")
-        
     else:
-        log.info("✅ No strong signals this cycle")
+        log.info("✅ No new signals this cycle")
     
     mark_success()
     log.info("✅ Run completed successfully - Trade Beacon v2.0.6")

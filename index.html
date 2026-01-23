@@ -753,9 +753,8 @@
     let data = null;
     let currentMode = localStorage.getItem('tradeBeaconMode') || 'aggressive';
 
+    // ✅ FIXED: Only use GitHub as data source (no local paths)
     const API_URLS = [
-      './signal_state/dashboard_state.json',
-      'signal_state/dashboard_state.json',
       'https://raw.githubusercontent.com/rahim-dotAI/forex-ai-models/main/signal_state/dashboard_state.json'
     ];
 
@@ -814,13 +813,21 @@
     async function fetchData() {
       for (const url of API_URLS) {
         try {
+          console.log('🔄 Attempting to fetch from:', url); // Debug logging
           const response = await fetch(url + '?t=' + Date.now(), {
             cache: 'no-store',
             headers: { 'Cache-Control': 'no-cache' }
           });
-          if (!response.ok) continue;
+          if (!response.ok) {
+            console.warn('❌ Failed to fetch:', url, response.status);
+            continue;
+          }
           const json = await response.json();
           if (json && json.signals !== undefined) {
+            console.log('✅ Successfully loaded from:', url); // Debug logging
+            console.log('📊 Data timestamp:', json.timestamp); // Debug logging
+            console.log('📈 Signal count:', json.signals?.length); // Debug logging
+            
             data = json;
 
             // ✅ Check equity protection status
@@ -835,7 +842,7 @@
             return;
           }
         } catch (e) {
-          console.warn('Fetch failed:', url, e);
+          console.warn('❌ Fetch failed:', url, e);
         }
       }
       updateStatus('STALE');

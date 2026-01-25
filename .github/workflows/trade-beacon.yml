@@ -1,12 +1,13 @@
-name: Trade Beacon v2.0.6 – Forex Signal Generator
+name: Trade Beacon v2.1.2 – Forex Signal Generator
 
 on:
   schedule:
+    # Run every 15 minutes during market hours (Mon-Fri)
     - cron: "*/15 * * * 1-5"
-
+  
   repository_dispatch:
     types: [trade-signal-check, performance-check]
-
+  
   workflow_dispatch:
     inputs:
       mode:
@@ -15,18 +16,26 @@ on:
         type: choice
         options: [default, aggressive, conservative]
         default: 'default'
+      
       sentiment:
         description: 'Enable Sentiment Analysis'
         required: false
         type: boolean
         default: false
+      
       run_backtest:
-        description: 'Run Backtest (optional)'
+        description: 'Run Backtest'
         required: false
         type: boolean
         default: false
+      
       reset_performance:
-        description: 'Reset Performance History (DANGER)'
+        description: 'RESET PERFORMANCE (type YES to confirm)'
+        required: false
+        default: 'NO'
+      
+      allow_optimization:
+        description: 'ALLOW threshold optimization (if min trades met)'
         required: false
         type: boolean
         default: false
@@ -34,10 +43,9 @@ on:
 env:
   PYTHON_VERSION: "3.10"
   ENTRY_SCRIPT: "trade_beacon.py"
-  PERFORMANCE_SCRIPT: "performance_tracker.py"
 
 concurrency:
-  group: trade-beacon-v2-${{ github.workflow }}
+  group: trade-beacon-v2.1.2-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: false
 
 permissions:
@@ -46,190 +54,363 @@ permissions:
 jobs:
   forex-trading:
     runs-on: ubuntu-latest
-
+    
     steps:
-      - name: 📥 Checkout repository
+      - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: 🐍 Setup Python
+      
+      - name: Setup Python environment
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
-
-      - name: 📦 Install dependencies
+          cache-dependency-path: requirements.txt
+      
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           sudo apt-get update && sudo apt-get install -y jq bc
-
-      - name: 📋 Verify system files
+      
+      - name: Verify system files
         run: |
-          for f in ${{ env.ENTRY_SCRIPT }} ${{ env.PERFORMANCE_SCRIPT }} requirements.txt; do
-            [ -f "$f" ] || { echo "❌ Missing $f"; exit 1; }
+          echo "🔍 Verifying critical files..."
+          for f in $ENTRY_SCRIPT requirements.txt performance_tracker.py config.json; do
+            if [ ! -f "$f" ]; then
+              echo "❌ Missing critical file: $f"
+              exit 1
+            fi
           done
+          echo "✅ All critical files present"
+          
+          # Ensure directories exist
           mkdir -p signal_state
-          echo "✅ System verified"
-
-      - name: 🗑️ Reset performance history
-        if: github.event.inputs.reset_performance == 'true'
+          
+          # Verify Python syntax
+          python -m py_compile $ENTRY_SCRIPT
+          python -m py_compile performance_tracker.py
+          echo "✅ Python syntax validation passed"
+      
+      - name: Validate tracker version alignment
         run: |
-          echo "⚠️ RESETTING PERFORMANCE HISTORY"
+          echo "🔍 Validating PerformanceTracker version..."
+          TRACKER_VER=$(python -c "from performance_tracker import TRACKER_VERSION; print(TRACKER_VERSION)" 2>/dev/null || echo "unknown")
+          BEACON_VER=$(grep -oP 'signal_generator_version.*\K[0-9.]+' $ENTRY_SCRIPT | head -1 || echo "unknown")
+          
+          echo "Tracker version: $TRACKER_VER"
+          echo "Beacon version: $BEACON_VER"
+          
+          if [ "$TRACKER_VER" != "$BEACON_VER" ]; then
+            echo "⚠️  Version mismatch detected (non-fatal)"
+          else
+            echo "✅ Versions aligned: $TRACKER_VER"
+          fi
+      
+      - name: Validate configuration
+        run: |
+          echo "🔍 Validating config.json..."
+          jq empty config.json || exit 1
+          
+          # Check required config fields
+          jq -e '.mode' config.json > /dev/null || exit 1
+          jq -e '.settings' config.json > /dev/null || exit 1
+          
+          # Snapshot original config for forensic baseline (once)
+          if [ ! -f config.runtime.base.json ]; then
+            cp config.json config.runtime.base.json
+            git add config.runtime.base.json 2>/dev/null || true
+            echo "📸 Created config baseline snapshot"
+          fi
+          
+          echo "✅ Configuration valid"
+      
+      - name: Reset performance history (DESTRUCTIVE - guarded)
+        if: github.event.inputs.reset_performance == 'YES'
+        run: |
+          echo "⚠️  PERFORMANCE RESET INITIATED"
           rm -f signal_state/signal_history.json
           rm -f signal_state/last_optimization.json
-          echo "✅ Performance history cleared"
-
-      - name: ⚙️ Apply v2.0.6 configuration
-        if: github.event.inputs.mode != 'default' && github.event.inputs.mode != ''
+          rm -f signal_state/dashboard_state.json
+          rm -f signal_state/trading_paused.json
+          echo "🔥 PERFORMANCE RESET COMPLETE - All history cleared"
+      
+      - name: Apply runtime overrides
+        if: github.event.inputs.mode != 'default' || github.event.inputs.sentiment == 'true'
         run: |
+          echo "⚙️  Applying runtime configuration..."
+          
           MODE="${{ github.event.inputs.mode }}"
           SENTIMENT="${{ github.event.inputs.sentiment }}"
-
-          jq --arg mode "$MODE" --argjson sentiment "$SENTIMENT" '
-          .mode = $mode |
-          .use_sentiment = $sentiment |
-          .settings.aggressive.threshold = 60 |
-          .settings.aggressive.min_adx = 20 |
-          .settings.aggressive.min_volume_ratio = 1.0 |
-          .settings.aggressive.volume_penalty = 0 |
-          .settings.aggressive.min_risk_reward = 2.0 |
-          .settings.aggressive.atr_stop_multiplier = 1.8 |
-          .settings.aggressive.atr_target_multiplier = 4.0 |
-          .settings.aggressive.max_correlated_signals = 2 |
-          .settings.conservative.threshold = 70 |
-          .settings.conservative.min_adx = 22 |
-          .settings.conservative.min_volume_ratio = 1.0 |
-          .settings.conservative.volume_penalty = 0 |
-          .settings.conservative.min_risk_reward = 2.5 |
-          .settings.conservative.atr_stop_multiplier = 2.0 |
-          .settings.conservative.atr_target_multiplier = 5.0 |
-          .settings.conservative.max_correlated_signals = 1 |
-          .advanced.validation.max_signal_age_seconds = 900 |
-          .advanced.validation.min_sl_pips = {"JPY_pairs":20,"other":12} |
-          .advanced.session_bonuses.LATE_US = {"all_major_pairs":0} |
-          .performance_tuning.auto_adjust_thresholds = false |
-          .performance_tracking.enable = true |
-          .performance_tracking.equity_curve.enabled = true |
-          .performance_tracking.equity_curve.max_points = 1000 |
-          .risk_management.equity_protection.enable = false
-          ' config.json > tmp.json && mv tmp.json config.json
-
-          echo "📄 v2.0.6 configuration applied"
-          jq '.' config.json
-
-      - name: 🔄 Resolve previous signals
-        run: |
-          echo "🔍 Checking for signals to resolve..."
-          if [ -f signal_state/dashboard_state.json ]; then
-            OPEN_COUNT=$(jq '.signals | map(select(.status == "OPEN")) | length' signal_state/dashboard_state.json 2>/dev/null || echo "0")
-            echo "📋 Found $OPEN_COUNT open signals to check"
-          else
-            echo "ℹ️ No previous signals found"
+          
+          # Use default from config if not specified
+          if [ "$MODE" = "default" ]; then
+            MODE=$(jq -r '.mode' config.json)
           fi
-
-      - name: 🤖 Run Trade Beacon v2.0.6
+          
+          jq \
+            --arg mode "$MODE" \
+            --argjson sentiment "$SENTIMENT" \
+            '.mode = $mode | .use_sentiment = $sentiment' \
+            config.json > tmp.json && mv tmp.json config.json
+          
+          echo "✅ Configuration updated: mode=$MODE, sentiment=$SENTIMENT"
+      
+      - name: Allow threshold optimization (if eligible)
+        if: github.event.inputs.allow_optimization == 'true'
+        run: |
+          echo "🔧 Allowing threshold optimization..."
+          jq '.performance_tuning.auto_adjust_thresholds = true' \
+            config.json > tmp.json && mv tmp.json config.json
+          
+          # Reset last optimization timestamp to allow immediate run
+          rm -f signal_state/last_optimization.json
+          
+          echo "✅ Optimization enabled (will run if min_trades_for_optimization met)"
+          echo "ℹ️  Note: Actual optimization depends on:"
+          echo "   - Minimum trade count threshold"
+          echo "   - Time since last optimization"
+          echo "   - Performance below target expectancy"
+          
+          # Log eligibility criteria for forensics
+          MIN_TRADES=$(jq -r '.performance_tuning.min_trades_for_optimization // 50' config.json)
+          CURRENT_TRADES=$(jq -r '.stats.total_trades // 0' signal_state/signal_history.json 2>/dev/null || echo "0")
+          
+          echo "📊 Optimization eligibility:"
+          echo "   Current trades: $CURRENT_TRADES"
+          echo "   Required trades: $MIN_TRADES"
+          
+          if [ "$CURRENT_TRADES" -ge "$MIN_TRADES" ]; then
+            echo "   ✅ Trade count threshold MET"
+          else
+            echo "   ⚠️  Trade count threshold NOT MET (need $((MIN_TRADES - CURRENT_TRADES)) more)"
+          fi
+      
+      - name: Pre-run health check
+        run: |
+          echo "🏥 Running pre-flight health check..."
+          
+          # Check if system is paused and exit early if so
+          if [ -f signal_state/trading_paused.json ]; then
+            PAUSED_UNTIL=$(jq -r '.paused_until // "unknown"' signal_state/trading_paused.json)
+            echo "⛔ Trading is currently paused until: $PAUSED_UNTIL"
+            echo "⛔ Skipping execution to prevent signal emission during cooldown"
+            
+            # Create status report
+            echo "paused" > signal_state/run_status.txt
+            echo "System paused - no execution" >> signal_state/run_status.txt
+            
+            exit 0
+          fi
+          
+          # Display current performance if available
+          if [ -f signal_state/signal_history.json ]; then
+            echo "📊 Current Performance:"
+            jq -r '.stats | "Total Trades: \(.total_trades // 0) | Win Rate: \(.win_rate // 0)% | Total Pips: \(.total_pips // 0) | Expectancy: \(.expectancy_pips // 0)"' \
+              signal_state/signal_history.json || echo "No stats available yet"
+          fi
+          
+          echo "✅ Pre-flight check complete - system ready"
+      
+      - name: Run Trade Beacon v2.1.2
         env:
-          newsapi_key: ${{ secrets.newsapi_key }}
+          NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
           MARKETAUX_API_KEY: ${{ secrets.MARKETAUX_API_KEY }}
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
-          HUGGINGFACE_API_KEY: ${{ secrets.HUGGINGFACE_API_KEY }}
         run: |
-          echo "🚀 Trade Beacon v2.0.6 - Signal Generator Mode"
-          python ${{ env.ENTRY_SCRIPT }}
-
-      - name: 📊 Optional Backtest
-        if: github.event.inputs.run_backtest == 'true'
-        run: |
-          echo "⚠️ Backtest enabled"
-          if [ -f backtest.py ]; then
-            python backtest.py || echo "⚠️ Backtest failed"
-          else
-            echo "⚠️ backtest.py not found"
-          fi
-
-      - name: 🔍 Validate outputs
-        run: |
-          echo "📊 Validating dashboard state..."
-          jq '.active_signals, .stats, .system.version' signal_state/dashboard_state.json
+          echo "🚀 Starting Trade Beacon v2.1.2..."
+          python $ENTRY_SCRIPT
+          EXIT_CODE=$?
           
-          echo "🏥 Validating health status..."
-          jq '.status, .signal_count, .system_info.version' signal_state/health.json
-          
-          if [ -f signal_state/signal_history.json ]; then
-            RESOLVED=$(jq '.stats.total_resolved // 0' signal_state/signal_history.json)
-            TOTAL=$(jq '.signals | length' signal_state/signal_history.json)
-            echo "📈 Performance: $RESOLVED resolved / $TOTAL total signals"
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "❌ Trade Beacon exited with error code: $EXIT_CODE"
+            exit $EXIT_CODE
           fi
-
-      - name: 📈 Display performance summary
+          
+          echo "✅ Trade Beacon completed successfully"
+          
+          # Log optimization decision if optimization was allowed
+          if [ -f signal_state/last_optimization.json ]; then
+            echo ""
+            echo "📊 Optimization Decision:"
+            jq -r '"Reason: \(.reason // "N/A")\nOld Threshold: \(.old_threshold // "N/A")\nNew Threshold: \(.new_threshold // "N/A")"' \
+              signal_state/last_optimization.json || echo "Optimization data not available"
+          elif [ "${{ github.event.inputs.allow_optimization }}" == "true" ]; then
+            echo ""
+            echo "ℹ️  Optimization was ALLOWED but NOT EXECUTED"
+            echo "   Possible reasons:"
+            
+            CURRENT_TRADES=$(jq -r '.stats.total_trades // 0' signal_state/signal_history.json 2>/dev/null || echo "0")
+            MIN_TRADES=$(jq -r '.performance_tuning.min_trades_for_optimization // 50' config.json)
+            
+            if [ "$CURRENT_TRADES" -lt "$MIN_TRADES" ]; then
+              echo "   ❌ Not enough trades ($CURRENT_TRADES < $MIN_TRADES)"
+            fi
+            
+            # Check if interval was met (14 days default)
+            if [ -f signal_state/last_optimization.json.backup ]; then
+              LAST_OPT=$(jq -r '.timestamp // ""' signal_state/last_optimization.json.backup 2>/dev/null || echo "")
+              if [ -n "$LAST_OPT" ]; then
+                echo "   ⚠️  Optimization interval not met (last run: $LAST_OPT)"
+              fi
+            fi
+            
+            EXPECTANCY=$(jq -r '.stats.expectancy_pips // 0' signal_state/signal_history.json 2>/dev/null || echo "0")
+            MIN_EXPECTANCY=$(jq -r '.performance_tuning.optimization_inputs.min_expectancy // 0.5' config.json)
+            
+            if (( $(echo "$EXPECTANCY >= $MIN_EXPECTANCY" | bc -l) )); then
+              echo "   ✅ Expectancy above threshold ($EXPECTANCY >= $MIN_EXPECTANCY)"
+            fi
+          fi
+      
+      - name: Validate output files
         if: always()
         run: |
-          if [ -f signal_state/signal_history.json ]; then
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            echo "📊 PERFORMANCE SUMMARY (v2.0.6)"
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            jq -r '
-              "Total Trades: \(.stats.total_trades // 0)",
-              "Resolved: \(.stats.total_resolved // 0)",
-              "Win Rate: \(.stats.win_rate // 0)%",
-              "Total Pips: \(.stats.total_pips // 0)",
-              "Expectancy: \(.stats.expectancy // 0)",
-              "Avg Win: \(.stats.avg_win // 0) pips",
-              "Avg Loss: \(.stats.avg_loss // 0) pips"
-            ' signal_state/signal_history.json
-            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          else
-            echo "ℹ️ No performance history available yet"
-          fi
-
-      - name: 💾 Commit state (local only)
-        run: |
-          git config user.name "Trade Beacon v2.0.6"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          git add signal_state/*.json signals.csv config.json || true
+          echo "🔍 Validating output files..."
           
-          if ! git diff --staged --quiet; then
-            SIGNAL_COUNT=$(jq '.active_signals // 0' signal_state/dashboard_state.json 2>/dev/null || echo "0")
-            RESOLVED=$(jq '.stats.total_resolved // 0' signal_state/signal_history.json 2>/dev/null || echo "0")
-            
-            git commit -m "📊 Trade Beacon v2.0.6 | Signals: $SIGNAL_COUNT active, $RESOLVED resolved [skip ci]"
-            echo "✅ Changes committed locally (not pushed)"
+          # Check dashboard state
+          if [ -f signal_state/dashboard_state.json ]; then
+            jq empty signal_state/dashboard_state.json || exit 1
+            echo "✅ Dashboard state valid"
           else
-            echo "ℹ️ No changes to commit"
+            echo "⚠️  Dashboard state not found"
           fi
-
-      - name: 🚀 Push changes (ONLY if committed)
+          
+          # Check health file
+          if [ -f signal_state/health.json ]; then
+            jq empty signal_state/health.json || exit 1
+            STATUS=$(jq -r '.status // "unknown"' signal_state/health.json)
+            echo "📊 System health: $STATUS"
+          fi
+      
+      - name: Optional backtest
+        if: github.event.inputs.run_backtest == 'true'
         run: |
-          if git rev-parse --verify HEAD >/dev/null 2>&1; then
-            if git diff --cached --quiet; then
-              echo "ℹ️ No new commits to push"
-            else
-              git push origin HEAD:main
-              echo "✅ Changes pushed to repo"
-            fi
+          echo "🧪 Running backtest..."
+          if [ -f backtest.py ]; then
+            python backtest.py || echo "⚠️  Backtest failed, continuing..."
           else
-            echo "ℹ️ No commit history found yet"
+            echo "⚠️  backtest.py not found, skipping..."
           fi
-
-      - name: 📦 Upload artifacts
+      
+      - name: Display comprehensive performance summary
+        if: always()
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📊 TRADE BEACON v2.1.2 PERFORMANCE SUMMARY"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          if [ -f signal_state/signal_history.json ]; then
+            echo ""
+            echo "📈 Overall Statistics:"
+            jq -r '.stats | 
+              "Total Trades: \(.total_trades // 0)\n" +
+              "Resolved: \(.total_resolved // 0)\n" +
+              "Wins: \(.wins // 0)\n" +
+              "Losses: \(.losses // 0)\n" +
+              "Expired: \(.expired // 0)\n" +
+              "Win Rate: \(.win_rate // 0)%\n" +
+              "Total Pips: \(.total_pips // 0)\n" +
+              "Avg Win: \(.avg_win // 0) pips\n" +
+              "Avg Loss: \(.avg_loss // 0) pips\n" +
+              "Expectancy: \(.expectancy_pips // 0) pips/trade\n" +
+              "Validated: \(.validated // false)"' \
+              signal_state/signal_history.json || echo "Stats not available"
+            
+            echo ""
+            echo "📊 Analytics by Session:"
+            jq -r '.analytics.by_session // {} | to_entries[] | 
+              "\(.key): \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
+              signal_state/signal_history.json 2>/dev/null || echo "No session data"
+            
+            echo ""
+            echo "🎯 Analytics by Confidence:"
+            jq -r '.analytics.by_confidence // {} | to_entries[] | 
+              "\(.key): \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
+              signal_state/signal_history.json 2>/dev/null || echo "No confidence data"
+          else
+            echo "⚠️  No performance history available yet"
+          fi
+          
+          echo ""
+          if [ -f signal_state/dashboard_state.json ]; then
+            echo "🔔 Active Signals:"
+            jq -r '.active_signals // 0' signal_state/dashboard_state.json || echo "0"
+            
+            echo ""
+            echo "📡 System Status:"
+            jq -r '.system | 
+              "Version: \(.version // "unknown")\n" +
+              "Signal Only Mode: \(.signal_only_mode // true)\n" +
+              "Performance Tracking: \(.performance_tracking_enabled // false)\n" +
+              "Optimization: \(.optimization_enabled // false)"' \
+              signal_state/dashboard_state.json || echo "Status not available"
+          fi
+          
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      
+      - name: Check for alerts
+        if: always()
+        run: |
+          if [ -f signal_state/health.json ]; then
+            STATUS=$(jq -r '.status // "unknown"' signal_state/health.json)
+            
+            if [ "$STATUS" = "paused" ]; then
+              echo "⚠️  ALERT: Trading is PAUSED"
+              jq -r '.issues // [] | .[]' signal_state/health.json 2>/dev/null || echo "No issue details"
+            elif [ "$STATUS" = "warning" ]; then
+              echo "⚠️  WARNING: System issues detected"
+              jq -r '.issues // [] | .[]' signal_state/health.json 2>/dev/null || echo "No issue details"
+            elif [ "$STATUS" != "ok" ]; then
+              echo "❌ ERROR: System in bad state: $STATUS"
+              jq -r '.issues // [] | .[]' signal_state/health.json 2>/dev/null || echo "No issue details"
+            fi
+          fi
+      
+      - name: Commit state changes
+        run: |
+          git config user.name "Trade Beacon v2.1.2 [bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Add all state files (including baseline snapshot if new)
+          git add signal_state/*.json config.json config.runtime.base.json signals.csv 2>/dev/null || true
+          
+          # Check if there are changes
+          if git diff --staged --quiet; then
+            echo "ℹ️  No changes to commit"
+          else
+            # Create detailed commit message with safe fallbacks
+            TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+            ACTIVE=$(jq -r '.active_signals // 0' signal_state/dashboard_state.json 2>/dev/null || echo "0")
+            SESSION=$(jq -r '.session // "UNKNOWN"' signal_state/dashboard_state.json 2>/dev/null || echo "UNKNOWN")
+            
+            git commit -m "📊 Trade Beacon v2.1.2 update [$TIMESTAMP]
+            
+            Session: $SESSION
+            Active Signals: $ACTIVE
+            Run: #${{ github.run_number }}
+            
+            [skip ci]"
+            
+            echo "✅ Changes committed"
+          fi
+      
+      - name: Push changes
+        run: |
+          git push origin HEAD:main || {
+            echo "⚠️  Push failed, will retry on next run"
+            exit 0
+          }
+          echo "✅ Changes pushed to repository"
+      
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: trade-beacon-v2.0.6-run-${{ github.run_number }}
+          name: trade-beacon-v2.1.2-run-${{ github.run_number }}
           path: |
             signal_state/
             signals.csv
             config.json
-          retention-days: 7
-
-      - name: 🚨 Notify on failure
-        if: failure()
-        run: |
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "❌ WORKFLOW FAILED"
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          if [ -f signal_state/health.json ]; then
-            echo "Health Status:"
-            jq '.' signal_state/health.json
-          fi
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          retention-days: 30
+          compression-level: 9

@@ -1,142 +1,139 @@
 {
-  "mode": "aggressive",
-  "use_sentiment": true,
-
+  "mode": "conservative",
+  "use_sentiment": false,
+  
   "settings": {
     "aggressive": {
-      "threshold": 45,
-      "min_adx": 15,
+      "threshold": 60,
+      "min_adx": 20,
       "rsi_oversold": 30,
       "rsi_overbought": 70,
       "min_volume_ratio": 1.0,
       "volume_penalty": 0,
-
-      "min_risk_reward": 1.8,
-
-      "atr_stop_multiplier": 1.5,
-      "atr_target_multiplier": 3.0,
-
-      "max_correlated_signals": 2
-    },
-
-    "conservative": {
-      "threshold": 55,
-      "min_adx": 18,
-      "rsi_oversold": 25,
-      "rsi_overbought": 75,
-      "min_volume_ratio": 1.0,
-      "volume_penalty": 0,
-
       "min_risk_reward": 2.0,
-
       "atr_stop_multiplier": 1.8,
       "atr_target_multiplier": 4.0,
-
+      "max_correlated_signals": 2
+    },
+    
+    "conservative": {
+      "threshold": 72,
+      "min_adx": 24,
+      "rsi_oversold": 23,
+      "rsi_overbought": 77,
+      "min_volume_ratio": 1.0,
+      "volume_penalty": 0,
+      "min_risk_reward": 2.6,
+      "atr_stop_multiplier": 2.1,
+      "atr_target_multiplier": 5.2,
       "max_correlated_signals": 1
     }
   },
-
+  
   "advanced": {
     "enable_session_filtering": true,
     "enable_correlation_filter": true,
-    "enable_performance_optimization": true,
-
+    "enable_performance_optimization": false,
     "cache_ttl_minutes": 5,
     "parallel_workers": 3,
-
+    
     "session_bonuses": {
       "ASIAN": {
-        "JPY_pairs": 5,
-        "AUD_NZD_pairs": 5,
+        "JPY_pairs": 3,
+        "AUD_NZD_pairs": 3,
         "other": 0
       },
       "EUROPEAN": {
-        "EUR_GBP_pairs": 5,
-        "EUR_GBP_crosses": 3,
+        "EUR_GBP_pairs": 3,
+        "EUR_GBP_crosses": 2,
         "other": 0
       },
       "OVERLAP": {
-        "all_major_pairs": 3
+        "all_major_pairs": 2
       },
       "US": {
-        "USD_majors": 5,
+        "USD_majors": 3,
         "other": 0
       },
       "LATE_US": {
         "all_major_pairs": 0
       }
     },
-
+    
     "validation": {
       "max_price_change_pct": 0.03,
       "max_signal_age_seconds": 900,
-
       "min_sl_pips": {
-        "JPY_pairs": 10,
-        "other": 6
+        "JPY_pairs": 20,
+        "other": 12
       },
-
       "max_spread_ratio": 0.25,
+      "max_sl_distance_pct": 0.02,
+      "max_tp_distance_pct": 0.05,
       "require_direction": true,
       "reject_missing_pips": true
     }
   },
-
+  
   "risk_management": {
     "max_daily_risk_pips": 150,
     "max_open_positions": 3,
     "max_correlated_exposure": 1,
-
     "stop_trading_on_drawdown_pips": 100,
-
+    
     "equity_protection": {
-      "enable": true,
-      "max_consecutive_losses": 5,
+      "enable": false,
+      "max_consecutive_losses": 3,
       "pause_minutes_after_hit": 120
     }
   },
-
+  
   "performance_tracking": {
     "enable": true,
     "history_file": "signal_state/signal_history.json",
-
+    
     "idempotency": {
       "enabled": true,
       "scope": "daily"
     },
-
+    
     "equity_curve": {
       "enabled": true,
       "max_points": 1000
     },
-
+    
     "analytics": {
       "track_by_pair": true,
       "track_by_confidence": true,
       "track_by_session": true
     },
-
+    
     "exports": {
       "enable_csv": true,
       "csv_path": "performance_export.csv"
     }
   },
-
+  
   "performance_tuning": {
-    "auto_adjust_thresholds": true,
-    "min_trades_for_optimization": 30,
-    "optimization_interval_days": 7,
-
-    "target_win_rate": 0.35,
-
+    "auto_adjust_thresholds": false,
+    "min_trades_for_optimization": 50,
+    "optimization_interval_days": 14,
+    "target_win_rate": 0.5,
+    
     "optimization_inputs": {
       "use_expectancy": true,
       "use_win_rate": true,
       "use_avg_rr": true,
-      "min_expectancy": 0.2
+      "min_expectancy": 0.5,
+      "hard_bounds": {
+        "aggressive_threshold_min": 55,
+        "aggressive_threshold_max": 65,
+        "conservative_threshold_min": 68,
+        "conservative_threshold_max": 78
+      }
     }
   },
-
+  
   "logging": {
     "performance_level": "INFO",
     "log_equity_updates": true,

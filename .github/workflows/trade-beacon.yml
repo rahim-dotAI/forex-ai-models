@@ -95,7 +95,7 @@ jobs:
         run: |
           echo "🔍 Validating PerformanceTracker version..."
           TRACKER_VER=$(python -c "from performance_tracker import TRACKER_VERSION; print(TRACKER_VERSION)" 2>/dev/null || echo "unknown")
-          BEACON_VER=$(grep -oP 'signal_generator_version.*\K[0-9.]+' $ENTRY_SCRIPT | head -1 || echo "unknown")
+          BEACON_VER=$(grep -oP '"signal_generator_version": "\K[0-9.]+' $ENTRY_SCRIPT | head -1 || echo "unknown")
           
           echo "Tracker version: $TRACKER_VER"
           echo "Beacon version: $BEACON_VER"
@@ -133,6 +133,30 @@ jobs:
           rm -f signal_state/dashboard_state.json
           rm -f signal_state/trading_paused.json
           echo "🔥 PERFORMANCE RESET COMPLETE - All history cleared"
+      
+      - name: Clean stale pause files
+        run: |
+          echo "🧹 Checking for stale pause files..."
+          
+          if [ -f signal_state/trading_paused.json ]; then
+            PAUSED_UNTIL=$(jq -r '.paused_until // "unknown"' signal_state/trading_paused.json)
+            
+            if [ "$PAUSED_UNTIL" != "unknown" ]; then
+              # Convert to timestamp for comparison
+              PAUSE_TS=$(date -d "$PAUSED_UNTIL" +%s 2>/dev/null || echo "0")
+              NOW_TS=$(date +%s)
+              
+              if [ "$NOW_TS" -gt "$PAUSE_TS" ]; then
+                echo "⚠️  Found expired pause file (until: $PAUSED_UNTIL)"
+                rm -f signal_state/trading_paused.json
+                echo "✅ Stale pause file removed"
+              else
+                echo "⏸️  Valid pause active until: $PAUSED_UNTIL"
+              fi
+            fi
+          else
+            echo "✅ No pause file present"
+          fi
       
       - name: Apply runtime overrides
         if: github.event.inputs.mode != 'default' || github.event.inputs.sentiment == 'true'

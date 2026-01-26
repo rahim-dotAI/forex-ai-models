@@ -159,16 +159,21 @@ jobs:
           fi
       
       - name: Apply runtime overrides
-        if: github.event.inputs.mode != 'default' || github.event.inputs.sentiment == 'true'
+        if: github.event.inputs.mode != 'default' && github.event.inputs.mode != '' && github.event.inputs.sentiment != ''
         run: |
           echo "⚙️  Applying runtime configuration..."
           
           MODE="${{ github.event.inputs.mode }}"
           SENTIMENT="${{ github.event.inputs.sentiment }}"
           
-          # Use default from config if not specified
-          if [ "$MODE" = "default" ]; then
+          # Use default from config if not specified or empty
+          if [ -z "$MODE" ] || [ "$MODE" = "default" ]; then
             MODE=$(jq -r '.mode' config.json)
+          fi
+          
+          # Default sentiment to false if empty
+          if [ -z "$SENTIMENT" ]; then
+            SENTIMENT="false"
           fi
           
           jq \

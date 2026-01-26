@@ -257,103 +257,48 @@
       font-weight: 700;
     }
 
-    .mode-selector {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 20px;
-      margin-bottom: 32px;
-    }
-
-    .mode-card {
+    .mode-indicator {
       background: var(--bg-card);
       border: 2px solid var(--border);
       border-radius: 24px;
       padding: 28px;
-      cursor: pointer;
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-      overflow: hidden;
+      margin-bottom: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
-    .mode-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
-      transform: scaleX(0);
-      transition: transform 0.4s;
-    }
-
-    .mode-card:hover {
-      border-color: var(--accent-blue);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 32px rgba(59, 130, 246, 0.2);
-    }
-
-    .mode-card.active {
+    .mode-indicator.active {
       background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(168, 85, 247, 0.15));
       border-color: var(--accent-blue);
       box-shadow: 0 12px 40px var(--glow-blue);
     }
 
-    .mode-card.active::before {
-      transform: scaleX(1);
-    }
-
-    .mode-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
+    .mode-info {
+      flex: 1;
     }
 
     .mode-title {
       font-size: 22px;
       font-weight: 900;
       letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+
+    .mode-subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
     }
 
     .mode-badge {
-      padding: 6px 14px;
+      padding: 10px 20px;
       border-radius: 14px;
-      font-size: 11px;
+      font-size: 13px;
       font-weight: 700;
       background: rgba(59, 130, 246, 0.2);
       color: var(--accent-blue);
       letter-spacing: 0.5px;
-    }
-
-    .mode-params {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      font-size: 13px;
-    }
-
-    .mode-param {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .mode-param span:first-child {
-      color: var(--text-secondary);
-      font-weight: 500;
-    }
-
-    .mode-param span:last-child {
-      color: var(--text-primary);
-      font-weight: 700;
-    }
-
-    .mode-param.disabled span:last-child {
-      color: var(--text-muted);
-      text-decoration: line-through;
-      opacity: 0.5;
+      text-transform: uppercase;
     }
 
     .section-header {
@@ -576,64 +521,6 @@
       color: var(--text-muted);
     }
 
-    .recent-trades {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 32px;
-      margin-bottom: 32px;
-    }
-
-    .trades-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-
-    .trades-table thead {
-      background: var(--bg-secondary);
-    }
-
-    .trades-table th {
-      padding: 16px;
-      text-align: left;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      border-bottom: 2px solid var(--border);
-    }
-
-    .trades-table td {
-      padding: 16px;
-      font-size: 14px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .trades-table tbody tr {
-      transition: background 0.2s;
-    }
-
-    .trades-table tbody tr:hover {
-      background: var(--bg-secondary);
-    }
-
-    .trade-win {
-      color: var(--success);
-      font-weight: 700;
-    }
-
-    .trade-loss {
-      color: var(--danger);
-      font-weight: 700;
-    }
-
-    .trade-expired {
-      color: var(--text-muted);
-      font-weight: 700;
-    }
-
     .empty-state {
       background: var(--bg-secondary);
       border: 1px solid var(--border);
@@ -753,23 +640,10 @@
         grid-template-columns: 1fr;
       }
 
-      .mode-selector {
-        grid-template-columns: 1fr;
-      }
-
       .section-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 16px;
-      }
-
-      .trades-table {
-        font-size: 12px;
-      }
-
-      .trades-table th,
-      .trades-table td {
-        padding: 10px;
       }
 
       .data-source-info,
@@ -777,6 +651,16 @@
         position: static;
         margin-top: 16px;
       }
+    }
+
+    .debug-badge {
+      background: rgba(168, 85, 247, 0.2);
+      color: var(--accent-purple);
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 700;
+      margin-left: 8px;
     }
   </style>
 </head>
@@ -822,11 +706,11 @@
 
   <script>
     let data = null;
-    let currentMode = localStorage.getItem('tradeBeaconMode') || 'aggressive';
+    let currentMode = localStorage.getItem('tradeBeaconMode') || 'conservative';
     let hasLoadedOnce = false;
     let lastUpdateTime = null;
     let dataSource = null;
-    let refreshInterval = 60000; // 60 seconds (ChatGPT Fix #1)
+    let refreshInterval = 60000; // 60 seconds
 
     const API_URLS = [
       './signal_state/dashboard_state.json',
@@ -835,19 +719,263 @@
       'https://raw.githubusercontent.com/rahim-dotAI/forex-ai-models/main/signal_state/dashboard_state.json'
     ];
 
-    const CONFIG = {
-      aggressive: { 
-        threshold: 60, 
-        min_adx: 20, 
-        rsi_oversold: 30, 
-        rsi_overbought: 70, 
-        min_volume_ratio: 1.0, 
-        min_risk_reward: 2.0 
-      },
-      conservative: { 
-        threshold: 70, 
-        min_adx: 22, 
-        rsi_oversold: 25, 
-        rsi_overbought: 75, 
-        min_volume_ratio: 1.0, 
-        min_risk_reward: 2.5
+    // CRITICAL FIX #1: Fetch data and sync mode from backend
+    async function fetchData() {
+      for (const url of API_URLS) {
+        try {
+          const response = await fetch(url, { cache: 'no-store' });
+          if (response.ok) {
+            data = await response.json();
+            dataSource = url;
+            
+            // CRITICAL FIX #2: Sync currentMode from backend (not localStorage)
+            currentMode = data?.mode || data?.system?.mode || currentMode;
+            localStorage.setItem('tradeBeaconMode', currentMode);
+            
+            // PRODUCTION FIX: Defensive timestamp handling
+            const ts = data.timestamp || data.system?.last_update;
+            lastUpdateTime = ts ? new Date(ts) : null;
+            hasLoadedOnce = true;
+            updateUI();
+            updateDataSourceInfo();
+            return;
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch from ${url}:`, error);
+        }
+      }
+      
+      // All sources failed
+      updateStatus('stale', 'NO DATA');
+      document.getElementById('app').innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">⚠️</div>
+          <div class="empty-title">Unable to Load Data</div>
+          <div class="empty-message">Could not connect to signal source. Please check your connection and try again.</div>
+        </div>
+      `;
+    }
+
+    function updateStatus(type, text) {
+      const statusEl = document.getElementById('status');
+      statusEl.className = `status-badge status-${type}`;
+      statusEl.innerHTML = `
+        <div class="status-dot"></div>
+        <span>${text}</span>
+      `;
+    }
+
+    function updateDataSourceInfo() {
+      const info = document.getElementById('dataSourceInfo');
+      const sourceText = dataSource ? dataSource.split('/').pop() : 'Unknown';
+      const timeText = lastUpdateTime ? lastUpdateTime.toLocaleTimeString() : 'N/A';
+      info.textContent = `Source: ${sourceText} | Last: ${timeText}`;
+    }
+
+    function getTimeDiff(timestamp) {
+      const now = new Date();
+      const then = new Date(timestamp);
+      const diffMs = now - then;
+      const diffMins = Math.floor(diffMs / 60000);
+      
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins}m ago`;
+      const diffHours = Math.floor(diffMins / 60);
+      if (diffHours < 24) return `${diffHours}h ago`;
+      return `${Math.floor(diffHours / 24)}d ago`;
+    }
+
+    function updateUI() {
+      if (!data) return;
+
+      // Update status badge
+      const canTrade = data.equity_protection?.can_trade !== false;
+      const isPaused = data.equity_protection?.pause_reason;
+      const isStale = lastUpdateTime && (Date.now() - lastUpdateTime.getTime()) > 600000; // 10 min
+
+      if (isPaused) {
+        updateStatus('paused', 'PAUSED');
+      } else if (isStale) {
+        updateStatus('stale', 'STALE');
+      } else if (canTrade) {
+        updateStatus('live', 'LIVE');
+      } else {
+        updateStatus('loading', 'UPDATING');
+      }
+
+      // CRITICAL FIX #3: Filter signals by eligible_modes (PRODUCTION-SAFE)
+      let signals = data?.signals || [];
+      const totalSignals = signals.length;
+      
+      // PRODUCTION FIX: Only show signals with explicit mode eligibility
+      // Empty/missing eligible_modes indicates backend bug or invalid signal
+      signals = signals.filter(s =>
+        Array.isArray(s.eligible_modes) &&
+        s.eligible_modes.length > 0 &&
+        s.eligible_modes.includes(currentMode)
+      );
+      
+      const filteredCount = signals.length;
+      const stats = data?.stats || {};
+      const session = data?.session || 'UNKNOWN';
+      const marketState = data?.market_state || {};
+
+      let html = '';
+
+      // Alert banner if paused
+      if (isPaused) {
+        html += `
+          <div class="alert-banner">
+            <div class="alert-icon">⏸️</div>
+            <div class="alert-content">
+              <div class="alert-title">Trading Paused</div>
+              <div class="alert-message">${data.equity_protection.pause_reason}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Hero stats
+      html += `
+        <div class="hero-stats">
+          <div class="hero-card">
+            <div class="hero-label">Active Signals</div>
+            <div class="hero-value">${filteredCount}</div>
+            <div class="hero-subtitle">
+              ${totalSignals !== filteredCount ? `<span class="debug-badge">${totalSignals} total, ${filteredCount} for ${currentMode}</span>` : `${currentMode.toUpperCase()} mode`}
+            </div>
+          </div>
+          
+          <div class="hero-card">
+            <div class="hero-label">Win Rate</div>
+            <div class="hero-value">${stats.win_rate?.toFixed(1) || '0.0'}%</div>
+            <div class="hero-subtitle">
+              ${stats.wins || 0}W / ${stats.losses || 0}L
+            </div>
+          </div>
+          
+          <div class="hero-card">
+            <div class="hero-label">Total Pips</div>
+            <div class="hero-value ${(stats.total_pips || 0) >= 0 ? 'change-positive' : 'change-negative'}">
+              ${(stats.total_pips || 0) >= 0 ? '+' : ''}${stats.total_pips?.toFixed(1) || '0.0'}
+            </div>
+            <div class="hero-subtitle">
+              ${stats.total_trades || 0} trades
+            </div>
+          </div>
+          
+          <div class="hero-card">
+            <div class="hero-label">Market Session</div>
+            <div class="hero-value" style="font-size: 32px;">${session}</div>
+            <div class="hero-subtitle">
+              ${marketState.volatility || 'NORMAL'} volatility
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Mode indicator (backend enforced)
+      html += `
+        <div class="mode-indicator active">
+          <div class="mode-info">
+            <div class="mode-title">${currentMode.toUpperCase()} Mode</div>
+            <div class="mode-subtitle">Backend enforced - signals pre-filtered by Trade Beacon v2.1.2</div>
+          </div>
+          <div class="mode-badge">🔒 Enforced</div>
+        </div>
+      `;
+
+      // Signals section
+      if (signals.length > 0) {
+        html += `
+          <div class="section-header">
+            <div class="section-title">
+              📡 Active Signals
+              <span class="signal-count">${signals.length}</span>
+            </div>
+          </div>
+          
+          <div class="signals-grid">
+        `;
+
+        signals.forEach(signal => {
+          const direction = signal.direction?.toLowerCase() || 'buy';
+          const confidence = signal.score || signal.technical_score || 0;
+          const confidenceWidth = Math.min(100, (confidence / 100) * 100);
+          
+          html += `
+            <div class="signal-card ${direction}">
+              <div class="signal-header">
+                <div class="signal-pair">${signal.pair || 'N/A'}</div>
+                <div class="signal-direction direction-${direction}">${signal.direction || 'BUY'}</div>
+              </div>
+              
+              <div class="signal-meta">
+                <div class="meta-badge">📊 ${signal.session || 'UNKNOWN'}</div>
+                <div class="meta-badge">⏱ ${signal.hold_time || 'INTRADAY'}</div>
+                <div class="meta-badge">🎯 ${signal.confidence || 'MODERATE'}</div>
+                ${signal.metadata?.signal_type ? `<div class="meta-badge">📈 ${signal.metadata.signal_type}</div>` : ''}
+              </div>
+              
+              <div class="confidence-section">
+                <div class="confidence-header">
+                  <div class="confidence-label">Signal Strength</div>
+                  <div class="confidence-score">${confidence}</div>
+                </div>
+                <div class="confidence-bar">
+                  <div class="confidence-fill" style="width: ${confidenceWidth}%"></div>
+                </div>
+              </div>
+              
+              <div class="price-grid">
+                <div class="price-row">
+                  <div class="price-label">📍 Entry</div>
+                  <div class="price-value entry">${signal.entry_price?.toFixed(5) || 'N/A'}</div>
+                </div>
+                <div class="price-row">
+                  <div class="price-label">🎯 Take Profit</div>
+                  <div class="price-value tp">${signal.tp?.toFixed(5) || 'N/A'}</div>
+                </div>
+                <div class="price-row">
+                  <div class="price-label">🛑 Stop Loss</div>
+                  <div class="price-value sl">${signal.sl?.toFixed(5) || 'N/A'}</div>
+                </div>
+              </div>
+              
+              <div class="signal-footer">
+                <div class="risk-reward">R:R ${signal.risk_reward?.toFixed(2) || 'N/A'}</div>
+                <div class="signal-time">${getTimeDiff(signal.timestamp)}</div>
+              </div>
+            </div>
+          `;
+        });
+
+        html += `</div>`;
+      } else {
+        html += `
+          <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <div class="empty-title">No Signals Available</div>
+            <div class="empty-message">
+              No ${currentMode} signals meet the current criteria. The system is actively monitoring markets.
+              ${totalSignals > 0 ? `<br><br><span class="debug-badge">${totalSignals} signals available in other modes</span>` : ''}
+            </div>
+          </div>
+        `;
+      }
+
+      document.getElementById('app').innerHTML = html;
+    }
+
+    // Auto-refresh
+    setInterval(() => {
+      if (hasLoadedOnce) {
+        fetchData();
+      }
+    }, refreshInterval);
+
+    // Initial load
+    fetchData();
+  </script>
+</body>
+</html>

@@ -587,11 +587,17 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
     if r < rsi_os: bull += (30 if MODE == "conservative" else 20)
     elif r > rsi_ob: bear += (30 if MODE == "conservative" else 20)
     
-    # ADX
+    # ADX (FIXED - explicit branching instead of conditional expression)
     if a > 25:
-        (bull if e12 > e26 else bear) += 20
+        if e12 > e26:
+            bull += 20
+        else:
+            bear += 20
     elif a > SETTINGS.get("min_adx", 22):
-        (bull if e12 > e26 else bear) += 10
+        if e12 > e26:
+            bull += 10
+        else:
+            bear += 10
     
     # Session (FIXED - elif for bear)
     session = get_market_session()
@@ -767,7 +773,17 @@ def filter_expired_signals(signals: List[Dict]) -> List[Dict]:
 def write_dashboard_state(signals: list, downloads: int, news_calls: int = 0, mkt_calls: int = 0, config: Dict = None, mode: str = None, settings: Dict = None):
     cfg = config or CONFIG
     md = mode or MODE
+    original_count = len(signals)
     signals = filter_expired_signals(signals)
+    
+    # CRITICAL FIX: Enforce mode filtering - only show signals eligible for current mode
+    signals = [
+        s for s in signals
+        if md in s.get("eligible_modes", [])
+    ]
+    
+    if original_count > len(signals):
+        log.info(f"🔒 Mode filter ({md}): {original_count} → {len(signals)} signals")
     
     perf = get_performance_summary()
     stats = perf.get("stats", {}) or {}
@@ -779,6 +795,7 @@ def write_dashboard_state(signals: list, downloads: int, news_calls: int = 0, mk
         "session": get_market_session(),
         "mode": md,
         "sentiment_enabled": USE_SENTIMENT,
+        "mode_filter_applied": True,
         "equity_protection": {"enabled": cfg.get("risk_management", {}).get("equity_protection", {}).get("enable", False), "can_trade": can_trade, "pause_reason": pause or None},
         "market_state": {"volatility": calculate_market_volatility(signals), "sentiment_bias": calculate_market_sentiment(signals), "session": get_market_session()},
         "signals": signals,

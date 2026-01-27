@@ -240,6 +240,43 @@ jobs:
           
           echo "✅ Pre-flight check complete - system ready"
       
+      - name: Display active configuration
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📋 ACTIVE CONFIGURATION"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          
+          MODE=$(jq -r '.mode' config.json)
+          echo "Trading Mode: $MODE"
+          echo ""
+          
+          echo "[$MODE Mode Settings]"
+          echo "  Threshold: $(jq -r ".settings.$MODE.threshold" config.json)"
+          echo "  Min ADX: $(jq -r ".settings.$MODE.min_adx" config.json)"
+          echo "  RSI Oversold: $(jq -r ".settings.$MODE.rsi_oversold" config.json)"
+          echo "  RSI Overbought: $(jq -r ".settings.$MODE.rsi_overbought" config.json)"
+          echo "  Min Risk:Reward: $(jq -r ".settings.$MODE.min_risk_reward" config.json)"
+          echo "  ATR Stop Multiplier: $(jq -r ".settings.$MODE.atr_stop_multiplier" config.json)"
+          echo "  ATR Target Multiplier: $(jq -r ".settings.$MODE.atr_target_multiplier" config.json)"
+          echo "  Max Correlated Signals: $(jq -r ".settings.$MODE.max_correlated_signals" config.json)"
+          echo ""
+          
+          echo "[System Settings]"
+          echo "  Sentiment Analysis: $(jq -r '.use_sentiment' config.json)"
+          echo "  Performance Tracking: $(jq -r '.performance_tracking.enable' config.json)"
+          echo "  Auto Threshold Optimization: $(jq -r '.performance_tuning.auto_adjust_thresholds' config.json)"
+          echo "  Session Filtering: $(jq -r '.advanced.enable_session_filtering' config.json)"
+          echo "  Correlation Filter: $(jq -r '.advanced.enable_correlation_filter' config.json)"
+          echo ""
+          
+          echo "[Risk Management]"
+          echo "  Max Daily Risk: $(jq -r '.risk_management.max_daily_risk_pips' config.json) pips"
+          echo "  Max Open Positions: $(jq -r '.risk_management.max_open_positions' config.json)"
+          echo "  Equity Protection: $(jq -r '.risk_management.equity_protection.enable' config.json)"
+          echo ""
+          
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      
       - name: Run Trade Beacon v2.1.2
         env:
           NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}

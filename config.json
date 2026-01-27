@@ -1,7 +1,6 @@
 {
-  "mode": "conservative",
-  "use_sentiment": false,
-
+  "mode": "aggressive",
+  "use_sentiment": true,
   "settings": {
     "aggressive": {
       "threshold": 60,
@@ -24,13 +23,11 @@
       "max_correlated_signals": 1
     }
   },
-
   "advanced": {
     "enable_session_filtering": true,
     "enable_correlation_filter": true,
     "cache_ttl_minutes": 5,
     "parallel_workers": 3,
-
     "session_bonuses": {
       "ASIAN": {
         "JPY_pairs": 3,
@@ -53,50 +50,41 @@
         "all_major_pairs": 0
       }
     },
-
     "validation": {
       "max_signal_age_seconds": 900,
       "require_direction": true,
       "reject_missing_pips": true,
-
       "min_sl_pips": {
         "JPY_pairs": 20,
         "other": 12
       },
-
       "max_spread_ratio": 0.25,
       "max_sl_distance_pct": 0.02,
       "max_tp_distance_pct": 0.05
     }
   },
-
   "risk_management": {
     "max_daily_risk_pips": 150,
     "max_open_positions": 3,
     "stop_trading_on_drawdown_pips": 100,
-
     "equity_protection": {
       "enable": false,
       "max_consecutive_losses": 3,
       "pause_minutes_after_hit": 120
     }
   },
-
   "performance_tracking": {
     "enable": true,
     "history_file": "signal_state/signal_history.json",
-
     "idempotency": {
       "enabled": true
     },
-
     "analytics": {
       "track_by_pair": true
     }
   },
-
   "performance_tuning": {
-    "auto_adjust_thresholds": false,
+    "auto_adjust_thresholds": true,
     "min_trades_for_optimization": 50,
     "target_win_rate": 0.5
   }

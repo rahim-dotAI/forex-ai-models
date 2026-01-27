@@ -1,6 +1,6 @@
 {
-  "mode": "aggressive",
-  "use_sentiment": true,
+  "mode": "conservative",
+  "use_sentiment": false,
   "settings": {
     "aggressive": {
       "threshold": 60,
@@ -84,7 +84,7 @@
     }
   },
   "performance_tuning": {
-    "auto_adjust_thresholds": true,
+    "auto_adjust_thresholds": false,
     "min_trades_for_optimization": 50,
     "target_win_rate": 0.5
   }

@@ -1,6 +1,6 @@
 {
-  "timestamp": "2026-01-28T08:45:56.781029+00:00",
-  "active_signals": 0,
+  "timestamp": "2026-01-28T08:55:07.213058+00:00",
+  "active_signals": 1,
   "session": "EUROPEAN",
   "mode": "conservative",
   "sentiment_enabled": false,
@@ -12,10 +12,55 @@
   },
   "market_state": {
     "volatility": "CALM",
-    "sentiment_bias": "MIXED",
+    "sentiment_bias": "BULLISH",
     "session": "EUROPEAN"
   },
-  "signals": [],
+  "signals": [
+    {
+      "signal_id": "AUDUSD_BUY_9b6e3a80dee7",
+      "id": "AUDUSD_BUY_9b6e3a80dee7",
+      "pair": "AUDUSD",
+      "direction": "BUY",
+      "score": 60,
+      "technical_score": 60,
+      "sentiment_score": 0,
+      "confidence": "MODERATE",
+      "rsi": 43.9,
+      "adx": 25.5,
+      "atr": 0.0007,
+      "volume_ratio": 0,
+      "session": "EUROPEAN",
+      "entry_price": 0.6993,
+      "sl": 0.6979,
+      "tp": 0.70246,
+      "risk_reward": 2.25,
+      "spread": 0.00018,
+      "timestamp": "2026-01-28T08:55:02.443319+00:00",
+      "status": "OPEN",
+      "hold_time": "INTRADAY",
+      "eligible_modes": [
+        "conservative",
+        "aggressive"
+      ],
+      "freshness": {
+        "status": "FRESH",
+        "age_minutes": 0.0,
+        "confidence_decay": 100.0
+      },
+      "metadata": {
+        "signal_type": "trend-continuation",
+        "market_state": "TRENDING_STRONG",
+        "timeframe": "15m",
+        "valid_for_minutes": 15,
+        "generated_at": "2026-01-28T08:55:02.443319+00:00",
+        "expires_at": "2026-01-28T09:10:02.443319+00:00",
+        "session_active": true,
+        "signal_generator_version": "2.1.2",
+        "atr_stop_multiplier": 2.0,
+        "atr_target_multiplier": 4.5
+      }
+    }
+  ],
   "api_usage": {
     "yfinance": {
       "successful_downloads": 10
@@ -35,8 +80,8 @@
     "expectancy": 0
   },
   "risk_management": {
-    "theoretical_max_pips": 0,
-    "total_risk_pips": 0,
+    "theoretical_max_pips": 31.6,
+    "total_risk_pips": 14.000000000000679,
     "max_daily_risk": 150
   },
   "analytics": {
@@ -46,7 +91,7 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-01-28T08:45:56.781057+00:00",
+    "last_update": "2026-01-28T08:55:07.213101+00:00",
     "signal_only_mode": true,
     "version": "2.1.2"
   }

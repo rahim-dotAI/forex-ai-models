@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trade Beacon v2.1.2 - Pro Dashboard</title>
+  <title>Trade Beacon v2.1.2 - Professional Dashboard</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -30,6 +30,7 @@
       --glow-purple: rgba(168, 85, 247, 0.3);
       --glow-green: rgba(16, 185, 129, 0.3);
       --glow-red: rgba(239, 68, 68, 0.3);
+      --gold: #fbbf24;
     }
 
     body {
@@ -137,52 +138,47 @@
       50% { opacity: 0.3; transform: scale(1.5); }
     }
 
-    .alert-banner {
-      background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(239, 68, 68, 0.2));
-      border: 2px solid var(--warning);
-      border-radius: 16px;
-      padding: 20px 28px;
-      margin-bottom: 24px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      animation: slideDown 0.4s ease;
-    }
-
-    @keyframes slideDown {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .alert-icon {
-      font-size: 32px;
-    }
-
-    .alert-content {
-      flex: 1;
-    }
-
-    .alert-title {
-      font-size: 18px;
-      font-weight: 800;
-      margin-bottom: 4px;
-      color: var(--warning);
-    }
-
-    .alert-message {
-      font-size: 14px;
-      color: var(--text-secondary);
-    }
-
     .container {
       max-width: 1920px;
       margin: 0 auto;
       padding: 32px;
     }
 
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 32px;
+      background: var(--bg-card);
+      padding: 8px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+    }
+
+    .tab {
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s;
+      color: var(--text-secondary);
+      border: 2px solid transparent;
+    }
+
+    .tab:hover {
+      color: var(--text-primary);
+      background: rgba(59, 130, 246, 0.1);
+    }
+
+    .tab.active {
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      color: var(--text-primary);
+      box-shadow: 0 4px 20px var(--glow-blue);
+    }
+
     .hero-stats {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: 24px;
       margin-bottom: 32px;
     }
@@ -257,50 +253,6 @@
       font-weight: 700;
     }
 
-    .mode-indicator {
-      background: var(--bg-card);
-      border: 2px solid var(--border);
-      border-radius: 24px;
-      padding: 28px;
-      margin-bottom: 32px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .mode-indicator.active {
-      background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(168, 85, 247, 0.15));
-      border-color: var(--accent-blue);
-      box-shadow: 0 12px 40px var(--glow-blue);
-    }
-
-    .mode-info {
-      flex: 1;
-    }
-
-    .mode-title {
-      font-size: 22px;
-      font-weight: 900;
-      letter-spacing: -0.5px;
-      margin-bottom: 8px;
-    }
-
-    .mode-subtitle {
-      font-size: 14px;
-      color: var(--text-secondary);
-    }
-
-    .mode-badge {
-      padding: 10px 20px;
-      border-radius: 14px;
-      font-size: 13px;
-      font-weight: 700;
-      background: rgba(59, 130, 246, 0.2);
-      color: var(--accent-blue);
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-
     .section-header {
       display: flex;
       justify-content: space-between;
@@ -317,18 +269,270 @@
       letter-spacing: -0.5px;
     }
 
-    .signal-count {
-      background: var(--bg-secondary);
-      color: var(--accent-blue);
-      padding: 6px 16px;
-      border-radius: 14px;
+    .trades-grid {
+      display: grid;
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .trade-row {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 24px;
+      display: grid;
+      grid-template-columns: 120px 100px 120px 120px 120px 120px 1fr 100px;
+      gap: 20px;
+      align-items: center;
+      transition: all 0.3s;
+      border-left: 4px solid transparent;
+    }
+
+    .trade-row.win {
+      border-left-color: var(--success);
+    }
+
+    .trade-row.loss {
+      border-left-color: var(--danger);
+    }
+
+    .trade-row.expired {
+      border-left-color: var(--warning);
+      opacity: 0.7;
+    }
+
+    .trade-row:hover {
+      transform: translateX(4px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      border-color: var(--border-light);
+    }
+
+    .trade-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .trade-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+
+    .trade-value {
       font-size: 15px;
       font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .trade-pair {
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+    }
+
+    .trade-direction {
+      padding: 4px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 800;
+      width: fit-content;
+    }
+
+    .direction-buy {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--success);
+      border: 1px solid var(--success);
+    }
+
+    .direction-sell {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+      border: 1px solid var(--danger);
+    }
+
+    .pips-badge {
+      padding: 6px 14px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 900;
+      font-family: 'Courier New', monospace;
+    }
+
+    .pips-win {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--success);
+      border: 2px solid var(--success);
+    }
+
+    .pips-loss {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+      border: 2px solid var(--danger);
+    }
+
+    .pips-expired {
+      background: rgba(245, 158, 11, 0.2);
+      color: var(--warning);
+      border: 2px solid var(--warning);
+    }
+
+    .highlight-card {
+      background: linear-gradient(135deg, var(--bg-card), var(--bg-tertiary));
+      border: 2px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .highlight-card::before {
+      content: '';
+      position: absolute;
+      top: -2px;
+      left: -2px;
+      right: -2px;
+      bottom: -2px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      border-radius: 20px;
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .highlight-card:hover::before {
+      opacity: 0.3;
+    }
+
+    .highlight-card.best {
+      border-color: var(--success);
+      box-shadow: 0 8px 32px var(--glow-green);
+    }
+
+    .highlight-card.worst {
+      border-color: var(--danger);
+      box-shadow: 0 8px 32px var(--glow-red);
+    }
+
+    .highlight-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .highlight-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .highlight-badge {
+      padding: 6px 16px;
+      border-radius: 12px;
+      font-size: 24px;
+      font-weight: 900;
+      font-family: 'Courier New', monospace;
+    }
+
+    .highlight-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px;
+    }
+
+    .highlight-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .highlight-stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .highlight-stat-value {
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .analytics-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+    }
+
+    .analytics-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 20px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .analytics-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .analytics-row:last-child {
+      border-bottom: none;
+    }
+
+    .analytics-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
+
+    .analytics-value {
+      font-size: 16px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .analytics-bar {
+      height: 6px;
+      background: var(--bg-secondary);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .analytics-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+      border-radius: 3px;
+      transition: width 0.6s ease;
     }
 
     .signals-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
       gap: 24px;
       margin-bottom: 40px;
     }
@@ -357,14 +561,6 @@
       border-color: var(--border-light);
     }
 
-    .signal-card.buy:hover {
-      box-shadow: 0 16px 48px var(--glow-green);
-    }
-
-    .signal-card.sell:hover {
-      box-shadow: 0 16px 48px var(--glow-red);
-    }
-
     .signal-header {
       display: flex;
       justify-content: space-between;
@@ -384,18 +580,6 @@
       font-size: 13px;
       font-weight: 800;
       letter-spacing: 0.5px;
-    }
-
-    .direction-buy {
-      background: rgba(16, 185, 129, 0.2);
-      color: var(--success);
-      border: 2px solid var(--success);
-    }
-
-    .direction-sell {
-      background: rgba(239, 68, 68, 0.2);
-      color: var(--danger);
-      border: 2px solid var(--danger);
     }
 
     .signal-meta {
@@ -570,52 +754,33 @@
       to { transform: rotate(360deg); }
     }
 
-    .data-source-info {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      font-size: 11px;
-      color: var(--text-muted);
-      background: rgba(17, 24, 39, 0.8);
-      padding: 6px 12px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      backdrop-filter: blur(10px);
-      z-index: 1000;
-      opacity: 0.7;
-      transition: opacity 0.3s;
-    }
-
-    .data-source-info:hover {
-      opacity: 1;
-    }
-
-    .refresh-btn {
-      position: fixed;
-      bottom: 20px;
-      left: 20px;
-      background: var(--bg-secondary);
-      color: var(--text-primary);
-      border: 1px solid var(--border);
-      padding: 8px 16px;
-      border-radius: 12px;
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.3s;
-      z-index: 1000;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .refresh-btn:hover {
-      background: var(--accent-blue);
-      border-color: var(--accent-blue);
+    .trophy-icon {
+      font-size: 32px;
+      filter: drop-shadow(0 0 10px var(--gold));
     }
 
     @media (max-width: 1400px) {
-      .signals-grid {
-        grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      .trade-row {
+        grid-template-columns: 100px 80px 100px 100px 100px 100px 1fr 80px;
+        gap: 12px;
+        font-size: 13px;
+      }
+    }
+
+    @media (max-width: 1024px) {
+      .trade-row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .tabs {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+      }
+
+      .signals-grid,
+      .analytics-grid {
+        grid-template-columns: 1fr;
       }
     }
 
@@ -629,38 +794,12 @@
       }
 
       .logo {
-        font-size: 20px;
-      }
-
-      .signals-grid {
-        grid-template-columns: 1fr;
+        font-size: 18px;
       }
 
       .hero-stats {
         grid-template-columns: 1fr;
       }
-
-      .section-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 16px;
-      }
-
-      .data-source-info,
-      .refresh-btn {
-        position: static;
-        margin-top: 16px;
-      }
-    }
-
-    .debug-badge {
-      background: rgba(168, 85, 247, 0.2);
-      color: var(--accent-purple);
-      padding: 4px 8px;
-      border-radius: 8px;
-      font-size: 10px;
-      font-weight: 700;
-      margin-left: 8px;
     }
   </style>
 </head>
@@ -675,8 +814,8 @@
         </div>
       </div>
       <div class="nav-controls">
-        <div style="font-size: 12px; color: var(--text-secondary); margin-right: 12px;">
-          Signal Generator
+        <div style="font-size: 12px; color: var(--text-secondary); margin-right: 12px;" id="lastUpdate">
+          Last update: --:--
         </div>
         <div class="status-badge status-loading" id="status">
           <div class="status-dot"></div>
@@ -687,6 +826,13 @@
   </nav>
 
   <div class="container">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('overview')">📊 Overview</div>
+      <div class="tab" onclick="switchTab('signals')">📡 Active Signals</div>
+      <div class="tab" onclick="switchTab('history')">📜 Trade History</div>
+      <div class="tab" onclick="switchTab('analytics')">📈 Analytics</div>
+    </div>
+
     <div id="app">
       <div class="loading">
         <div class="spinner"></div>
@@ -695,81 +841,60 @@
     </div>
   </div>
 
-  <div class="refresh-btn" onclick="fetchData()">
-    <span>🔄</span>
-    Refresh
-  </div>
-
-  <div class="data-source-info" id="dataSourceInfo">
-    Source: Loading...
-  </div>
-
   <script>
     let data = null;
+    let historyData = null;
     let currentMode = localStorage.getItem('tradeBeaconMode') || 'conservative';
-    let hasLoadedOnce = false;
-    let lastUpdateTime = null;
-    let dataSource = null;
-    let refreshInterval = 60000; // 60 seconds
+    let currentTab = 'overview';
+    let refreshInterval = 60000;
 
     const API_URLS = [
       './signal_state/dashboard_state.json',
       'signal_state/dashboard_state.json',
-      '/signal_state/dashboard_state.json',
       'https://raw.githubusercontent.com/rahim-dotAI/forex-ai-models/main/signal_state/dashboard_state.json'
     ];
 
-    // CRITICAL FIX #1: Fetch data and sync mode from backend
+    const HISTORY_URLS = [
+      './signal_state/signal_history.json',
+      'signal_state/signal_history.json',
+      'https://raw.githubusercontent.com/rahim-dotAI/forex-ai-models/main/signal_state/signal_history.json'
+    ];
+
     async function fetchData() {
+      // Fetch dashboard data
       for (const url of API_URLS) {
         try {
           const response = await fetch(url, { cache: 'no-store' });
           if (response.ok) {
             data = await response.json();
-            dataSource = url;
-            
-            // CRITICAL FIX #2: Sync currentMode from backend (not localStorage)
-            currentMode = data?.mode || data?.system?.mode || currentMode;
-            localStorage.setItem('tradeBeaconMode', currentMode);
-            
-            // PRODUCTION FIX: Defensive timestamp handling
-            const ts = data.timestamp || data.system?.last_update;
-            lastUpdateTime = ts ? new Date(ts) : null;
-            hasLoadedOnce = true;
-            updateUI();
-            updateDataSourceInfo();
-            return;
+            currentMode = data?.mode || currentMode;
+            break;
           }
         } catch (error) {
-          console.warn(`Failed to fetch from ${url}:`, error);
+          console.warn(`Failed to fetch from ${url}`);
         }
       }
-      
-      // All sources failed
-      updateStatus('stale', 'NO DATA');
-      document.getElementById('app').innerHTML = `
-        <div class="empty-state">
-          <div class="empty-icon">⚠️</div>
-          <div class="empty-title">Unable to Load Data</div>
-          <div class="empty-message">Could not connect to signal source. Please check your connection and try again.</div>
-        </div>
-      `;
+
+      // Fetch history data
+      for (const url of HISTORY_URLS) {
+        try {
+          const response = await fetch(url, { cache: 'no-store' });
+          if (response.ok) {
+            historyData = await response.json();
+            break;
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch history from ${url}`);
+        }
+      }
+
+      updateUI();
     }
 
     function updateStatus(type, text) {
       const statusEl = document.getElementById('status');
       statusEl.className = `status-badge status-${type}`;
-      statusEl.innerHTML = `
-        <div class="status-dot"></div>
-        <span>${text}</span>
-      `;
-    }
-
-    function updateDataSourceInfo() {
-      const info = document.getElementById('dataSourceInfo');
-      const sourceText = dataSource ? dataSource.split('/').pop() : 'Unknown';
-      const timeText = lastUpdateTime ? lastUpdateTime.toLocaleTimeString() : 'N/A';
-      info.textContent = `Source: ${sourceText} | Last: ${timeText}`;
+      statusEl.innerHTML = `<div class="status-dot"></div><span>${text}</span>`;
     }
 
     function getTimeDiff(timestamp) {
@@ -785,73 +910,83 @@
       return `${Math.floor(diffHours / 24)}d ago`;
     }
 
-    function updateUI() {
-      if (!data) return;
+    function formatTime(timestamp) {
+      const date = new Date(timestamp);
+      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    }
 
-      // Update status badge
-      const canTrade = data.equity_protection?.can_trade !== false;
-      const isPaused = data.equity_protection?.pause_reason;
-      const isStale = lastUpdateTime && (Date.now() - lastUpdateTime.getTime()) > 600000; // 10 min
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+      updateUI();
+    }
 
-      if (isPaused) {
-        updateStatus('paused', 'PAUSED');
-      } else if (isStale) {
-        updateStatus('stale', 'STALE');
-      } else if (canTrade) {
-        updateStatus('live', 'LIVE');
-      } else {
-        updateStatus('loading', 'UPDATING');
-      }
-
-      // CRITICAL FIX #3: Filter signals by eligible_modes (PRODUCTION-SAFE)
-      let signals = data?.signals || [];
-      const totalSignals = signals.length;
+    function getTodayTrades() {
+      if (!historyData || !historyData.signals) return [];
       
-      // PRODUCTION FIX: Only show signals with explicit mode eligibility
-      // Empty/missing eligible_modes indicates backend bug or invalid signal
+      const today = new Date().toISOString().split('T')[0];
+      return historyData.signals.filter(s => {
+        const tradeDate = s.exit_time || s.timestamp;
+        if (!tradeDate) return false;
+        return tradeDate.startsWith(today) && ['WIN', 'LOSS', 'EXPIRED'].includes(s.status);
+      });
+    }
+
+    function getBestWorstTrades() {
+      const todayTrades = getTodayTrades();
+      if (todayTrades.length === 0) return { best: null, worst: null };
+
+      const resolved = todayTrades.filter(t => t.status === 'WIN' || t.status === 'LOSS');
+      if (resolved.length === 0) return { best: null, worst: null };
+
+      const sorted = resolved.sort((a, b) => (b.pips || 0) - (a.pips || 0));
+      return {
+        best: sorted[0],
+        worst: sorted[sorted.length - 1]
+      };
+    }
+
+    function renderOverview() {
+      if (!data) return '<div class="loading"><div class="spinner"></div></div>';
+
+      let signals = data?.signals || [];
       signals = signals.filter(s =>
         Array.isArray(s.eligible_modes) &&
-        s.eligible_modes.length > 0 &&
         s.eligible_modes.includes(currentMode)
       );
-      
-      const filteredCount = signals.length;
+
       const stats = data?.stats || {};
       const session = data?.session || 'UNKNOWN';
       const marketState = data?.market_state || {};
+      const todayTrades = getTodayTrades();
+      const { best, worst } = getBestWorstTrades();
 
-      let html = '';
+      // Calculate today's stats
+      const todayWins = todayTrades.filter(t => t.status === 'WIN').length;
+      const todayLosses = todayTrades.filter(t => t.status === 'LOSS').length;
+      const todayPips = todayTrades.reduce((sum, t) => sum + (t.pips || 0), 0);
 
-      // Alert banner if paused
-      if (isPaused) {
-        html += `
-          <div class="alert-banner">
-            <div class="alert-icon">⏸️</div>
-            <div class="alert-content">
-              <div class="alert-title">Trading Paused</div>
-              <div class="alert-message">${data.equity_protection.pause_reason}</div>
-            </div>
-          </div>
-        `;
-      }
-
-      // Hero stats
-      html += `
+      let html = `
         <div class="hero-stats">
           <div class="hero-card">
             <div class="hero-label">Active Signals</div>
-            <div class="hero-value">${filteredCount}</div>
-            <div class="hero-subtitle">
-              ${totalSignals !== filteredCount ? `<span class="debug-badge">${totalSignals} total, ${filteredCount} for ${currentMode}</span>` : `${currentMode.toUpperCase()} mode`}
-            </div>
+            <div class="hero-value">${signals.length}</div>
+            <div class="hero-subtitle">${currentMode.toUpperCase()} mode</div>
           </div>
           
           <div class="hero-card">
-            <div class="hero-label">Win Rate</div>
-            <div class="hero-value">${stats.win_rate?.toFixed(1) || '0.0'}%</div>
-            <div class="hero-subtitle">
-              ${stats.wins || 0}W / ${stats.losses || 0}L
+            <div class="hero-label">Today's Performance</div>
+            <div class="hero-value ${todayPips >= 0 ? 'change-positive' : 'change-negative'}">
+              ${todayPips >= 0 ? '+' : ''}${todayPips.toFixed(1)}
             </div>
+            <div class="hero-subtitle">${todayWins}W / ${todayLosses}L today</div>
+          </div>
+          
+          <div class="hero-card">
+            <div class="hero-label">Overall Win Rate</div>
+            <div class="hero-value">${stats.win_rate?.toFixed(1) || '0.0'}%</div>
+            <div class="hero-subtitle">${stats.wins || 0}W / ${stats.losses || 0}L all time</div>
           </div>
           
           <div class="hero-card">
@@ -859,46 +994,127 @@
             <div class="hero-value ${(stats.total_pips || 0) >= 0 ? 'change-positive' : 'change-negative'}">
               ${(stats.total_pips || 0) >= 0 ? '+' : ''}${stats.total_pips?.toFixed(1) || '0.0'}
             </div>
-            <div class="hero-subtitle">
-              ${stats.total_trades || 0} trades
+            <div class="hero-subtitle">${stats.total_trades || 0} trades</div>
+          </div>
+          
+          <div class="hero-card">
+            <div class="hero-label">Expectancy</div>
+            <div class="hero-value ${(stats.expectancy_pips || 0) >= 0 ? 'change-positive' : 'change-negative'}">
+              ${(stats.expectancy_pips || 0) >= 0 ? '+' : ''}${stats.expectancy_pips?.toFixed(2) || '0.00'}
             </div>
+            <div class="hero-subtitle">pips per trade</div>
           </div>
           
           <div class="hero-card">
             <div class="hero-label">Market Session</div>
             <div class="hero-value" style="font-size: 32px;">${session}</div>
-            <div class="hero-subtitle">
-              ${marketState.volatility || 'NORMAL'} volatility
+            <div class="hero-subtitle">${marketState.volatility || 'NORMAL'} volatility</div>
+          </div>
+        </div>
+      `;
+
+      // Best/Worst trades of the day
+      if (best || worst) {
+        html += `
+          <div class="section-header">
+            <div class="section-title">🏆 Today's Highlights</div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; margin-bottom: 40px;">
+        `;
+
+        if (best) {
+          html += `
+            <div class="highlight-card best">
+              <div class="highlight-header">
+                <div class="highlight-title">
+                  <span class="trophy-icon">🏆</span>
+                  Best Trade
+                </div>
+                <div class="highlight-badge pips-win">+${best.pips?.toFixed(1) || '0.0'}</div>
+              </div>
+              <div class="highlight-details">
+                <div class="highlight-stat">
+                  <div class="highlight-stat-label">Pair</div>
+                  <div class="highlight-stat-value">${best.pair || 'N/A'}</div>
+                </div>
+                <div class="highlight-stat">
+                  <div class="highlight-stat-label">Direction</div>
+                  <div class="highlight-stat-value">${best.direction || 'N/A'}</div>
+                </div>
+                <div class="highlight-stat">
+                  <div class="highlight-stat-label">Entry</div>
+                  <div class="highlight-stat-value">${best.entry_price?.toFixed(5) || 'N/A'}</div>
+                </div>
+                <div class="highlight-stat">
+                  <div class="highlight-stat-label">Exit</div>
+                  <div class="highlight-stat-value">${best.exit_price?.toFixed(5) || 'N/A'}</div>
+                </div>
+                <div class="highlight-stat">
+                  <div class="highlight-stat-label">Session</div>
+                  <div class="highlight-stat-value">${best.session || 'N/A'}</div>
+                </div>
+                <div class="highlight-stat">
+                  <div class="highlight-stat-label">Time</div>
+                  <div class="highlight-stat-value">${formatTime(best.exit_time || best.timestamp)}</div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      `;
+          `;
+        }
 
-      // Mode indicator (backend enforced)
-      html += `
-        <div class="mode-indicator active">
-          <div class="mode-info">
-            <div class="mode-title">${currentMode.toUpperCase()} Mode</div>
-            <div class="mode-subtitle">Backend enforced - signals pre-filtered by Trade Beacon v2.1.2</div>
-          </div>
-          <div class="mode-badge">🔒 Enforced</div>
-        </div>
-      `;
+        if (worst && worst.pips < 0) {
+          html += `
+            <div class="highlight-card worst">
+              <div class="highlight-header">
+                <div class="highlight-title">
+                  📉 Largest Loss
+                </div>
+                <div class="highlight-badge pips-loss">${worst.pips?.toFixed(1) || '0.0'}</div>
+              </div>
+              <div class="highlight-details">
+                <div class="highlight-stat">
+                  <div class="highlight-stat-label">Pair</div>
+                  <div class="highlight-stat-value">${worst.pair || 'N/A'}</div>
+                </div>
+                <div class="highlight-stat">
+                  <div class="highlight-stat-label">Direction</div>
+                  <div class="highlight-stat-value">${worst.direction || 'N/A'}</div>
+                </div>
+                <div class="highlight-stat">
+                  <div class="highlight-stat-label">Entry</div>
+                  <div class="highlight-stat-value">${worst.entry_price?.toFixed(5) || 'N/A'}</div>
+                </div>
+                <div class="highlight-stat">
+                  <div class="highlight-stat-label">Exit</div>
+                  <div class="highlight-stat-value">${worst.exit_price?.toFixed(5) || 'N/A'}</div>
+                </div>
+                <div class="highlight-stat">
+                  <div class="highlight-stat-label">Session</div>
+                  <div class="highlight-stat-value">${worst.session || 'N/A'}</div>
+                </div>
+                <div class="highlight-stat">
+                  <div class="highlight-stat-label">Time</div>
+                  <div class="highlight-stat-value">${formatTime(worst.exit_time || worst.timestamp)}</div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
 
-      // Signals section
+        html += `</div>`;
+      }
+
+      // Active signals preview
       if (signals.length > 0) {
         html += `
           <div class="section-header">
-            <div class="section-title">
-              📡 Active Signals
-              <span class="signal-count">${signals.length}</span>
-            </div>
+            <div class="section-title">📡 Active Signals <span style="background: var(--bg-secondary); color: var(--accent-blue); padding: 6px 16px; border-radius: 14px; font-size: 15px; font-weight: 700; margin-left: 12px;">${signals.length}</span></div>
+            <div style="font-size: 14px; color: var(--text-secondary); cursor: pointer;" onclick="switchTab('signals'); document.querySelectorAll('.tab')[1].click();">View all →</div>
           </div>
-          
           <div class="signals-grid">
         `;
 
-        signals.forEach(signal => {
+        signals.slice(0, 3).forEach(signal => {
           const direction = signal.direction?.toLowerCase() || 'buy';
           const confidence = signal.score || signal.technical_score || 0;
           const confidenceWidth = Math.min(100, (confidence / 100) * 100);
@@ -914,7 +1130,6 @@
                 <div class="meta-badge">📊 ${signal.session || 'UNKNOWN'}</div>
                 <div class="meta-badge">⏱ ${signal.hold_time || 'INTRADAY'}</div>
                 <div class="meta-badge">🎯 ${signal.confidence || 'MODERATE'}</div>
-                ${signal.metadata?.signal_type ? `<div class="meta-badge">📈 ${signal.metadata.signal_type}</div>` : ''}
               </div>
               
               <div class="confidence-section">
@@ -951,28 +1166,357 @@
         });
 
         html += `</div>`;
-      } else {
-        html += `
+      }
+
+      return html;
+    }
+
+    function renderSignals() {
+      if (!data) return '<div class="loading"><div class="spinner"></div></div>';
+
+      let signals = data?.signals || [];
+      signals = signals.filter(s =>
+        Array.isArray(s.eligible_modes) &&
+        s.eligible_modes.includes(currentMode)
+      );
+
+      if (signals.length === 0) {
+        return `
           <div class="empty-state">
             <div class="empty-icon">📭</div>
-            <div class="empty-title">No Signals Available</div>
-            <div class="empty-message">
-              No ${currentMode} signals meet the current criteria. The system is actively monitoring markets.
-              ${totalSignals > 0 ? `<br><br><span class="debug-badge">${totalSignals} signals available in other modes</span>` : ''}
+            <div class="empty-title">No Active Signals</div>
+            <div class="empty-message">No ${currentMode} signals meet the current criteria. The system is actively monitoring markets.</div>
+          </div>
+        `;
+      }
+
+      let html = `
+        <div class="section-header">
+          <div class="section-title">📡 Active Signals <span style="background: var(--bg-secondary); color: var(--accent-blue); padding: 6px 16px; border-radius: 14px; font-size: 15px; font-weight: 700; margin-left: 12px;">${signals.length}</span></div>
+        </div>
+        <div class="signals-grid">
+      `;
+
+      signals.forEach(signal => {
+        const direction = signal.direction?.toLowerCase() || 'buy';
+        const confidence = signal.score || signal.technical_score || 0;
+        const confidenceWidth = Math.min(100, (confidence / 100) * 100);
+        
+        html += `
+          <div class="signal-card ${direction}">
+            <div class="signal-header">
+              <div class="signal-pair">${signal.pair || 'N/A'}</div>
+              <div class="signal-direction direction-${direction}">${signal.direction || 'BUY'}</div>
+            </div>
+            
+            <div class="signal-meta">
+              <div class="meta-badge">📊 ${signal.session || 'UNKNOWN'}</div>
+              <div class="meta-badge">⏱ ${signal.hold_time || 'INTRADAY'}</div>
+              <div class="meta-badge">🎯 ${signal.confidence || 'MODERATE'}</div>
+              ${signal.metadata?.signal_type ? `<div class="meta-badge">📈 ${signal.metadata.signal_type}</div>` : ''}
+            </div>
+            
+            <div class="confidence-section">
+              <div class="confidence-header">
+                <div class="confidence-label">Signal Strength</div>
+                <div class="confidence-score">${confidence}</div>
+              </div>
+              <div class="confidence-bar">
+                <div class="confidence-fill" style="width: ${confidenceWidth}%"></div>
+              </div>
+            </div>
+            
+            <div class="price-grid">
+              <div class="price-row">
+                <div class="price-label">📍 Entry</div>
+                <div class="price-value entry">${signal.entry_price?.toFixed(5) || 'N/A'}</div>
+              </div>
+              <div class="price-row">
+                <div class="price-label">🎯 Take Profit</div>
+                <div class="price-value tp">${signal.tp?.toFixed(5) || 'N/A'}</div>
+              </div>
+              <div class="price-row">
+                <div class="price-label">🛑 Stop Loss</div>
+                <div class="price-value sl">${signal.sl?.toFixed(5) || 'N/A'}</div>
+              </div>
+            </div>
+            
+            <div class="signal-footer">
+              <div class="risk-reward">R:R ${signal.risk_reward?.toFixed(2) || 'N/A'}</div>
+              <div class="signal-time">${getTimeDiff(signal.timestamp)}</div>
             </div>
           </div>
         `;
+      });
+
+      html += `</div>`;
+      return html;
+    }
+
+    function renderHistory() {
+      if (!historyData || !historyData.signals) {
+        return `
+          <div class="empty-state">
+            <div class="empty-icon">📜</div>
+            <div class="empty-title">No Trade History</div>
+            <div class="empty-message">Trade history will appear here once signals are resolved.</div>
+          </div>
+        `;
+      }
+
+      const allTrades = historyData.signals.filter(s => ['WIN', 'LOSS', 'EXPIRED'].includes(s.status));
+      
+      if (allTrades.length === 0) {
+        return `
+          <div class="empty-state">
+            <div class="empty-icon">📜</div>
+            <div class="empty-title">No Trade History</div>
+            <div class="empty-message">Trade history will appear here once signals are resolved.</div>
+          </div>
+        `;
+      }
+
+      // Sort by most recent
+      const sortedTrades = allTrades.sort((a, b) => {
+        const aTime = new Date(a.exit_time || a.timestamp);
+        const bTime = new Date(b.exit_time || b.timestamp);
+        return bTime - aTime;
+      });
+
+      let html = `
+        <div class="section-header">
+          <div class="section-title">📜 Trade History <span style="background: var(--bg-secondary); color: var(--accent-blue); padding: 6px 16px; border-radius: 14px; font-size: 15px; font-weight: 700; margin-left: 12px;">${sortedTrades.length}</span></div>
+        </div>
+        <div class="trades-grid">
+      `;
+
+      sortedTrades.forEach(trade => {
+        const statusClass = trade.status.toLowerCase();
+        const pipsClass = trade.status === 'WIN' ? 'pips-win' : (trade.status === 'LOSS' ? 'pips-loss' : 'pips-expired');
+        const pipsSign = (trade.pips || 0) >= 0 ? '+' : '';
+
+        html += `
+          <div class="trade-row ${statusClass}">
+            <div class="trade-cell">
+              <div class="trade-label">Pair</div>
+              <div class="trade-pair">${trade.pair || 'N/A'}</div>
+            </div>
+            
+            <div class="trade-cell">
+              <div class="trade-label">Direction</div>
+              <div class="trade-direction direction-${trade.direction?.toLowerCase() || 'buy'}">${trade.direction || 'N/A'}</div>
+            </div>
+            
+            <div class="trade-cell">
+              <div class="trade-label">Entry</div>
+              <div class="trade-value">${trade.entry_price?.toFixed(5) || 'N/A'}</div>
+            </div>
+            
+            <div class="trade-cell">
+              <div class="trade-label">Exit</div>
+              <div class="trade-value">${trade.exit_price?.toFixed(5) || 'N/A'}</div>
+            </div>
+            
+            <div class="trade-cell">
+              <div class="trade-label">Result</div>
+              <div class="pips-badge ${pipsClass}">${pipsSign}${trade.pips?.toFixed(1) || '0.0'}</div>
+            </div>
+            
+            <div class="trade-cell">
+              <div class="trade-label">Session</div>
+              <div class="trade-value">${trade.session || 'N/A'}</div>
+            </div>
+            
+            <div class="trade-cell">
+              <div class="trade-label">Confidence</div>
+              <div class="trade-value">${trade.confidence || 'N/A'}</div>
+            </div>
+            
+            <div class="trade-cell">
+              <div class="trade-label">Time</div>
+              <div class="trade-value">${formatTime(trade.exit_time || trade.timestamp)}</div>
+            </div>
+          </div>
+        `;
+      });
+
+      html += `</div>`;
+      return html;
+    }
+
+    function renderAnalytics() {
+      if (!historyData || !historyData.analytics) {
+        return `
+          <div class="empty-state">
+            <div class="empty-icon">📈</div>
+            <div class="empty-title">No Analytics Data</div>
+            <div class="empty-message">Analytics will appear here once you have sufficient trade history.</div>
+          </div>
+        `;
+      }
+
+      const analytics = historyData.analytics;
+      const stats = historyData.stats || {};
+
+      let html = `
+        <div class="hero-stats">
+          <div class="hero-card">
+            <div class="hero-label">Total Trades</div>
+            <div class="hero-value">${stats.total_trades || 0}</div>
+            <div class="hero-subtitle">All time</div>
+          </div>
+          
+          <div class="hero-card">
+            <div class="hero-label">Win Rate</div>
+            <div class="hero-value">${stats.win_rate?.toFixed(1) || '0.0'}%</div>
+            <div class="hero-subtitle">${stats.wins || 0}W / ${stats.losses || 0}L</div>
+          </div>
+          
+          <div class="hero-card">
+            <div class="hero-label">Average Win</div>
+            <div class="hero-value change-positive">+${stats.avg_win?.toFixed(1) || '0.0'}</div>
+            <div class="hero-subtitle">pips</div>
+          </div>
+          
+          <div class="hero-card">
+            <div class="hero-label">Average Loss</div>
+            <div class="hero-value change-negative">-${stats.avg_loss?.toFixed(1) || '0.0'}</div>
+            <div class="hero-subtitle">pips</div>
+          </div>
+        </div>
+
+        <div class="analytics-grid">
+      `;
+
+      // By Session
+      if (analytics.by_session && Object.keys(analytics.by_session).length > 0) {
+        html += `
+          <div class="analytics-card">
+            <div class="analytics-title">📊 Performance by Session</div>
+        `;
+
+        Object.entries(analytics.by_session).forEach(([session, data]) => {
+          const winRate = data.win_rate || 0;
+          html += `
+            <div class="analytics-row">
+              <div class="analytics-label">${session}</div>
+              <div class="analytics-value">
+                ${winRate.toFixed(0)}%
+                <span style="font-size: 12px; color: var(--text-muted);">(${data.trades} trades)</span>
+              </div>
+            </div>
+            <div class="analytics-bar">
+              <div class="analytics-fill" style="width: ${winRate}%"></div>
+            </div>
+          `;
+        });
+
+        html += `</div>`;
+      }
+
+      // By Confidence
+      if (analytics.by_confidence && Object.keys(analytics.by_confidence).length > 0) {
+        html += `
+          <div class="analytics-card">
+            <div class="analytics-title">🎯 Performance by Confidence</div>
+        `;
+
+        Object.entries(analytics.by_confidence).forEach(([conf, data]) => {
+          const winRate = data.win_rate || 0;
+          html += `
+            <div class="analytics-row">
+              <div class="analytics-label">${conf}</div>
+              <div class="analytics-value">
+                ${winRate.toFixed(0)}%
+                <span style="font-size: 12px; color: var(--text-muted);">(${data.trades} trades)</span>
+              </div>
+            </div>
+            <div class="analytics-bar">
+              <div class="analytics-fill" style="width: ${winRate}%"></div>
+            </div>
+          `;
+        });
+
+        html += `</div>`;
+      }
+
+      // By Pair
+      if (analytics.by_pair && Object.keys(analytics.by_pair).length > 0) {
+        html += `
+          <div class="analytics-card">
+            <div class="analytics-title">💱 Performance by Pair</div>
+        `;
+
+        Object.entries(analytics.by_pair).forEach(([pair, data]) => {
+          const winRate = data.win_rate || 0;
+          const totalPips = data.total_pips || 0;
+          html += `
+            <div class="analytics-row">
+              <div class="analytics-label">${pair}</div>
+              <div class="analytics-value">
+                ${winRate.toFixed(0)}%
+                <span style="font-size: 12px; ${totalPips >= 0 ? 'color: var(--success)' : 'color: var(--danger)'};">
+                  (${totalPips >= 0 ? '+' : ''}${totalPips.toFixed(1)}p)
+                </span>
+              </div>
+            </div>
+            <div class="analytics-bar">
+              <div class="analytics-fill" style="width: ${winRate}%"></div>
+            </div>
+          `;
+        });
+
+        html += `</div>`;
+      }
+
+      html += `</div>`;
+      return html;
+    }
+
+    function updateUI() {
+      if (!data && !historyData) return;
+
+      // Update status
+      const canTrade = data?.equity_protection?.can_trade !== false;
+      const isPaused = data?.equity_protection?.pause_reason;
+
+      if (isPaused) {
+        updateStatus('paused', 'PAUSED');
+      } else if (canTrade) {
+        updateStatus('live', 'LIVE');
+      } else {
+        updateStatus('loading', 'UPDATING');
+      }
+
+      // Update last update time
+      const lastUpdate = data?.timestamp || data?.system?.last_update;
+      if (lastUpdate) {
+        const date = new Date(lastUpdate);
+        document.getElementById('lastUpdate').textContent = `Last update: ${date.toLocaleTimeString()}`;
+      }
+
+      // Render current tab
+      let html = '';
+      switch (currentTab) {
+        case 'overview':
+          html = renderOverview();
+          break;
+        case 'signals':
+          html = renderSignals();
+          break;
+        case 'history':
+          html = renderHistory();
+          break;
+        case 'analytics':
+          html = renderAnalytics();
+          break;
       }
 
       document.getElementById('app').innerHTML = html;
     }
 
     // Auto-refresh
-    setInterval(() => {
-      if (hasLoadedOnce) {
-        fetchData();
-      }
-    }, refreshInterval);
+    setInterval(fetchData, refreshInterval);
 
     // Initial load
     fetchData();

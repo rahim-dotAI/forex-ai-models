@@ -147,7 +147,7 @@
     .tabs {
       display: flex;
       gap: 8px;
-      margin-bottom: 32px;
+      margin-bottom: 24px;
       background: var(--bg-card);
       padding: 8px;
       border-radius: 16px;
@@ -174,6 +174,40 @@
       background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
       color: var(--text-primary);
       box-shadow: 0 4px 20px var(--glow-blue);
+    }
+
+    /* Tier badges */
+    .tier-badge {
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      margin-left: 8px;
+    }
+
+    .tier-aplus {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      color: #000;
+      box-shadow: 0 0 12px rgba(251, 191, 36, 0.5);
+    }
+
+    .tier-a {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--success);
+      border: 1px solid var(--success);
+    }
+
+    .tier-b {
+      background: rgba(59, 130, 246, 0.2);
+      color: var(--accent-blue);
+      border: 1px solid var(--accent-blue);
+    }
+
+    .tier-c {
+      background: rgba(156, 163, 175, 0.2);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
     }
 
     .hero-stats {
@@ -833,6 +867,16 @@
       <div class="tab" onclick="switchTab('analytics')">📈 Analytics</div>
     </div>
 
+    <!-- MODE SWITCHER - ADDED HERE -->
+    <div style="display: flex; justify-content: center; gap: 12px; margin-bottom: 24px; background: var(--bg-card); padding: 12px; border-radius: 16px; border: 1px solid var(--border);">
+      <button id="modeAggressiveBtn" onclick="switchMode('aggressive')" style="flex: 1; padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.3s; border: 2px solid transparent; background: transparent; color: var(--text-secondary);">
+        ⚡ AGGRESSIVE
+      </button>
+      <button id="modeConservativeBtn" onclick="switchMode('conservative')" style="flex: 1; padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.3s; border: 2px solid transparent; background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); color: var(--text-primary);">
+        🛡️ CONSERVATIVE  
+      </button>
+    </div>
+
     <div id="app">
       <div class="loading">
         <div class="spinner"></div>
@@ -889,6 +933,31 @@
       }
 
       updateUI();
+      updateModeButtons();
+    }
+
+    function switchMode(mode) {
+      currentMode = mode;
+      localStorage.setItem('tradeBeaconMode', mode);
+      updateModeButtons();
+      updateUI();
+    }
+
+    function updateModeButtons() {
+      const aggBtn = document.getElementById('modeAggressiveBtn');
+      const consBtn = document.getElementById('modeConservativeBtn');
+      
+      if (currentMode === 'aggressive') {
+        aggBtn.style.background = 'linear-gradient(135deg, var(--accent-blue), var(--accent-purple))';
+        aggBtn.style.color = 'var(--text-primary)';
+        consBtn.style.background = 'transparent';
+        consBtn.style.color = 'var(--text-secondary)';
+      } else {
+        consBtn.style.background = 'linear-gradient(135deg, var(--accent-blue), var(--accent-purple))';
+        consBtn.style.color = 'var(--text-primary)';
+        aggBtn.style.background = 'transparent';
+        aggBtn.style.color = 'var(--text-secondary)';
+      }
     }
 
     function updateStatus(type, text) {
@@ -923,10 +992,18 @@
     }
 
     function getTodayTrades() {
-      if (!historyData || !historyData.signals) return [];
+      if (!historyData) return [];
+      
+      // Handle both old and new data structures
+      let allSignals = [];
+      if (historyData.signals_by_mode) {
+        allSignals = historyData.signals_by_mode.aggressive?.concat(historyData.signals_by_mode.conservative || []) || [];
+      } else if (historyData.signals) {
+        allSignals = historyData.signals;
+      }
       
       const today = new Date().toISOString().split('T')[0];
-      return historyData.signals.filter(s => {
+      return allSignals.filter(s => {
         const tradeDate = s.exit_time || s.timestamp;
         if (!tradeDate) return false;
         return tradeDate.startsWith(today) && ['WIN', 'LOSS', 'EXPIRED'].includes(s.status);
@@ -947,20 +1024,30 @@
       };
     }
 
+    function getFilteredSignals() {
+      if (!data) return [];
+      
+      let signals = [];
+      if (data?.signals_by_mode) {
+        // Multi-mode data structure
+        signals = data.signals_by_mode[currentMode] || [];
+      } else if (data?.signals) {
+        // Legacy structure - filter by eligible_modes
+        signals = data.signals.filter(s =>
+          Array.isArray(s.eligible_modes) && s.eligible_modes.includes(currentMode)
+        );
+      }
+      return signals;
+    }
+
     function renderOverview() {
       if (!data) return '<div class="loading"><div class="spinner"></div></div>';
 
-      let signals = data?.signals || [];
-      signals = signals.filter(s =>
-        Array.isArray(s.eligible_modes) &&
-        s.eligible_modes.includes(currentMode)
-      );
-
+      const signals = getFilteredSignals();
       const stats = data?.stats || {};
       const session = data?.session || 'UNKNOWN';
       const marketState = data?.market_state || {};
       const todayTrades = getTodayTrades();
-      const { best, worst } = getBestWorstTrades();
 
       // Calculate today's stats
       const todayWins = todayTrades.filter(t => t.status === 'WIN').length;
@@ -1013,7 +1100,38 @@
         </div>
       `;
 
+      // Mode-specific stats if available
+      if (historyData?.stats?.by_mode) {
+        const modeStats = historyData.stats.by_mode[currentMode];
+        if (modeStats && modeStats.trades > 0) {
+          html += `
+            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 32px;">
+              <div style="font-size: 14px; font-weight: 700; color: var(--text-secondary); margin-bottom: 12px; text-transform: uppercase;">
+                ${currentMode.toUpperCase()} Mode Performance
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px;">
+                <div>
+                  <div style="font-size: 11px; color: var(--text-muted);">Trades</div>
+                  <div style="font-size: 20px; font-weight: 900;">${modeStats.trades}</div>
+                </div>
+                <div>
+                  <div style="font-size: 11px; color: var(--text-muted);">Win Rate</div>
+                  <div style="font-size: 20px; font-weight: 900; color: var(--success);">${modeStats.win_rate?.toFixed(1)}%</div>
+                </div>
+                <div>
+                  <div style="font-size: 11px; color: var(--text-muted);">Total Pips</div>
+                  <div style="font-size: 20px; font-weight: 900; color: ${modeStats.total_pips >= 0 ? 'var(--success)' : 'var(--danger)'};">
+                    ${modeStats.total_pips >= 0 ? '+' : ''}${modeStats.total_pips?.toFixed(1)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      }
+
       // Best/Worst trades of the day
+      const { best, worst } = getBestWorstTrades();
       if (best || worst) {
         html += `
           <div class="section-header">
@@ -1118,11 +1236,14 @@
           const direction = signal.direction?.toLowerCase() || 'buy';
           const confidence = signal.score || signal.technical_score || 0;
           const confidenceWidth = Math.min(100, (confidence / 100) * 100);
+          const tierClass = signal.tier ? `tier-${signal.tier.toLowerCase().replace('+', 'plus')}` : '';
           
           html += `
             <div class="signal-card ${direction}">
               <div class="signal-header">
-                <div class="signal-pair">${signal.pair || 'N/A'}</div>
+                <div class="signal-pair">${signal.pair || 'N/A'}
+                  ${signal.tier ? `<span class="tier-badge ${tierClass}">${signal.tier}</span>` : ''}
+                </div>
                 <div class="signal-direction direction-${direction}">${signal.direction || 'BUY'}</div>
               </div>
               
@@ -1172,13 +1293,7 @@
     }
 
     function renderSignals() {
-      if (!data) return '<div class="loading"><div class="spinner"></div></div>';
-
-      let signals = data?.signals || [];
-      signals = signals.filter(s =>
-        Array.isArray(s.eligible_modes) &&
-        s.eligible_modes.includes(currentMode)
-      );
+      const signals = getFilteredSignals();
 
       if (signals.length === 0) {
         return `
@@ -1201,11 +1316,14 @@
         const direction = signal.direction?.toLowerCase() || 'buy';
         const confidence = signal.score || signal.technical_score || 0;
         const confidenceWidth = Math.min(100, (confidence / 100) * 100);
+        const tierClass = signal.tier ? `tier-${signal.tier.toLowerCase().replace('+', 'plus')}` : '';
         
         html += `
           <div class="signal-card ${direction}">
             <div class="signal-header">
-              <div class="signal-pair">${signal.pair || 'N/A'}</div>
+              <div class="signal-pair">${signal.pair || 'N/A'}
+                ${signal.tier ? `<span class="tier-badge ${tierClass}">${signal.tier}</span>` : ''}
+              </div>
               <div class="signal-direction direction-${direction}">${signal.direction || 'BUY'}</div>
             </div>
             
@@ -1254,7 +1372,7 @@
     }
 
     function renderHistory() {
-      if (!historyData || !historyData.signals) {
+      if (!historyData) {
         return `
           <div class="empty-state">
             <div class="empty-icon">📜</div>
@@ -1264,9 +1382,19 @@
         `;
       }
 
-      const allTrades = historyData.signals.filter(s => ['WIN', 'LOSS', 'EXPIRED'].includes(s.status));
+      // Get all trades from both modes
+      let allTrades = [];
+      if (historyData.signals_by_mode) {
+        Object.values(historyData.signals_by_mode).forEach(modeSignals => {
+          allTrades = allTrades.concat(modeSignals || []);
+        });
+      } else if (historyData.signals) {
+        allTrades = historyData.signals;
+      }
+
+      const filteredTrades = allTrades.filter(s => ['WIN', 'LOSS', 'EXPIRED'].includes(s.status));
       
-      if (allTrades.length === 0) {
+      if (filteredTrades.length === 0) {
         return `
           <div class="empty-state">
             <div class="empty-icon">📜</div>
@@ -1277,7 +1405,7 @@
       }
 
       // Sort by most recent
-      const sortedTrades = allTrades.sort((a, b) => {
+      const sortedTrades = filteredTrades.sort((a, b) => {
         const aTime = new Date(a.exit_time || a.timestamp);
         const bTime = new Date(b.exit_time || b.timestamp);
         return bTime - aTime;
@@ -1426,6 +1554,32 @@
           html += `
             <div class="analytics-row">
               <div class="analytics-label">${conf}</div>
+              <div class="analytics-value">
+                ${winRate.toFixed(0)}%
+                <span style="font-size: 12px; color: var(--text-muted);">(${data.trades} trades)</span>
+              </div>
+            </div>
+            <div class="analytics-bar">
+              <div class="analytics-fill" style="width: ${winRate}%"></div>
+            </div>
+          `;
+        });
+
+        html += `</div>`;
+      }
+
+      // By Tier
+      if (analytics.by_tier && Object.keys(analytics.by_tier).length > 0) {
+        html += `
+          <div class="analytics-card">
+            <div class="analytics-title">🏆 Performance by Tier</div>
+        `;
+
+        Object.entries(analytics.by_tier).forEach(([tier, data]) => {
+          const winRate = data.win_rate || 0;
+          html += `
+            <div class="analytics-row">
+              <div class="analytics-label">Tier ${tier}</div>
               <div class="analytics-value">
                 ${winRate.toFixed(0)}%
                 <span style="font-size: 12px; color: var(--text-muted);">(${data.trades} trades)</span>

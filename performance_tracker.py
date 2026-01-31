@@ -1,16 +1,19 @@
 """
-Performance Tracker v2.1.2 - Aligned with Trade Beacon v2.1.2
-==============================================================
+Performance Tracker v2.1.2-MULTI - Aligned with Trade Beacon v2.1.2-MULTI
+============================================================================
 
-CHANGELOG:
-- ✅ Version updated to 2.1.2
+CHANGELOG v2.1.2-MULTI:
+- ✅ Multi-mode support: tracks eligible_modes per signal
+- ✅ Tier tracking: A+, A, B, C quality classification
+- ✅ Enhanced analytics: by tier, by mode, cross-analytics
+- ✅ Backtest metadata: estimated_win_rate, sentiment_applied
+- ✅ Mode-specific performance metrics
 - ✅ Session normalization (LONDON→EUROPEAN, NEW_YORK→US)
 - ✅ Confidence tier normalization (HIGH→VERY_STRONG, MEDIUM→MODERATE)
 - ✅ EXPIRED signals tracking
 - ✅ UTC-only datetime handling
 - ✅ Deterministic ID validation
 - ✅ Status transition guards
-- ✅ Single expectancy metric
 """
 
 import json
@@ -23,7 +26,7 @@ import pandas as pd
 
 log = logging.getLogger("performance-tracker")
 
-TRACKER_VERSION = "2.1.2"
+TRACKER_VERSION = "2.1.2-MULTI"
 
 # Safe type conversion utilities
 def safe_int(val: Any, default: int = 0) -> int:
@@ -70,23 +73,36 @@ def normalize_confidence(conf: Optional[str]) -> str:
         return c
     return "UNKNOWN"
 
+def normalize_tier(tier: Optional[str]) -> str:
+    """Normalize tier classification."""
+    if not tier:
+        return "C"
+    t = tier.upper()
+    if t in ("A+", "A", "B", "C"):
+        return t
+    return "C"
+
 class PerformanceTracker:
     """
-    Signal-only performance tracker with trade resolution support.
+    Multi-mode signal performance tracker with tier-based analytics.
     
-    Aligned with Trade Beacon v2.1.2:
+    Aligned with Trade Beacon v2.1.2-MULTI:
+    - Multi-mode support: aggressive + conservative
+    - Tier classification: A+, A, B, C
     - Session taxonomy: ASIAN, EUROPEAN, OVERLAP, US, LATE_US
     - Confidence tiers: VERY_STRONG, STRONG, MODERATE
     - Signal statuses: OPEN, EXPIRED, WIN, LOSS
     - UTC-only datetime handling
     - Deterministic SHA-1 signal IDs
+    - Enhanced analytics: by mode, by tier, cross-analytics
     
     IMPORTANT:
     - No equity assumptions
     - No fake drawdowns
-    - Stats only computed from RESOLVED signals (WIN/LOSS)
+    - Stats computed from RESOLVED signals (WIN/LOSS)
     - EXPIRED signals tracked separately
-    - Designed for backtesting / paper simulation integration
+    - Mode-specific performance tracking
+    - Tier-based quality analysis
     """
 
     def __init__(self, history_file="signal_state/signal_history.json"):
@@ -126,7 +142,7 @@ class PerformanceTracker:
         return data
 
     def _migrate(self, data: Dict, from_version: str) -> Dict:
-        """Migrate old data to v2.1.2 format."""
+        """Migrate old data to v2.1.2-MULTI format."""
         log.info(f"🔄 Migrating {len(data.get('signals', []))} signals...")
         
         # Normalize all signals
@@ -139,9 +155,33 @@ class PerformanceTracker:
             if "confidence" in signal:
                 signal["confidence"] = normalize_confidence(signal["confidence"])
             
+            # Add tier if missing (infer from score)
+            if "tier" not in signal and "score" in signal:
+                score = safe_int(signal["score"])
+                if score >= 80:
+                    signal["tier"] = "A+"
+                elif score >= 72:
+                    signal["tier"] = "A"
+                elif score >= 65:
+                    signal["tier"] = "B"
+                else:
+                    signal["tier"] = "C"
+            
+            # Add eligible_modes if missing (infer from score/confidence)
+            if "eligible_modes" not in signal:
+                score = safe_int(signal.get("score", 0))
+                if score >= 60:
+                    signal["eligible_modes"] = ["aggressive", "conservative"]
+                else:
+                    signal["eligible_modes"] = ["aggressive"]
+            
             # Ensure signal_id exists
             if "signal_id" not in signal and "id" in signal:
                 signal["signal_id"] = signal["id"]
+            
+            # Add backtest metadata if missing
+            signal.setdefault("sentiment_applied", False)
+            signal.setdefault("estimated_win_rate", None)
         
         data["version"] = TRACKER_VERSION
         log.info("✅ Migration complete")
@@ -166,7 +206,7 @@ class PerformanceTracker:
         }
 
     def _empty_stats(self) -> Dict:
-        """Empty stats structure."""
+        """Empty stats structure with multi-mode support."""
         return {
             "total_trades": 0,
             "total_resolved": 0,
@@ -178,21 +218,34 @@ class PerformanceTracker:
             "avg_win": 0.0,
             "avg_loss": 0.0,
             "expectancy_pips": 0.0,
+            "validated": False,
+            "by_mode": {
+                "aggressive": {"trades": 0, "wins": 0, "total_pips": 0.0, "win_rate": 0.0},
+                "conservative": {"trades": 0, "wins": 0, "total_pips": 0.0, "win_rate": 0.0}
+            },
             "note": "Stats valid after statistical significance (100+ trades)"
         }
 
     def _empty_analytics(self) -> Dict:
-        """Empty analytics structure."""
+        """Empty analytics structure with tier and mode dimensions."""
         return {
             "by_pair": {},
             "by_session": {},
-            "by_confidence": {}
+            "by_confidence": {},
+            "by_tier": {},  # NEW: Tier-based analytics
+            "by_mode": {},  # NEW: Mode-specific analytics
+            "cross_analytics": {  # NEW: Multi-dimensional analytics
+                "tier_by_session": {},
+                "mode_by_tier": {}
+            }
         }
 
     def register_signal(self, signal: Dict):
         """
         Register a signal safely (idempotent).
         Status must be: OPEN, EXPIRED, WIN, LOSS
+        
+        NEW: Supports multi-mode signals with tier classification
         """
         signal_id = signal.get("id") or signal.get("signal_id")
         
@@ -214,6 +267,14 @@ class PerformanceTracker:
             signal["session"] = normalize_session(signal["session"])
         if "confidence" in signal:
             signal["confidence"] = normalize_confidence(signal["confidence"])
+        if "tier" in signal:
+            signal["tier"] = normalize_tier(signal["tier"])
+        
+        # Ensure multi-mode fields exist
+        signal.setdefault("eligible_modes", ["aggressive"])
+        signal.setdefault("tier", "C")
+        signal.setdefault("sentiment_applied", False)
+        signal.setdefault("estimated_win_rate", None)
         
         # Add to signals list
         self.history["signals"].append(signal)
@@ -232,25 +293,18 @@ class PerformanceTracker:
                      entry_price: float, exit_price: float, sl: float, tp: float,
                      outcome: str, pips: float, confidence: str = None,
                      score: int = None, session: str = None,
-                     entry_time: str = None, exit_time: str = None, **kwargs):
+                     entry_time: str = None, exit_time: str = None,
+                     tier: str = None, eligible_modes: List[str] = None,
+                     sentiment_applied: bool = False, estimated_win_rate: float = None,
+                     **kwargs):
         """
         Record trade outcome when it hits SL/TP or expires.
         
-        Args:
-            signal_id: Unique signal identifier (deterministic)
-            pair: Currency pair
-            direction: BUY or SELL
-            entry_price: Entry price
-            exit_price: Exit price
-            sl: Stop loss level
-            tp: Take profit level
-            outcome: WIN, LOSS, or EXPIRED
-            pips: Pip profit/loss (negative for losses)
-            confidence: Signal confidence level
-            score: Signal score
-            session: Market session
-            entry_time: ISO timestamp of entry
-            exit_time: ISO timestamp of exit
+        NEW Args:
+            tier: Quality tier (A+, A, B, C)
+            eligible_modes: List of modes this signal qualifies for
+            sentiment_applied: Whether sentiment analysis was applied
+            estimated_win_rate: Micro-backtest estimated win probability
         """
         # Find existing signal
         signal = self._find_signal(signal_id)
@@ -283,6 +337,10 @@ class PerformanceTracker:
                 "confidence": normalize_confidence(confidence),
                 "score": score,
                 "session": normalize_session(session),
+                "tier": normalize_tier(tier),
+                "eligible_modes": eligible_modes or ["aggressive"],
+                "sentiment_applied": sentiment_applied,
+                "estimated_win_rate": estimated_win_rate,
                 "timestamp": entry_time or datetime.now(timezone.utc).isoformat(),
                 "exit_time": exit_time or datetime.now(timezone.utc).isoformat()
             }
@@ -303,6 +361,8 @@ class PerformanceTracker:
         """
         Recalculate all statistics from resolved signals.
         
+        NEW: Includes tier-based and mode-specific analytics
+        
         RESOLVED = WIN or LOSS (used for stats)
         EXPIRED = tracked separately (not included in win rate)
         """
@@ -320,6 +380,12 @@ class PerformanceTracker:
         losses: List[float] = []
         total_pips = 0.0
         analytics = self._empty_analytics()
+        
+        # Mode-specific tracking
+        mode_stats = {
+            "aggressive": {"trades": 0, "wins": 0, "total_pips": 0.0},
+            "conservative": {"trades": 0, "wins": 0, "total_pips": 0.0}
+        }
 
         for s in resolved:
             pips = safe_float(s.get("pips"))
@@ -328,11 +394,23 @@ class PerformanceTracker:
             pair = s.get("pair", "UNKNOWN")
             session = normalize_session(s.get("session"))
             confidence = normalize_confidence(s.get("confidence"))
+            tier = normalize_tier(s.get("tier"))
+            modes = s.get("eligible_modes", ["aggressive"])
 
-            if s["status"] == "WIN":
+            is_win = s["status"] == "WIN"
+            
+            if is_win:
                 wins.append(pips)
             else:
                 losses.append(abs(pips))
+
+            # Track by mode
+            for mode in modes:
+                if mode in mode_stats:
+                    mode_stats[mode]["trades"] += 1
+                    mode_stats[mode]["total_pips"] += pips
+                    if is_win:
+                        mode_stats[mode]["wins"] += 1
 
             # Pair analytics
             analytics["by_pair"].setdefault(pair, {
@@ -340,7 +418,7 @@ class PerformanceTracker:
             })
             analytics["by_pair"][pair]["trades"] += 1
             analytics["by_pair"][pair]["total_pips"] += pips
-            if s["status"] == "WIN":
+            if is_win:
                 analytics["by_pair"][pair]["wins"] += 1
 
             # Session analytics
@@ -349,7 +427,7 @@ class PerformanceTracker:
             })
             analytics["by_session"][session]["trades"] += 1
             analytics["by_session"][session]["total_pips"] += pips
-            if s["status"] == "WIN":
+            if is_win:
                 analytics["by_session"][session]["wins"] += 1
 
             # Confidence analytics
@@ -358,8 +436,48 @@ class PerformanceTracker:
             })
             analytics["by_confidence"][confidence]["trades"] += 1
             analytics["by_confidence"][confidence]["total_pips"] += pips
-            if s["status"] == "WIN":
+            if is_win:
                 analytics["by_confidence"][confidence]["wins"] += 1
+            
+            # NEW: Tier analytics
+            analytics["by_tier"].setdefault(tier, {
+                "trades": 0, "wins": 0, "total_pips": 0.0
+            })
+            analytics["by_tier"][tier]["trades"] += 1
+            analytics["by_tier"][tier]["total_pips"] += pips
+            if is_win:
+                analytics["by_tier"][tier]["wins"] += 1
+            
+            # NEW: Mode analytics
+            for mode in modes:
+                analytics["by_mode"].setdefault(mode, {
+                    "trades": 0, "wins": 0, "total_pips": 0.0
+                })
+                analytics["by_mode"][mode]["trades"] += 1
+                analytics["by_mode"][mode]["total_pips"] += pips
+                if is_win:
+                    analytics["by_mode"][mode]["wins"] += 1
+            
+            # NEW: Cross analytics - Tier by Session
+            tier_session_key = f"{tier}_{session}"
+            analytics["cross_analytics"]["tier_by_session"].setdefault(tier_session_key, {
+                "tier": tier, "session": session, "trades": 0, "wins": 0, "total_pips": 0.0
+            })
+            analytics["cross_analytics"]["tier_by_session"][tier_session_key]["trades"] += 1
+            analytics["cross_analytics"]["tier_by_session"][tier_session_key]["total_pips"] += pips
+            if is_win:
+                analytics["cross_analytics"]["tier_by_session"][tier_session_key]["wins"] += 1
+            
+            # NEW: Cross analytics - Mode by Tier
+            for mode in modes:
+                mode_tier_key = f"{mode}_{tier}"
+                analytics["cross_analytics"]["mode_by_tier"].setdefault(mode_tier_key, {
+                    "mode": mode, "tier": tier, "trades": 0, "wins": 0, "total_pips": 0.0
+                })
+                analytics["cross_analytics"]["mode_by_tier"][mode_tier_key]["trades"] += 1
+                analytics["cross_analytics"]["mode_by_tier"][mode_tier_key]["total_pips"] += pips
+                if is_win:
+                    analytics["cross_analytics"]["mode_by_tier"][mode_tier_key]["wins"] += 1
 
         total = len(resolved)
         win_rate = (len(wins) / total * 100) if total else 0.0
@@ -369,6 +487,11 @@ class PerformanceTracker:
             (win_rate / 100) * avg_win -
             (1 - win_rate / 100) * avg_loss
         ) if total else 0.0
+
+        # Calculate mode-specific win rates
+        for mode, data in mode_stats.items():
+            if data["trades"] > 0:
+                data["win_rate"] = safe_round(data["wins"] / data["trades"] * 100, 1)
 
         self.history["stats"] = {
             "total_trades": total,
@@ -381,12 +504,23 @@ class PerformanceTracker:
             "avg_win": safe_round(avg_win, 1),
             "avg_loss": safe_round(avg_loss, 1),
             "expectancy_pips": safe_round(expectancy, 2),
-            "validated": total >= 100
+            "validated": total >= 100,
+            "by_mode": mode_stats
         }
 
         # Calculate win rates per dimension
-        for group in analytics.values():
+        for group in [analytics["by_pair"], analytics["by_session"], 
+                      analytics["by_confidence"], analytics["by_tier"], 
+                      analytics["by_mode"]]:
             for data in group.values():
+                if data["trades"] > 0:
+                    data["win_rate"] = safe_round(
+                        data["wins"] / data["trades"] * 100, 1
+                    )
+        
+        # Calculate cross-analytics win rates
+        for cross_group in analytics["cross_analytics"].values():
+            for data in cross_group.values():
                 if data["trades"] > 0:
                     data["win_rate"] = safe_round(
                         data["wins"] / data["trades"] * 100, 1
@@ -395,27 +529,34 @@ class PerformanceTracker:
         self.history["analytics"] = analytics
 
     def export_to_csv(self, path="performance_export.csv") -> str:
-        """Export all signals to CSV."""
+        """Export all signals to CSV with multi-mode fields."""
         pd.DataFrame(self.history["signals"]).to_csv(path, index=False)
         log.info(f"📄 Exported to {path}")
         return path
 
     def get_dashboard_summary(self) -> Dict:
-        """Get summary for dashboard integration."""
+        """Get summary for dashboard integration with multi-mode support."""
         return {
             "stats": self.history["stats"],
             "analytics": self.history["analytics"],
             "equity": {},  # Placeholder for compatibility
             "signals_total": len(self.history["signals"]),
             "updated_at": datetime.now(timezone.utc).isoformat(),
-            "version": TRACKER_VERSION
+            "version": TRACKER_VERSION,
+            "multi_mode": True
         }
 
     def _log_state(self):
-        """Log current tracker state."""
+        """Log current tracker state with multi-mode info."""
         open_sigs = [s for s in self.history["signals"] if s.get("status") == "OPEN"]
         resolved = [s for s in self.history["signals"] if s.get("status") in ("WIN", "LOSS")]
         expired = [s for s in self.history["signals"] if s.get("status") == "EXPIRED"]
+        
+        # Count by tier
+        tier_counts = {}
+        for s in self.history["signals"]:
+            tier = s.get("tier", "C")
+            tier_counts[tier] = tier_counts.get(tier, 0) + 1
         
         log.info(
             f"📊 Tracker v{TRACKER_VERSION} Loaded | "
@@ -424,3 +565,7 @@ class PerformanceTracker:
             f"Resolved: {len(resolved)} | "
             f"Expired: {len(expired)}"
         )
+        
+        if tier_counts:
+            tier_str = " | ".join([f"{t}: {c}" for t, c in sorted(tier_counts.items())])
+            log.info(f"🏆 Tiers: {tier_str}")

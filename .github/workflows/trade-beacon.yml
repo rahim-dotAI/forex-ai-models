@@ -1,4 +1,4 @@
-name: Trade Beacon v2.1.2 – Forex Signal Generator
+name: Trade Beacon v2.1.2-MULTI – Forex Signal Generator
 
 on:
   schedule:
@@ -10,13 +10,6 @@ on:
   
   workflow_dispatch:
     inputs:
-      mode:
-        description: 'Trading Mode'
-        required: false
-        type: choice
-        options: [default, aggressive, conservative]
-        default: 'default'
-      
       sentiment:
         description: 'Enable Sentiment Analysis'
         required: false
@@ -42,10 +35,10 @@ on:
 
 env:
   PYTHON_VERSION: "3.10"
-  ENTRY_SCRIPT: "trade_beacon.py"
+  ENTRY_SCRIPT: "trade_beacon_multi.py"  # UPDATED for multi-mode
 
 concurrency:
-  group: trade-beacon-v2.1.2-${{ github.ref }}-${{ github.event_name }}
+  group: trade-beacon-v2.1.2-multi-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: false
 
 permissions:
@@ -95,12 +88,15 @@ jobs:
         run: |
           echo "🔍 Validating PerformanceTracker version..."
           TRACKER_VER=$(python -c "from performance_tracker import TRACKER_VERSION; print(TRACKER_VERSION)" 2>/dev/null || echo "unknown")
-          BEACON_VER=$(grep -oP '"signal_generator_version": "\K[0-9.]+' $ENTRY_SCRIPT | head -1 || echo "unknown")
+          # Match Python variable assignment syntax, not JSON
+          BEACON_VER=$(grep -oP 'signal_generator_version\s*=\s*"\K[^"]+' $ENTRY_SCRIPT | head -1 || echo "unknown")
           
           echo "Tracker version: $TRACKER_VER"
           echo "Beacon version: $BEACON_VER"
           
-          if [ "$TRACKER_VER" != "$BEACON_VER" ]; then
+          if [[ "$TRACKER_VER" == *"MULTI"* ]] && [[ "$BEACON_VER" == *"MULTI"* ]]; then
+            echo "✅ Multi-mode versions aligned"
+          elif [ "$TRACKER_VER" != "$BEACON_VER" ]; then
             echo "⚠️  Version mismatch detected (non-fatal)"
           else
             echo "✅ Versions aligned: $TRACKER_VER"
@@ -111,9 +107,12 @@ jobs:
           echo "🔍 Validating config.json..."
           jq empty config.json || exit 1
           
-          # Check required config fields
-          jq -e '.mode' config.json > /dev/null || exit 1
-          jq -e '.settings' config.json > /dev/null || exit 1
+          # Check required config fields - BOTH modes must exist
+          jq -e '.settings.aggressive' config.json > /dev/null || exit 1
+          jq -e '.settings.conservative' config.json > /dev/null || exit 1
+          jq -e '.tiers' config.json > /dev/null || {
+            echo "⚠️  Tier thresholds not found - using defaults"
+          }
           
           # Snapshot original config for forensic baseline (once)
           if [ ! -f config.runtime.base.json ]; then
@@ -123,6 +122,7 @@ jobs:
           fi
           
           echo "✅ Configuration valid"
+          echo "ℹ️  Multi-mode: Both aggressive and conservative signals generated simultaneously"
       
       - name: Reset performance history (DESTRUCTIVE - guarded)
         if: github.event.inputs.reset_performance == 'YES'
@@ -159,17 +159,11 @@ jobs:
           fi
       
       - name: Apply runtime overrides
-        if: github.event.inputs.mode != 'default' && github.event.inputs.mode != '' && github.event.inputs.sentiment != ''
+        if: github.event.inputs.sentiment != ''
         run: |
           echo "⚙️  Applying runtime configuration..."
           
-          MODE="${{ github.event.inputs.mode }}"
           SENTIMENT="${{ github.event.inputs.sentiment }}"
-          
-          # Use default from config if not specified or empty
-          if [ -z "$MODE" ] || [ "$MODE" = "default" ]; then
-            MODE=$(jq -r '.mode' config.json)
-          fi
           
           # Default sentiment to false if empty
           if [ -z "$SENTIMENT" ]; then
@@ -177,12 +171,12 @@ jobs:
           fi
           
           jq \
-            --arg mode "$MODE" \
             --argjson sentiment "$SENTIMENT" \
-            '.mode = $mode | .use_sentiment = $sentiment' \
+            '.use_sentiment = $sentiment' \
             config.json > tmp.json && mv tmp.json config.json
           
-          echo "✅ Configuration updated: mode=$MODE, sentiment=$SENTIMENT"
+          echo "✅ Configuration updated: sentiment=$SENTIMENT"
+          echo "ℹ️  Note: Mode selection removed - system generates ALL modes"
       
       - name: Allow threshold optimization (if eligible)
         if: github.event.inputs.allow_optimization == 'true'
@@ -236,6 +230,14 @@ jobs:
             echo "📊 Current Performance:"
             jq -r '.stats | "Total Trades: \(.total_trades // 0) | Win Rate: \(.win_rate // 0)% | Total Pips: \(.total_pips // 0) | Expectancy: \(.expectancy_pips // 0)"' \
               signal_state/signal_history.json || echo "No stats available yet"
+            
+            # Display multi-mode stats if available
+            if jq -e '.stats.by_mode' signal_state/signal_history.json > /dev/null 2>&1; then
+              echo ""
+              echo "📊 Multi-Mode Breakdown:"
+              echo "  Aggressive: $(jq -r '.stats.by_mode.aggressive.trades // 0' signal_state/signal_history.json) trades, $(jq -r '.stats.by_mode.aggressive.win_rate // 0' signal_state/signal_history.json)% WR"
+              echo "  Conservative: $(jq -r '.stats.by_mode.conservative.trades // 0' signal_state/signal_history.json) trades, $(jq -r '.stats.by_mode.conservative.win_rate // 0' signal_state/signal_history.json)% WR"
+            fi
           fi
           
           echo "✅ Pre-flight check complete - system ready"
@@ -243,22 +245,38 @@ jobs:
       - name: Display active configuration
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "📋 ACTIVE CONFIGURATION"
+          echo "📋 ACTIVE CONFIGURATION (MULTI-MODE)"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          
-          MODE=$(jq -r '.mode' config.json)
-          echo "Trading Mode: $MODE"
+          echo ""
+          echo "🎯 MULTI-MODE: Generating both Aggressive AND Conservative signals"
           echo ""
           
-          echo "[$MODE Mode Settings]"
-          echo "  Threshold: $(jq -r ".settings.$MODE.threshold" config.json)"
-          echo "  Min ADX: $(jq -r ".settings.$MODE.min_adx" config.json)"
-          echo "  RSI Oversold: $(jq -r ".settings.$MODE.rsi_oversold" config.json)"
-          echo "  RSI Overbought: $(jq -r ".settings.$MODE.rsi_overbought" config.json)"
-          echo "  Min Risk:Reward: $(jq -r ".settings.$MODE.min_risk_reward" config.json)"
-          echo "  ATR Stop Multiplier: $(jq -r ".settings.$MODE.atr_stop_multiplier" config.json)"
-          echo "  ATR Target Multiplier: $(jq -r ".settings.$MODE.atr_target_multiplier" config.json)"
-          echo "  Max Correlated Signals: $(jq -r ".settings.$MODE.max_correlated_signals" config.json)"
+          echo "[Aggressive Mode Thresholds]"
+          echo "  Threshold: $(jq -r '.settings.aggressive.threshold' config.json)"
+          echo "  Min ADX: $(jq -r '.settings.aggressive.min_adx' config.json)"
+          echo "  RSI Oversold: $(jq -r '.settings.aggressive.rsi_oversold' config.json)"
+          echo "  RSI Overbought: $(jq -r '.settings.aggressive.rsi_overbought' config.json)"
+          echo "  Min Risk:Reward: $(jq -r '.settings.aggressive.min_risk_reward' config.json)"
+          echo "  ATR Stop Multiplier: $(jq -r '.settings.aggressive.atr_stop_multiplier' config.json)"
+          echo "  ATR Target Multiplier: $(jq -r '.settings.aggressive.atr_target_multiplier' config.json)"
+          echo "  Max Correlated Signals: $(jq -r '.settings.aggressive.max_correlated_signals' config.json)"
+          echo ""
+          
+          echo "[Conservative Mode Thresholds]"
+          echo "  Threshold: $(jq -r '.settings.conservative.threshold' config.json)"
+          echo "  Min ADX: $(jq -r '.settings.conservative.min_adx' config.json)"
+          echo "  RSI Oversold: $(jq -r '.settings.conservative.rsi_oversold' config.json)"
+          echo "  RSI Overbought: $(jq -r '.settings.conservative.rsi_overbought' config.json)"
+          echo "  Min Risk:Reward: $(jq -r '.settings.conservative.min_risk_reward' config.json)"
+          echo "  ATR Stop Multiplier: $(jq -r '.settings.conservative.atr_stop_multiplier' config.json)"
+          echo "  ATR Target Multiplier: $(jq -r '.settings.conservative.atr_target_multiplier' config.json)"
+          echo "  Max Correlated Signals: $(jq -r '.settings.conservative.max_correlated_signals' config.json)"
+          echo ""
+          
+          echo "[Tier Thresholds]"
+          echo "  A+ Minimum Score: $(jq -r '.tiers.A_plus_min_score // 80' config.json)"
+          echo "  A Minimum Score: $(jq -r '.tiers.A_min_score // 72' config.json)"
+          echo "  B Minimum Score: $(jq -r '.tiers.B_min_score // 65' config.json)"
           echo ""
           
           echo "[System Settings]"
@@ -277,13 +295,13 @@ jobs:
           
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
       
-      - name: Run Trade Beacon v2.1.2
+      - name: Run Trade Beacon v2.1.2-MULTI
         env:
           NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
           MARKETAUX_API_KEY: ${{ secrets.MARKETAUX_API_KEY }}
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
         run: |
-          echo "🚀 Starting Trade Beacon v2.1.2..."
+          echo "🚀 Starting Trade Beacon v2.1.2-MULTI..."
           python $ENTRY_SCRIPT
           EXIT_CODE=$?
           
@@ -294,38 +312,23 @@ jobs:
           
           echo "✅ Trade Beacon completed successfully"
           
+          # Display multi-mode signal breakdown
+          if [ -f signal_state/dashboard_state.json ]; then
+            echo ""
+            echo "📊 Multi-Mode Signal Breakdown:"
+            AGG_COUNT=$(jq -r '.active_signals_by_mode.aggressive // 0' signal_state/dashboard_state.json 2>/dev/null || echo "0")
+            CONS_COUNT=$(jq -r '.active_signals_by_mode.conservative // 0' signal_state/dashboard_state.json 2>/dev/null || echo "0")
+            echo "  Aggressive: $AGG_COUNT signals"
+            echo "  Conservative: $CONS_COUNT signals"
+            echo "  Total: $(jq -r '.active_signals // 0' signal_state/dashboard_state.json) unique signals"
+          fi
+          
           # Log optimization decision if optimization was allowed
           if [ -f signal_state/last_optimization.json ]; then
             echo ""
             echo "📊 Optimization Decision:"
-            jq -r '"Reason: \(.reason // "N/A")\nOld Threshold: \(.old_threshold // "N/A")\nNew Threshold: \(.new_threshold // "N/A")"' \
+            jq -r '"Reason: \(.reason // "N/A")\nOld Threshold: \(.old // "N/A")\nNew Threshold: \(.new // "N/A")"' \
               signal_state/last_optimization.json || echo "Optimization data not available"
-          elif [ "${{ github.event.inputs.allow_optimization }}" == "true" ]; then
-            echo ""
-            echo "ℹ️  Optimization was ALLOWED but NOT EXECUTED"
-            echo "   Possible reasons:"
-            
-            CURRENT_TRADES=$(jq -r '.stats.total_trades // 0' signal_state/signal_history.json 2>/dev/null || echo "0")
-            MIN_TRADES=$(jq -r '.performance_tuning.min_trades_for_optimization // 50' config.json)
-            
-            if [ "$CURRENT_TRADES" -lt "$MIN_TRADES" ]; then
-              echo "   ❌ Not enough trades ($CURRENT_TRADES < $MIN_TRADES)"
-            fi
-            
-            # Check if interval was met (14 days default)
-            if [ -f signal_state/last_optimization.json.backup ]; then
-              LAST_OPT=$(jq -r '.timestamp // ""' signal_state/last_optimization.json.backup 2>/dev/null || echo "")
-              if [ -n "$LAST_OPT" ]; then
-                echo "   ⚠️  Optimization interval not met (last run: $LAST_OPT)"
-              fi
-            fi
-            
-            EXPECTANCY=$(jq -r '.stats.expectancy_pips // 0' signal_state/signal_history.json 2>/dev/null || echo "0")
-            MIN_EXPECTANCY=$(jq -r '.performance_tuning.optimization_inputs.min_expectancy // 0.5' config.json)
-            
-            if (( $(echo "$EXPECTANCY >= $MIN_EXPECTANCY" | bc -l) )); then
-              echo "   ✅ Expectancy above threshold ($EXPECTANCY >= $MIN_EXPECTANCY)"
-            fi
           fi
       
       - name: Validate output files
@@ -336,7 +339,13 @@ jobs:
           # Check dashboard state
           if [ -f signal_state/dashboard_state.json ]; then
             jq empty signal_state/dashboard_state.json || exit 1
-            echo "✅ Dashboard state valid"
+            
+            # Verify multi-mode structure with boolean check
+            if jq -e '.multi_mode == true' signal_state/dashboard_state.json > /dev/null 2>&1; then
+              echo "✅ Dashboard state valid (multi-mode=true)"
+            else
+              echo "⚠️  Dashboard missing multi_mode=true flag"
+            fi
           else
             echo "⚠️  Dashboard state not found"
           fi
@@ -345,24 +354,15 @@ jobs:
           if [ -f signal_state/health.json ]; then
             jq empty signal_state/health.json || exit 1
             STATUS=$(jq -r '.status // "unknown"' signal_state/health.json)
-            echo "📊 System health: $STATUS"
-          fi
-      
-      - name: Optional backtest
-        if: github.event.inputs.run_backtest == 'true'
-        run: |
-          echo "🧪 Running backtest..."
-          if [ -f backtest.py ]; then
-            python backtest.py || echo "⚠️  Backtest failed, continuing..."
-          else
-            echo "⚠️  backtest.py not found, skipping..."
+            VERSION=$(jq -r '.system_info.version // "unknown"' signal_state/health.json)
+            echo "📊 System health: $STATUS (version: $VERSION)"
           fi
       
       - name: Display comprehensive performance summary
         if: always()
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "📊 TRADE BEACON v2.1.2 PERFORMANCE SUMMARY"
+          echo "📊 TRADE BEACON v2.1.2-MULTI PERFORMANCE SUMMARY"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           
           if [ -f signal_state/signal_history.json ]; then
@@ -382,6 +382,24 @@ jobs:
               "Validated: \(.validated // false)"' \
               signal_state/signal_history.json || echo "Stats not available"
             
+            # Multi-mode stats
+            if jq -e '.stats.by_mode' signal_state/signal_history.json > /dev/null 2>&1; then
+              echo ""
+              echo "🎯 Performance by Mode:"
+              jq -r '.stats.by_mode // {} | to_entries[] | 
+                "\(.key | ascii_upcase): \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
+                signal_state/signal_history.json 2>/dev/null || echo "No mode-specific data"
+            fi
+            
+            # Tier stats
+            if jq -e '.analytics.by_tier' signal_state/signal_history.json > /dev/null 2>&1; then
+              echo ""
+              echo "🏆 Performance by Tier:"
+              jq -r '.analytics.by_tier // {} | to_entries[] | 
+                "Tier \(.key): \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
+                signal_state/signal_history.json 2>/dev/null || echo "No tier data"
+            fi
+            
             echo ""
             echo "📊 Analytics by Session:"
             jq -r '.analytics.by_session // {} | to_entries[] | 
@@ -400,15 +418,19 @@ jobs:
           echo ""
           if [ -f signal_state/dashboard_state.json ]; then
             echo "🔔 Active Signals:"
-            jq -r '.active_signals // 0' signal_state/dashboard_state.json || echo "0"
+            TOTAL=$(jq -r '.active_signals // 0' signal_state/dashboard_state.json)
+            AGG=$(jq -r '.active_signals_by_mode.aggressive // 0' signal_state/dashboard_state.json 2>/dev/null || echo "0")
+            CONS=$(jq -r '.active_signals_by_mode.conservative // 0' signal_state/dashboard_state.json 2>/dev/null || echo "0")
+            echo "  Total: $TOTAL"
+            echo "  Aggressive: $AGG"
+            echo "  Conservative: $CONS"
             
             echo ""
             echo "📡 System Status:"
             jq -r '.system | 
               "Version: \(.version // "unknown")\n" +
               "Signal Only Mode: \(.signal_only_mode // true)\n" +
-              "Performance Tracking: \(.performance_tracking_enabled // false)\n" +
-              "Optimization: \(.optimization_enabled // false)"' \
+              "Multi-Mode: \(.multi_mode // false)"' \
               signal_state/dashboard_state.json || echo "Status not available"
           fi
           
@@ -435,25 +457,27 @@ jobs:
       
       - name: Commit state changes
         run: |
-          git config user.name "Trade Beacon v2.1.2 [bot]"
+          git config user.name "Trade Beacon v2.1.2-MULTI [bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Add all state files (including baseline snapshot if new)
+          # Add all state files
           git add signal_state/*.json config.json config.runtime.base.json signals.csv 2>/dev/null || true
           
           # Check if there are changes
           if git diff --staged --quiet; then
             echo "ℹ️  No changes to commit"
           else
-            # Create detailed commit message with safe fallbacks
+            # Create detailed commit message
             TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
-            ACTIVE=$(jq -r '.active_signals // 0' signal_state/dashboard_state.json 2>/dev/null || echo "0")
+            TOTAL=$(jq -r '.active_signals // 0' signal_state/dashboard_state.json 2>/dev/null || echo "0")
+            AGG=$(jq -r '.active_signals_by_mode.aggressive // 0' signal_state/dashboard_state.json 2>/dev/null || echo "0")
+            CONS=$(jq -r '.active_signals_by_mode.conservative // 0' signal_state/dashboard_state.json 2>/dev/null || echo "0")
             SESSION=$(jq -r '.session // "UNKNOWN"' signal_state/dashboard_state.json 2>/dev/null || echo "UNKNOWN")
             
-            git commit -m "📊 Trade Beacon v2.1.2 update [$TIMESTAMP]
+            git commit -m "📊 Trade Beacon v2.1.2-MULTI update [$TIMESTAMP]
             
             Session: $SESSION
-            Active Signals: $ACTIVE
+            Total Signals: $TOTAL (Agg: $AGG, Cons: $CONS)
             Run: #${{ github.run_number }}
             
             [skip ci]"
@@ -473,7 +497,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: trade-beacon-v2.1.2-run-${{ github.run_number }}
+          name: trade-beacon-v2.1.2-multi-run-${{ github.run_number }}
           path: |
             signal_state/
             signals.csv

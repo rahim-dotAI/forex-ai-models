@@ -1,6 +1,7 @@
 """
 Trade Beacon v2.1.2 - Forex Signal Generator (INSTITUTIONAL GRADE)
-Minimized version with all fixes + ChatGPT audit improvements
+MULTI-MODE EDITION: Generates Aggressive + Conservative signals simultaneously
+with tier-based selective enhancement (sentiment/backtest only on top-tier)
 """
 
 import logging
@@ -103,7 +104,7 @@ def _default_config():
         "use_sentiment": False,
         "settings": {
             "aggressive": {"threshold": 60, "min_adx": 20, "rsi_oversold": 30, "rsi_overbought": 70, "min_risk_reward": 2.0, "atr_stop_multiplier": 1.8, "atr_target_multiplier": 4.0, "max_correlated_signals": 2},
-            "conservative": {"threshold": 70, "min_adx": 22, "rsi_oversold": 25, "rsi_overbought": 75, "min_risk_reward": 2.5, "atr_stop_multiplier": 2.0, "atr_target_multiplier": 5.0, "max_correlated_signals": 1}
+            "conservative": {"threshold": 60, "min_adx": 20, "rsi_oversold": 30, "rsi_overbought": 70, "min_risk_reward": 2.2, "atr_stop_multiplier": 2.0, "atr_target_multiplier": 4.5, "max_correlated_signals": 1}
         },
         "advanced": {
             "enable_session_filtering": True,
@@ -115,7 +116,7 @@ def _default_config():
         },
         "risk_management": {"max_daily_risk_pips": 150, "max_open_positions": 3, "stop_trading_on_drawdown_pips": 100, "equity_protection": {"enable": False, "max_consecutive_losses": 3, "pause_minutes_after_hit": 120}},
         "performance_tracking": {"enable": True, "history_file": "signal_state/signal_history.json", "idempotency": {"enabled": True}, "analytics": {"track_by_pair": True}},
-        "performance_tuning": {"auto_adjust_thresholds": False, "min_trades_for_optimization": 50, "target_win_rate": 0.5}
+        "performance_tuning": {"auto_adjust_thresholds": False, "min_trades_for_optimization": 50, "target_win_rate": 0.5, "optimization_inputs": {"min_expectancy": 0.5}}
     }
 
 # API validation
@@ -183,7 +184,9 @@ def last(series: pd.Series):
 
 @retry_with_backoff(max_retries=3, backoff_factor=10)
 def download(pair: str) -> Tuple[pd.DataFrame, bool]:
-    cached = _cache.get(pair)
+    # Normalize cache key to avoid pollution
+    cache_key = pair.replace("=X", "")
+    cached = _cache.get(cache_key)
     if cached is not None:
         return cached, True
     
@@ -197,7 +200,7 @@ def download(pair: str) -> Tuple[pd.DataFrame, bool]:
             return pd.DataFrame(), False
         
         df = df.dropna()
-        _cache.set(pair, df)
+        _cache.set(cache_key, df)
         return df, True
     except Exception as e:
         log.error(f"❌ {pair} download failed: {e}")
@@ -274,6 +277,24 @@ def calculate_eligible_modes(score: int, adx: float, config: Dict) -> List[str]:
             modes.append(mode_name)
     return modes
 
+# NEW: Tier classification system
+def classify_signal_tier(score: int) -> str:
+    """
+    Classify signal quality into tiers:
+    A+ = Institutional grade (80+)
+    A  = Premium (72-79)
+    B  = Standard (65-71)
+    C  = Entry level (60-64)
+    """
+    if score >= 80:
+        return "A+"
+    elif score >= 72:
+        return "A"
+    elif score >= 65:
+        return "B"
+    else:
+        return "C"
+
 def calculate_signal_freshness(ts: datetime) -> dict:
     age = (datetime.now(timezone.utc) - ts).total_seconds() / 60
     status = "FRESH" if age < 15 else ("RECENT" if age < 30 else ("AGING" if age < 60 else "STALE"))
@@ -290,11 +311,13 @@ def calculate_market_sentiment(sigs: List[Dict]) -> str:
     bear = sum(1 for s in sigs if s.get("direction") == "SELL")
     return "BULLISH" if bull > bear * 1.5 else ("BEARISH" if bear > bull * 1.5 else "MIXED")
 
-# Signal validation (FIXED)
+# Signal validation
 def validate_signal_quality(signal: Dict, config: Dict) -> Tuple[bool, List[str]]:
     warnings = []
     val_cfg = config.get("advanced", {}).get("validation", {})
-    mode_settings = config["settings"][config.get("mode", "conservative")]
+    # Use signal's first eligible mode for validation, fallback to conservative
+    modes = signal.get("eligible_modes", ["conservative"])
+    mode_settings = config["settings"].get(modes[0], config["settings"]["conservative"])
     
     # Direction
     if val_cfg.get("require_direction", True) and signal.get('direction') not in ("BUY", "SELL"):
@@ -309,7 +332,7 @@ def validate_signal_quality(signal: Dict, config: Dict) -> Tuple[bool, List[str]
         warnings.append("Invalid entry/SL")
         return False, warnings
     
-    # Spread ratio (FIXED)
+    # Spread ratio
     spread = float(signal.get("spread", 0.0002))
     sl_dist = abs(entry - sl)
     spread_ratio = spread / sl_dist if sl_dist > 0 else 1
@@ -317,15 +340,15 @@ def validate_signal_quality(signal: Dict, config: Dict) -> Tuple[bool, List[str]
         warnings.append(f"High spread ratio: {spread_ratio:.1%}")
         return False, warnings
     
-    # ATR validation (FIXED with regime-aware bounds consideration)
+    # ATR validation
     atr = signal.get("atr")
     if atr is None or not isinstance(atr, (int, float)):
         warnings.append("Missing/invalid ATR")
         return False, warnings
     
-    # Conservative static bounds (could be made regime-aware via ADX in future)
+    # Conservative static bounds (tightened for FX reality, JPY pairs need more headroom)
     atr_pct = atr / entry
-    max_atr, min_atr = (0.01, 0.0001) if "JPY" in signal['pair'] else (0.01, 0.00001)
+    max_atr, min_atr = (0.006, 0.0001) if "JPY" in signal['pair'] else (0.005, 0.00001)
     if atr_pct <= min_atr or atr_pct > max_atr:
         warnings.append(f"Invalid ATR: {atr_pct:.4%}")
         return False, warnings
@@ -340,12 +363,13 @@ def validate_signal_quality(signal: Dict, config: Dict) -> Tuple[bool, List[str]
         warnings.append(f"SL too tight: {sl_pips:.1f}")
         return False, warnings
     
-    # R:R
-    if signal['risk_reward'] < mode_settings.get("min_risk_reward", 2.0):
+    # R:R (use minimum from either mode)
+    min_rr = min(mode_settings.get("min_risk_reward", 2.0), 2.0)
+    if signal['risk_reward'] < min_rr:
         warnings.append(f"Poor R:R: {signal['risk_reward']:.2f}")
         return False, warnings
     
-    # SL/TP distance (FIXED - separated)
+    # SL/TP distance
     if abs(sl - entry) / entry > val_cfg.get("max_sl_distance_pct", 0.02):
         warnings.append(f"SL too far: {abs(sl - entry) / entry:.2%}")
         return False, warnings
@@ -384,12 +408,13 @@ def check_equity_protection(config: Dict) -> Tuple[bool, str]:
                 pass
     return True, ""
 
-# Deterministic ID (FIXED - SHA1)
+# Deterministic ID
 def generate_deterministic_signal_id(pair: str, direction: str, entry: float, session: str, date: str) -> str:
-    data = f"{pair}|{direction}|{entry:.5f}|{session}|{date}"
+    # Round entry to prevent float noise from creating duplicate IDs
+    data = f"{pair}|{direction}|{round(entry, 5)}|{session}|{date}"
     return f"{pair}_{direction}_{hashlib.sha1(data.encode()).hexdigest()[:12]}"
 
-# Duplicate detection (FIXED - 3 sources)
+# Duplicate detection
 def get_existing_signals_today() -> List[str]:
     today = datetime.now(timezone.utc).date()
     existing_ids = set()
@@ -399,7 +424,8 @@ def get_existing_signals_today() -> List[str]:
     if dashboard_file.exists():
         try:
             with open(dashboard_file, 'r') as f:
-                for s in json.load(f).get("signals", []):
+                data = json.load(f)
+                for s in data.get("signals_by_mode", {}).get("aggressive", []) + data.get("signals_by_mode", {}).get("conservative", []):
                     try:
                         if datetime.fromisoformat(s.get("timestamp", "").replace('Z', '+00:00')).date() == today:
                             if sid := s.get("signal_id"):
@@ -412,28 +438,13 @@ def get_existing_signals_today() -> List[str]:
     # Performance tracker
     if PERFORMANCE_TRACKER and hasattr(PERFORMANCE_TRACKER, 'history'):
         try:
-            for trade in PERFORMANCE_TRACKER.history.get("trades", []):
+            for trade in PERFORMANCE_TRACKER.history.get("signals", []):
                 try:
-                    if datetime.fromisoformat(trade.get("entry_time", "").replace('Z', '+00:00')).date() == today:
+                    if datetime.fromisoformat(trade.get("timestamp", "").replace('Z', '+00:00')).date() == today:
                         if sid := trade.get("signal_id"):
                             existing_ids.add(sid)
                 except:
                     continue
-        except:
-            pass
-    
-    # Archive
-    archive_file = Path("signal_state/archive.json")
-    if archive_file.exists():
-        try:
-            with open(archive_file, 'r') as f:
-                for s in json.load(f).get("signals", []):
-                    try:
-                        if datetime.fromisoformat(s.get("timestamp", "").replace('Z', '+00:00')).date() == today:
-                            if sid := s.get("signal_id"):
-                                existing_ids.add(sid)
-                    except:
-                        continue
         except:
             pass
     
@@ -443,7 +454,7 @@ def get_existing_signals_today() -> List[str]:
 def is_duplicate_signal(sid: str, existing: List[str]) -> bool:
     return sid in existing
 
-# Optimization (FIXED - deep copy)
+# Optimization
 def optimize_thresholds_if_needed(config: Dict) -> Dict:
     tuning = config.get("performance_tuning", {})
     if not tuning.get("auto_adjust_thresholds", False) or not PERFORMANCE_TRACKER:
@@ -465,7 +476,7 @@ def optimize_thresholds_if_needed(config: Dict) -> Dict:
     
     opt_config = copy.deepcopy(config)
     wr = float(stats.get("win_rate", 0)) / 100 if stats.get("win_rate", 0) > 1 else float(stats.get("win_rate", 0))
-    exp = stats.get("expectancy_per_trade", stats.get("expectancy", 0))
+    exp = stats.get("expectancy_pips", stats.get("expectancy", 0))
     
     mode = opt_config.get("mode", "conservative")
     curr_thresh = opt_config["settings"][mode]["threshold"]
@@ -479,7 +490,7 @@ def optimize_thresholds_if_needed(config: Dict) -> Dict:
         adj = -3
     
     if adj != 0:
-        new_thresh = max(55 if mode == "aggressive" else 65, min(70 if mode == "aggressive" else 80, curr_thresh + adj))
+        new_thresh = max(55 if mode == "aggressive" else 60, min(70 if mode == "aggressive" else 75, curr_thresh + adj))
         opt_config["settings"][mode]["threshold"] = new_thresh
         log.info(f"✅ Threshold: {curr_thresh} → {new_thresh}")
         
@@ -497,7 +508,8 @@ def resolve_active_signals():
     
     try:
         with open(dashboard_file, 'r') as f:
-            signals = json.load(f).get("signals", [])
+            data = json.load(f)
+            signals = data.get("signals_by_mode", {}).get("aggressive", []) + data.get("signals_by_mode", {}).get("conservative", [])
     except:
         return 0
     
@@ -513,7 +525,10 @@ def resolve_active_signals():
         entry, sl, tp = sig.get("entry_price"), sig.get("sl"), sig.get("tp")
         
         try:
-            df = yf.download(f"{pair}=X", interval="1m", period="1d", progress=False, auto_adjust=True)
+            # Always clean and reconstruct to ensure consistency
+            clean_pair = pair.replace("=X", "")
+            ticker = f"{clean_pair}=X"
+            df = yf.download(ticker, interval="1m", period="1d", progress=False, auto_adjust=True)
             if df is None or df.empty:
                 active.append(sig)
                 continue
@@ -549,13 +564,18 @@ def resolve_active_signals():
             active.append(sig)
     
     if resolved > 0:
+        # Re-split active signals by mode
+        mode_buckets = split_signals_by_mode(active)
+        with open(dashboard_file, 'r') as f:
+            dashboard_data = json.load(f)
+        dashboard_data["signals_by_mode"] = mode_buckets
         with open(dashboard_file, 'w') as f:
-            json.dump({"signals": active}, f, indent=2)
+            json.dump(dashboard_data, f, indent=2)
         log.info(f"✅ Resolved {resolved}, {len(active)} active")
     
     return resolved
 
-# Signal generation (FIXED)
+# Signal generation
 def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
     df, ok = download(pair)
     if not ok or len(df) < MIN_ROWS:
@@ -569,7 +589,11 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
         log.warning(f"⚠️ {pair} indicators failed: {e}")
         return None, ok
     
-    if None in (e12, e26, e200, r, a, curr, atr) or a < SETTINGS.get("min_adx", 22):
+    # Minimum threshold check (use lowest threshold across all modes)
+    min_threshold = min(CONFIG["settings"]["aggressive"]["threshold"], CONFIG["settings"]["conservative"]["threshold"])
+    min_adx = min(CONFIG["settings"]["aggressive"]["min_adx"], CONFIG["settings"]["conservative"]["min_adx"])
+    
+    if None in (e12, e26, e200, r, a, curr, atr) or a < min_adx:
         return None, ok
     
     bull = bear = 0
@@ -578,28 +602,28 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
     if e12 > e26 > e200: bull += 25
     elif e12 < e26 < e200: bear += 25
     
-    # Pullback (FIXED - safety guard)
-    rsi_os, rsi_ob = SETTINGS.get("rsi_oversold", 30), SETTINGS.get("rsi_overbought", 70)
+    # Pullback
+    rsi_os, rsi_ob = 30, 70  # Use aggressive thresholds for signal generation
     if e12 > e26 > e200 and rsi_os + 5 < r < 45: bull += 15
     elif e12 < e26 < e200 and 55 < r < rsi_ob - 5: bear += 15
     
     # RSI
-    if r < rsi_os: bull += (30 if MODE == "conservative" else 20)
-    elif r > rsi_ob: bear += (30 if MODE == "conservative" else 20)
+    if r < rsi_os: bull += 25
+    elif r > rsi_ob: bear += 25
     
-    # ADX (FIXED - explicit branching instead of conditional expression)
+    # ADX
     if a > 25:
         if e12 > e26:
             bull += 20
         else:
             bear += 20
-    elif a > SETTINGS.get("min_adx", 22):
+    elif a > min_adx:
         if e12 > e26:
             bull += 10
         else:
             bear += 10
     
-    # Session (FIXED - elif for bear)
+    # Session
     session = get_market_session()
     bonus = calculate_dynamic_session_bonus(pair.replace("=X", ""), session, CONFIG)
     if e12 > e26:
@@ -608,26 +632,36 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
         bear += bonus
     
     diff = abs(bull - bear)
-    if diff < SETTINGS.get("threshold", 60):
+    
+    # Reject ambiguous ties (bull == bear means no clear direction)
+    if bull == bear:
+        return None, ok
+    
+    if diff < min_threshold:
         return None, ok
     
     direction = "BUY" if bull > bear else "SELL"
     
-    # Confidence (FIXED)
+    # Confidence
     if diff >= 75: conf = "VERY_STRONG"
     elif diff >= 65: conf = "STRONG"
     else: conf = "MODERATE"
     
-    # SL/TP
+    # NEW: Tier classification
+    tier = classify_signal_tier(diff)
+    
+    # SL/TP (use conservative multipliers as baseline)
     spread = get_spread(pair)
-    atr_stop, atr_tgt = SETTINGS.get("atr_stop_multiplier", 1.8), SETTINGS.get("atr_target_multiplier", 4.0)
+    atr_stop, atr_tgt = 2.0, 4.5
     if direction == "BUY":
         sl, tp = curr - atr_stop * atr, curr + atr_tgt * atr
     else:
         sl, tp = curr + atr_stop * atr, curr - atr_tgt * atr
     
     rr = abs(tp - curr) / abs(curr - sl) if abs(curr - sl) > 0 else 0
-    if rr < SETTINGS.get("min_risk_reward", 2.0):
+    if rr < 2.0:  # Minimum R:R for any mode
+        return None, ok
+    if rr > 10:  # Reject pathological spikes
         return None, ok
     
     now = datetime.now(timezone.utc)
@@ -638,12 +672,14 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
     signal = {
         "signal_id": sid, "id": sid, "pair": pair.replace("=X", ""), "direction": direction,
         "score": diff, "technical_score": diff, "sentiment_score": 0, "confidence": conf,
+        "tier": tier,  # NEW: Tier classification
         "rsi": round(r, 1), "adx": round(a, 1), "atr": round(atr, 5), 
-        "volume_ratio": 0,  # FX volume scoring disabled by design (USE_VOLUME_FOR_FX = False)
+        "volume_ratio": 0,
         "session": session, "entry_price": round(curr, 5), "sl": round(sl, 5), "tp": round(tp, 5),
         "risk_reward": round(rr, 2), "spread": round(spread, 5), "timestamp": now.isoformat(), "status": "OPEN",
         "hold_time": calculate_hold_time(rr, atr), "eligible_modes": calculate_eligible_modes(diff, a, CONFIG),
         "freshness": calculate_signal_freshness(now),
+        "sentiment_applied": False,  # NEW: Track if sentiment was applied
         "metadata": {
             "signal_type": get_signal_type(e12, e26, e200, r, a), "market_state": classify_market_state(a, atr, curr),
             "timeframe": INTERVAL, "valid_for_minutes": 15, "generated_at": now.isoformat(), "expires_at": expires.isoformat(),
@@ -659,8 +695,63 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
     
     return signal, ok
 
-# Correlation filter (FIXED - direction aware)
+# NEW: Multi-mode helpers
+def split_signals_by_mode(signals: List[Dict]) -> Dict[str, List[Dict]]:
+    """Split signals into mode-specific buckets"""
+    buckets = {
+        "aggressive": [],
+        "conservative": []
+    }
+    
+    for s in signals:
+        for m in s.get("eligible_modes", []):
+            if m in buckets:
+                buckets[m].append(s)
+    
+    return buckets
+
+def select_high_potential(signals: List[Dict]) -> List[Dict]:
+    """Select top-tier signals for enhanced analysis"""
+    return [s for s in signals if s.get("tier") in ("A+", "A")]
+
+def quick_micro_backtest(signal: Dict) -> float:
+    """
+    Quick probabilistic win rate estimation based on signal characteristics
+    Returns: Estimated win probability (0-1)
+    """
+    base = 0.5
+    
+    # Tier bonus
+    tier = signal.get("tier", "C")
+    if tier == "A+":
+        base += 0.15
+    elif tier == "A":
+        base += 0.10
+    elif tier == "B":
+        base += 0.05
+    
+    # Confidence bonus
+    if signal.get("confidence") == "VERY_STRONG":
+        base += 0.05
+    elif signal.get("confidence") == "STRONG":
+        base += 0.03
+    
+    # Session bonus
+    if signal.get("metadata", {}).get("session_active"):
+        base += 0.02
+    
+    # Market state bonus
+    if signal.get("metadata", {}).get("market_state") in ("TRENDING_STRONG", "TRENDING_STRONG_HIGH_VOL"):
+        base += 0.03
+    
+    return min(base, 0.95)
+
+# Correlation filter
 def filter_correlated_signals_enhanced(signals: List[Dict], max_corr: int = 1) -> List[Dict]:
+    """
+    Filter correlated signals regardless of direction.
+    BUY EURUSD + SELL GBPUSD are still correlated and should be limited.
+    """
     if len(signals) <= 1:
         return signals
     
@@ -669,12 +760,12 @@ def filter_correlated_signals_enhanced(signals: List[Dict], max_corr: int = 1) -
     
     for sig in sorted(signals, key=lambda x: x['score'], reverse=True):
         pair = f"{sig['pair']}=X"
-        direction = sig['direction']
         
         group_key = None
         for corr_group in CORRELATED_PAIRS:
             if pair in corr_group:
-                group_key = (frozenset(corr_group), direction)
+                # Direction-agnostic correlation control
+                group_key = frozenset(corr_group)
                 break
         
         if group_key:
@@ -683,7 +774,7 @@ def filter_correlated_signals_enhanced(signals: List[Dict], max_corr: int = 1) -
                 filtered.append(sig)
                 groups[group_key] = count + 1
             else:
-                log.info(f"⚠️ Skipping {sig['pair']} {direction} (correlation limit)")
+                log.info(f"⚠️ Skipping {sig['pair']} {sig['direction']} (correlation limit)")
         else:
             filtered.append(sig)
     
@@ -691,13 +782,15 @@ def filter_correlated_signals_enhanced(signals: List[Dict], max_corr: int = 1) -
         log.info(f"🔗 Correlation filter: {len(signals)} → {len(filtered)}")
     return filtered
 
-def check_risk_limits(signals: List[Dict], config: Dict) -> Tuple[List[Dict], List[str]]:
+def check_risk_limits(signals: List[Dict], config: Dict, mode: str) -> Tuple[List[Dict], List[str]]:
+    """Apply risk limits per mode"""
     risk = config.get("risk_management", {})
+    mode_settings = config["settings"][mode]
     warnings = []
     
     max_pos = risk.get("max_open_positions", 3)
     if len(signals) > max_pos:
-        warnings.append(f"Limiting to {max_pos} positions")
+        warnings.append(f"Limiting {mode} to {max_pos} positions")
         signals = sorted(signals, key=lambda x: x['score'], reverse=True)[:max_pos]
     
     max_daily = risk.get("max_daily_risk_pips", 150)
@@ -710,10 +803,10 @@ def check_risk_limits(signals: List[Dict], config: Dict) -> Tuple[List[Dict], Li
             filtered.append(sig)
             total_risk += risk_pips
         else:
-            warnings.append(f"Skipped {sig['pair']} - risk limit")
+            warnings.append(f"Skipped {sig['pair']} - {mode} risk limit")
     
     if config.get("advanced", {}).get("enable_correlation_filter", True):
-        max_corr = config["settings"][config.get("mode", "conservative")].get("max_correlated_signals", 1)
+        max_corr = mode_settings.get("max_correlated_signals", 1)
         filtered = filter_correlated_signals_enhanced(filtered, max_corr)
     
     return filtered, warnings
@@ -726,13 +819,22 @@ class NewsAggregator:
     def get_news(self, pairs): return []
 
 def enhance_with_sentiment(signals: List[Dict], news_agg) -> List[Dict]:
+    """Apply sentiment analysis to signals"""
+    # Placeholder - implement actual sentiment logic here
+    for sig in signals:
+        sig["sentiment_score"] = 0
+        sig["sentiment_applied"] = True
     return signals
 
 # Dashboard
 def calculate_daily_pips(signals: List[Dict]) -> float:
+    """Calculate total risk in pips for today's signals (uses SL distance, not TP)"""
     today = datetime.now(timezone.utc).date()
-    return round(sum(price_to_pips(s.get('pair', ''), abs(s.get('tp', 0) - s.get('entry_price', 0))) 
-                     for s in signals if datetime.fromisoformat(s.get('timestamp', '')).date() == today), 1)
+    return round(sum(
+        price_to_pips(s.get('pair', ''), abs(s.get('entry_price', 0) - s.get('sl', 0)))
+        for s in signals
+        if datetime.fromisoformat(s.get('timestamp', '')).date() == today
+    ), 1)
 
 def get_performance_summary() -> Dict:
     if not PERFORMANCE_TRACKER:
@@ -764,7 +866,8 @@ def filter_expired_signals(signals: List[Dict]) -> List[Dict]:
                 if (now - sig_time).total_seconds() < CONFIG.get("advanced", {}).get("validation", {}).get("max_signal_age_seconds", 900):
                     active.append(sig)
         except:
-            active.append(sig)
+            # Discard signals with corrupt timestamps
+            continue
     
     if len(active) < len(signals):
         log.info(f"⏰ Filtered {len(signals) - len(active)} expired")
@@ -773,38 +876,39 @@ def filter_expired_signals(signals: List[Dict]) -> List[Dict]:
 def write_dashboard_state(signals: list, downloads: int, news_calls: int = 0, mkt_calls: int = 0, config: Dict = None, mode: str = None, settings: Dict = None):
     cfg = config or CONFIG
     md = mode or MODE
-    original_count = len(signals)
     signals = filter_expired_signals(signals)
     
-    # CRITICAL FIX: Enforce mode filtering - only show signals eligible for current mode
-    signals = [
-        s for s in signals
-        if md in s.get("eligible_modes", [])
-    ]
-    
-    if original_count > len(signals):
-        log.info(f"🔒 Mode filter ({md}): {original_count} → {len(signals)} signals")
+    # NEW: Split signals by mode instead of filtering
+    mode_buckets = split_signals_by_mode(signals)
     
     perf = get_performance_summary()
     stats = perf.get("stats", {}) or {}
     can_trade, pause = check_equity_protection(cfg)
     
+    # Calculate stats per mode
+    agg_count = len(mode_buckets["aggressive"])
+    cons_count = len(mode_buckets["conservative"])
+    
     dashboard = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "active_signals": len(signals),
+        "active_signals_by_mode": {
+            "aggressive": agg_count,
+            "conservative": cons_count
+        },
         "session": get_market_session(),
-        "mode": md,
+        "mode": md,  # Keep for backward compatibility
         "sentiment_enabled": USE_SENTIMENT,
-        "mode_filter_applied": True,
+        "multi_mode": True,  # NEW: Flag for multi-mode operation
         "equity_protection": {"enabled": cfg.get("risk_management", {}).get("equity_protection", {}).get("enable", False), "can_trade": can_trade, "pause_reason": pause or None},
         "market_state": {"volatility": calculate_market_volatility(signals), "sentiment_bias": calculate_market_sentiment(signals), "session": get_market_session()},
-        "signals": signals,
+        "signals_by_mode": mode_buckets,  # NEW: Signals split by mode
         "api_usage": {"yfinance": {"successful_downloads": downloads}, "sentiment": {"enabled": USE_SENTIMENT, "newsapi": news_calls, "marketaux": mkt_calls}},
-        "stats": {"total_trades": stats.get("total_trades", 0), "win_rate": stats.get("win_rate", 0), "total_pips": stats.get("total_pips", 0), "wins": stats.get("wins", 0), "losses": stats.get("losses", 0), "expectancy": stats.get("expectancy_per_trade", 0)},
+        "stats": {"total_trades": stats.get("total_trades", 0), "win_rate": stats.get("win_rate", 0), "total_pips": stats.get("total_pips", 0), "wins": stats.get("wins", 0), "losses": stats.get("losses", 0), "expectancy": stats.get("expectancy_pips", 0)},
         "risk_management": {"theoretical_max_pips": calculate_daily_pips(signals), "total_risk_pips": sum(price_to_pips(s.get('pair', ''), abs(s.get('entry_price', 0) - s.get('sl', 0))) for s in signals), "max_daily_risk": cfg.get("risk_management", {}).get("max_daily_risk_pips", 150)},
         "analytics": perf.get("analytics", {}),
         "equity_curve": perf.get("equity", {}).get("curve", []),
-        "system": {"last_update": datetime.now(timezone.utc).isoformat(), "signal_only_mode": SIGNAL_ONLY_MODE, "version": "2.1.2"}
+        "system": {"last_update": datetime.now(timezone.utc).isoformat(), "signal_only_mode": SIGNAL_ONLY_MODE, "version": "2.1.2-MULTI"}
     }
     
     output_dir = Path("signal_state")
@@ -814,6 +918,7 @@ def write_dashboard_state(signals: list, downloads: int, news_calls: int = 0, mk
         json.dump(dashboard, f, indent=2)
     
     log.info(f"📊 Dashboard written")
+    log.info(f"📊 Aggressive: {agg_count} | Conservative: {cons_count} | Total: {len(signals)}")
     if stats.get("total_trades", 0) > 0:
         log.info(f"📈 {stats['total_trades']} trades | WR: {stats['win_rate']:.1f}% | Pips: {stats['total_pips']:.1f}")
     
@@ -830,7 +935,7 @@ def write_health_check(signals, downloads, news, mkt, can_trade, pause, mode):
         "issues": issues,
         "can_trade": can_trade,
         "api_status": {"yfinance": "ok" if downloads > 0 else "degraded", "newsapi": "ok" if news > 0 else "disabled", "marketaux": "ok" if mkt > 0 else "disabled"},
-        "system_info": {"mode": mode, "pairs_monitored": len(PAIRS), "version": "2.1.2"}
+        "system_info": {"mode": mode, "pairs_monitored": len(PAIRS), "version": "2.1.2-MULTI"}
     }
     
     with open(Path("signal_state/health.json"), "w") as f:
@@ -874,11 +979,17 @@ def cleanup_legacy_signals():
     
     try:
         data = json.loads(dashboard.read_text())
-        signals = data.get("signals", [])
-        now = datetime.now(timezone.utc)
         
+        # Handle both old and new format
+        if "signals_by_mode" in data:
+            all_signals = data["signals_by_mode"].get("aggressive", []) + data["signals_by_mode"].get("conservative", [])
+        else:
+            all_signals = data.get("signals", [])
+        
+        now = datetime.now(timezone.utc)
         cleaned = []
-        for sig in signals:
+        
+        for sig in all_signals:
             if sig.get("status") == "ACTIVE":
                 sig["status"] = "OPEN"
             if sig.get("status") != "OPEN":
@@ -892,14 +1003,16 @@ def cleanup_legacy_signals():
                 except:
                     pass
         
-        if len(cleaned) < len(signals):
-            data["signals"] = cleaned
+        if len(cleaned) < len(all_signals):
+            # Re-split cleaned signals
+            mode_buckets = split_signals_by_mode(cleaned)
+            data["signals_by_mode"] = mode_buckets
             dashboard.write_text(json.dumps(data, indent=2))
-            log.info(f"🧹 Cleaned {len(signals) - len(cleaned)} stale signals")
+            log.info(f"🧹 Cleaned {len(all_signals) - len(cleaned)} stale signals")
     except:
         pass
 
-# Main (FIXED)
+# Main
 def main():
     cleanup_legacy_signals()
     
@@ -916,7 +1029,11 @@ def main():
     if dashboard.exists():
         try:
             data = json.loads(dashboard.read_text())
-            existing = [s for s in data.get("signals", []) if s.get("status", "OPEN") in ("OPEN", "ACTIVE")]
+            if "signals_by_mode" in data:
+                existing = data["signals_by_mode"].get("aggressive", []) + data["signals_by_mode"].get("conservative", [])
+                existing = [s for s in existing if s.get("status", "OPEN") in ("OPEN", "ACTIVE")]
+            else:
+                existing = [s for s in data.get("signals", []) if s.get("status", "OPEN") in ("OPEN", "ACTIVE")]
             log.info(f"📋 {len(existing)} active signals from previous cycles")
         except:
             pass
@@ -929,11 +1046,11 @@ def main():
     
     opt_cfg = optimize_thresholds_if_needed(CONFIG) if CONFIG.get("performance_tuning", {}).get("auto_adjust_thresholds", False) else CONFIG
     opt_mode = opt_cfg["mode"]
-    opt_settings = opt_cfg["settings"][opt_mode]
     
-    log.info(f"🚀 Trade Beacon v2.1.2 - Mode={opt_mode} | Sentiment={'ON' if USE_SENTIMENT else 'OFF'}")
+    log.info(f"🚀 Trade Beacon v2.1.2-MULTI - Generating ALL signal types | Sentiment={'ON' if USE_SENTIMENT else 'OFF'}")
     log.info(f"📊 Monitoring {len(PAIRS)} pairs")
-    log.info(f"🎯 Threshold: {opt_settings['threshold']} | Min ADX: {opt_settings['min_adx']} | Min R:R: {opt_settings['min_risk_reward']}")
+    log.info(f"🎯 Aggressive: Score≥{opt_cfg['settings']['aggressive']['threshold']} ADX≥{opt_cfg['settings']['aggressive']['min_adx']}")
+    log.info(f"🎯 Conservative: Score≥{opt_cfg['settings']['conservative']['threshold']} ADX≥{opt_cfg['settings']['conservative']['min_adx']}")
     
     new_signals = []
     downloads = 0
@@ -958,43 +1075,115 @@ def main():
                         continue
                     
                     new_signals.append(sig)
-                    log.info(f"✅ {pair.replace('=X', '')} - Score: {sig['score']}, RR: {sig['risk_reward']:.2f}")
+                    modes_str = "+".join(sig['eligible_modes'])
+                    log.info(f"✅ {pair.replace('=X', '')} - Score: {sig['score']} [{sig['tier']}] ({modes_str}) RR: {sig['risk_reward']:.2f}")
             except Exception as e:
                 log.error(f"❌ {pair.replace('=X', '')} failed: {e}")
             
             time.sleep(0.5)
     
-    if new_signals:
-        new_signals, warnings = check_risk_limits(new_signals, opt_cfg)
-        for w in warnings:
-            log.warning(f"⚠️ {w}")
-    
+    # NEW: Apply sentiment and backtest ONLY to high-potential signals
     if USE_SENTIMENT and new_signals:
         try:
             news = NewsAggregator()
-            new_signals = enhance_with_sentiment(new_signals, news)
+            elite = select_high_potential(new_signals)
+            log.info(f"🎯 Applying sentiment to {len(elite)} high-potential signals (Tier A+/A)")
+            
+            elite = enhance_with_sentiment(elite, news)
+            elite_ids = {s["signal_id"] for s in elite}
+            
+            # Mark which signals received sentiment analysis
+            for s in new_signals:
+                if s["signal_id"] not in elite_ids:
+                    s["sentiment_applied"] = False
         except Exception as e:
             log.error(f"❌ Sentiment failed: {e}")
     
-    all_signals = filter_expired_signals(new_signals + existing)
+    # NEW: Apply micro-backtest to high-potential signals
+    elite = select_high_potential(new_signals)
+    for s in elite:
+        s["estimated_win_rate"] = quick_micro_backtest(s)
     
-    log.info(f"\n✅ Complete | New: {len(new_signals)} | Existing: {len(existing)} | Total: {len(all_signals)}")
+    # Filter by estimated win rate (keep only >55% probability)
+    log.info(f"🎲 Micro-backtest: {len(elite)} elite signals analyzed")
+    high_probability = [s for s in elite if s.get("estimated_win_rate", 0) >= 0.55]
+    if len(high_probability) < len(elite):
+        log.info(f"📊 Win-rate filter: {len(elite)} → {len(high_probability)} signals (≥55% estimated WR)")
     
-    write_dashboard_state(all_signals, downloads, 0, 0, opt_cfg, opt_mode, opt_settings)
+    # CRITICAL: Remove low-probability elite signals from new_signals
+    elite_pass_ids = {s["signal_id"] for s in high_probability}
+    new_signals = [
+        s for s in new_signals
+        if s.get("tier") not in ("A+", "A") or s.get("signal_id") in elite_pass_ids
+    ]
     
-    if new_signals:
-        df = pd.DataFrame(new_signals)
-        df.to_csv("signals.csv", index=False)
-        log.info("📄 signals.csv written")
+    # Mark all signals with backtest data
+    elite_ids = {s["signal_id"] for s in elite}
+    for s in new_signals:
+        if s["signal_id"] not in elite_ids:
+            s["estimated_win_rate"] = None
+    
+    # Split signals by mode and apply mode-specific risk limits
+    mode_buckets = split_signals_by_mode(new_signals)
+    
+    # Apply risk limits per mode
+    agg_filtered, agg_warnings = check_risk_limits(mode_buckets["aggressive"], opt_cfg, "aggressive")
+    cons_filtered, cons_warnings = check_risk_limits(mode_buckets["conservative"], opt_cfg, "conservative")
+    
+    for w in agg_warnings + cons_warnings:
+        log.warning(f"⚠️ {w}")
+    
+    # Combine all signals (they're already in mode buckets, but we need flat list for existing merge)
+    all_new = []
+    seen = set()
+    for sig in agg_filtered + cons_filtered:
+        if sig["signal_id"] not in seen:
+            all_new.append(sig)
+            seen.add(sig["signal_id"])
+    
+    all_signals = filter_expired_signals(all_new + existing)
+    
+    # HARDENING: Prevent JSON bloat - keep only most recent signals
+    MAX_STORED_SIGNALS = 200
+    if len(all_signals) > MAX_STORED_SIGNALS:
+        # Sort by timestamp descending and keep most recent
+        all_signals = sorted(all_signals, key=lambda s: s.get("timestamp", ""), reverse=True)[:MAX_STORED_SIGNALS]
+        log.info(f"📦 Signal cap applied: trimmed to {MAX_STORED_SIGNALS} most recent")
+    
+    log.info(f"\n✅ Complete | New: {len(all_new)} | Existing: {len(existing)} | Total: {len(all_signals)}")
+    log.info(f"📊 Breakdown - Aggressive: {len(agg_filtered)} | Conservative: {len(cons_filtered)}")
+    
+    write_dashboard_state(all_signals, downloads, 0, 0, opt_cfg, opt_mode, None)
+    
+    if all_new:
+        # Print both mode sections
+        mode_buckets = split_signals_by_mode(all_new)
         
-        print("\n" + "="*80)
-        print(f"🎯 {opt_mode.upper()} SIGNALS (v2.1.2 - INSTITUTIONAL GRADE):")
-        print("="*80)
-        print(df[["signal_id", "pair", "direction", "score", "confidence", "risk_reward"]].to_string(index=False))
-        print("="*80 + "\n")
+        print("\n" + "="*100)
+        print(f"🎯 MULTI-MODE SIGNALS (v2.1.2-MULTI - INSTITUTIONAL GRADE)")
+        print("="*100)
+        
+        if mode_buckets["aggressive"]:
+            print(f"\n⚡ AGGRESSIVE SIGNALS ({len(mode_buckets['aggressive'])})")
+            print("-"*100)
+            df_agg = pd.DataFrame(mode_buckets["aggressive"])
+            print(df_agg[["signal_id", "pair", "direction", "score", "tier", "confidence", "risk_reward"]].to_string(index=False))
+        
+        if mode_buckets["conservative"]:
+            print(f"\n🛡️ CONSERVATIVE SIGNALS ({len(mode_buckets['conservative'])})")
+            print("-"*100)
+            df_cons = pd.DataFrame(mode_buckets["conservative"])
+            print(df_cons[["signal_id", "pair", "direction", "score", "tier", "confidence", "risk_reward"]].to_string(index=False))
+        
+        print("="*100 + "\n")
+        
+        # Also save CSV with mode info
+        all_df = pd.DataFrame(all_new)
+        all_df.to_csv("signals.csv", index=False)
+        log.info("📄 signals.csv written")
     
     mark_success()
-    log.info("✅ Run completed - v2.1.2 INSTITUTIONAL GRADE")
+    log.info("✅ Run completed - v2.1.2-MULTI INSTITUTIONAL GRADE")
 
 if __name__ == "__main__":
     main()

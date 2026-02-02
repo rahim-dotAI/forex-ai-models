@@ -1,10 +1,14 @@
 {
-  "timestamp": "2026-01-31T22:31:06.766954+00:00",
+  "timestamp": "2026-02-02T06:01:25.519557+00:00",
   "active_signals": 0,
-  "session": "LATE_US",
+  "active_signals_by_mode": {
+    "aggressive": 0,
+    "conservative": 0
+  },
+  "session": "ASIAN",
   "mode": "conservative",
   "sentiment_enabled": false,
-  "mode_filter_applied": true,
+  "multi_mode": true,
   "equity_protection": {
     "enabled": false,
     "can_trade": true,
@@ -13,9 +17,12 @@
   "market_state": {
     "volatility": "CALM",
     "sentiment_bias": "MIXED",
-    "session": "LATE_US"
+    "session": "ASIAN"
   },
-  "signals": [],
+  "signals_by_mode": {
+    "aggressive": [],
+    "conservative": []
+  },
   "api_usage": {
     "yfinance": {
       "successful_downloads": 10
@@ -32,7 +39,7 @@
     "total_pips": 104.1,
     "wins": 1,
     "losses": 0,
-    "expectancy": 0
+    "expectancy": 104.1
   },
   "risk_management": {
     "theoretical_max_pips": 0,
@@ -67,8 +74,8 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-01-31T22:31:06.767004+00:00",
+    "last_update": "2026-02-02T06:01:25.519583+00:00",
     "signal_only_mode": true,
-    "version": "2.1.2"
+    "version": "2.1.2-MULTI"
   }
 }

@@ -1,4 +1,4 @@
-name: Trade Beacon v2.1.2-MULTI – Forex Signal Generator
+name: Trade Beacon v2.1.2 – Forex Signal Generator
 
 on:
   schedule:
@@ -35,10 +35,10 @@ on:
 
 env:
   PYTHON_VERSION: "3.10"
-  ENTRY_SCRIPT: "trade_beacon_multi.py"
+  ENTRY_SCRIPT: "trade_beacon.py"
 
 concurrency:
-  group: trade-beacon-v2.1.2-multi-${{ github.ref }}-${{ github.event_name }}
+  group: trade-beacon-v2.1.2-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: false
 
 permissions:
@@ -295,13 +295,13 @@ jobs:
           
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
       
-      - name: Run Trade Beacon v2.1.2-MULTI
+      - name: Run Trade Beacon v2.1.2
         env:
           NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
           MARKETAUX_API_KEY: ${{ secrets.MARKETAUX_API_KEY }}
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
         run: |
-          echo "🚀 Starting Trade Beacon v2.1.2-MULTI..."
+          echo "🚀 Starting Trade Beacon v2.1.2..."
           python $ENTRY_SCRIPT
           EXIT_CODE=$?
           
@@ -362,7 +362,7 @@ jobs:
         if: always()
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "📊 TRADE BEACON v2.1.2-MULTI PERFORMANCE SUMMARY"
+          echo "📊 TRADE BEACON v2.1.2 PERFORMANCE SUMMARY"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           
           if [ -f signal_state/signal_history.json ]; then
@@ -457,7 +457,7 @@ jobs:
       
       - name: Commit state changes
         run: |
-          git config user.name "Trade Beacon v2.1.2-MULTI [bot]"
+          git config user.name "Trade Beacon v2.1.2 [bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
           # Add all state files
@@ -474,7 +474,7 @@ jobs:
             CONS=$(jq -r '.active_signals_by_mode.conservative // 0' signal_state/dashboard_state.json 2>/dev/null || echo "0")
             SESSION=$(jq -r '.session // "UNKNOWN"' signal_state/dashboard_state.json 2>/dev/null || echo "UNKNOWN")
             
-            git commit -m "📊 Trade Beacon v2.1.2-MULTI update [$TIMESTAMP]
+            git commit -m "📊 Trade Beacon v2.1.2 update [$TIMESTAMP]
             
             Session: $SESSION
             Total Signals: $TOTAL (Agg: $AGG, Cons: $CONS)
@@ -497,7 +497,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: trade-beacon-v2.1.2-multi-run-${{ github.run_number }}
+          name: trade-beacon-v2.1.2-run-${{ github.run_number }}
           path: |
             signal_state/
             signals.csv

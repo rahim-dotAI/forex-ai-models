@@ -35,7 +35,7 @@ on:
 
 env:
   PYTHON_VERSION: "3.10"
-  ENTRY_SCRIPT: "trade_beacon_multi.py"  # UPDATED for multi-mode
+  ENTRY_SCRIPT: "trade_beacon_multi.py"
 
 concurrency:
   group: trade-beacon-v2.1.2-multi-${{ github.ref }}-${{ github.event_name }}

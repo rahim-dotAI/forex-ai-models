@@ -1,11 +1,11 @@
 {
-  "timestamp": "2026-02-03T12:48:01.426004+00:00",
+  "timestamp": "2026-02-03T13:01:16.728460+00:00",
   "active_signals": 2,
   "active_signals_by_mode": {
     "aggressive": 2,
-    "conservative": 0
+    "conservative": 1
   },
-  "session": "EUROPEAN",
+  "session": "OVERLAP",
   "mode": "conservative",
   "sentiment_enabled": false,
   "multi_mode": true,
@@ -16,11 +16,58 @@
   },
   "market_state": {
     "volatility": "CALM",
-    "sentiment_bias": "BULLISH",
-    "session": "EUROPEAN"
+    "sentiment_bias": "MIXED",
+    "session": "OVERLAP"
   },
   "signals_by_mode": {
     "aggressive": [
+      {
+        "signal_id": "GBPUSD_SELL_8c8a74208bf7",
+        "id": "GBPUSD_SELL_8c8a74208bf7",
+        "pair": "GBPUSD",
+        "direction": "SELL",
+        "score": 62,
+        "technical_score": 62,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 55.5,
+        "adx": 28.3,
+        "atr": 0.00075,
+        "volume_ratio": 0,
+        "session": "OVERLAP",
+        "entry_price": 1.36821,
+        "sl": 1.3697,
+        "tp": 1.36486,
+        "risk_reward": 2.25,
+        "spread": 0.0002,
+        "timestamp": "2026-02-03T13:01:11.719030+00:00",
+        "status": "OPEN",
+        "hold_time": "INTRADAY",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-03T13:01:11.719030+00:00",
+          "expires_at": "2026-02-03T13:16:11.719030+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      },
       {
         "signal_id": "USDCAD_BUY_4975246fd02d",
         "id": "USDCAD_BUY_4975246fd02d",
@@ -66,31 +113,34 @@
           "atr_target_multiplier": 4.5
         },
         "estimated_win_rate": null
-      },
+      }
+    ],
+    "conservative": [
       {
-        "signal_id": "USDCAD_BUY_113c7f16f7ae",
-        "id": "USDCAD_BUY_113c7f16f7ae",
-        "pair": "USDCAD",
-        "direction": "BUY",
-        "score": 50,
-        "technical_score": 50,
+        "signal_id": "GBPUSD_SELL_8c8a74208bf7",
+        "id": "GBPUSD_SELL_8c8a74208bf7",
+        "pair": "GBPUSD",
+        "direction": "SELL",
+        "score": 62,
+        "technical_score": 62,
         "sentiment_score": 0,
         "confidence": "MODERATE",
         "tier": "C",
-        "rsi": 44.5,
-        "adx": 21.6,
-        "atr": 0.00108,
+        "rsi": 55.5,
+        "adx": 28.3,
+        "atr": 0.00075,
         "volume_ratio": 0,
-        "session": "EUROPEAN",
-        "entry_price": 1.36635,
-        "sl": 1.3642,
-        "tp": 1.37119,
+        "session": "OVERLAP",
+        "entry_price": 1.36821,
+        "sl": 1.3697,
+        "tp": 1.36486,
         "risk_reward": 2.25,
         "spread": 0.0002,
-        "timestamp": "2026-02-03T12:45:59.143444+00:00",
+        "timestamp": "2026-02-03T13:01:11.719030+00:00",
         "status": "OPEN",
         "hold_time": "INTRADAY",
         "eligible_modes": [
+          "conservative",
           "aggressive"
         ],
         "freshness": {
@@ -101,11 +151,11 @@
         "sentiment_applied": false,
         "metadata": {
           "signal_type": "trend-continuation",
-          "market_state": "TRENDING_MODERATE",
+          "market_state": "TRENDING_STRONG",
           "timeframe": "15m",
           "valid_for_minutes": 15,
-          "generated_at": "2026-02-03T12:45:59.143444+00:00",
-          "expires_at": "2026-02-03T13:00:59.143444+00:00",
+          "generated_at": "2026-02-03T13:01:11.719030+00:00",
+          "expires_at": "2026-02-03T13:16:11.719030+00:00",
           "session_active": true,
           "signal_generator_version": "2.1.2",
           "atr_stop_multiplier": 2.0,
@@ -113,8 +163,7 @@
         },
         "estimated_win_rate": null
       }
-    ],
-    "conservative": []
+    ]
   },
   "api_usage": {
     "yfinance": {
@@ -135,8 +184,8 @@
     "expectancy": 104.1
   },
   "risk_management": {
-    "theoretical_max_pips": 43.8,
-    "total_risk_pips": 43.799999999998285,
+    "theoretical_max_pips": 37.2,
+    "total_risk_pips": 37.199999999999456,
     "max_daily_risk": 150
   },
   "analytics": {
@@ -167,7 +216,7 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-02-03T12:48:01.426055+00:00",
+    "last_update": "2026-02-03T13:01:16.728500+00:00",
     "signal_only_mode": true,
     "version": "2.1.2-MULTI"
   }

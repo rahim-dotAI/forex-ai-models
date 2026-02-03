@@ -1076,19 +1076,25 @@
       `).join('');
     }
 
-    // Render history
+    // FIXED: Render history - prioritize dashboard data
     async function renderHistory() {
       const tbody = document.getElementById('historyTableBody');
       
-      // Try to load signal_history.json directly
-      let signals = [];
-      try {
-        const response = await fetch('signal_state/signal_history.json');
-        const historyData = await response.json();
-        signals = historyData.signals || [];
-      } catch (error) {
-        console.log('Could not load signal_history.json, trying dashboard data');
-        signals = dashboardData?.historical_signals || [];
+      // PRIORITY 1: Use dashboard historical_signals (most reliable)
+      let signals = dashboardData?.historical_signals || [];
+      
+      // PRIORITY 2: If empty, try signal_history.json
+      if (signals.length === 0) {
+        try {
+          const response = await fetch('signal_state/signal_history.json');
+          const historyData = await response.json();
+          signals = historyData.signals || [];
+          console.log(`✅ Loaded ${signals.length} signals from signal_history.json`);
+        } catch (error) {
+          console.log('Could not load signal_history.json:', error);
+        }
+      } else {
+        console.log(`✅ Using ${signals.length} historical_signals from dashboard`);
       }
       
       if (!signals || signals.length === 0) {
@@ -1138,8 +1144,8 @@
         
         const modes = signal.eligible_modes?.join(', ') || 'N/A';
         
-        // Map confidence to tier if tier is missing
-        const tier = signal.tier || mapConfidenceToTier(signal.confidence);
+        // Use tier directly
+        const tier = signal.tier || 'C';
         
         return `
           <tr>
@@ -1161,14 +1167,14 @@
       updatePairFilterFromSignals(signals);
     }
 
-    // Render analytics
+    // FIXED: Render analytics - use correct data paths
     function renderAnalytics() {
       if (!dashboardData) return;
       
       const analytics = dashboardData.analytics || {};
       
-      // Tier analytics - get from analytics.by_confidence since there's no by_tier
-      renderTierAnalytics(analytics.by_confidence || {});
+      // FIXED: Use by_tier directly (not by_confidence)
+      renderTierAnalytics(analytics.by_tier || {});
       
       // Session analytics
       renderSessionAnalytics(analytics.by_session || {});
@@ -1176,48 +1182,30 @@
       // Pair analytics
       renderPairAnalytics(analytics.by_pair || {});
       
-      // Mode analytics - create from stats
-      const stats = dashboardData.stats || {};
-      const modeAnalytics = {
-        'aggressive': { trades: 0, wins: 0, win_rate: 0, total_pips: 0 },
-        'conservative': { 
-          trades: stats.total_trades || 0, 
-          wins: stats.wins || 0, 
-          win_rate: stats.win_rate || 0, 
-          total_pips: stats.total_pips || 0 
-        }
-      };
-      renderModeAnalytics(modeAnalytics);
+      // FIXED: Use by_mode directly
+      renderModeAnalytics(analytics.by_mode || {});
     }
 
-    function renderTierAnalytics(confidenceStats) {
+    // FIXED: Render tier analytics using actual tier data
+    function renderTierAnalytics(tierStats) {
       const container = document.getElementById('tierAnalytics');
-      // Map confidence levels to tier-like display
-      const confidenceLevels = ['VERY_STRONG', 'STRONG', 'MODERATE', 'WEAK'];
+      const tiers = ['A+', 'A', 'B', 'C'];  // Actual tier values
       
-      container.innerHTML = confidenceLevels.map(confidence => {
-        const data = confidenceStats[confidence] || { trades: 0, wins: 0, win_rate: 0, total_pips: 0 };
+      container.innerHTML = tiers.map(tier => {
+        const data = tierStats[tier] || { trades: 0, wins: 0, win_rate: 0, total_pips: 0 };
         const winRate = data.win_rate || 0;
         
-        // Map confidence to tier for display
-        const tierDisplay = {
-          'VERY_STRONG': 'A+',
-          'STRONG': 'A',
-          'MODERATE': 'B',
-          'WEAK': 'C'
-        }[confidence];
-        
         const tierClass = {
-          'VERY_STRONG': 'aplus',
-          'STRONG': 'a',
-          'MODERATE': 'b',
-          'WEAK': 'c'
-        }[confidence];
+          'A+': 'aplus',
+          'A': 'a',
+          'B': 'b',
+          'C': 'c'
+        }[tier];
         
         return `
           <div class="analytics-item">
             <div>
-              <span class="tier-badge tier-${tierClass}" style="font-size: 11px; padding: 4px 10px;">${tierDisplay}</span>
+              <span class="tier-badge tier-${tierClass}" style="font-size: 11px; padding: 4px 10px;">${tier}</span>
               <span class="analytics-label" style="margin-left: 12px;">${data.trades} trades</span>
             </div>
             <div class="analytics-value" style="color: ${winRate >= 60 ? 'var(--green-bright)' : 'var(--text-primary)'}">
@@ -1283,6 +1271,7 @@
       }).join('');
     }
 
+    // FIXED: Render mode analytics using actual analytics.by_mode data
     function renderModeAnalytics(modeStats) {
       const container = document.getElementById('modeAnalytics');
       const modes = ['aggressive', 'conservative'];
@@ -1376,16 +1365,6 @@
     function getTierClass(tier) {
       if (tier === 'A+') return 'aplus';
       return tier.toLowerCase();
-    }
-
-    function mapConfidenceToTier(confidence) {
-      const mapping = {
-        'VERY_STRONG': 'A+',
-        'STRONG': 'A',
-        'MODERATE': 'B',
-        'WEAK': 'C'
-      };
-      return mapping[confidence] || 'C';
     }
 
     function formatTime(timestamp) {

@@ -1,8 +1,8 @@
 {
-  "timestamp": "2026-02-03T15:16:00.010186+00:00",
-  "active_signals": 0,
+  "timestamp": "2026-02-03T15:31:12.785292+00:00",
+  "active_signals": 1,
   "active_signals_by_mode": {
-    "aggressive": 0,
+    "aggressive": 1,
     "conservative": 0
   },
   "session": "OVERLAP",
@@ -16,11 +16,58 @@
   },
   "market_state": {
     "volatility": "CALM",
-    "sentiment_bias": "MIXED",
+    "sentiment_bias": "BEARISH",
     "session": "OVERLAP"
   },
   "signals_by_mode": {
-    "aggressive": [],
+    "aggressive": [
+      {
+        "signal_id": "EURUSD_SELL_3c651e15c918",
+        "id": "EURUSD_SELL_3c651e15c918",
+        "pair": "EURUSD",
+        "direction": "SELL",
+        "score": 52,
+        "technical_score": 52,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 58.2,
+        "adx": 18.3,
+        "atr": 0.0007,
+        "volume_ratio": 0,
+        "session": "OVERLAP",
+        "entry_price": 1.1812,
+        "sl": 1.1826,
+        "tp": 1.17804,
+        "risk_reward": 2.25,
+        "spread": 0.00015,
+        "timestamp": "2026-02-03T15:31:07.772797+00:00",
+        "status": "OPEN",
+        "hold_time": "INTRADAY",
+        "eligible_modes": [
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "CONSOLIDATING",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-03T15:31:07.772797+00:00",
+          "expires_at": "2026-02-03T15:46:07.772797+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      }
+    ],
     "conservative": []
   },
   "api_usage": {
@@ -42,8 +89,8 @@
     "expectancy": 104.1
   },
   "risk_management": {
-    "theoretical_max_pips": 0,
-    "total_risk_pips": 0,
+    "theoretical_max_pips": 14.0,
+    "total_risk_pips": 14.000000000000679,
     "max_daily_risk": 150
   },
   "analytics": {
@@ -74,7 +121,7 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-02-03T15:16:00.010217+00:00",
+    "last_update": "2026-02-03T15:31:12.785339+00:00",
     "signal_only_mode": true,
     "version": "2.1.2-MULTI"
   }

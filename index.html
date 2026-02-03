@@ -997,7 +997,8 @@
       
       document.getElementById('activeSignalsTotal').textContent = uniqueSignals.length;
       
-      const stats = dashboardData.performance_stats || {};
+      // Use 'stats' instead of 'performance_stats'
+      const stats = dashboardData.stats || {};
       const winRate = stats.win_rate || 0;
       const totalPips = stats.total_pips || 0;
       const expectancy = stats.expectancy || 0;
@@ -1076,15 +1077,27 @@
     }
 
     // Render history
-    function renderHistory() {
+    async function renderHistory() {
       const tbody = document.getElementById('historyTableBody');
       
-      if (!dashboardData?.historical_signals) {
+      // Try to load signal_history.json directly
+      let signals = [];
+      try {
+        const response = await fetch('signal_state/signal_history.json');
+        const historyData = await response.json();
+        signals = historyData.signals || [];
+      } catch (error) {
+        console.log('Could not load signal_history.json, trying dashboard data');
+        signals = dashboardData?.historical_signals || [];
+      }
+      
+      if (!signals || signals.length === 0) {
         tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 40px; color: var(--text-muted);">No historical data available</td></tr>';
         return;
       }
 
-      let signals = dashboardData.historical_signals.filter(s => s.status && ['WIN', 'LOSS', 'EXPIRED'].includes(s.status));
+      // Filter for resolved trades only
+      signals = signals.filter(s => s.status && ['WIN', 'LOSS', 'EXPIRED'].includes(s.status));
       
       // Apply filters
       const statusFilter = document.getElementById('statusFilter')?.value || 'all';
@@ -1118,18 +1131,22 @@
       
       tbody.innerHTML = signals.map(signal => {
         const resultClass = signal.status === 'WIN' ? 'result-win' : signal.status === 'LOSS' ? 'result-loss' : 'result-expired';
-        const resultText = signal.status === 'WIN' ? `+${signal.pips_result?.toFixed(1) || 0}` : 
-                          signal.status === 'LOSS' ? `${signal.pips_result?.toFixed(1) || 0}` : 
+        const pipsValue = signal.pips || signal.pips_result || 0;
+        const resultText = signal.status === 'WIN' ? `+${pipsValue.toFixed(1)}` : 
+                          signal.status === 'LOSS' ? `${pipsValue.toFixed(1)}` : 
                           'EXPIRED';
         
         const modes = signal.eligible_modes?.join(', ') || 'N/A';
+        
+        // Map confidence to tier if tier is missing
+        const tier = signal.tier || mapConfidenceToTier(signal.confidence);
         
         return `
           <tr>
             <td>${formatDate(signal.timestamp)}</td>
             <td style="font-weight: 700;">${signal.pair}</td>
             <td>${signal.direction}</td>
-            <td><span class="tier-badge tier-${getTierClass(signal.tier)}" style="font-size: 10px; padding: 4px 8px;">${signal.tier}</span></td>
+            <td><span class="tier-badge tier-${getTierClass(tier)}" style="font-size: 10px; padding: 4px 8px;">${tier}</span></td>
             <td>${signal.entry_price?.toFixed(5) || 'N/A'}</td>
             <td>${signal.exit_price?.toFixed(5) || 'N/A'}</td>
             <td class="${resultClass}">${signal.status}</td>
@@ -1139,39 +1156,68 @@
           </tr>
         `;
       }).join('');
+      
+      // Update pair filter options
+      updatePairFilterFromSignals(signals);
     }
 
     // Render analytics
     function renderAnalytics() {
-      if (!dashboardData?.performance_stats) return;
+      if (!dashboardData) return;
       
-      const stats = dashboardData.performance_stats;
+      const analytics = dashboardData.analytics || {};
       
-      // Tier analytics
-      renderTierAnalytics(stats.by_tier || {});
+      // Tier analytics - get from analytics.by_confidence since there's no by_tier
+      renderTierAnalytics(analytics.by_confidence || {});
       
       // Session analytics
-      renderSessionAnalytics(stats.by_session || {});
+      renderSessionAnalytics(analytics.by_session || {});
       
       // Pair analytics
-      renderPairAnalytics(stats.by_pair || {});
+      renderPairAnalytics(analytics.by_pair || {});
       
-      // Mode analytics
-      renderModeAnalytics(stats.by_mode || {});
+      // Mode analytics - create from stats
+      const stats = dashboardData.stats || {};
+      const modeAnalytics = {
+        'aggressive': { trades: 0, wins: 0, win_rate: 0, total_pips: 0 },
+        'conservative': { 
+          trades: stats.total_trades || 0, 
+          wins: stats.wins || 0, 
+          win_rate: stats.win_rate || 0, 
+          total_pips: stats.total_pips || 0 
+        }
+      };
+      renderModeAnalytics(modeAnalytics);
     }
 
-    function renderTierAnalytics(tierStats) {
+    function renderTierAnalytics(confidenceStats) {
       const container = document.getElementById('tierAnalytics');
-      const tiers = ['A+', 'A', 'B', 'C'];
+      // Map confidence levels to tier-like display
+      const confidenceLevels = ['VERY_STRONG', 'STRONG', 'MODERATE', 'WEAK'];
       
-      container.innerHTML = tiers.map(tier => {
-        const data = tierStats[tier] || { trades: 0, wins: 0, win_rate: 0, total_pips: 0 };
+      container.innerHTML = confidenceLevels.map(confidence => {
+        const data = confidenceStats[confidence] || { trades: 0, wins: 0, win_rate: 0, total_pips: 0 };
         const winRate = data.win_rate || 0;
+        
+        // Map confidence to tier for display
+        const tierDisplay = {
+          'VERY_STRONG': 'A+',
+          'STRONG': 'A',
+          'MODERATE': 'B',
+          'WEAK': 'C'
+        }[confidence];
+        
+        const tierClass = {
+          'VERY_STRONG': 'aplus',
+          'STRONG': 'a',
+          'MODERATE': 'b',
+          'WEAK': 'c'
+        }[confidence];
         
         return `
           <div class="analytics-item">
             <div>
-              <span class="tier-badge tier-${getTierClass(tier)}" style="font-size: 11px; padding: 4px 10px;">${tier}</span>
+              <span class="tier-badge tier-${tierClass}" style="font-size: 11px; padding: 4px 10px;">${tierDisplay}</span>
               <span class="analytics-label" style="margin-left: 12px;">${data.trades} trades</span>
             </div>
             <div class="analytics-value" style="color: ${winRate >= 60 ? 'var(--green-bright)' : 'var(--text-primary)'}">
@@ -1279,6 +1325,17 @@
       select.value = currentValue;
     }
 
+    // Update pair filter from signals array
+    function updatePairFilterFromSignals(signals) {
+      const pairs = [...new Set(signals.map(s => s.pair))].sort();
+      const select = document.getElementById('pairFilter');
+      
+      const currentValue = select.value;
+      select.innerHTML = '<option value="all">All Pairs</option>' + 
+        pairs.map(pair => `<option value="${pair}">${pair}</option>`).join('');
+      select.value = currentValue;
+    }
+
     // Initialize date filters
     function initializeDateFilters() {
       const endDate = document.getElementById('endDate');
@@ -1319,6 +1376,16 @@
     function getTierClass(tier) {
       if (tier === 'A+') return 'aplus';
       return tier.toLowerCase();
+    }
+
+    function mapConfidenceToTier(confidence) {
+      const mapping = {
+        'VERY_STRONG': 'A+',
+        'STRONG': 'A',
+        'MODERATE': 'B',
+        'WEAK': 'C'
+      };
+      return mapping[confidence] || 'C';
     }
 
     function formatTime(timestamp) {

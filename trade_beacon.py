@@ -889,6 +889,22 @@ def write_dashboard_state(signals: list, downloads: int, news_calls: int = 0, mk
     agg_count = len(mode_buckets["aggressive"])
     cons_count = len(mode_buckets["conservative"])
     
+    # Get historical signals from tracker
+    historical_signals = []
+    if TRACKER:
+        try:
+            # Get all resolved signals (WIN/LOSS/EXPIRED) from the last 7 days
+            from datetime import timedelta
+            seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
+            all_signals = TRACKER.signals
+            historical_signals = [
+                s for s in all_signals 
+                if s.get("status") in ["WIN", "LOSS", "EXPIRED"] 
+                and s.get("timestamp", "") >= seven_days_ago.isoformat()
+            ]
+        except Exception as e:
+            log.warning(f"Could not load historical signals: {e}")
+    
     dashboard = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "active_signals": len(signals),
@@ -903,6 +919,7 @@ def write_dashboard_state(signals: list, downloads: int, news_calls: int = 0, mk
         "equity_protection": {"enabled": cfg.get("risk_management", {}).get("equity_protection", {}).get("enable", False), "can_trade": can_trade, "pause_reason": pause or None},
         "market_state": {"volatility": calculate_market_volatility(signals), "sentiment_bias": calculate_market_sentiment(signals), "session": get_market_session()},
         "signals_by_mode": mode_buckets,  # NEW: Signals split by mode
+        "historical_signals": historical_signals,  # NEW: Historical data for dashboard
         "api_usage": {"yfinance": {"successful_downloads": downloads}, "sentiment": {"enabled": USE_SENTIMENT, "newsapi": news_calls, "marketaux": mkt_calls}},
         "stats": {"total_trades": stats.get("total_trades", 0), "win_rate": stats.get("win_rate", 0), "total_pips": stats.get("total_pips", 0), "wins": stats.get("wins", 0), "losses": stats.get("losses", 0), "expectancy": stats.get("expectancy_pips", 0)},
         "risk_management": {"theoretical_max_pips": calculate_daily_pips(signals), "total_risk_pips": sum(price_to_pips(s.get('pair', ''), abs(s.get('entry_price', 0) - s.get('sl', 0))) for s in signals), "max_daily_risk": cfg.get("risk_management", {}).get("max_daily_risk_pips", 150)},

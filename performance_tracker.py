@@ -262,6 +262,7 @@ class PerformanceTracker:
         
         # Mode-specific tracking
         mode_stats = {
+            "all": {"trades": 0, "wins": 0, "total_pips": 0.0},
             "aggressive": {"trades": 0, "wins": 0, "total_pips": 0.0},
             "conservative": {"trades": 0, "wins": 0, "total_pips": 0.0}
         }
@@ -282,6 +283,12 @@ class PerformanceTracker:
                 wins.append(pips)
             else:
                 losses.append(abs(pips))
+
+            # Track 'all' mode
+            mode_stats["all"]["trades"] += 1
+            mode_stats["all"]["total_pips"] += pips
+            if is_win:
+                mode_stats["all"]["wins"] += 1
 
             # Track by mode
             for mode in modes:
@@ -448,6 +455,7 @@ class PerformanceTracker:
             "expectancy_pips": 0.0,
             "validated": False,
             "by_mode": {
+                "all": {"trades": 0, "wins": 0, "total_pips": 0.0, "win_rate": 0.0},
                 "aggressive": {"trades": 0, "wins": 0, "total_pips": 0.0, "win_rate": 0.0},
                 "conservative": {"trades": 0, "wins": 0, "total_pips": 0.0, "win_rate": 0.0}
             },
@@ -461,7 +469,9 @@ class PerformanceTracker:
             "by_session": {},
             "by_confidence": {},
             "by_tier": {},  # NEW: Tier-based analytics
-            "by_mode": {},  # NEW: Mode-specific analytics
+            "by_mode": {
+                "all": {"trades": 0, "wins": 0, "total_pips": 0.0, "win_rate": 0.0}
+            },  # NEW: Mode-specific analytics (includes 'all' mode)
             "cross_analytics": {  # NEW: Multi-dimensional analytics
                 "tier_by_session": {},
                 "mode_by_tier": {}
@@ -611,6 +621,7 @@ class PerformanceTracker:
         
         # Mode-specific tracking
         mode_stats = {
+            "all": {"trades": 0, "wins": 0, "total_pips": 0.0},
             "aggressive": {"trades": 0, "wins": 0, "total_pips": 0.0},
             "conservative": {"trades": 0, "wins": 0, "total_pips": 0.0}
         }
@@ -631,6 +642,12 @@ class PerformanceTracker:
                 wins.append(pips)
             else:
                 losses.append(abs(pips))
+
+            # Track 'all' mode (every signal counts here)
+            mode_stats["all"]["trades"] += 1
+            mode_stats["all"]["total_pips"] += pips
+            if is_win:
+                mode_stats["all"]["wins"] += 1
 
             # Track by mode
             for mode in modes:

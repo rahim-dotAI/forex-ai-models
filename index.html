@@ -3,56 +3,104 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trade Beacon v2.1.2-MULTI | Institutional Trading Dashboard</title>
+  <title>Trade Beacon | Institutional Trading Intelligence</title>
+  
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
     :root {
-      --bg-void: #000000;
-      --bg-deep: #0a0e17;
-      --bg-surface: #131825;
-      --bg-elevated: #1a2332;
-      --bg-card: #1e2a3f;
+      /* Neural Network Theme - Deep Space */
+      --void: #000000;
+      --deep: #0A0E27;
+      --surface: #0F1419;
+      --elevated: #151B23;
+      --card: #1A2332;
+      --panel: #1E293B;
       
-      --border-dim: rgba(99, 179, 237, 0.1);
-      --border-glow: rgba(99, 179, 237, 0.3);
-      --border-bright: rgba(99, 179, 237, 0.6);
+      /* Neon Accents */
+      --cyan-900: #083344;
+      --cyan-700: #0E7490;
+      --cyan: #06B6D4;
+      --cyan-bright: #22D3EE;
+      --cyan-glow: rgba(6, 182, 212, 0.5);
       
-      --text-primary: #f8fafc;
-      --text-secondary: #94a3b8;
-      --text-muted: #64748b;
+      --gold-900: #78350F;
+      --gold: #F59E0B;
+      --gold-bright: #FCD34D;
+      --gold-glow: rgba(251, 191, 36, 0.4);
       
-      --cyan: #06b6d4;
-      --cyan-bright: #22d3ee;
-      --cyan-dark: #0891b2;
+      --emerald: #10B981;
+      --emerald-bright: #34D399;
+      --ruby: #EF4444;
+      --ruby-bright: #F87171;
       
-      --gold: #fbbf24;
-      --gold-bright: #fcd34d;
+      --purple: #8B5CF6;
+      --purple-bright: #A78BFA;
       
-      --green: #10b981;
-      --green-bright: #34d399;
-      --red: #ef4444;
-      --red-bright: #f87171;
+      /* Text */
+      --text-primary: #F8FAFC;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+      --text-dim: #475569;
       
-      --tier-aplus: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-      --tier-a: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      --tier-b: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-      --tier-c: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+      /* Borders */
+      --border-subtle: rgba(148, 163, 184, 0.1);
+      --border-default: rgba(148, 163, 184, 0.2);
+      --border-strong: rgba(148, 163, 184, 0.3);
+      
+      /* Gradients */
+      --gradient-primary: linear-gradient(135deg, #06B6D4 0%, #3B82F6 50%, #8B5CF6 100%);
+      --gradient-gold: linear-gradient(135deg, #F59E0B 0%, #EAB308 100%);
+      --gradient-success: linear-gradient(135deg, #10B981 0%, #059669 100%);
+      --gradient-danger: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+      
+      /* Shadows */
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+      --shadow-glow-cyan: 0 0 30px var(--cyan-glow);
+      --shadow-glow-gold: 0 0 30px var(--gold-glow);
+    }
+
+    /* Neural Network Background */
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(180deg); }
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.6; }
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -1000px 0; }
+      100% { background-position: 1000px 0; }
     }
 
     body {
-      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--bg-void);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--void);
       color: var(--text-primary);
       line-height: 1.6;
       overflow-x: hidden;
       position: relative;
     }
 
-    /* Animated background */
+    /* Animated Neural Background */
     body::before {
       content: '';
       position: fixed;
@@ -61,29 +109,45 @@
       width: 100%;
       height: 100%;
       background: 
-        radial-gradient(circle at 20% 30%, rgba(6, 182, 212, 0.05) 0%, transparent 50%),
-        radial-gradient(circle at 80% 70%, rgba(251, 191, 36, 0.03) 0%, transparent 50%);
+        radial-gradient(circle at 10% 20%, rgba(6, 182, 212, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.04) 0%, transparent 50%);
       pointer-events: none;
       z-index: 0;
+      animation: pulse-glow 8s ease-in-out infinite;
+    }
+
+    /* Floating Particles */
+    .particle {
+      position: fixed;
+      width: 2px;
+      height: 2px;
+      background: var(--cyan);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      animation: float 20s ease-in-out infinite;
+      box-shadow: 0 0 10px var(--cyan-glow);
     }
 
     .container {
-      max-width: 1800px;
+      max-width: 1920px;
       margin: 0 auto;
       padding: 24px;
       position: relative;
       z-index: 1;
     }
 
-    /* Header */
+    /* ==================== HEADER ==================== */
     .header {
+      background: linear-gradient(135deg, var(--surface) 0%, var(--elevated) 100%);
+      border: 1px solid var(--border-default);
+      border-radius: 24px;
+      padding: 40px;
       margin-bottom: 32px;
-      padding: 32px;
-      background: var(--bg-surface);
-      border: 1px solid var(--border-dim);
-      border-radius: 20px;
       position: relative;
       overflow: hidden;
+      box-shadow: var(--shadow-xl);
     }
 
     .header::before {
@@ -92,122 +156,243 @@
       top: 0;
       left: 0;
       right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, var(--cyan), var(--gold));
+      height: 4px;
+      background: var(--gradient-primary);
+      box-shadow: 0 4px 20px var(--cyan-glow);
     }
 
-    .header-top {
-      display: flex;
-      justify-content: space-between;
+    .header::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, var(--cyan-glow) 0%, transparent 70%);
+      pointer-events: none;
+      opacity: 0.3;
+      animation: pulse-glow 4s ease-in-out infinite;
+    }
+
+    .header-grid {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 40px;
       align-items: center;
-      margin-bottom: 24px;
+      position: relative;
+      z-index: 1;
     }
 
-    .logo {
+    .brand {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 20px;
     }
 
-    .logo-icon {
-      width: 48px;
-      height: 48px;
-      background: linear-gradient(135deg, var(--cyan), var(--cyan-bright));
-      border-radius: 12px;
+    .brand-icon {
+      width: 72px;
+      height: 72px;
+      background: var(--gradient-primary);
+      border-radius: 20px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 700;
-      font-size: 24px;
-      color: var(--bg-void);
-      box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+      box-shadow: var(--shadow-glow-cyan);
+      position: relative;
+      overflow: hidden;
     }
 
-    .logo-text h1 {
-      font-size: 28px;
+    .brand-icon::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 200%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      animation: shimmer 3s infinite;
+    }
+
+    .brand-icon svg {
+      width: 40px;
+      height: 40px;
+      color: white;
+      filter: drop-shadow(0 0 10px rgba(255,255,255,0.5));
+    }
+
+    .brand-text h1 {
+      font-size: 36px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .brand-text p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 500;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 1px;
+    }
+
+    .header-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .mini-stat {
+      text-align: center;
+      padding: 16px;
+      background: rgba(6, 182, 212, 0.05);
+      border: 1px solid var(--border-subtle);
+      border-radius: 16px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .mini-stat:hover {
+      background: rgba(6, 182, 212, 0.1);
+      border-color: var(--cyan);
+      transform: translateY(-2px);
+    }
+
+    .mini-stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .mini-stat-value {
+      font-size: 24px;
       font-weight: 800;
-      letter-spacing: -0.5px;
-      background: linear-gradient(135deg, var(--cyan-bright), var(--gold-bright));
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--gradient-primary);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
 
-    .logo-text p {
-      font-size: 13px;
-      color: var(--text-secondary);
-      font-weight: 300;
-      font-family: 'JetBrains Mono', monospace;
+    .status-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
 
     .status-badge {
-      padding: 8px 20px;
-      border-radius: 50px;
-      font-size: 13px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      padding: 12px 24px;
       background: rgba(16, 185, 129, 0.1);
       border: 1px solid rgba(16, 185, 129, 0.3);
-      color: var(--green-bright);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--emerald-bright);
     }
 
     .status-dot {
       width: 8px;
       height: 8px;
+      background: var(--emerald-bright);
       border-radius: 50%;
-      background: var(--green-bright);
-      animation: pulse 2s ease-in-out infinite;
+      box-shadow: 0 0 10px var(--emerald-bright);
+      animation: pulse-glow 2s ease-in-out infinite;
     }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(0.9); }
+    .session-badge {
+      padding: 12px 24px;
+      background: var(--card);
+      border: 1px solid var(--border-default);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 13px;
+      font-family: 'JetBrains Mono', monospace;
     }
 
-    /* Hero Stats Grid */
-    .hero-stats {
+    /* ==================== HERO METRICS ==================== */
+    .hero-metrics {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      margin-top: 24px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
     }
 
-    .stat-card {
-      background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-card) 100%);
-      border: 1px solid var(--border-dim);
-      border-radius: 16px;
-      padding: 20px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    .metric-card {
+      background: linear-gradient(135deg, var(--elevated) 0%, var(--card) 100%);
+      border: 1px solid var(--border-default);
+      border-radius: 20px;
+      padding: 28px;
       position: relative;
       overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
     }
 
-    .stat-card::before {
+    .metric-card::before {
       content: '';
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
-      opacity: 0;
-      transition: opacity 0.3s;
+      height: 3px;
+      background: var(--gradient-primary);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .stat-card:hover {
-      transform: translateY(-4px);
-      border-color: var(--border-glow);
-      box-shadow: 0 8px 30px rgba(6, 182, 212, 0.15);
+    .metric-card:hover::before {
+      transform: scaleX(1);
     }
 
-    .stat-card:hover::before {
-      opacity: 1;
+    .metric-card:hover {
+      transform: translateY(-8px);
+      border-color: var(--cyan);
+      box-shadow: var(--shadow-glow-cyan);
     }
 
-    .stat-label {
+    .metric-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(6, 182, 212, 0.1);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      transition: all 0.3s;
+    }
+
+    .metric-card:hover .metric-icon {
+      background: var(--gradient-primary);
+      box-shadow: var(--shadow-glow-cyan);
+    }
+
+    .metric-icon svg {
+      width: 24px;
+      height: 24px;
+      color: var(--cyan-bright);
+      transition: all 0.3s;
+    }
+
+    .metric-card:hover .metric-icon svg {
+      color: white;
+      transform: scale(1.1);
+    }
+
+    .metric-label {
       font-size: 12px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -216,80 +401,100 @@
       margin-bottom: 8px;
     }
 
-    .stat-value {
-      font-size: 32px;
-      font-weight: 800;
+    .metric-value {
+      font-size: 36px;
+      font-weight: 900;
       font-family: 'JetBrains Mono', monospace;
-      background: linear-gradient(135deg, var(--text-primary), var(--cyan-bright));
+      background: var(--gradient-primary);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+      line-height: 1.2;
+      margin-bottom: 4px;
     }
 
-    .stat-sublabel {
-      font-size: 11px;
+    .metric-subtitle {
+      font-size: 12px;
       color: var(--text-secondary);
-      margin-top: 4px;
+      font-weight: 500;
     }
 
-    /* Mode Switcher */
-    .mode-switcher {
+    /* ==================== MODE SELECTOR ==================== */
+    .mode-selector {
       display: flex;
-      gap: 12px;
-      margin: 32px 0;
+      gap: 16px;
+      margin-bottom: 32px;
+      background: var(--surface);
+      border: 1px solid var(--border-default);
+      border-radius: 20px;
       padding: 8px;
-      background: var(--bg-surface);
-      border: 1px solid var(--border-dim);
-      border-radius: 16px;
       width: fit-content;
+      box-shadow: var(--shadow-lg);
     }
 
     .mode-btn {
-      padding: 14px 32px;
+      padding: 16px 40px;
       border: none;
-      border-radius: 12px;
+      border-radius: 14px;
       font-size: 15px;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       background: transparent;
       color: var(--text-secondary);
-      font-family: 'Outfit', sans-serif;
+      font-family: 'Inter', sans-serif;
       position: relative;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .mode-btn svg {
+      width: 20px;
+      height: 20px;
     }
 
     .mode-btn.active {
-      background: linear-gradient(135deg, var(--cyan), var(--cyan-bright));
-      color: var(--bg-void);
-      box-shadow: 0 4px 20px rgba(6, 182, 212, 0.4);
+      background: var(--gradient-primary);
+      color: white;
+      box-shadow: var(--shadow-glow-cyan);
     }
 
     .mode-btn:not(.active):hover {
       background: rgba(6, 182, 212, 0.1);
       color: var(--cyan-bright);
+      transform: translateY(-2px);
     }
 
-    /* Navigation Tabs */
-    .nav-tabs {
+    /* ==================== TAB NAVIGATION ==================== */
+    .tabs {
       display: flex;
       gap: 8px;
-      margin: 32px 0 24px;
-      border-bottom: 2px solid var(--border-dim);
+      margin-bottom: 32px;
+      border-bottom: 2px solid var(--border-default);
       padding-bottom: 0;
     }
 
     .tab {
-      padding: 14px 28px;
+      padding: 16px 32px;
       border: none;
       background: transparent;
       color: var(--text-secondary);
       font-size: 15px;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
-      border-radius: 8px 8px 0 0;
-      transition: all 0.3s;
-      font-family: 'Outfit', sans-serif;
+      border-radius: 12px 12px 0 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: 'Inter', sans-serif;
       position: relative;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .tab svg {
+      width: 18px;
+      height: 18px;
     }
 
     .tab::after {
@@ -299,9 +504,9 @@
       left: 0;
       right: 0;
       height: 2px;
-      background: var(--cyan);
+      background: var(--gradient-primary);
       transform: scaleX(0);
-      transition: transform 0.3s;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .tab.active {
@@ -315,28 +520,235 @@
 
     .tab:hover:not(.active) {
       color: var(--text-primary);
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(148, 163, 184, 0.05);
     }
 
-    /* Tab Content */
+    /* ==================== TAB CONTENT ==================== */
     .tab-content {
       display: none;
-      animation: fadeIn 0.4s ease-in-out;
+      animation: fadeSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .tab-content.active {
       display: block;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    @keyframes fadeSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
-    /* Filters */
-    .filters {
+    /* ==================== SIGNAL CARDS ==================== */
+    .signals-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      gap: 24px;
+    }
+
+    .signal-card {
+      background: linear-gradient(135deg, var(--surface) 0%, var(--elevated) 100%);
+      border: 1px solid var(--border-default);
+      border-radius: 20px;
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+    }
+
+    .signal-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--gradient-primary);
+    }
+
+    .signal-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 150px;
+      height: 150px;
+      background: radial-gradient(circle, var(--cyan-glow) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.4s;
+      pointer-events: none;
+    }
+
+    .signal-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      border-color: var(--cyan);
+      box-shadow: var(--shadow-glow-cyan);
+    }
+
+    .signal-card:hover::after {
+      opacity: 0.4;
+    }
+
+    .signal-header {
       display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+    }
+
+    .signal-pair-section {
+      display: flex;
+      flex-direction: column;
       gap: 12px;
+    }
+
+    .signal-pair {
+      font-size: 28px;
+      font-weight: 900;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: -0.5px;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .direction-badge {
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+    }
+
+    .direction-buy {
+      background: var(--gradient-success);
+      color: white;
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+    }
+
+    .direction-sell {
+      background: var(--gradient-danger);
+      color: white;
+      box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+    }
+
+    .tier-badge {
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      color: white;
+      box-shadow: var(--shadow-md);
+      text-transform: uppercase;
+    }
+
+    .tier-aplus {
+      background: var(--gradient-gold);
+      box-shadow: var(--shadow-glow-gold);
+    }
+
+    .tier-a {
+      background: var(--gradient-success);
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+    }
+
+    .tier-b {
+      background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+      box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+    }
+
+    .tier-c {
+      background: linear-gradient(135deg, #64748B 0%, #475569 100%);
+      box-shadow: 0 4px 20px rgba(100, 116, 139, 0.4);
+    }
+
+    .signal-metrics {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    .signal-metric {
+      background: var(--card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 16px;
+      transition: all 0.3s;
+    }
+
+    .signal-metric:hover {
+      background: rgba(6, 182, 212, 0.05);
+      border-color: var(--cyan);
+    }
+
+    .signal-metric-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .signal-metric-value {
+      font-size: 20px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-primary);
+    }
+
+    .signal-metric-value.highlight {
+      color: var(--gold-bright);
+    }
+
+    .signal-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .signal-time {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .signal-session {
+      padding: 6px 14px;
+      background: rgba(6, 182, 212, 0.1);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--cyan-bright);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ==================== HISTORY TABLE ==================== */
+    .history-controls {
+      display: flex;
+      gap: 16px;
       margin-bottom: 24px;
       flex-wrap: wrap;
     }
@@ -348,227 +760,39 @@
     }
 
     .filter-label {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .filter-select {
-      padding: 10px 16px;
-      background: var(--bg-elevated);
-      border: 1px solid var(--border-dim);
-      border-radius: 10px;
-      color: var(--text-primary);
-      font-size: 14px;
-      font-family: 'Outfit', sans-serif;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-
-    .filter-select:hover {
-      border-color: var(--border-glow);
-    }
-
-    .filter-select:focus {
-      outline: none;
-      border-color: var(--cyan);
-      box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
-    }
-
-    /* Signal Cards */
-    .signals-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-      gap: 20px;
-    }
-
-    .signal-card {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-dim);
-      border-radius: 16px;
-      padding: 24px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .signal-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, var(--cyan), var(--gold));
-    }
-
-    .signal-card:hover {
-      transform: translateY(-4px);
-      border-color: var(--border-bright);
-      box-shadow: 0 12px 40px rgba(6, 182, 212, 0.2);
-    }
-
-    .signal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 20px;
-    }
-
-    .signal-pair {
-      font-size: 24px;
-      font-weight: 800;
-      font-family: 'JetBrains Mono', monospace;
-      color: var(--text-primary);
-    }
-
-    .signal-badges {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .tier-badge {
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 700;
-      font-family: 'JetBrains Mono', monospace;
-      color: white;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-    }
-
-    .tier-aplus { background: var(--tier-aplus); }
-    .tier-a { background: var(--tier-a); }
-    .tier-b { background: var(--tier-b); }
-    .tier-c { background: var(--tier-c); }
-
-    .direction-badge {
-      padding: 8px 16px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-
-    .direction-buy {
-      background: rgba(16, 185, 129, 0.15);
-      color: var(--green-bright);
-      border: 1px solid rgba(16, 185, 129, 0.3);
-    }
-
-    .direction-sell {
-      background: rgba(239, 68, 68, 0.15);
-      color: var(--red-bright);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-    }
-
-    .signal-metrics {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin: 16px 0;
-    }
-
-    .metric {
-      background: var(--bg-elevated);
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid var(--border-dim);
-    }
-
-    .metric-label {
       font-size: 11px;
+      font-weight: 700;
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      margin-bottom: 4px;
     }
 
-    .metric-value {
-      font-size: 18px;
-      font-weight: 700;
-      font-family: 'JetBrains Mono', monospace;
-      color: var(--text-primary);
-    }
-
-    .signal-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 16px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border-dim);
-    }
-
-    .signal-time {
-      font-size: 12px;
-      color: var(--text-secondary);
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .signal-session {
-      padding: 4px 10px;
-      background: rgba(6, 182, 212, 0.1);
-      border: 1px solid rgba(6, 182, 212, 0.3);
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--cyan-bright);
-    }
-
-    /* History Section */
-    .history-section {
-      margin-top: 32px;
-    }
-
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-    }
-
-    .section-title {
-      font-size: 24px;
-      font-weight: 800;
-      color: var(--text-primary);
-    }
-
-    .date-range {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-
-    .date-input {
-      padding: 10px 16px;
-      background: var(--bg-elevated);
-      border: 1px solid var(--border-dim);
+    .filter-input {
+      padding: 12px 16px;
+      background: var(--elevated);
+      border: 1px solid var(--border-default);
       border-radius: 10px;
       color: var(--text-primary);
       font-size: 14px;
       font-family: 'JetBrains Mono', monospace;
-      cursor: pointer;
+      transition: all 0.3s;
     }
 
-    .date-input:focus {
+    .filter-input:focus {
       outline: none;
       border-color: var(--cyan);
       box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
     }
 
-    /* History Table */
-    .history-table {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-dim);
-      border-radius: 16px;
+    .history-table-wrapper {
+      background: var(--surface);
+      border: 1px solid var(--border-default);
+      border-radius: 20px;
       overflow: hidden;
+      box-shadow: var(--shadow-lg);
     }
 
-    .table-wrapper {
+    .table-scroll {
       overflow-x: auto;
     }
 
@@ -578,23 +802,23 @@
     }
 
     thead {
-      background: var(--bg-elevated);
+      background: var(--elevated);
     }
 
     th {
-      padding: 16px;
+      padding: 20px;
       text-align: left;
-      font-size: 12px;
-      font-weight: 700;
+      font-size: 11px;
+      font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       color: var(--text-secondary);
-      border-bottom: 2px solid var(--border-dim);
+      border-bottom: 2px solid var(--border-default);
     }
 
     tbody tr {
-      border-bottom: 1px solid var(--border-dim);
-      transition: background 0.2s;
+      border-bottom: 1px solid var(--border-subtle);
+      transition: all 0.2s;
     }
 
     tbody tr:hover {
@@ -602,19 +826,20 @@
     }
 
     td {
-      padding: 16px;
+      padding: 20px;
       font-size: 14px;
       font-family: 'JetBrains Mono', monospace;
+      color: var(--text-primary);
     }
 
     .result-win {
-      color: var(--green-bright);
-      font-weight: 700;
+      color: var(--emerald-bright);
+      font-weight: 800;
     }
 
     .result-loss {
-      color: var(--red-bright);
-      font-weight: 700;
+      color: var(--ruby-bright);
+      font-weight: 800;
     }
 
     .result-expired {
@@ -622,33 +847,43 @@
       font-weight: 600;
     }
 
-    /* Analytics Section */
+    /* ==================== ANALYTICS ==================== */
     .analytics-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
       gap: 24px;
     }
 
     .analytics-card {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-dim);
-      border-radius: 16px;
-      padding: 24px;
+      background: linear-gradient(135deg, var(--surface) 0%, var(--elevated) 100%);
+      border: 1px solid var(--border-default);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: var(--shadow-lg);
     }
 
-    .card-title {
-      font-size: 18px;
-      font-weight: 700;
-      margin-bottom: 20px;
+    .analytics-title {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 24px;
       color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .analytics-title svg {
+      width: 24px;
+      height: 24px;
+      color: var(--cyan-bright);
     }
 
     .analytics-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--border-dim);
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border-subtle);
     }
 
     .analytics-item:last-child {
@@ -658,204 +893,303 @@
     .analytics-label {
       font-size: 14px;
       color: var(--text-secondary);
+      font-weight: 600;
     }
 
     .analytics-value {
-      font-size: 16px;
-      font-weight: 700;
+      font-size: 18px;
+      font-weight: 800;
       font-family: 'JetBrains Mono', monospace;
       color: var(--text-primary);
     }
 
     .progress-bar {
-      height: 6px;
-      background: var(--bg-elevated);
-      border-radius: 3px;
+      height: 8px;
+      background: var(--elevated);
+      border-radius: 4px;
       overflow: hidden;
-      margin-top: 8px;
+      margin-top: 10px;
     }
 
     .progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, var(--cyan), var(--cyan-bright));
-      border-radius: 3px;
-      transition: width 0.5s ease-out;
+      background: var(--gradient-primary);
+      border-radius: 4px;
+      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 0 10px var(--cyan-glow);
     }
 
-    /* Empty State */
+    /* ==================== EMPTY STATE ==================== */
     .empty-state {
       text-align: center;
-      padding: 80px 40px;
-      background: var(--bg-surface);
-      border: 1px solid var(--border-dim);
-      border-radius: 16px;
+      padding: 100px 40px;
+      background: var(--surface);
+      border: 1px solid var(--border-default);
+      border-radius: 20px;
+      box-shadow: var(--shadow-lg);
     }
 
     .empty-icon {
-      font-size: 64px;
-      margin-bottom: 16px;
-      opacity: 0.3;
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 24px;
+      color: var(--text-dim);
     }
 
     .empty-title {
-      font-size: 20px;
-      font-weight: 700;
+      font-size: 24px;
+      font-weight: 800;
       color: var(--text-secondary);
-      margin-bottom: 8px;
+      margin-bottom: 12px;
     }
 
     .empty-description {
-      font-size: 14px;
+      font-size: 15px;
       color: var(--text-muted);
     }
 
-    /* Loading State */
+    /* ==================== LOADING ==================== */
     .loading {
       text-align: center;
-      padding: 40px;
+      padding: 60px;
     }
 
     .spinner {
-      width: 40px;
-      height: 40px;
-      border: 3px solid var(--border-dim);
+      width: 48px;
+      height: 48px;
+      border: 4px solid var(--border-default);
       border-top-color: var(--cyan);
       border-radius: 50%;
       animation: spin 1s linear infinite;
-      margin: 0 auto 16px;
+      margin: 0 auto 20px;
+      box-shadow: 0 0 20px var(--cyan-glow);
     }
 
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
 
-    /* Responsive */
-    @media (max-width: 1200px) {
-      .signals-grid {
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      }
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 1400px) {
       .analytics-grid {
         grid-template-columns: 1fr;
       }
     }
 
-    @media (max-width: 768px) {
-      .container {
-        padding: 16px;
+    @media (max-width: 1200px) {
+      .signals-grid {
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
       }
-      .header {
-        padding: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .header-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
       }
-      .logo-text h1 {
-        font-size: 22px;
+      
+      .header-stats {
+        grid-template-columns: repeat(3, 1fr);
       }
-      .hero-stats {
-        grid-template-columns: repeat(2, 1fr);
-      }
+      
       .signals-grid {
         grid-template-columns: 1fr;
       }
-      .mode-switcher {
+      
+      .hero-metrics {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 16px;
+      }
+      
+      .header {
+        padding: 24px;
+      }
+      
+      .brand-text h1 {
+        font-size: 24px;
+      }
+      
+      .hero-metrics {
+        grid-template-columns: 1fr;
+      }
+      
+      .mode-selector {
         width: 100%;
       }
+      
       .mode-btn {
         flex: 1;
+        justify-content: center;
       }
     }
   </style>
 </head>
 <body>
+  <!-- Floating Particles -->
+  <script>
+    for (let i = 0; i < 30; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      particle.style.left = `${Math.random() * 100}%`;
+      particle.style.top = `${Math.random() * 100}%`;
+      particle.style.animationDelay = `${Math.random() * 20}s`;
+      particle.style.animationDuration = `${15 + Math.random() * 10}s`;
+      document.body.appendChild(particle);
+    }
+  </script>
+
   <div class="container">
-    <!-- Header -->
+    <!-- HEADER -->
     <header class="header">
-      <div class="header-top">
-        <div class="logo">
-          <div class="logo-icon">TB</div>
-          <div class="logo-text">
+      <div class="header-grid">
+        <div class="brand">
+          <div class="brand-icon">
+            <i data-lucide="zap"></i>
+          </div>
+          <div class="brand-text">
             <h1>TRADE BEACON</h1>
-            <p>v2.1.2-MULTI | Institutional Grade</p>
+            <p>INSTITUTIONAL INTELLIGENCE v2.1.2</p>
           </div>
         </div>
-        <div class="status-badge">
-          <div class="status-dot"></div>
-          <span id="statusText">LIVE</span>
-        </div>
-      </div>
 
-      <!-- Hero Stats -->
-      <div class="hero-stats">
-        <div class="stat-card">
-          <div class="stat-label">Active Signals</div>
-          <div class="stat-value" id="activeSignalsTotal">0</div>
-          <div class="stat-sublabel">Multi-mode opportunities</div>
+        <div class="header-stats">
+          <div class="mini-stat">
+            <div class="mini-stat-label">Active</div>
+            <div class="mini-stat-value" id="headerActive">0</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-stat-label">Win Rate</div>
+            <div class="mini-stat-value" id="headerWR">0%</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-stat-label">Pips</div>
+            <div class="mini-stat-value" id="headerPips">0</div>
+          </div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Win Rate</div>
-          <div class="stat-value" id="winRateStat">0%</div>
-          <div class="stat-sublabel" id="winRateSubtext">No trades yet</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Total Pips</div>
-          <div class="stat-value" id="totalPipsStat">0</div>
-          <div class="stat-sublabel" id="pipsSubtext">Lifetime performance</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Expectancy</div>
-          <div class="stat-value" id="expectancyStat">0</div>
-          <div class="stat-sublabel">Pips per trade</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Today's Signals</div>
-          <div class="stat-value" id="todaySignalsStat">0</div>
-          <div class="stat-sublabel" id="todaySubtext">Generated today</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Market Session</div>
-          <div class="stat-value" id="sessionStat" style="font-size: 20px;">--</div>
-          <div class="stat-sublabel" id="sessionTime">--</div>
+
+        <div class="status-panel">
+          <div class="status-badge">
+            <div class="status-dot"></div>
+            <span>LIVE MARKET</span>
+          </div>
+          <div class="session-badge">
+            <i data-lucide="globe-2" style="width: 16px; height: 16px;"></i>
+            <span id="currentSession">---</span>
+          </div>
         </div>
       </div>
     </header>
 
-    <!-- Mode Switcher -->
-    <div class="mode-switcher">
-      <button class="mode-btn active" id="btnAggressive" onclick="switchMode('aggressive')">
-        ⚡ AGGRESSIVE
-      </button>
-      <button class="mode-btn" id="btnConservative" onclick="switchMode('conservative')">
-        🛡️ CONSERVATIVE
-      </button>
-    </div>
+    <!-- HERO METRICS -->
+    <div class="hero-metrics">
+      <div class="metric-card">
+        <div class="metric-icon">
+          <i data-lucide="activity"></i>
+        </div>
+        <div class="metric-label">Active Signals</div>
+        <div class="metric-value" id="metricSignals">0</div>
+        <div class="metric-subtitle">Multi-mode opportunities</div>
+      </div>
 
-    <!-- Navigation Tabs -->
-    <nav class="nav-tabs">
-      <button class="tab active" onclick="switchTab('today')">📡 Today's Signals</button>
-      <button class="tab" onclick="switchTab('history')">📜 History (7 Days)</button>
-      <button class="tab" onclick="switchTab('analytics')">📊 Analytics</button>
-    </nav>
+      <div class="metric-card">
+        <div class="metric-icon">
+          <i data-lucide="target"></i>
+        </div>
+        <div class="metric-label">Win Rate</div>
+        <div class="metric-value" id="metricWinRate">0%</div>
+        <div class="metric-subtitle" id="metricWRSub">No trades yet</div>
+      </div>
 
-    <!-- Today's Signals Tab -->
-    <div id="tabToday" class="tab-content active">
-      <div class="signals-grid" id="todaySignalsGrid">
-        <!-- Populated by JS -->
+      <div class="metric-card">
+        <div class="metric-icon">
+          <i data-lucide="trending-up"></i>
+        </div>
+        <div class="metric-label">Total Pips</div>
+        <div class="metric-value" id="metricPips">0</div>
+        <div class="metric-subtitle" id="metricPipsSub">Lifetime performance</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-icon">
+          <i data-lucide="bar-chart-3"></i>
+        </div>
+        <div class="metric-label">Expectancy</div>
+        <div class="metric-value" id="metricExpect">0</div>
+        <div class="metric-subtitle">Pips per trade</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-icon">
+          <i data-lucide="calendar"></i>
+        </div>
+        <div class="metric-label">Today</div>
+        <div class="metric-value" id="metricToday">0</div>
+        <div class="metric-subtitle" id="metricTodaySub">Signals generated</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-icon">
+          <i data-lucide="clock"></i>
+        </div>
+        <div class="metric-label">Session</div>
+        <div class="metric-value" id="metricSession" style="font-size: 20px;">---</div>
+        <div class="metric-subtitle" id="metricTime">---</div>
       </div>
     </div>
 
-    <!-- History Tab -->
+    <!-- MODE SELECTOR -->
+    <div class="mode-selector">
+      <button class="mode-btn active" id="btnAggressive" onclick="switchMode('aggressive')">
+        <i data-lucide="zap"></i>
+        AGGRESSIVE
+      </button>
+      <button class="mode-btn" id="btnConservative" onclick="switchMode('conservative')">
+        <i data-lucide="shield"></i>
+        CONSERVATIVE
+      </button>
+    </div>
+
+    <!-- TABS -->
+    <nav class="tabs">
+      <button class="tab active" onclick="switchTab('signals')">
+        <i data-lucide="radio"></i>
+        Live Signals
+      </button>
+      <button class="tab" onclick="switchTab('history')">
+        <i data-lucide="history"></i>
+        History
+      </button>
+      <button class="tab" onclick="switchTab('analytics')">
+        <i data-lucide="pie-chart"></i>
+        Analytics
+      </button>
+    </nav>
+
+    <!-- TAB: LIVE SIGNALS -->
+    <div id="tabSignals" class="tab-content active">
+      <div class="signals-grid" id="signalsGrid"></div>
+    </div>
+
+    <!-- TAB: HISTORY -->
     <div id="tabHistory" class="tab-content">
-      <div class="filters">
+      <div class="history-controls">
         <div class="filter-group">
           <label class="filter-label">Date Range</label>
-          <div class="date-range">
-            <input type="date" id="startDate" class="date-input">
-            <span style="color: var(--text-muted);">to</span>
-            <input type="date" id="endDate" class="date-input">
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <input type="date" id="dateStart" class="filter-input">
+            <span style="color: var(--text-muted);">→</span>
+            <input type="date" id="dateEnd" class="filter-input">
           </div>
         </div>
         <div class="filter-group">
           <label class="filter-label">Status</label>
-          <select id="statusFilter" class="filter-select">
-            <option value="all">All Statuses</option>
+          <select id="filterStatus" class="filter-input">
+            <option value="all">All</option>
             <option value="WIN">Wins</option>
             <option value="LOSS">Losses</option>
             <option value="EXPIRED">Expired</option>
@@ -863,14 +1197,14 @@
         </div>
         <div class="filter-group">
           <label class="filter-label">Pair</label>
-          <select id="pairFilter" class="filter-select">
+          <select id="filterPair" class="filter-input">
             <option value="all">All Pairs</option>
           </select>
         </div>
       </div>
 
-      <div class="history-table">
-        <div class="table-wrapper">
+      <div class="history-table-wrapper">
+        <div class="table-scroll">
           <table>
             <thead>
               <tr>
@@ -886,73 +1220,80 @@
                 <th>Mode</th>
               </tr>
             </thead>
-            <tbody id="historyTableBody">
-              <!-- Populated by JS -->
-            </tbody>
+            <tbody id="historyBody"></tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- Analytics Tab -->
+    <!-- TAB: ANALYTICS -->
     <div id="tabAnalytics" class="tab-content">
       <div class="analytics-grid">
         <div class="analytics-card">
-          <h3 class="card-title">🏆 Performance by Tier</h3>
-          <div id="tierAnalytics">
-            <!-- Populated by JS -->
-          </div>
+          <h3 class="analytics-title">
+            <i data-lucide="award"></i>
+            Performance by Tier
+          </h3>
+          <div id="tierAnalytics"></div>
         </div>
+
         <div class="analytics-card">
-          <h3 class="card-title">🌍 Performance by Session</h3>
-          <div id="sessionAnalytics">
-            <!-- Populated by JS -->
-          </div>
+          <h3 class="analytics-title">
+            <i data-lucide="globe-2"></i>
+            Performance by Session
+          </h3>
+          <div id="sessionAnalytics"></div>
         </div>
+
         <div class="analytics-card">
-          <h3 class="card-title">💱 Top Performing Pairs</h3>
-          <div id="pairAnalytics">
-            <!-- Populated by JS -->
-          </div>
+          <h3 class="analytics-title">
+            <i data-lucide="trending-up"></i>
+            Top Performing Pairs
+          </h3>
+          <div id="pairAnalytics"></div>
         </div>
+
         <div class="analytics-card">
-          <h3 class="card-title">📈 Performance by Mode</h3>
-          <div id="modeAnalytics">
-            <!-- Populated by JS -->
-          </div>
+          <h3 class="analytics-title">
+            <i data-lucide="layers"></i>
+            Performance by Mode
+          </h3>
+          <div id="modeAnalytics"></div>
         </div>
       </div>
     </div>
   </div>
 
   <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
     let currentMode = localStorage.getItem('tbMode') || 'aggressive';
     let dashboardData = null;
 
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {
       updateModeButtons();
-      loadDashboardData();
-      setInterval(loadDashboardData, 60000); // Refresh every 60 seconds
-      initializeDateFilters();
-      updateMarketSession();
-      setInterval(updateMarketSession, 60000);
+      loadDashboard();
+      setInterval(loadDashboard, 60000);
+      initFilters();
+      updateSession();
+      setInterval(updateSession, 60000);
     });
 
     // Load dashboard data
-    async function loadDashboardData() {
+    async function loadDashboard() {
       try {
         const response = await fetch('signal_state/dashboard_state.json');
         dashboardData = await response.json();
         
-        updateHeroStats();
-        renderTodaySignals();
+        updateMetrics();
+        renderSignals();
         renderHistory();
         renderAnalytics();
-        updatePairFilter();
       } catch (error) {
-        console.error('Error loading dashboard data:', error);
-        showEmptyState('todaySignalsGrid', '⚠️', 'Unable to load data', 'Please check if the signal generator is running');
+        console.error('Error loading data:', error);
+        showEmpty('signalsGrid', 'alert-triangle', 'Unable to load data', 'Please check if the system is running');
       }
     }
 
@@ -961,12 +1302,14 @@
       currentMode = mode;
       localStorage.setItem('tbMode', mode);
       updateModeButtons();
-      renderTodaySignals();
+      renderSignals();
+      lucide.createIcons(); // Refresh icons
     }
 
     function updateModeButtons() {
       document.getElementById('btnAggressive').classList.toggle('active', currentMode === 'aggressive');
       document.getElementById('btnConservative').classList.toggle('active', currentMode === 'conservative');
+      lucide.createIcons();
     }
 
     // Switch tab
@@ -974,142 +1317,143 @@
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       
-      event.target.classList.add('active');
+      event.target.closest('.tab').classList.add('active');
       
       const tabMap = {
-        'today': 'tabToday',
+        'signals': 'tabSignals',
         'history': 'tabHistory',
         'analytics': 'tabAnalytics'
       };
       
       document.getElementById(tabMap[tab]).classList.add('active');
+      lucide.createIcons();
     }
 
-    // Update hero stats
-    function updateHeroStats() {
+    // Update metrics
+    function updateMetrics() {
       if (!dashboardData) return;
 
-      const modeSignals = dashboardData.signals_by_mode?.[currentMode] || [];
-      const allSignals = [...(dashboardData.signals_by_mode?.aggressive || []), ...(dashboardData.signals_by_mode?.conservative || [])];
-      
-      // Deduplicate
+      const allSignals = [
+        ...(dashboardData.signals_by_mode?.aggressive || []),
+        ...(dashboardData.signals_by_mode?.conservative || [])
+      ];
       const uniqueSignals = [...new Map(allSignals.map(s => [s.signal_id, s])).values()];
       
-      document.getElementById('activeSignalsTotal').textContent = uniqueSignals.length;
-      
-      // Use 'stats' instead of 'performance_stats'
       const stats = dashboardData.stats || {};
       const winRate = stats.win_rate || 0;
       const totalPips = stats.total_pips || 0;
       const expectancy = stats.expectancy || 0;
       const totalTrades = stats.total_trades || 0;
       
-      document.getElementById('winRateStat').textContent = winRate.toFixed(1) + '%';
-      document.getElementById('winRateSubtext').textContent = `${stats.wins || 0}/${totalTrades} trades`;
+      // Header stats
+      document.getElementById('headerActive').textContent = uniqueSignals.length;
+      document.getElementById('headerWR').textContent = winRate.toFixed(1) + '%';
+      document.getElementById('headerPips').textContent = totalPips > 0 ? '+' + totalPips.toFixed(0) : totalPips.toFixed(0);
       
-      document.getElementById('totalPipsStat').textContent = totalPips > 0 ? '+' + totalPips.toFixed(1) : totalPips.toFixed(1);
-      document.getElementById('pipsSubtext').textContent = totalTrades > 0 ? `From ${totalTrades} trades` : 'No trades yet';
+      // Hero metrics
+      document.getElementById('metricSignals').textContent = uniqueSignals.length;
+      document.getElementById('metricWinRate').textContent = winRate.toFixed(1) + '%';
+      document.getElementById('metricWRSub').textContent = `${stats.wins || 0}/${totalTrades} trades`;
+      document.getElementById('metricPips').textContent = totalPips > 0 ? '+' + totalPips.toFixed(1) : totalPips.toFixed(1);
+      document.getElementById('metricPipsSub').textContent = totalTrades > 0 ? `From ${totalTrades} trades` : 'No trades yet';
+      document.getElementById('metricExpect').textContent = expectancy > 0 ? '+' + expectancy.toFixed(1) : expectancy.toFixed(1);
       
-      document.getElementById('expectancyStat').textContent = expectancy > 0 ? '+' + expectancy.toFixed(1) : expectancy.toFixed(1);
-      
-      // Count today's signals
+      // Today's count
       const today = new Date().toISOString().split('T')[0];
       const todayCount = uniqueSignals.filter(s => s.timestamp && s.timestamp.startsWith(today)).length;
-      document.getElementById('todaySignalsStat').textContent = todayCount;
-      document.getElementById('todaySubtext').textContent = todayCount === 0 ? 'No signals yet' : 'Generated today';
+      document.getElementById('metricToday').textContent = todayCount;
+      document.getElementById('metricTodaySub').textContent = todayCount === 0 ? 'No signals yet' : 'Generated today';
     }
 
-    // Render today's signals
-    function renderTodaySignals() {
-      const grid = document.getElementById('todaySignalsGrid');
+    // Render signals
+    function renderSignals() {
+      const grid = document.getElementById('signalsGrid');
       
       if (!dashboardData) {
-        grid.innerHTML = '<div class="loading"><div class="spinner"></div><p style="color: var(--text-secondary);">Loading signals...</p></div>';
+        grid.innerHTML = '<div class="loading"><div class="spinner"></div><p style="color: var(--text-secondary); font-weight: 600;">Loading signals...</p></div>';
         return;
       }
 
       const signals = dashboardData.signals_by_mode?.[currentMode] || [];
       
       if (signals.length === 0) {
-        showEmptyState('todaySignalsGrid', '📡', 'No active signals', `No ${currentMode} signals available right now`);
+        showEmpty('signalsGrid', 'radio', 'No active signals', `No ${currentMode} signals available right now`);
         return;
       }
 
-      grid.innerHTML = signals.map(signal => `
+      grid.innerHTML = signals.map(s => `
         <div class="signal-card">
           <div class="signal-header">
-            <div>
-              <div class="signal-pair">${signal.pair}</div>
-              <div class="direction-badge direction-${signal.direction.toLowerCase()}">
-                ${signal.direction}
+            <div class="signal-pair-section">
+              <div class="signal-pair">${s.pair}</div>
+              <div class="direction-badge direction-${s.direction.toLowerCase()}">
+                <i data-lucide="${s.direction === 'BUY' ? 'arrow-up' : 'arrow-down'}" style="width: 16px; height: 16px;"></i>
+                ${s.direction}
               </div>
             </div>
-            <div class="signal-badges">
-              <div class="tier-badge tier-${getTierClass(signal.tier)}">${signal.tier}</div>
-            </div>
+            <div class="tier-badge tier-${getTierClass(s.tier)}">${s.tier}</div>
           </div>
 
           <div class="signal-metrics">
-            <div class="metric">
-              <div class="metric-label">Entry</div>
-              <div class="metric-value">${signal.entry_price?.toFixed(5) || 'N/A'}</div>
+            <div class="signal-metric">
+              <div class="signal-metric-label">Entry</div>
+              <div class="signal-metric-value">${s.entry_price?.toFixed(5) || 'N/A'}</div>
             </div>
-            <div class="metric">
-              <div class="metric-label">Stop Loss</div>
-              <div class="metric-value">${signal.stop_loss?.toFixed(5) || 'N/A'}</div>
+            <div class="signal-metric">
+              <div class="signal-metric-label">Stop Loss</div>
+              <div class="signal-metric-value">${s.sl?.toFixed(5) || 'N/A'}</div>
             </div>
-            <div class="metric">
-              <div class="metric-label">Take Profit</div>
-              <div class="metric-value">${signal.take_profit?.toFixed(5) || 'N/A'}</div>
+            <div class="signal-metric">
+              <div class="signal-metric-label">Take Profit</div>
+              <div class="signal-metric-value">${s.tp?.toFixed(5) || 'N/A'}</div>
             </div>
-            <div class="metric">
-              <div class="metric-label">Risk:Reward</div>
-              <div class="metric-value" style="color: var(--gold-bright)">${signal.risk_reward?.toFixed(2) || 'N/A'}</div>
+            <div class="signal-metric">
+              <div class="signal-metric-label">Risk:Reward</div>
+              <div class="signal-metric-value highlight">${s.risk_reward?.toFixed(2) || 'N/A'}</div>
             </div>
           </div>
 
           <div class="signal-footer">
-            <div class="signal-time">${formatTime(signal.timestamp)}</div>
-            <div class="signal-session">${signal.session || 'N/A'}</div>
+            <div class="signal-time">
+              <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
+              ${formatTime(s.timestamp)}
+            </div>
+            <div class="signal-session">${s.session || 'N/A'}</div>
           </div>
         </div>
       `).join('');
+      
+      lucide.createIcons();
     }
 
-    // FIXED: Render history - prioritize dashboard data
+    // Render history
     async function renderHistory() {
-      const tbody = document.getElementById('historyTableBody');
+      const tbody = document.getElementById('historyBody');
       
-      // PRIORITY 1: Use dashboard historical_signals (most reliable)
       let signals = dashboardData?.historical_signals || [];
       
-      // PRIORITY 2: If empty, try signal_history.json
       if (signals.length === 0) {
         try {
           const response = await fetch('signal_state/signal_history.json');
           const historyData = await response.json();
           signals = historyData.signals || [];
-          console.log(`✅ Loaded ${signals.length} signals from signal_history.json`);
         } catch (error) {
-          console.log('Could not load signal_history.json:', error);
+          console.log('Could not load signal_history.json');
         }
-      } else {
-        console.log(`✅ Using ${signals.length} historical_signals from dashboard`);
       }
       
       if (!signals || signals.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 40px; color: var(--text-muted);">No historical data available</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 60px; color: var(--text-muted);">No historical data available</td></tr>';
         return;
       }
 
-      // Filter for resolved trades only
       signals = signals.filter(s => s.status && ['WIN', 'LOSS', 'EXPIRED'].includes(s.status));
       
       // Apply filters
-      const statusFilter = document.getElementById('statusFilter')?.value || 'all';
-      const pairFilter = document.getElementById('pairFilter')?.value || 'all';
-      const startDate = document.getElementById('startDate')?.value;
-      const endDate = document.getElementById('endDate')?.value;
+      const statusFilter = document.getElementById('filterStatus')?.value || 'all';
+      const pairFilter = document.getElementById('filterPair')?.value || 'all';
+      const startDate = document.getElementById('dateStart')?.value;
+      const endDate = document.getElementById('dateEnd')?.value;
       
       if (statusFilter !== 'all') {
         signals = signals.filter(s => s.status === statusFilter);
@@ -1127,88 +1471,68 @@
         signals = signals.filter(s => s.timestamp <= endDate + 'T23:59:59');
       }
       
-      // Sort by date descending
       signals.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
       
       if (signals.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 40px; color: var(--text-muted);">No signals match the selected filters</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; padding: 60px; color: var(--text-muted);">No signals match the selected filters</td></tr>';
         return;
       }
       
-      tbody.innerHTML = signals.map(signal => {
-        const resultClass = signal.status === 'WIN' ? 'result-win' : signal.status === 'LOSS' ? 'result-loss' : 'result-expired';
-        const pipsValue = signal.pips || signal.pips_result || 0;
-        const resultText = signal.status === 'WIN' ? `+${pipsValue.toFixed(1)}` : 
-                          signal.status === 'LOSS' ? `${pipsValue.toFixed(1)}` : 
+      tbody.innerHTML = signals.map(s => {
+        const resultClass = s.status === 'WIN' ? 'result-win' : s.status === 'LOSS' ? 'result-loss' : 'result-expired';
+        const pipsValue = s.pips || 0;
+        const resultText = s.status === 'WIN' ? `+${pipsValue.toFixed(1)}` : 
+                          s.status === 'LOSS' ? `${pipsValue.toFixed(1)}` : 
                           'EXPIRED';
-        
-        const modes = signal.eligible_modes?.join(', ') || 'N/A';
-        
-        // Use tier directly
-        const tier = signal.tier || 'C';
+        const modes = s.eligible_modes?.join(', ') || 'N/A';
+        const tier = s.tier || 'C';
         
         return `
           <tr>
-            <td>${formatDate(signal.timestamp)}</td>
-            <td style="font-weight: 700;">${signal.pair}</td>
-            <td>${signal.direction}</td>
-            <td><span class="tier-badge tier-${getTierClass(tier)}" style="font-size: 10px; padding: 4px 8px;">${tier}</span></td>
-            <td>${signal.entry_price?.toFixed(5) || 'N/A'}</td>
-            <td>${signal.exit_price?.toFixed(5) || 'N/A'}</td>
-            <td class="${resultClass}">${signal.status}</td>
+            <td>${formatDate(s.timestamp)}</td>
+            <td style="font-weight: 800;">${s.pair}</td>
+            <td>${s.direction}</td>
+            <td><span class="tier-badge tier-${getTierClass(tier)}" style="font-size: 10px; padding: 4px 10px;">${tier}</span></td>
+            <td>${s.entry_price?.toFixed(5) || 'N/A'}</td>
+            <td>${s.exit_price?.toFixed(5) || 'N/A'}</td>
+            <td class="${resultClass}">${s.status}</td>
             <td class="${resultClass}">${resultText}</td>
-            <td>${signal.session || 'N/A'}</td>
+            <td>${s.session || 'N/A'}</td>
             <td style="font-size: 11px;">${modes}</td>
           </tr>
         `;
       }).join('');
       
-      // Update pair filter options
-      updatePairFilterFromSignals(signals);
+      updatePairFilter(signals);
     }
 
-    // FIXED: Render analytics - use correct data paths
+    // Render analytics
     function renderAnalytics() {
       if (!dashboardData) return;
       
       const analytics = dashboardData.analytics || {};
       
-      // FIXED: Use by_tier directly (not by_confidence)
       renderTierAnalytics(analytics.by_tier || {});
-      
-      // Session analytics
       renderSessionAnalytics(analytics.by_session || {});
-      
-      // Pair analytics
       renderPairAnalytics(analytics.by_pair || {});
-      
-      // FIXED: Use by_mode directly
       renderModeAnalytics(analytics.by_mode || {});
     }
 
-    // FIXED: Render tier analytics using actual tier data
     function renderTierAnalytics(tierStats) {
       const container = document.getElementById('tierAnalytics');
-      const tiers = ['A+', 'A', 'B', 'C'];  // Actual tier values
+      const tiers = ['A+', 'A', 'B', 'C'];
       
       container.innerHTML = tiers.map(tier => {
         const data = tierStats[tier] || { trades: 0, wins: 0, win_rate: 0, total_pips: 0 };
         const winRate = data.win_rate || 0;
         
-        const tierClass = {
-          'A+': 'aplus',
-          'A': 'a',
-          'B': 'b',
-          'C': 'c'
-        }[tier];
-        
         return `
           <div class="analytics-item">
             <div>
-              <span class="tier-badge tier-${tierClass}" style="font-size: 11px; padding: 4px 10px;">${tier}</span>
-              <span class="analytics-label" style="margin-left: 12px;">${data.trades} trades</span>
+              <span class="tier-badge tier-${getTierClass(tier)}" style="font-size: 11px; padding: 6px 12px;">${tier}</span>
+              <span class="analytics-label" style="margin-left: 16px;">${data.trades} trades</span>
             </div>
-            <div class="analytics-value" style="color: ${winRate >= 60 ? 'var(--green-bright)' : 'var(--text-primary)'}">
+            <div class="analytics-value" style="color: ${winRate >= 60 ? 'var(--emerald-bright)' : 'var(--text-primary)'}">
               ${winRate.toFixed(1)}%
             </div>
           </div>
@@ -1221,10 +1545,7 @@
 
     function renderSessionAnalytics(sessionStats) {
       const container = document.getElementById('sessionAnalytics');
-      const sessions = Object.keys(sessionStats).sort((a, b) => {
-        const order = ['ASIAN', 'EUROPEAN', 'OVERLAP', 'US', 'LATE_US'];
-        return order.indexOf(a) - order.indexOf(b);
-      });
+      const sessions = Object.keys(sessionStats).sort();
       
       container.innerHTML = sessions.map(session => {
         const data = sessionStats[session];
@@ -1249,7 +1570,7 @@
         .slice(0, 10);
       
       if (pairs.length === 0) {
-        container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">No data available</p>';
+        container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 40px;">No data available</p>';
         return;
       }
       
@@ -1259,22 +1580,21 @@
         
         return `
           <div class="analytics-item">
-            <div class="analytics-label" style="font-weight: 600;">${pair}</div>
-            <div class="analytics-value" style="color: ${pips > 0 ? 'var(--green-bright)' : 'var(--red-bright)'}">
+            <div class="analytics-label" style="font-weight: 800;">${pair}</div>
+            <div class="analytics-value" style="color: ${pips > 0 ? 'var(--emerald-bright)' : 'var(--ruby-bright)'}">
               ${pips > 0 ? '+' : ''}${pips.toFixed(1)} pips
             </div>
           </div>
-          <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+          <div style="font-size: 13px; color: var(--text-secondary); margin-top: 8px;">
             ${data.trades} trades • ${winRate.toFixed(1)}% WR
           </div>
         `;
       }).join('');
     }
 
-    // FIXED: Render mode analytics using actual analytics.by_mode data
     function renderModeAnalytics(modeStats) {
       const container = document.getElementById('modeAnalytics');
-      const modes = ['aggressive', 'conservative'];
+      const modes = ['all', 'aggressive', 'conservative'];
       
       container.innerHTML = modes.map(mode => {
         const data = modeStats[mode] || { trades: 0, wins: 0, win_rate: 0, total_pips: 0 };
@@ -1283,14 +1603,12 @@
         
         return `
           <div class="analytics-item">
-            <div class="analytics-label" style="text-transform: uppercase; font-weight: 600;">${mode}</div>
-            <div class="analytics-value">
-              ${data.trades} trades
-            </div>
+            <div class="analytics-label" style="text-transform: uppercase; font-weight: 800;">${mode}</div>
+            <div class="analytics-value">${data.trades} trades</div>
           </div>
-          <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 13px;">
+          <div style="display: flex; justify-content: space-between; margin-top: 12px; font-size: 14px;">
             <span style="color: var(--text-secondary);">Win Rate: ${winRate.toFixed(1)}%</span>
-            <span style="color: ${pips > 0 ? 'var(--green-bright)' : 'var(--red-bright)'}; font-weight: 700;">
+            <span style="color: ${pips > 0 ? 'var(--emerald-bright)' : 'var(--ruby-bright)'}; font-weight: 800;">
               ${pips > 0 ? '+' : ''}${pips.toFixed(1)} pips
             </span>
           </div>
@@ -1301,34 +1619,10 @@
       }).join('');
     }
 
-    // Update pair filter
-    function updatePairFilter() {
-      if (!dashboardData?.historical_signals) return;
-      
-      const pairs = [...new Set(dashboardData.historical_signals.map(s => s.pair))].sort();
-      const select = document.getElementById('pairFilter');
-      
-      const currentValue = select.value;
-      select.innerHTML = '<option value="all">All Pairs</option>' + 
-        pairs.map(pair => `<option value="${pair}">${pair}</option>`).join('');
-      select.value = currentValue;
-    }
-
-    // Update pair filter from signals array
-    function updatePairFilterFromSignals(signals) {
-      const pairs = [...new Set(signals.map(s => s.pair))].sort();
-      const select = document.getElementById('pairFilter');
-      
-      const currentValue = select.value;
-      select.innerHTML = '<option value="all">All Pairs</option>' + 
-        pairs.map(pair => `<option value="${pair}">${pair}</option>`).join('');
-      select.value = currentValue;
-    }
-
-    // Initialize date filters
-    function initializeDateFilters() {
-      const endDate = document.getElementById('endDate');
-      const startDate = document.getElementById('startDate');
+    // Utilities
+    function initFilters() {
+      const endDate = document.getElementById('dateEnd');
+      const startDate = document.getElementById('dateStart');
       
       const today = new Date().toISOString().split('T')[0];
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
@@ -1338,12 +1632,11 @@
       
       endDate.addEventListener('change', renderHistory);
       startDate.addEventListener('change', renderHistory);
-      document.getElementById('statusFilter').addEventListener('change', renderHistory);
-      document.getElementById('pairFilter').addEventListener('change', renderHistory);
+      document.getElementById('filterStatus').addEventListener('change', renderHistory);
+      document.getElementById('filterPair').addEventListener('change', renderHistory);
     }
 
-    // Update market session
-    function updateMarketSession() {
+    function updateSession() {
       const now = new Date();
       const utcHour = now.getUTCHours();
       
@@ -1353,15 +1646,25 @@
       else if (utcHour >= 12 && utcHour < 17) session = 'OVERLAP';
       else if (utcHour >= 17 && utcHour < 22) session = 'US';
       
-      document.getElementById('sessionStat').textContent = session;
-      document.getElementById('sessionTime').textContent = now.toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
+      document.getElementById('currentSession').textContent = session;
+      document.getElementById('metricSession').textContent = session;
+      document.getElementById('metricTime').textContent = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
         minute: '2-digit',
         timeZone: 'UTC'
       }) + ' UTC';
     }
 
-    // Utility functions
+    function updatePairFilter(signals) {
+      const pairs = [...new Set(signals.map(s => s.pair))].sort();
+      const select = document.getElementById('filterPair');
+      
+      const currentValue = select.value;
+      select.innerHTML = '<option value="all">All Pairs</option>' + 
+        pairs.map(pair => `<option value="${pair}">${pair}</option>`).join('');
+      select.value = currentValue;
+    }
+
     function getTierClass(tier) {
       if (tier === 'A+') return 'aplus';
       return tier.toLowerCase();
@@ -1388,14 +1691,15 @@
       });
     }
 
-    function showEmptyState(containerId, icon, title, description) {
+    function showEmpty(containerId, icon, title, description) {
       document.getElementById(containerId).innerHTML = `
         <div class="empty-state">
-          <div class="empty-icon">${icon}</div>
+          <i data-lucide="${icon}" class="empty-icon"></i>
           <div class="empty-title">${title}</div>
           <div class="empty-description">${description}</div>
         </div>
       `;
+      lucide.createIcons();
     }
   </script>
 </body>

@@ -1,5 +1,5 @@
 {
-  "mode": "conservative",
+  "mode": "all",
   "use_sentiment": false,
   "tiers": {
     "A_plus_min_score": 80,
@@ -8,29 +8,29 @@
   },
   "settings": {
     "aggressive": {
-      "threshold": 50,
-      "min_adx": 18,
+      "threshold": 45,
+      "min_adx": 15,
       "rsi_oversold": 30,
       "rsi_overbought": 70,
-      "min_risk_reward": 2.0,
+      "min_risk_reward": 1.8,
       "atr_stop_multiplier": 1.8,
       "atr_target_multiplier": 4.0,
-      "max_correlated_signals": 2
+      "max_correlated_signals": 3
     },
     "conservative": {
-      "threshold": 58,
-      "min_adx": 18,
+      "threshold": 45,
+      "min_adx": 15,
       "rsi_oversold": 30,
       "rsi_overbought": 70,
-      "min_risk_reward": 2.2,
-      "atr_stop_multiplier": 2.0,
-      "atr_target_multiplier": 4.5,
-      "max_correlated_signals": 1
+      "min_risk_reward": 1.8,
+      "atr_stop_multiplier": 1.8,
+      "atr_target_multiplier": 4.0,
+      "max_correlated_signals": 3
     }
   },
   "advanced": {
     "enable_session_filtering": true,
-    "enable_correlation_filter": true,
+    "enable_correlation_filter": false,
     "cache_ttl_minutes": 5,
     "parallel_workers": 3,
     "session_bonuses": {
@@ -60,18 +60,18 @@
       "require_direction": true,
       "reject_missing_pips": true,
       "min_sl_pips": {
-        "JPY_pairs": 20,
-        "other": 12
+        "JPY_pairs": 15,
+        "other": 10
       },
-      "max_spread_ratio": 0.25,
-      "max_sl_distance_pct": 0.02,
-      "max_tp_distance_pct": 0.05
+      "max_spread_ratio": 0.35,
+      "max_sl_distance_pct": 0.025,
+      "max_tp_distance_pct": 0.06
     }
   },
   "risk_management": {
-    "max_daily_risk_pips": 150,
-    "max_open_positions": 3,
-    "stop_trading_on_drawdown_pips": 100,
+    "max_daily_risk_pips": 250,
+    "max_open_positions": 5,
+    "stop_trading_on_drawdown_pips": 150,
     "equity_protection": {
       "enable": false,
       "max_consecutive_losses": 3,
@@ -97,8 +97,23 @@
     }
   },
   "_comments": {
-    "mode": "DEPRECATED in v2.1.2-MULTI - System now generates both aggressive and conservative signals simultaneously",
-    "multi_mode_note": "The 'mode' setting is kept for backward compatibility but is no longer used for filtering. Both modes are always generated.",
-    "how_it_works": "Trade Beacon generates all signals and tags them with eligible_modes=['aggressive','conservative']. Dashboard can filter by mode preference."
+    "mode": "Set to 'all' to generate maximum signals while maintaining quality",
+    "changes": [
+      "Lowered threshold from 50/58 to 45 (both modes) - generates more signals",
+      "Lowered min_adx from 18 to 15 - less strict on trend strength",
+      "Lowered min_risk_reward from 2.0/2.2 to 1.8 - accepts slightly lower R:R",
+      "Disabled correlation_filter - allows multiple correlated pairs",
+      "Increased max_correlated_signals to 3 - more signals from same region",
+      "Increased max_open_positions to 5 - can hold more signals",
+      "Increased max_daily_risk_pips to 250 - higher risk tolerance",
+      "Relaxed validation thresholds - more lenient signal acceptance"
+    ],
+    "quality_controls_kept": [
+      "Tier classification still active (A+, A, B, C)",
+      "Session filtering still active (pairs still get session bonuses)",
+      "Basic validation still active (no malformed signals)",
+      "Risk:Reward minimum of 1.8 (still profitable expectancy)",
+      "ATR-based stops (still dynamic risk management)"
+    ]
   }
 }

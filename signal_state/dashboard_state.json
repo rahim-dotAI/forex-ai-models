@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-04T04:46:03.199728+00:00",
+  "timestamp": "2026-02-04T05:01:21.518624+00:00",
   "active_signals": 0,
   "active_signals_by_mode": {
     "aggressive": 0,
@@ -23,7 +23,32 @@
     "aggressive": [],
     "conservative": []
   },
-  "historical_signals": [],
+  "historical_signals": [
+    {
+      "id": "GBPUSD_BUY_5cb81c427531",
+      "signal_id": "GBPUSD_BUY_5cb81c427531",
+      "pair": "GBPUSD",
+      "direction": "BUY",
+      "entry_price": 1.19374,
+      "exit_price": 1.20415,
+      "sl": 1.18912,
+      "tp": 1.20415,
+      "status": "WIN",
+      "pips": 104.10000000000029,
+      "confidence": "MODERATE",
+      "score": 63,
+      "session": "US",
+      "timestamp": "2026-01-28T16:24:50.251788+00:00",
+      "exit_time": "2026-01-28T16:31:07.001158+00:00",
+      "tier": "C",
+      "eligible_modes": [
+        "aggressive",
+        "conservative"
+      ],
+      "sentiment_applied": false,
+      "estimated_win_rate": null
+    }
+  ],
   "api_usage": {
     "yfinance": {
       "successful_downloads": 10
@@ -176,7 +201,7 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-02-04T04:46:03.199764+00:00",
+    "last_update": "2026-02-04T05:01:21.518664+00:00",
     "signal_only_mode": true,
     "version": "2.1.2-MULTI"
   }

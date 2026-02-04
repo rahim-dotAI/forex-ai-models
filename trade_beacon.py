@@ -271,7 +271,15 @@ def calculate_hold_time(rr: float, atr: float) -> str:
     return "SHORT"
 
 def calculate_eligible_modes(score: int, adx: float, config: Dict) -> List[str]:
-    """Calculate eligible trading modes based on score and ADX only."""
+    """
+    Calculate eligible trading modes based on score and ADX only.
+    In 'all' mode, returns all modes for every signal (no filtering).
+    """
+    # If mode is 'all', every signal qualifies for all modes
+    if config.get("mode") == "all":
+        return ["aggressive", "conservative"]
+    
+    # Legacy mode-specific filtering (backward compatibility)
     modes = []
     for mode_name in ["conservative", "aggressive"]:
         s = config["settings"][mode_name]
@@ -317,9 +325,13 @@ def calculate_market_sentiment(sigs: List[Dict]) -> str:
 def validate_signal_quality(signal: Dict, config: Dict) -> Tuple[bool, List[str]]:
     warnings = []
     val_cfg = config.get("advanced", {}).get("validation", {})
-    # Use signal's first eligible mode for validation, fallback to conservative
-    modes = signal.get("eligible_modes", ["conservative"])
-    mode_settings = config["settings"].get(modes[0], config["settings"]["conservative"])
+    
+    # In 'all' mode, use unified settings; otherwise use signal's first eligible mode
+    if config.get("mode") == "all":
+        mode_settings = config["settings"]["aggressive"]  # Use unified settings
+    else:
+        modes = signal.get("eligible_modes", ["conservative"])
+        mode_settings = config["settings"].get(modes[0], config["settings"]["conservative"])
     
     # Direction
     if val_cfg.get("require_direction", True) and signal.get('direction') not in ("BUY", "SELL"):
@@ -591,9 +603,15 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
         log.warning(f"⚠️ {pair} indicators failed: {e}")
         return None, ok
     
-    # Minimum threshold check (use lowest threshold across all modes)
-    min_threshold = min(CONFIG["settings"]["aggressive"]["threshold"], CONFIG["settings"]["conservative"]["threshold"])
-    min_adx = min(CONFIG["settings"]["aggressive"]["min_adx"], CONFIG["settings"]["conservative"]["min_adx"])
+    # Minimum threshold check
+    if CONFIG.get("mode") == "all":
+        # In 'all' mode, use the single unified threshold from either setting
+        min_threshold = CONFIG["settings"]["aggressive"]["threshold"]
+        min_adx = CONFIG["settings"]["aggressive"]["min_adx"]
+    else:
+        # Legacy mode: use lowest threshold across modes
+        min_threshold = min(CONFIG["settings"]["aggressive"]["threshold"], CONFIG["settings"]["conservative"]["threshold"])
+        min_adx = min(CONFIG["settings"]["aggressive"]["min_adx"], CONFIG["settings"]["conservative"]["min_adx"])
     
     if None in (e12, e26, e200, r, a, curr, atr) or a < min_adx:
         return None, ok
@@ -749,12 +767,14 @@ def quick_micro_backtest(signal: Dict) -> float:
     return min(base, 0.95)
 
 # Correlation filter
-def filter_correlated_signals_enhanced(signals: List[Dict], max_corr: int = 1) -> List[Dict]:
+def filter_correlated_signals_enhanced(signals: List[Dict], max_corr: int = 1, enabled: bool = True) -> List[Dict]:
     """
     Filter correlated signals regardless of direction.
     BUY EURUSD + SELL GBPUSD are still correlated and should be limited.
+    
+    If enabled=False, returns all signals without filtering.
     """
-    if len(signals) <= 1:
+    if not enabled or len(signals) <= 1:
         return signals
     
     filtered = []
@@ -809,7 +829,9 @@ def check_risk_limits(signals: List[Dict], config: Dict, mode: str) -> Tuple[Lis
     
     if config.get("advanced", {}).get("enable_correlation_filter", True):
         max_corr = mode_settings.get("max_correlated_signals", 1)
-        filtered = filter_correlated_signals_enhanced(filtered, max_corr)
+        filtered = filter_correlated_signals_enhanced(filtered, max_corr, enabled=True)
+    else:
+        log.info(f"🔓 Correlation filter disabled - allowing all correlated pairs")
     
     return filtered, warnings
 
@@ -1101,10 +1123,13 @@ def main():
     opt_cfg = optimize_thresholds_if_needed(CONFIG) if CONFIG.get("performance_tuning", {}).get("auto_adjust_thresholds", False) else CONFIG
     opt_mode = opt_cfg["mode"]
     
-    log.info(f"🚀 Trade Beacon v2.1.2-MULTI - Generating ALL signal types | Sentiment={'ON' if USE_SENTIMENT else 'OFF'}")
+    log.info(f"🚀 Trade Beacon v2.1.2-MULTI - {'Generating ALL SIGNALS (Maximum Mode)' if opt_cfg.get('mode') == 'all' else 'Generating ALL signal types'} | Sentiment={'ON' if USE_SENTIMENT else 'OFF'}")
     log.info(f"📊 Monitoring {len(PAIRS)} pairs")
-    log.info(f"🎯 Aggressive: Score≥{opt_cfg['settings']['aggressive']['threshold']} ADX≥{opt_cfg['settings']['aggressive']['min_adx']}")
-    log.info(f"🎯 Conservative: Score≥{opt_cfg['settings']['conservative']['threshold']} ADX≥{opt_cfg['settings']['conservative']['min_adx']}")
+    if opt_cfg.get("mode") == "all":
+        log.info(f"🎯 ALL MODE: Score≥{opt_cfg['settings']['aggressive']['threshold']} ADX≥{opt_cfg['settings']['aggressive']['min_adx']} (No mode filtering)")
+    else:
+        log.info(f"🎯 Aggressive: Score≥{opt_cfg['settings']['aggressive']['threshold']} ADX≥{opt_cfg['settings']['aggressive']['min_adx']}")
+        log.info(f"🎯 Conservative: Score≥{opt_cfg['settings']['conservative']['threshold']} ADX≥{opt_cfg['settings']['conservative']['min_adx']}")
     
     new_signals = []
     downloads = 0

@@ -2,6 +2,8 @@
 Trade Beacon v2.1.2 - Forex Signal Generator (INSTITUTIONAL GRADE)
 MULTI-MODE EDITION: Generates Aggressive + Conservative signals simultaneously
 with tier-based selective enhancement (sentiment/backtest only on top-tier)
+
+FIXED: Line 1162 - Changed PERFORMANCE_TRACKER.signals to PERFORMANCE_TRACKER.history.get("signals", [])
 """
 
 import logging
@@ -889,21 +891,41 @@ def write_dashboard_state(signals: list, downloads: int, news_calls: int = 0, mk
     agg_count = len(mode_buckets["aggressive"])
     cons_count = len(mode_buckets["conservative"])
     
-    # Get historical signals from tracker
+    # Get historical signals from tracker - FIXED LINE 1162
     historical_signals = []
     if PERFORMANCE_TRACKER:
         try:
-            # Get all resolved signals (WIN/LOSS/EXPIRED) from the last 7 days
             from datetime import timedelta
             seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
-            all_signals = PERFORMANCE_TRACKER.signals
-            historical_signals = [
-                s for s in all_signals 
-                if s.get("status") in ["WIN", "LOSS", "EXPIRED"] 
-                and s.get("timestamp", "") >= seven_days_ago.isoformat()
-            ]
+            
+            # ✅ FIXED: Use history.get() instead of .signals attribute
+            all_signals = PERFORMANCE_TRACKER.history.get("signals", [])
+            
+            for s in all_signals:
+                if s.get("status") not in ["WIN", "LOSS", "EXPIRED"]:
+                    continue
+                try:
+                    ts = datetime.fromisoformat(s.get("timestamp", "").replace('Z', '+00:00'))
+                    if ts >= seven_days_ago:
+                        historical_signals.append(s)
+                except:
+                    continue  # Skip signals with invalid timestamps
+            
+            log.info(f"📊 Loaded {len(historical_signals)} historical signals from tracker")
         except Exception as e:
             log.warning(f"Could not load historical signals: {e}")
+    
+    # If tracker is empty, try loading from existing dashboard
+    if not historical_signals:
+        dashboard_file = Path("signal_state/dashboard_state.json")
+        if dashboard_file.exists():
+            try:
+                with open(dashboard_file) as f:
+                    old_data = json.load(f)
+                    historical_signals = old_data.get("historical_signals", [])
+                    log.info(f"📊 Loaded {len(historical_signals)} from existing dashboard")
+            except:
+                pass
     
     dashboard = {
         "timestamp": datetime.now(timezone.utc).isoformat(),

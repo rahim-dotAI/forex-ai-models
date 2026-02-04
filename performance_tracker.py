@@ -14,6 +14,7 @@ CHANGELOG v2.1.2-MULTI:
 - ✅ UTC-only datetime handling
 - ✅ Deterministic ID validation
 - ✅ Status transition guards
+- ✅ AUTOMATIC MIGRATION: Updates old v2.1.2 files to v2.1.2-MULTI on load
 """
 
 import json
@@ -82,6 +83,24 @@ def normalize_tier(tier: Optional[str]) -> str:
         return t
     return "C"
 
+def map_confidence_to_tier(confidence: str) -> str:
+    """Map confidence level to tier for migration."""
+    mapping = {
+        'VERY_STRONG': 'A+',
+        'STRONG': 'A',
+        'MODERATE': 'B',
+        'WEAK': 'C',
+        'UNKNOWN': 'C'
+    }
+    return mapping.get(confidence, 'C')
+
+def map_score_to_modes(score: int) -> List[str]:
+    """Map score to eligible modes for migration."""
+    if score >= 60:
+        return ['aggressive', 'conservative']
+    else:
+        return ['aggressive']
+
 class PerformanceTracker:
     """
     Multi-mode signal performance tracker with tier-based analytics.
@@ -95,6 +114,7 @@ class PerformanceTracker:
     - UTC-only datetime handling
     - Deterministic SHA-1 signal IDs
     - Enhanced analytics: by mode, by tier, cross-analytics
+    - AUTOMATIC MIGRATION from v2.1.2 to v2.1.2-MULTI
     
     IMPORTANT:
     - No equity assumptions
@@ -112,7 +132,7 @@ class PerformanceTracker:
         self._log_state()
 
     def _load(self) -> Dict:
-        """Load history with migration support."""
+        """Load history with automatic migration support."""
         if not self.history_file.exists():
             return self._empty()
 
@@ -128,6 +148,11 @@ class PerformanceTracker:
         if old_version != TRACKER_VERSION:
             log.info(f"📦 Migrating from {old_version} to {TRACKER_VERSION}")
             data = self._migrate(data, old_version)
+            # Save immediately after migration
+            self.history_file.parent.mkdir(exist_ok=True)
+            with open(self.history_file, "w") as f:
+                json.dump(data, f, indent=2)
+            log.info(f"✅ Migration saved to {self.history_file}")
         
         data.setdefault("version", TRACKER_VERSION)
         data.setdefault("signals", [])
@@ -142,49 +167,252 @@ class PerformanceTracker:
         return data
 
     def _migrate(self, data: Dict, from_version: str) -> Dict:
-        """Migrate old data to v2.1.2-MULTI format."""
+        """
+        Migrate old data to v2.1.2-MULTI format.
+        
+        This automatically adds tier and eligible_modes to all signals.
+        """
         log.info(f"🔄 Migrating {len(data.get('signals', []))} signals...")
         
         # Normalize all signals
+        migrated_count = 0
         for signal in data.get("signals", []):
+            needs_migration = False
+            
             # Normalize session
             if "session" in signal:
+                old_session = signal["session"]
                 signal["session"] = normalize_session(signal["session"])
+                if old_session != signal["session"]:
+                    needs_migration = True
             
             # Normalize confidence
             if "confidence" in signal:
+                old_conf = signal["confidence"]
                 signal["confidence"] = normalize_confidence(signal["confidence"])
+                if old_conf != signal["confidence"]:
+                    needs_migration = True
             
-            # Add tier if missing (infer from score)
-            if "tier" not in signal and "score" in signal:
-                score = safe_int(signal["score"])
-                if score >= 80:
-                    signal["tier"] = "A+"
-                elif score >= 72:
-                    signal["tier"] = "A"
-                elif score >= 65:
-                    signal["tier"] = "B"
+            # Add tier if missing (infer from score or confidence)
+            if "tier" not in signal or not signal["tier"]:
+                if "score" in signal:
+                    score = safe_int(signal["score"])
+                    if score >= 80:
+                        signal["tier"] = "A+"
+                    elif score >= 72:
+                        signal["tier"] = "A"
+                    elif score >= 65:
+                        signal["tier"] = "B"
+                    else:
+                        signal["tier"] = "C"
                 else:
-                    signal["tier"] = "C"
+                    # Fallback to confidence mapping
+                    conf = normalize_confidence(signal.get("confidence", "MODERATE"))
+                    signal["tier"] = map_confidence_to_tier(conf)
+                needs_migration = True
+                log.info(f"   ✅ Added tier '{signal['tier']}' to {signal.get('pair', 'UNKNOWN')}")
             
-            # Add eligible_modes if missing (infer from score/confidence)
-            if "eligible_modes" not in signal:
+            # Add eligible_modes if missing (infer from score)
+            if "eligible_modes" not in signal or not signal["eligible_modes"]:
                 score = safe_int(signal.get("score", 0))
-                if score >= 60:
-                    signal["eligible_modes"] = ["aggressive", "conservative"]
-                else:
-                    signal["eligible_modes"] = ["aggressive"]
+                signal["eligible_modes"] = map_score_to_modes(score)
+                needs_migration = True
+                log.info(f"   ✅ Added eligible_modes {signal['eligible_modes']} to {signal.get('pair', 'UNKNOWN')}")
             
             # Ensure signal_id exists
             if "signal_id" not in signal and "id" in signal:
                 signal["signal_id"] = signal["id"]
+                needs_migration = True
             
             # Add backtest metadata if missing
-            signal.setdefault("sentiment_applied", False)
-            signal.setdefault("estimated_win_rate", None)
+            if "sentiment_applied" not in signal:
+                signal["sentiment_applied"] = False
+                needs_migration = True
+            if "estimated_win_rate" not in signal:
+                signal["estimated_win_rate"] = None
+                needs_migration = True
+            
+            if needs_migration:
+                migrated_count += 1
+        
+        # Force recalculation of analytics with new fields
+        log.info(f"🔄 Recalculating analytics with tier and mode dimensions...")
+        
+        # Temporarily set signals and recalculate
+        temp_tracker = type('obj', (object,), {
+            'history': data,
+            '_empty_analytics': self._empty_analytics
+        })()
+        
+        # Use the _recalculate logic
+        resolved = [
+            s for s in data.get("signals", [])
+            if s.get("status") in ("WIN", "LOSS")
+        ]
+        
+        expired = [
+            s for s in data.get("signals", [])
+            if s.get("status") == "EXPIRED"
+        ]
+
+        wins: List[float] = []
+        losses: List[float] = []
+        total_pips = 0.0
+        analytics = self._empty_analytics()
+        
+        # Mode-specific tracking
+        mode_stats = {
+            "aggressive": {"trades": 0, "wins": 0, "total_pips": 0.0},
+            "conservative": {"trades": 0, "wins": 0, "total_pips": 0.0}
+        }
+
+        for s in resolved:
+            pips = safe_float(s.get("pips"))
+            total_pips += pips
+            
+            pair = s.get("pair", "UNKNOWN")
+            session = normalize_session(s.get("session"))
+            confidence = normalize_confidence(s.get("confidence"))
+            tier = normalize_tier(s.get("tier"))
+            modes = s.get("eligible_modes", ["aggressive"])
+
+            is_win = s["status"] == "WIN"
+            
+            if is_win:
+                wins.append(pips)
+            else:
+                losses.append(abs(pips))
+
+            # Track by mode
+            for mode in modes:
+                if mode in mode_stats:
+                    mode_stats[mode]["trades"] += 1
+                    mode_stats[mode]["total_pips"] += pips
+                    if is_win:
+                        mode_stats[mode]["wins"] += 1
+
+            # Pair analytics
+            analytics["by_pair"].setdefault(pair, {
+                "trades": 0, "wins": 0, "total_pips": 0.0
+            })
+            analytics["by_pair"][pair]["trades"] += 1
+            analytics["by_pair"][pair]["total_pips"] += pips
+            if is_win:
+                analytics["by_pair"][pair]["wins"] += 1
+
+            # Session analytics
+            analytics["by_session"].setdefault(session, {
+                "trades": 0, "wins": 0, "total_pips": 0.0
+            })
+            analytics["by_session"][session]["trades"] += 1
+            analytics["by_session"][session]["total_pips"] += pips
+            if is_win:
+                analytics["by_session"][session]["wins"] += 1
+
+            # Confidence analytics
+            analytics["by_confidence"].setdefault(confidence, {
+                "trades": 0, "wins": 0, "total_pips": 0.0
+            })
+            analytics["by_confidence"][confidence]["trades"] += 1
+            analytics["by_confidence"][confidence]["total_pips"] += pips
+            if is_win:
+                analytics["by_confidence"][confidence]["wins"] += 1
+            
+            # NEW: Tier analytics
+            analytics["by_tier"].setdefault(tier, {
+                "trades": 0, "wins": 0, "total_pips": 0.0
+            })
+            analytics["by_tier"][tier]["trades"] += 1
+            analytics["by_tier"][tier]["total_pips"] += pips
+            if is_win:
+                analytics["by_tier"][tier]["wins"] += 1
+            
+            # NEW: Mode analytics
+            for mode in modes:
+                analytics["by_mode"].setdefault(mode, {
+                    "trades": 0, "wins": 0, "total_pips": 0.0
+                })
+                analytics["by_mode"][mode]["trades"] += 1
+                analytics["by_mode"][mode]["total_pips"] += pips
+                if is_win:
+                    analytics["by_mode"][mode]["wins"] += 1
+            
+            # Cross analytics
+            tier_session_key = f"{tier}_{session}"
+            analytics["cross_analytics"]["tier_by_session"].setdefault(tier_session_key, {
+                "tier": tier, "session": session, "trades": 0, "wins": 0, "total_pips": 0.0
+            })
+            analytics["cross_analytics"]["tier_by_session"][tier_session_key]["trades"] += 1
+            analytics["cross_analytics"]["tier_by_session"][tier_session_key]["total_pips"] += pips
+            if is_win:
+                analytics["cross_analytics"]["tier_by_session"][tier_session_key]["wins"] += 1
+            
+            for mode in modes:
+                mode_tier_key = f"{mode}_{tier}"
+                analytics["cross_analytics"]["mode_by_tier"].setdefault(mode_tier_key, {
+                    "mode": mode, "tier": tier, "trades": 0, "wins": 0, "total_pips": 0.0
+                })
+                analytics["cross_analytics"]["mode_by_tier"][mode_tier_key]["trades"] += 1
+                analytics["cross_analytics"]["mode_by_tier"][mode_tier_key]["total_pips"] += pips
+                if is_win:
+                    analytics["cross_analytics"]["mode_by_tier"][mode_tier_key]["wins"] += 1
+
+        total = len(resolved)
+        win_rate = (len(wins) / total * 100) if total else 0.0
+        avg_win = sum(wins) / len(wins) if wins else 0.0
+        avg_loss = sum(losses) / len(losses) if losses else 0.0
+        expectancy = (
+            (win_rate / 100) * avg_win -
+            (1 - win_rate / 100) * avg_loss
+        ) if total else 0.0
+
+        # Calculate mode-specific win rates
+        for mode, mode_data in mode_stats.items():
+            if mode_data["trades"] > 0:
+                mode_data["win_rate"] = safe_round(mode_data["wins"] / mode_data["trades"] * 100, 1)
+
+        # Calculate win rates per dimension
+        for group in [analytics["by_pair"], analytics["by_session"], 
+                      analytics["by_confidence"], analytics["by_tier"], 
+                      analytics["by_mode"]]:
+            for data_item in group.values():
+                if data_item["trades"] > 0:
+                    data_item["win_rate"] = safe_round(
+                        data_item["wins"] / data_item["trades"] * 100, 1
+                    )
+        
+        # Calculate cross-analytics win rates
+        for cross_group in analytics["cross_analytics"].values():
+            for data_item in cross_group.values():
+                if data_item["trades"] > 0:
+                    data_item["win_rate"] = safe_round(
+                        data_item["wins"] / data_item["trades"] * 100, 1
+                    )
+
+        data["analytics"] = analytics
+        
+        # Update stats
+        data["stats"] = {
+            "total_trades": total,
+            "total_resolved": total,
+            "wins": len(wins),
+            "losses": len(losses),
+            "expired": len(expired),
+            "win_rate": safe_round(win_rate, 1),
+            "total_pips": safe_round(total_pips, 1),
+            "avg_win": safe_round(avg_win, 1),
+            "avg_loss": safe_round(avg_loss, 1),
+            "expectancy_pips": safe_round(expectancy, 2),
+            "validated": total >= 100,
+            "by_mode": mode_stats
+        }
         
         data["version"] = TRACKER_VERSION
-        log.info("✅ Migration complete")
+        
+        log.info(f"✅ Migration complete: {migrated_count} signals updated")
+        log.info(f"   - by_tier: {list(analytics['by_tier'].keys())}")
+        log.info(f"   - by_mode: {list(analytics['by_mode'].keys())}")
+        
         return data
 
     def _save(self):

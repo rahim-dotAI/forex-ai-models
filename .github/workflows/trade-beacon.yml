@@ -122,7 +122,14 @@ jobs:
           fi
           
           echo "✅ Configuration valid"
-          echo "ℹ️  Multi-mode: Both aggressive and conservative signals generated simultaneously"
+          
+          # Display mode info
+          MODE=$(jq -r '.mode // "conservative"' config.json)
+          if [ "$MODE" = "all" ]; then
+            echo "ℹ️  ALL MODE: Maximum signal generation enabled"
+          else
+            echo "ℹ️  Multi-mode: Both aggressive and conservative signals generated simultaneously"
+          fi
       
       - name: Reset performance history (DESTRUCTIVE - guarded)
         if: github.event.inputs.reset_performance == 'YES'
@@ -176,7 +183,7 @@ jobs:
             config.json > tmp.json && mv tmp.json config.json
           
           echo "✅ Configuration updated: sentiment=$SENTIMENT"
-          echo "ℹ️  Note: Mode selection removed - system generates ALL modes"
+          echo "ℹ️  Note: Mode selection removed - system generates based on config mode setting"
       
       - name: Allow threshold optimization (if eligible)
         if: github.event.inputs.allow_optimization == 'true'
@@ -231,10 +238,16 @@ jobs:
             jq -r '.stats | "Total Trades: \(.total_trades // 0) | Win Rate: \(.win_rate // 0)% | Total Pips: \(.total_pips // 0) | Expectancy: \(.expectancy_pips // 0)"' \
               signal_state/signal_history.json || echo "No stats available yet"
             
-            # Display multi-mode stats if available
+            # Display multi-mode stats if available (including 'all' mode)
             if jq -e '.stats.by_mode' signal_state/signal_history.json > /dev/null 2>&1; then
               echo ""
               echo "📊 Multi-Mode Breakdown:"
+              
+              # Check if 'all' mode exists
+              if jq -e '.stats.by_mode.all' signal_state/signal_history.json > /dev/null 2>&1; then
+                echo "  All: $(jq -r '.stats.by_mode.all.trades // 0' signal_state/signal_history.json) trades, $(jq -r '.stats.by_mode.all.win_rate // 0' signal_state/signal_history.json)% WR"
+              fi
+              
               echo "  Aggressive: $(jq -r '.stats.by_mode.aggressive.trades // 0' signal_state/signal_history.json) trades, $(jq -r '.stats.by_mode.aggressive.win_rate // 0' signal_state/signal_history.json)% WR"
               echo "  Conservative: $(jq -r '.stats.by_mode.conservative.trades // 0' signal_state/signal_history.json) trades, $(jq -r '.stats.by_mode.conservative.win_rate // 0' signal_state/signal_history.json)% WR"
             fi
@@ -245,34 +258,50 @@ jobs:
       - name: Display active configuration
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "📋 ACTIVE CONFIGURATION (MULTI-MODE)"
+          echo "📋 ACTIVE CONFIGURATION"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo ""
-          echo "🎯 MULTI-MODE: Generating both Aggressive AND Conservative signals"
-          echo ""
           
-          echo "[Aggressive Mode Thresholds]"
-          echo "  Threshold: $(jq -r '.settings.aggressive.threshold' config.json)"
-          echo "  Min ADX: $(jq -r '.settings.aggressive.min_adx' config.json)"
-          echo "  RSI Oversold: $(jq -r '.settings.aggressive.rsi_oversold' config.json)"
-          echo "  RSI Overbought: $(jq -r '.settings.aggressive.rsi_overbought' config.json)"
-          echo "  Min Risk:Reward: $(jq -r '.settings.aggressive.min_risk_reward' config.json)"
-          echo "  ATR Stop Multiplier: $(jq -r '.settings.aggressive.atr_stop_multiplier' config.json)"
-          echo "  ATR Target Multiplier: $(jq -r '.settings.aggressive.atr_target_multiplier' config.json)"
-          echo "  Max Correlated Signals: $(jq -r '.settings.aggressive.max_correlated_signals' config.json)"
-          echo ""
+          MODE=$(jq -r '.mode // "conservative"' config.json)
           
-          echo "[Conservative Mode Thresholds]"
-          echo "  Threshold: $(jq -r '.settings.conservative.threshold' config.json)"
-          echo "  Min ADX: $(jq -r '.settings.conservative.min_adx' config.json)"
-          echo "  RSI Oversold: $(jq -r '.settings.conservative.rsi_oversold' config.json)"
-          echo "  RSI Overbought: $(jq -r '.settings.conservative.rsi_overbought' config.json)"
-          echo "  Min Risk:Reward: $(jq -r '.settings.conservative.min_risk_reward' config.json)"
-          echo "  ATR Stop Multiplier: $(jq -r '.settings.conservative.atr_stop_multiplier' config.json)"
-          echo "  ATR Target Multiplier: $(jq -r '.settings.conservative.atr_target_multiplier' config.json)"
-          echo "  Max Correlated Signals: $(jq -r '.settings.conservative.max_correlated_signals' config.json)"
-          echo ""
+          if [ "$MODE" = "all" ]; then
+            echo "🚀 ALL MODE: Maximum signal generation (no mode filtering)"
+            echo ""
+            echo "[Unified Thresholds]"
+            echo "  Score Threshold: $(jq -r '.settings.aggressive.threshold' config.json)"
+            echo "  Min ADX: $(jq -r '.settings.aggressive.min_adx' config.json)"
+            echo "  RSI Oversold: $(jq -r '.settings.aggressive.rsi_oversold' config.json)"
+            echo "  RSI Overbought: $(jq -r '.settings.aggressive.rsi_overbought' config.json)"
+            echo "  Min Risk:Reward: $(jq -r '.settings.aggressive.min_risk_reward' config.json)"
+            echo "  ATR Stop Multiplier: $(jq -r '.settings.aggressive.atr_stop_multiplier' config.json)"
+            echo "  ATR Target Multiplier: $(jq -r '.settings.aggressive.atr_target_multiplier' config.json)"
+            echo "  Max Correlated Signals: $(jq -r '.settings.aggressive.max_correlated_signals' config.json)"
+          else
+            echo "🎯 MULTI-MODE: Generating both Aggressive AND Conservative signals"
+            echo ""
+            echo "[Aggressive Mode Thresholds]"
+            echo "  Threshold: $(jq -r '.settings.aggressive.threshold' config.json)"
+            echo "  Min ADX: $(jq -r '.settings.aggressive.min_adx' config.json)"
+            echo "  RSI Oversold: $(jq -r '.settings.aggressive.rsi_oversold' config.json)"
+            echo "  RSI Overbought: $(jq -r '.settings.aggressive.rsi_overbought' config.json)"
+            echo "  Min Risk:Reward: $(jq -r '.settings.aggressive.min_risk_reward' config.json)"
+            echo "  ATR Stop Multiplier: $(jq -r '.settings.aggressive.atr_stop_multiplier' config.json)"
+            echo "  ATR Target Multiplier: $(jq -r '.settings.aggressive.atr_target_multiplier' config.json)"
+            echo "  Max Correlated Signals: $(jq -r '.settings.aggressive.max_correlated_signals' config.json)"
+            echo ""
+            
+            echo "[Conservative Mode Thresholds]"
+            echo "  Threshold: $(jq -r '.settings.conservative.threshold' config.json)"
+            echo "  Min ADX: $(jq -r '.settings.conservative.min_adx' config.json)"
+            echo "  RSI Oversold: $(jq -r '.settings.conservative.rsi_oversold' config.json)"
+            echo "  RSI Overbought: $(jq -r '.settings.conservative.rsi_overbought' config.json)"
+            echo "  Min Risk:Reward: $(jq -r '.settings.conservative.min_risk_reward' config.json)"
+            echo "  ATR Stop Multiplier: $(jq -r '.settings.conservative.atr_stop_multiplier' config.json)"
+            echo "  ATR Target Multiplier: $(jq -r '.settings.conservative.atr_target_multiplier' config.json)"
+            echo "  Max Correlated Signals: $(jq -r '.settings.conservative.max_correlated_signals' config.json)"
+          fi
           
+          echo ""
           echo "[Tier Thresholds]"
           echo "  A+ Minimum Score: $(jq -r '.tiers.A_plus_min_score // 80' config.json)"
           echo "  A Minimum Score: $(jq -r '.tiers.A_min_score // 72' config.json)"
@@ -280,6 +309,7 @@ jobs:
           echo ""
           
           echo "[System Settings]"
+          echo "  Mode: $MODE"
           echo "  Sentiment Analysis: $(jq -r '.use_sentiment' config.json)"
           echo "  Performance Tracking: $(jq -r '.performance_tracking.enable' config.json)"
           echo "  Auto Threshold Optimization: $(jq -r '.performance_tuning.auto_adjust_thresholds' config.json)"
@@ -318,9 +348,16 @@ jobs:
             echo "📊 Multi-Mode Signal Breakdown:"
             AGG_COUNT=$(jq -r '.active_signals_by_mode.aggressive // 0' signal_state/dashboard_state.json 2>/dev/null || echo "0")
             CONS_COUNT=$(jq -r '.active_signals_by_mode.conservative // 0' signal_state/dashboard_state.json 2>/dev/null || echo "0")
+            TOTAL=$(jq -r '.active_signals // 0' signal_state/dashboard_state.json)
             echo "  Aggressive: $AGG_COUNT signals"
             echo "  Conservative: $CONS_COUNT signals"
-            echo "  Total: $(jq -r '.active_signals // 0' signal_state/dashboard_state.json) unique signals"
+            echo "  Total: $TOTAL unique signals"
+            
+            # Check if in 'all' mode
+            MODE=$(jq -r '.mode // "conservative"' config.json)
+            if [ "$MODE" = "all" ]; then
+              echo "  [ALL MODE Active: Every signal tagged with all modes]"
+            fi
           fi
           
           # Log optimization decision if optimization was allowed
@@ -382,7 +419,7 @@ jobs:
               "Validated: \(.validated // false)"' \
               signal_state/signal_history.json || echo "Stats not available"
             
-            # Multi-mode stats
+            # Multi-mode stats (including 'all' mode)
             if jq -e '.stats.by_mode' signal_state/signal_history.json > /dev/null 2>&1; then
               echo ""
               echo "🎯 Performance by Mode:"
@@ -432,6 +469,9 @@ jobs:
               "Signal Only Mode: \(.signal_only_mode // true)\n" +
               "Multi-Mode: \(.multi_mode // false)"' \
               signal_state/dashboard_state.json || echo "Status not available"
+            
+            MODE=$(jq -r '.mode // "conservative"' config.json)
+            echo "Configuration Mode: $MODE"
           fi
           
           echo ""
@@ -473,9 +513,11 @@ jobs:
             AGG=$(jq -r '.active_signals_by_mode.aggressive // 0' signal_state/dashboard_state.json 2>/dev/null || echo "0")
             CONS=$(jq -r '.active_signals_by_mode.conservative // 0' signal_state/dashboard_state.json 2>/dev/null || echo "0")
             SESSION=$(jq -r '.session // "UNKNOWN"' signal_state/dashboard_state.json 2>/dev/null || echo "UNKNOWN")
+            MODE=$(jq -r '.mode // "conservative"' config.json)
             
             git commit -m "📊 Trade Beacon v2.1.2 update [$TIMESTAMP]
             
+            Mode: $MODE
             Session: $SESSION
             Total Signals: $TOTAL (Agg: $AGG, Cons: $CONS)
             Run: #${{ github.run_number }}

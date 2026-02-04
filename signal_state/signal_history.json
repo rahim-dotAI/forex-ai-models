@@ -1,5 +1,5 @@
 {
-  "version": "2.1.2",
+  "version": "2.1.2-MULTI",
   "signals": [
     {
       "id": "GBPUSD_BUY_5cb81c427531",
@@ -16,7 +16,14 @@
       "score": 63,
       "session": "US",
       "timestamp": "2026-01-28T16:24:50.251788+00:00",
-      "exit_time": "2026-01-28T16:31:07.001158+00:00"
+      "exit_time": "2026-01-28T16:31:07.001158+00:00",
+      "tier": "C",
+      "eligible_modes": [
+        "aggressive",
+        "conservative"
+      ],
+      "sentiment_applied": false,
+      "estimated_win_rate": null
     }
   ],
   "stats": {
@@ -30,7 +37,21 @@
     "avg_win": 104.1,
     "avg_loss": 0.0,
     "expectancy_pips": 104.1,
-    "validated": false
+    "validated": false,
+    "by_mode": {
+      "aggressive": {
+        "trades": 1,
+        "wins": 1,
+        "total_pips": 104.10000000000029,
+        "win_rate": 100.0
+      },
+      "conservative": {
+        "trades": 1,
+        "wins": 1,
+        "total_pips": 104.10000000000029,
+        "win_rate": 100.0
+      }
+    }
   },
   "analytics": {
     "by_pair": {
@@ -55,6 +76,58 @@
         "wins": 1,
         "total_pips": 104.10000000000029,
         "win_rate": 100.0
+      }
+    },
+    "by_tier": {
+      "C": {
+        "trades": 1,
+        "wins": 1,
+        "total_pips": 104.10000000000029,
+        "win_rate": 100.0
+      }
+    },
+    "by_mode": {
+      "aggressive": {
+        "trades": 1,
+        "wins": 1,
+        "total_pips": 104.10000000000029,
+        "win_rate": 100.0
+      },
+      "conservative": {
+        "trades": 1,
+        "wins": 1,
+        "total_pips": 104.10000000000029,
+        "win_rate": 100.0
+      }
+    },
+    "cross_analytics": {
+      "tier_by_session": {
+        "C_US": {
+          "tier": "C",
+          "session": "US",
+          "trades": 1,
+          "wins": 1,
+          "total_pips": 104.10000000000029,
+          "win_rate": 100.0
+        }
+      },
+      "mode_by_tier": {
+        "aggressive_C": {
+          "mode": "aggressive",
+          "tier": "C",
+          "trades": 1,
+          "wins": 1,
+          "total_pips": 104.10000000000029,
+          "win_rate": 100.0
+        },
+        "conservative_C": {
+          "mode": "conservative",
+          "tier": "C",
+          "trades": 1,
+          "wins": 1,
+          "total_pips": 104.10000000000029,
+          "win_rate": 100.0
+        }
       }
     }
   },

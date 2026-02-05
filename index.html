@@ -1374,7 +1374,22 @@
         return;
       }
 
-      const signals = dashboardData.signals_by_mode?.[currentMode] || [];
+      // Get signals from current mode
+      let signals = dashboardData.signals_by_mode?.[currentMode] || [];
+      
+      // CRITICAL: Deduplicate by signal_id (in ALL MODE, same signal appears in both arrays)
+      const uniqueSignals = [];
+      const seenIds = new Set();
+      
+      for (const signal of signals) {
+        const id = signal.signal_id || signal.id;
+        if (!seenIds.has(id)) {
+          seenIds.add(id);
+          uniqueSignals.push(signal);
+        }
+      }
+      
+      signals = uniqueSignals;
       
       if (signals.length === 0) {
         showEmpty('signalsGrid', 'radio', 'No active signals', `No ${currentMode} signals available right now`);

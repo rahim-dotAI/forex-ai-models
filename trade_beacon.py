@@ -835,20 +835,248 @@ def check_risk_limits(signals: List[Dict], config: Dict, mode: str) -> Tuple[Lis
     
     return filtered, warnings
 
-# Sentiment (placeholder)
-class NewsAggregator:
-    def __init__(self):
-        self.newsapi_calls = 0
-        self.marketaux_calls = 0
-    def get_news(self, pairs): return []
-
 def enhance_with_sentiment(signals: List[Dict], news_agg) -> List[Dict]:
-    """Apply sentiment analysis to signals"""
-    # Placeholder - implement actual sentiment logic here
-    for sig in signals:
-        sig["sentiment_score"] = 0
-        sig["sentiment_applied"] = True
-    return signals
+    """
+    Apply sentiment analysis to high-confidence signals only.
+    Uses both NewsAPI and MarketAux with smart rate limiting.
+    Only analyzes signals with score >= 60 to conserve API quota.
+    """
+    if not signals:
+        return signals
+    
+    try:
+        # Get relevant currencies from signals
+        currencies = set()
+        for sig in signals:
+            pair = sig.get("pair", "")
+            # Extract base and quote currencies (e.g., GBPUSD -> GBP, USD)
+            if len(pair) >= 6:
+                currencies.add(pair[:3])  # Base currency
+                currencies.add(pair[3:6])  # Quote currency
+        
+        # Fetch news for relevant currencies (limited to conserve API calls)
+        currency_sentiment = {}
+        for currency in currencies:
+            try:
+                sentiment_score = news_agg.get_currency_sentiment(currency)
+                currency_sentiment[currency] = sentiment_score
+                log.info(f"📰 {currency} sentiment: {sentiment_score:+.2f}")
+            except Exception as e:
+                log.warning(f"⚠️ Failed to get {currency} sentiment: {e}")
+                currency_sentiment[currency] = 0.0
+        
+        # Apply sentiment to each signal
+        for sig in signals:
+            pair = sig.get("pair", "")
+            if len(pair) < 6:
+                sig["sentiment_score"] = 0.0
+                sig["sentiment_applied"] = True
+                continue
+            
+            base_curr = pair[:3]
+            quote_curr = pair[3:6]
+            
+            # Calculate sentiment: positive for base currency = bullish signal
+            base_sentiment = currency_sentiment.get(base_curr, 0.0)
+            quote_sentiment = currency_sentiment.get(quote_curr, 0.0)
+            
+            # Net sentiment: base bullish + quote bearish = buy signal gets boost
+            direction = sig.get("direction", "BUY")
+            if direction == "BUY":
+                # Buying base currency (bullish on base, bearish on quote is good)
+                net_sentiment = base_sentiment - quote_sentiment
+            else:  # SELL
+                # Selling base currency (bearish on base, bullish on quote is good)
+                net_sentiment = quote_sentiment - base_sentiment
+            
+            # Apply sentiment boost/penalty to score
+            original_score = sig.get("score", 50)
+            sentiment_adjustment = net_sentiment * 5  # Scale: -10 to +10 points
+            
+            # Cap adjustment to ±10 points
+            sentiment_adjustment = max(-10, min(10, sentiment_adjustment))
+            
+            adjusted_score = original_score + sentiment_adjustment
+            adjusted_score = max(0, min(100, adjusted_score))  # Keep in 0-100 range
+            
+            # Update signal
+            sig["sentiment_score"] = round(net_sentiment, 2)
+            sig["sentiment_adjustment"] = round(sentiment_adjustment, 1)
+            sig["score_before_sentiment"] = original_score
+            sig["score"] = round(adjusted_score, 0)
+            sig["sentiment_applied"] = True
+            
+            log.info(f"💭 {pair} {direction}: sentiment={net_sentiment:+.2f}, "
+                    f"score {original_score} → {adjusted_score} ({sentiment_adjustment:+.1f})")
+        
+        return signals
+        
+    except Exception as e:
+        log.error(f"❌ Sentiment enhancement failed: {e}")
+        # Mark as attempted but failed
+        for sig in signals:
+            sig["sentiment_score"] = 0
+            sig["sentiment_applied"] = True
+        return signals
+
+
+class NewsAggregator:
+    """Aggregates news sentiment from NewsAPI and MarketAux APIs"""
+    
+    def __init__(self):
+        self.newsapi_key = os.getenv("NEWSAPI_KEY")
+        self.marketaux_key = os.getenv("MARKETAUX_API_KEY")
+        self.cache = {}
+        self.cache_ttl = 1800  # 30 minutes
+        self.last_call_time = {}
+        self.min_call_interval = 2  # 2 seconds between calls
+        
+    def _rate_limit(self, api_name: str):
+        """Enforce rate limiting between API calls"""
+        last_call = self.last_call_time.get(api_name, 0)
+        elapsed = time.time() - last_call
+        if elapsed < self.min_call_interval:
+            time.sleep(self.min_call_interval - elapsed)
+        self.last_call_time[api_name] = time.time()
+    
+    def _is_cached(self, key: str) -> bool:
+        """Check if data is in cache and not expired"""
+        if key not in self.cache:
+            return False
+        cached_time, _ = self.cache[key]
+        return (time.time() - cached_time) < self.cache_ttl
+    
+    def _get_cached(self, key: str):
+        """Get cached data"""
+        if self._is_cached(key):
+            _, data = self.cache[key]
+            return data
+        return None
+    
+    def _set_cache(self, key: str, data):
+        """Set cache data"""
+        self.cache[key] = (time.time(), data)
+    
+    @retry_with_backoff(max_retries=2, backoff_factor=5)
+    def get_currency_sentiment(self, currency: str) -> float:
+        """
+        Get sentiment score for a currency from news sources.
+        Returns: float between -1.0 (very bearish) and +1.0 (very bullish)
+        """
+        cache_key = f"sentiment_{currency}"
+        cached = self._get_cached(cache_key)
+        if cached is not None:
+            return cached
+        
+        sentiment_scores = []
+        
+        # Try NewsAPI first
+        if self.newsapi_key:
+            try:
+                self._rate_limit("newsapi")
+                newsapi_sentiment = self._fetch_newsapi_sentiment(currency)
+                if newsapi_sentiment is not None:
+                    sentiment_scores.append(newsapi_sentiment)
+            except Exception as e:
+                log.warning(f"⚠️ NewsAPI failed for {currency}: {e}")
+        
+        # Try MarketAux
+        if self.marketaux_key:
+            try:
+                self._rate_limit("marketaux")
+                marketaux_sentiment = self._fetch_marketaux_sentiment(currency)
+                if marketaux_sentiment is not None:
+                    sentiment_scores.append(marketaux_sentiment)
+            except Exception as e:
+                log.warning(f"⚠️ MarketAux failed for {currency}: {e}")
+        
+        # Average the scores
+        if sentiment_scores:
+            avg_sentiment = sum(sentiment_scores) / len(sentiment_scores)
+            self._set_cache(cache_key, avg_sentiment)
+            return avg_sentiment
+        
+        # No sentiment data available
+        return 0.0
+    
+    def _fetch_newsapi_sentiment(self, currency: str) -> Optional[float]:
+        """Fetch sentiment from NewsAPI"""
+        url = "https://newsapi.org/v2/everything"
+        params = {
+            "q": f"{currency} currency forex",
+            "language": "en",
+            "sortBy": "publishedAt",
+            "pageSize": 10,
+            "apiKey": self.newsapi_key
+        }
+        
+        response = requests.get(url, params=params, timeout=10)
+        if response.status_code != 200:
+            return None
+        
+        data = response.json()
+        articles = data.get("articles", [])
+        
+        if not articles:
+            return 0.0
+        
+        # Simple sentiment analysis based on keywords
+        positive_keywords = ["surge", "rally", "gain", "rise", "strength", "bullish", "up", "higher", "strong"]
+        negative_keywords = ["fall", "drop", "decline", "weak", "bearish", "down", "lower", "plunge", "crash"]
+        
+        sentiment_sum = 0
+        for article in articles:
+            title = (article.get("title", "") + " " + article.get("description", "")).lower()
+            
+            positive_count = sum(1 for word in positive_keywords if word in title)
+            negative_count = sum(1 for word in negative_keywords if word in title)
+            
+            if positive_count > negative_count:
+                sentiment_sum += 1
+            elif negative_count > positive_count:
+                sentiment_sum -= 1
+        
+        # Normalize to -1.0 to +1.0 range
+        return max(-1.0, min(1.0, sentiment_sum / max(len(articles), 1)))
+    
+    def _fetch_marketaux_sentiment(self, currency: str) -> Optional[float]:
+        """Fetch sentiment from MarketAux"""
+        url = "https://api.marketaux.com/v1/news/all"
+        params = {
+            "symbols": f"{currency}USD",
+            "filter_entities": "true",
+            "language": "en",
+            "limit": 10,
+            "api_token": self.marketaux_key
+        }
+        
+        response = requests.get(url, params=params, timeout=10)
+        if response.status_code != 200:
+            return None
+        
+        data = response.json()
+        articles = data.get("data", [])
+        
+        if not articles:
+            return 0.0
+        
+        # MarketAux provides sentiment in entities
+        sentiment_sum = 0
+        sentiment_count = 0
+        
+        for article in articles:
+            entities = article.get("entities", [])
+            for entity in entities:
+                if currency in entity.get("symbol", ""):
+                    sentiment_score = entity.get("sentiment_score", 0)
+                    # MarketAux sentiment is typically -1 to +1
+                    sentiment_sum += sentiment_score
+                    sentiment_count += 1
+        
+        if sentiment_count > 0:
+            return sentiment_sum / sentiment_count
+        
+        return 0.0
 
 # Dashboard
 def calculate_daily_pips(signals: List[Dict]) -> float:
@@ -1161,22 +1389,36 @@ def main():
             
             time.sleep(0.5)
     
-    # NEW: Apply sentiment and backtest ONLY to high-potential signals
+    # NEW: Apply sentiment ONLY to high-confidence signals (score >= 60) to conserve API quota
     if USE_SENTIMENT and new_signals:
         try:
-            news = NewsAggregator()
-            elite = select_high_potential(new_signals)
-            log.info(f"🎯 Applying sentiment to {len(elite)} high-potential signals (Tier A+/A)")
+            # Filter for high-confidence signals only (score >= 60)
+            high_confidence = [s for s in new_signals if s.get("score", 0) >= 60]
             
-            elite = enhance_with_sentiment(elite, news)
-            elite_ids = {s["signal_id"] for s in elite}
-            
-            # Mark which signals received sentiment analysis
-            for s in new_signals:
-                if s["signal_id"] not in elite_ids:
+            if high_confidence:
+                news = NewsAggregator()
+                log.info(f"💭 Applying sentiment to {len(high_confidence)}/{len(new_signals)} high-confidence signals (score ≥60)")
+                
+                enhanced = enhance_with_sentiment(high_confidence, news)
+                enhanced_ids = {s["signal_id"] for s in enhanced}
+                
+                # Mark which signals received sentiment analysis
+                for s in new_signals:
+                    if s["signal_id"] not in enhanced_ids:
+                        s["sentiment_applied"] = False
+                        s["sentiment_score"] = 0
+                
+                log.info(f"✅ Sentiment analysis complete: {len(enhanced)} signals enhanced")
+            else:
+                log.info(f"ℹ️  No signals meet sentiment threshold (score ≥60), skipping to conserve API quota")
+                for s in new_signals:
                     s["sentiment_applied"] = False
+                    s["sentiment_score"] = 0
         except Exception as e:
             log.error(f"❌ Sentiment failed: {e}")
+            for s in new_signals:
+                s["sentiment_applied"] = False
+                s["sentiment_score"] = 0
     
     # NEW: Apply micro-backtest to high-potential signals
     elite = select_high_potential(new_signals)

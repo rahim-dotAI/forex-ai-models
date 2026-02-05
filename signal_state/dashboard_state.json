@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-02-05T13:31:13.382823+00:00",
-  "active_signals": 1,
+  "timestamp": "2026-02-05T13:46:00.965648+00:00",
+  "active_signals": 4,
   "active_signals_by_mode": {
-    "aggressive": 1,
-    "conservative": 1
+    "aggressive": 4,
+    "conservative": 4
   },
   "session": "OVERLAP",
   "mode": "conservative",
@@ -15,12 +15,153 @@
     "pause_reason": null
   },
   "market_state": {
-    "volatility": "CALM",
+    "volatility": "HIGH",
     "sentiment_bias": "BULLISH",
     "session": "OVERLAP"
   },
   "signals_by_mode": {
     "aggressive": [
+      {
+        "signal_id": "GBPJPY_SELL_1cb2141297d3",
+        "id": "GBPJPY_SELL_1cb2141297d3",
+        "pair": "GBPJPY",
+        "direction": "SELL",
+        "score": 47,
+        "technical_score": 47,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 32.7,
+        "adx": 30.1,
+        "atr": 0.25501,
+        "volume_ratio": 0,
+        "session": "OVERLAP",
+        "entry_price": 212.65401,
+        "sl": 213.16403,
+        "tp": 211.50645,
+        "risk_reward": 2.25,
+        "spread": 0.003,
+        "timestamp": "2026-02-05T13:45:56.656708+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-05T13:45:56.656708+00:00",
+          "expires_at": "2026-02-05T14:00:56.656708+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "EURGBP_BUY_09665ab6c3b9",
+        "id": "EURGBP_BUY_09665ab6c3b9",
+        "pair": "EURGBP",
+        "direction": "BUY",
+        "score": 47,
+        "technical_score": 47,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 63.0,
+        "adx": 38.1,
+        "atr": 0.00088,
+        "volume_ratio": 0,
+        "session": "OVERLAP",
+        "entry_price": 0.86967,
+        "sl": 0.86791,
+        "tp": 0.87364,
+        "risk_reward": 2.25,
+        "spread": 0.00015,
+        "timestamp": "2026-02-05T13:45:56.799632+00:00",
+        "status": "OPEN",
+        "hold_time": "INTRADAY",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-05T13:45:56.799632+00:00",
+          "expires_at": "2026-02-05T14:00:56.799632+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "EURGBP_BUY_0a6d32207cf5",
+        "id": "EURGBP_BUY_0a6d32207cf5",
+        "pair": "EURGBP",
+        "direction": "BUY",
+        "score": 47,
+        "technical_score": 47,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 57.6,
+        "adx": 37.5,
+        "atr": 0.00088,
+        "volume_ratio": 0,
+        "session": "OVERLAP",
+        "entry_price": 0.86865,
+        "sl": 0.8669,
+        "tp": 0.87259,
+        "risk_reward": 2.25,
+        "spread": 0.00015,
+        "timestamp": "2026-02-05T13:31:09.120596+00:00",
+        "status": "OPEN",
+        "hold_time": "INTRADAY",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-05T13:31:09.120596+00:00",
+          "expires_at": "2026-02-05T13:46:09.120596+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      },
       {
         "signal_id": "EURGBP_BUY_0a6d32207cf5",
         "id": "EURGBP_BUY_0a6d32207cf5",
@@ -70,6 +211,147 @@
       }
     ],
     "conservative": [
+      {
+        "signal_id": "GBPJPY_SELL_1cb2141297d3",
+        "id": "GBPJPY_SELL_1cb2141297d3",
+        "pair": "GBPJPY",
+        "direction": "SELL",
+        "score": 47,
+        "technical_score": 47,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 32.7,
+        "adx": 30.1,
+        "atr": 0.25501,
+        "volume_ratio": 0,
+        "session": "OVERLAP",
+        "entry_price": 212.65401,
+        "sl": 213.16403,
+        "tp": 211.50645,
+        "risk_reward": 2.25,
+        "spread": 0.003,
+        "timestamp": "2026-02-05T13:45:56.656708+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-05T13:45:56.656708+00:00",
+          "expires_at": "2026-02-05T14:00:56.656708+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "EURGBP_BUY_09665ab6c3b9",
+        "id": "EURGBP_BUY_09665ab6c3b9",
+        "pair": "EURGBP",
+        "direction": "BUY",
+        "score": 47,
+        "technical_score": 47,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 63.0,
+        "adx": 38.1,
+        "atr": 0.00088,
+        "volume_ratio": 0,
+        "session": "OVERLAP",
+        "entry_price": 0.86967,
+        "sl": 0.86791,
+        "tp": 0.87364,
+        "risk_reward": 2.25,
+        "spread": 0.00015,
+        "timestamp": "2026-02-05T13:45:56.799632+00:00",
+        "status": "OPEN",
+        "hold_time": "INTRADAY",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-05T13:45:56.799632+00:00",
+          "expires_at": "2026-02-05T14:00:56.799632+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "EURGBP_BUY_0a6d32207cf5",
+        "id": "EURGBP_BUY_0a6d32207cf5",
+        "pair": "EURGBP",
+        "direction": "BUY",
+        "score": 47,
+        "technical_score": 47,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 57.6,
+        "adx": 37.5,
+        "atr": 0.00088,
+        "volume_ratio": 0,
+        "session": "OVERLAP",
+        "entry_price": 0.86865,
+        "sl": 0.8669,
+        "tp": 0.87259,
+        "risk_reward": 2.25,
+        "spread": 0.00015,
+        "timestamp": "2026-02-05T13:31:09.120596+00:00",
+        "status": "OPEN",
+        "hold_time": "INTRADAY",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-05T13:31:09.120596+00:00",
+          "expires_at": "2026-02-05T13:46:09.120596+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      },
       {
         "signal_id": "EURGBP_BUY_0a6d32207cf5",
         "id": "EURGBP_BUY_0a6d32207cf5",
@@ -501,8 +783,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 17.5,
-    "total_risk_pips": 17.50000000000029,
+    "theoretical_max_pips": 103.6,
+    "total_risk_pips": 103.60200000000125,
     "max_daily_risk": 250
   },
   "analytics": {
@@ -645,7 +927,7 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-02-05T13:31:13.382877+00:00",
+    "last_update": "2026-02-05T13:46:00.965707+00:00",
     "signal_only_mode": true,
     "version": "2.1.2-MULTI"
   }

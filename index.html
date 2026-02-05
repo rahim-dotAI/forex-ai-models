@@ -1428,6 +1428,29 @@
             </div>
           </div>
 
+          ${s.sentiment_applied ? `
+          <div style="margin: 16px 0; padding: 12px; background: rgba(6, 182, 212, 0.05); border: 1px solid rgba(6, 182, 212, 0.2); border-radius: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+              <i data-lucide="newspaper" style="width: 16px; height: 16px; color: var(--cyan-bright);"></i>
+              <span style="font-size: 12px; font-weight: 700; color: var(--cyan-bright); text-transform: uppercase; letter-spacing: 0.5px;">News Sentiment Applied</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 12px;">
+              <div>
+                <span style="color: var(--text-muted);">Sentiment:</span>
+                <span style="color: ${s.sentiment_score > 0 ? 'var(--emerald-bright)' : s.sentiment_score < 0 ? 'var(--ruby-bright)' : 'var(--text-secondary)'}; font-weight: 700; margin-left: 4px;">
+                  ${s.sentiment_score > 0 ? '+' : ''}${s.sentiment_score?.toFixed(2) || '0.00'}
+                </span>
+              </div>
+              <div>
+                <span style="color: var(--text-muted);">Score Adj:</span>
+                <span style="color: ${s.sentiment_adjustment > 0 ? 'var(--emerald-bright)' : s.sentiment_adjustment < 0 ? 'var(--ruby-bright)' : 'var(--text-secondary)'}; font-weight: 700; margin-left: 4px;">
+                  ${s.sentiment_adjustment > 0 ? '+' : ''}${s.sentiment_adjustment?.toFixed(1) || '0.0'} pts
+                </span>
+              </div>
+            </div>
+          </div>
+          ` : ''}
+
           <div class="signal-footer">
             <div class="signal-time">
               <i data-lucide="clock" style="width: 14px; height: 14px;"></i>

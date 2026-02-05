@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-02-05T22:31:07.872891+00:00",
-  "active_signals": 0,
+  "timestamp": "2026-02-05T22:46:00.539430+00:00",
+  "active_signals": 1,
   "active_signals_by_mode": {
-    "aggressive": 0,
-    "conservative": 0
+    "aggressive": 1,
+    "conservative": 1
   },
   "session": "LATE_US",
   "mode": "conservative",
@@ -16,12 +16,108 @@
   },
   "market_state": {
     "volatility": "CALM",
-    "sentiment_bias": "MIXED",
+    "sentiment_bias": "BULLISH",
     "session": "LATE_US"
   },
   "signals_by_mode": {
-    "aggressive": [],
-    "conservative": []
+    "aggressive": [
+      {
+        "signal_id": "EURGBP_BUY_29b953d3ae6d",
+        "id": "EURGBP_BUY_29b953d3ae6d",
+        "pair": "EURGBP",
+        "direction": "BUY",
+        "score": 50,
+        "technical_score": 50,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 42.3,
+        "adx": 20.7,
+        "atr": 0.00055,
+        "volume_ratio": 0,
+        "session": "LATE_US",
+        "entry_price": 0.86984,
+        "sl": 0.86875,
+        "tp": 0.8723,
+        "risk_reward": 2.25,
+        "spread": 0.00015,
+        "timestamp": "2026-02-05T22:45:56.266635+00:00",
+        "status": "OPEN",
+        "hold_time": "INTRADAY",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_MODERATE",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-05T22:45:56.266635+00:00",
+          "expires_at": "2026-02-05T23:00:56.266635+00:00",
+          "session_active": false,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      }
+    ],
+    "conservative": [
+      {
+        "signal_id": "EURGBP_BUY_29b953d3ae6d",
+        "id": "EURGBP_BUY_29b953d3ae6d",
+        "pair": "EURGBP",
+        "direction": "BUY",
+        "score": 50,
+        "technical_score": 50,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 42.3,
+        "adx": 20.7,
+        "atr": 0.00055,
+        "volume_ratio": 0,
+        "session": "LATE_US",
+        "entry_price": 0.86984,
+        "sl": 0.86875,
+        "tp": 0.8723,
+        "risk_reward": 2.25,
+        "spread": 0.00015,
+        "timestamp": "2026-02-05T22:45:56.266635+00:00",
+        "status": "OPEN",
+        "hold_time": "INTRADAY",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_MODERATE",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-05T22:45:56.266635+00:00",
+          "expires_at": "2026-02-05T23:00:56.266635+00:00",
+          "session_active": false,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      }
+    ]
   },
   "historical_signals": [
     {
@@ -430,8 +526,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 0,
-    "total_risk_pips": 0,
+    "theoretical_max_pips": 10.9,
+    "total_risk_pips": 10.899999999999244,
     "max_daily_risk": 250
   },
   "analytics": {
@@ -574,7 +670,7 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-02-05T22:31:07.872929+00:00",
+    "last_update": "2026-02-05T22:46:00.539482+00:00",
     "signal_only_mode": true,
     "version": "2.1.2-MULTI"
   }

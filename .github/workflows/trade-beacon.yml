@@ -315,6 +315,24 @@ jobs:
           echo "  Auto Threshold Optimization: $(jq -r '.performance_tuning.auto_adjust_thresholds' config.json)"
           echo "  Session Filtering: $(jq -r '.advanced.enable_session_filtering' config.json)"
           echo "  Correlation Filter: $(jq -r '.advanced.enable_correlation_filter' config.json)"
+          
+          # Show sentiment API status if enabled
+          SENTIMENT=$(jq -r '.use_sentiment' config.json)
+          if [ "$SENTIMENT" = "true" ]; then
+            echo ""
+            echo "[Sentiment Analysis]"
+            if [ -n "$NEWSAPI_KEY" ]; then
+              echo "  NewsAPI: ✅ Configured"
+            else
+              echo "  NewsAPI: ❌ Missing"
+            fi
+            if [ -n "$MARKETAUX_API_KEY" ]; then
+              echo "  MarketAux: ✅ Configured"
+            else
+              echo "  MarketAux: ❌ Missing"
+            fi
+            echo "  Threshold: Score ≥60 (conserves API quota)"
+          fi
           echo ""
           
           echo "[Risk Management]"

@@ -261,6 +261,7 @@
       border: 1px solid var(--border);
       border-radius: 16px;
       padding: 24px;
+      padding-top: 50px; /* ✅ FIX: Space for tier badge */
       position: relative;
       overflow: hidden;
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -276,11 +277,29 @@
     }
     .card:hover { transform: translateY(-8px) scale(1.02); border-color: rgba(255,255,255,0.2); box-shadow: var(--glow-orange); }
     
+    /* ✅ FIX: Tier badge positioning */
+    .tier {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-family: 'Orbitron', monospace;
+      font-size: 11px;
+      font-weight: 900;
+      color: white;
+      z-index: 5;
+    }
+    .tier-aplus { background: linear-gradient(135deg, #fbbf24, #f59e0b); box-shadow: 0 0 20px rgba(251,191,36,0.5); }
+    .tier-a { background: linear-gradient(135deg, var(--green), #00c787); box-shadow: 0 0 20px rgba(0,242,169,0.4); }
+    .tier-b { background: linear-gradient(135deg, var(--blue), #3a8bd6); box-shadow: 0 0 20px rgba(79,172,254,0.4); }
+    .tier-c { background: linear-gradient(135deg, #6b7280, #4b5563); }
+    
     /* Signal Strength Meter */
     .strength {
       position: absolute;
-      top: 24px;
-      right: 24px;
+      top: 12px;
+      right: 12px;
       width: 60px;
       height: 60px;
     }
@@ -305,6 +324,7 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       margin-bottom: 12px;
+      padding-right: 70px; /* ✅ FIX: Space for strength meter */
     }
     
     .dir {
@@ -399,23 +419,6 @@
       letter-spacing: 0.5px;
     }
     
-    /* Tier */
-    .tier {
-      position: absolute;
-      top: 24px;
-      left: 24px;
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-family: 'Orbitron', monospace;
-      font-size: 12px;
-      font-weight: 900;
-      color: white;
-    }
-    .tier-aplus { background: linear-gradient(135deg, #fbbf24, #f59e0b); box-shadow: 0 0 20px rgba(251,191,36,0.5); }
-    .tier-a { background: linear-gradient(135deg, var(--green), #00c787); box-shadow: 0 0 20px rgba(0,242,169,0.4); }
-    .tier-b { background: linear-gradient(135deg, var(--blue), #3a8bd6); box-shadow: 0 0 20px rgba(79,172,254,0.4); }
-    .tier-c { background: linear-gradient(135deg, #6b7280, #4b5563); }
-    
     /* History */
     .history-wrap {
       background: var(--surface);
@@ -424,7 +427,6 @@
       overflow: hidden;
     }
     
-    /* ✅ FIX 3: History table scrolling */
     .history-scroll-container {
       max-height: 600px;
       overflow-x: auto;
@@ -479,7 +481,6 @@
     .loss { color: var(--red); font-weight: 900; }
     .exp { color: var(--text-muted); font-weight: 700; }
     
-    /* Scrollbar styling */
     .history-scroll-container::-webkit-scrollbar {
       height: 10px;
       width: 10px;
@@ -550,6 +551,21 @@
     .empty-title { font-size: 20px; font-weight: 900; color: var(--text-dim); margin-bottom: 8px; }
     .empty-desc { font-size: 14px; color: var(--text-muted); }
     
+    /* Debug info */
+    .debug-info {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.8);
+      padding: 10px;
+      border-radius: 8px;
+      font-family: 'Orbitron', monospace;
+      font-size: 10px;
+      color: var(--green);
+      z-index: 9999;
+      display: none; /* Hidden by default, toggle with Ctrl+D */
+    }
+    
     /* Responsive */
     @media (max-width: 768px) {
       .header-grid { grid-template-columns: 1fr; }
@@ -564,6 +580,15 @@
     <div class="candle"></div><div class="candle"></div><div class="candle"></div><div class="candle"></div><div class="candle"></div>
   </div>
 
+  <!-- ✅ Debug Info Panel -->
+  <div class="debug-info" id="debugInfo">
+    <div>Total Signals: <span id="dbgTotal">0</span></div>
+    <div>Agg Signals: <span id="dbgAgg">0</span></div>
+    <div>Cons Signals: <span id="dbgCons">0</span></div>
+    <div>Unique IDs: <span id="dbgUnique">0</span></div>
+    <div>Display Mode: <span id="dbgMode">--</span></div>
+  </div>
+
   <div class="container">
     <header class="header">
       <div class="header-grid">
@@ -575,7 +600,6 @@
           </div>
         </div>
         <div class="header-stats">
-          <!-- ✅ FIX 1: Deduplicated signal count -->
           <div class="mini-stat"><div class="mini-stat-label">ACTIVE</div><div class="mini-stat-value" id="hActive">0</div></div>
           <div class="mini-stat"><div class="mini-stat-label">WIN RATE</div><div class="mini-stat-value" id="hWR">0%</div></div>
           <div class="mini-stat"><div class="mini-stat-label">PIPS</div><div class="mini-stat-value" id="hPips">0</div></div>
@@ -614,7 +638,6 @@
         <div class="filter"><label class="filter-label">Status</label><select id="filterStatus" class="filter-input"><option value="all">All</option><option value="WIN">Wins</option><option value="LOSS">Losses</option><option value="EXPIRED">Expired</option></select></div>
         <div class="filter"><label class="filter-label">Pair</label><select id="filterPair" class="filter-input"><option value="all">All Pairs</option></select></div>
       </div>
-      <!-- ✅ FIX 3: Scrollable container -->
       <div class="history-wrap">
         <div class="history-scroll-container">
           <table>
@@ -629,7 +652,6 @@
 
     <div id="tabAnalytics" class="tab-content">
       <div class="analytics">
-        <!-- ✅ FIX 2: Proper tier labels in analytics -->
         <div class="analytics-card"><h3 class="analytics-title"><i data-lucide="award" style="width:24px;height:24px;color:var(--orange)"></i>Performance by Tier</h3><div id="tierAnalytics"></div></div>
         <div class="analytics-card"><h3 class="analytics-title"><i data-lucide="globe-2" style="width:24px;height:24px;color:var(--blue)"></i>Performance by Session</h3><div id="sessionAnalytics"></div></div>
         <div class="analytics-card"><h3 class="analytics-title"><i data-lucide="trending-up" style="width:24px;height:24px;color:var(--green)"></i>Top Performing Pairs</h3><div id="pairAnalytics"></div></div>
@@ -646,10 +668,19 @@
       mode=localStorage.getItem('tbMode')||'aggressive';
       updateModeBtns();
       load();
-      setInterval(load,30000);  // ✅ Changed to 30 seconds for better refresh rate
+      setInterval(load,30000);
       initFilters();
       updateSess();
       setInterval(updateSess,60000);
+      
+      // Toggle debug with Ctrl+D
+      document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.key === 'd') {
+          e.preventDefault();
+          const debug = document.getElementById('debugInfo');
+          debug.style.display = debug.style.display === 'none' ? 'block' : 'none';
+        }
+      });
     });
     
     async function load(){
@@ -688,48 +719,83 @@
       lucide.createIcons();
     }
     
-    // ✅ FIX 1: Updated metrics calculation with deduplication
+    // ✅ FIX 1: Complete signal count deduplication
     function updateMetrics(){
-      if(!data)return;
+      if(!data) return;
       
-      // Deduplicate signals across modes
+      console.log('=== SIGNAL COUNT DEBUG ===');
+      console.log('Raw data:', data.signals_by_mode);
+      
       const aggSignals = data.signals_by_mode?.aggressive || [];
       const consSignals = data.signals_by_mode?.conservative || [];
+      
+      console.log('Aggressive count:', aggSignals.length);
+      console.log('Conservative count:', consSignals.length);
+      
+      // Deduplicate by signal_id
       const allSignals = [...aggSignals, ...consSignals];
-      const uniqueSignals = [...new Map(allSignals.map(s=>[s.signal_id,s])).values()];
+      const uniqueMap = new Map();
+      allSignals.forEach(s => {
+        if (s.signal_id && !uniqueMap.has(s.signal_id)) {
+          uniqueMap.set(s.signal_id, s);
+        }
+      });
+      const uniqueSignals = Array.from(uniqueMap.values());
+      
+      console.log('Total before dedup:', allSignals.length);
+      console.log('Unique after dedup:', uniqueSignals.length);
+      console.log('Unique IDs:', Array.from(uniqueMap.keys()));
+      
+      // Update debug panel
+      document.getElementById('dbgTotal').textContent = allSignals.length;
+      document.getElementById('dbgAgg').textContent = aggSignals.length;
+      document.getElementById('dbgCons').textContent = consSignals.length;
+      document.getElementById('dbgUnique').textContent = uniqueSignals.length;
+      document.getElementById('dbgMode').textContent = mode;
       
       const st=data.stats||{};
       const wr=st.win_rate||0,tp=st.total_pips||0,ex=st.expectancy||0,tt=st.total_trades||0;
       
       // Use deduplicated count
-      document.getElementById('hActive').textContent=uniqueSignals.length;
-      document.getElementById('hWR').textContent=wr.toFixed(1)+'%';
-      document.getElementById('hPips').textContent=tp>0?'+'+tp.toFixed(0):tp.toFixed(0);
-      document.getElementById('mSignals').textContent=uniqueSignals.length;
-      document.getElementById('mWR').textContent=wr.toFixed(1)+'%';
-      document.getElementById('mWRSub').textContent=`${st.wins||0}/${tt} trades`;
-      document.getElementById('mPips').textContent=tp>0?'+'+tp.toFixed(1):tp.toFixed(1);
-      document.getElementById('mPipsSub').textContent=tt>0?`From ${tt} trades`:'Lifetime';
-      document.getElementById('mExp').textContent=ex>0?'+'+ex.toFixed(1):ex.toFixed(1);
+      document.getElementById('hActive').textContent = uniqueSignals.length;
+      document.getElementById('hWR').textContent = wr.toFixed(1)+'%';
+      document.getElementById('hPips').textContent = tp>0?'+'+tp.toFixed(0):tp.toFixed(0);
+      document.getElementById('mSignals').textContent = uniqueSignals.length;
+      document.getElementById('mWR').textContent = wr.toFixed(1)+'%';
+      document.getElementById('mWRSub').textContent = `${st.wins||0}/${tt} trades`;
+      document.getElementById('mPips').textContent = tp>0?'+'+tp.toFixed(1):tp.toFixed(1);
+      document.getElementById('mPipsSub').textContent = tt>0?`From ${tt} trades`:'Lifetime';
+      document.getElementById('mExp').textContent = ex>0?'+'+ex.toFixed(1):ex.toFixed(1);
       
       const today=new Date().toISOString().split('T')[0];
       const tc=uniqueSignals.filter(s=>s.timestamp&&s.timestamp.startsWith(today)).length;
-      document.getElementById('mToday').textContent=tc;
-      document.getElementById('mTodaySub').textContent=tc===0?'No signals':'Generated today';
+      document.getElementById('mToday').textContent = tc;
+      document.getElementById('mTodaySub').textContent = tc===0?'No signals':'Generated today';
     }
     
     function renderSignals(){
       const g=document.getElementById('signalsGrid');
-      if(!data){g.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-muted)">Loading...</div>';return;}
+      if(!data){
+        g.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-muted)">Loading...</div>';
+        return;
+      }
       
-      let sigs=data.signals_by_mode?.[mode]||[];
-      const pm=new Map();
-      sigs.forEach(s=>{const p=s.pair;const ex=pm.get(p);if(!ex||new Date(s.timestamp)>new Date(ex.timestamp))pm.set(p,s);});
-      sigs=Array.from(pm.values()).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+      // Get mode-specific signals without per-pair deduplication
+      let sigs = data.signals_by_mode?.[mode] || [];
       
-      if(sigs.length===0){showEmpty('signalsGrid','radio','No signals',`No ${mode} signals`);return;}
+      console.log(`=== RENDERING ${mode.toUpperCase()} SIGNALS ===`);
+      console.log('Signal count:', sigs.length);
+      console.log('Signals:', sigs.map(s => `${s.pair} ${s.signal_id}`));
       
-      g.innerHTML=sigs.map(s=>{
+      // Sort by timestamp (newest first)
+      sigs = sigs.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+      
+      if(sigs.length === 0){
+        showEmpty('signalsGrid','radio','No signals',`No ${mode} signals`);
+        return;
+      }
+      
+      g.innerHTML = sigs.map(s=>{
         const sc=s.score||50;
         const sp=Math.min(100,sc);
         const c=2*Math.PI*27;
@@ -738,7 +804,7 @@
         if(sc>=80)col='#fbbf24';else if(sc>=70)col='#00f2a9';else if(sc>=60)col='#4facfe';
         
         return`<div class="card">
-          <div class="tier tier-${getTier(s.tier)}">${s.tier}</div>
+          <div class="tier tier-${getTier(s.tier)}">${s.tier || 'C'}</div>
           <div class="strength">
             <svg viewBox="0 0 60 60"><circle class="strength-bg" cx="30" cy="30" r="27"></circle><circle class="strength-bar" cx="30" cy="30" r="27" stroke="${col}" stroke-dasharray="${c}" stroke-dashoffset="${off}"></circle></svg>
             <div class="strength-text" style="color:${col}">${sc}</div>
@@ -800,7 +866,7 @@
         const rc=s.status==='WIN'?'win':s.status==='LOSS'?'loss':'exp';
         const pv=s.pips||0;
         const rt=s.status==='WIN'?`+${pv.toFixed(1)}`:s.status==='LOSS'?`${pv.toFixed(1)}`:'EXPIRED';
-        return`<tr><td>${fmtDate(s.timestamp)}</td><td style="font-weight:900">${s.pair}</td><td>${s.direction}</td><td><span class="tier tier-${getTier(s.tier)}" style="font-size:10px;padding:4px 8px">${s.tier}</span></td><td class="${rc}">${s.status}</td><td class="${rc}">${rt}</td><td>${s.session||'N/A'}</td></tr>`;
+        return`<tr><td>${fmtDate(s.timestamp)}</td><td style="font-weight:900">${s.pair}</td><td>${s.direction}</td><td><span class="tier tier-${getTier(s.tier)}" style="font-size:10px;padding:4px 8px">${s.tier||'C'}</span></td><td class="${rc}">${s.status}</td><td class="${rc}">${rt}</td><td>${s.session||'N/A'}</td></tr>`;
       }).join('');
       
       updatePairFilter(sigs);
@@ -815,7 +881,7 @@
       renderMode(an.by_mode||{});
     }
     
-    // ✅ FIX 2: Proper tier rendering with all labels
+    // ✅ FIX 2: Proper tier labels with all tiers
     function renderTier(ts){
       const c=document.getElementById('tierAnalytics');
       const tiers=['A+','A','B','C'];
@@ -826,7 +892,7 @@
         
         return`<div class="analytics-item">
           <div>
-            <span class="tier tier-${getTier(t)}" style="font-size:11px;padding:4px 10px">${t}</span>
+            <span class="tier tier-${getTier(t)}" style="font-size:11px;padding:4px 10px">Tier ${t}</span>
             <span class="analytics-label" style="margin-left:12px">${d.trades} trades</span>
           </div>
           <div class="analytics-value" style="color:${wr>=60?'var(--green)':'var(--text)'}">${wr.toFixed(1)}%</div>
@@ -860,7 +926,7 @@
       c.innerHTML=modes.map(m=>{
         const d=ms[m]||{trades:0,wins:0,win_rate:0,total_pips:0};
         const wr=d.win_rate||0;const pips=d.total_pips||0;
-        return`<div class="analytics-item"><div class="analytics-label" style="text-transform:uppercase;font-weight:800">${m}</div><div class="analytics-value">${d.trades} trades</div></div><div style="display:flex;justify-content:space-between;margin-top:12px;font-size:14px"><span style="color:var(--text-dim)">Win Rate: ${wr.toFixed(1)}%</span><span style="color:${pips>0?'var(--green)':'var(--red)'}; font-weight:900">${pips>0?'+':''}${pips.toFixed(1)} pips</span></div><div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;
+        return`<div class="analytics-item"><div class="analytics-label" style="text-transform:uppercase;font-weight:800">${m}</div><div class="analytics-value">${d.trades} trades</div></div><div style="display:flex;justify-content:space-between;margin-top:12px;font-size:14px"><span style="color:var(--text-dim)">Win Rate: ${wr.toFixed(1)}%</span><span style="color:${pips>0?'var(--green)':'var(--red)'};font-weight:900">${pips>0?'+':''}${pips.toFixed(1)} pips</span></div><div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;
       }).join('');
     }
     
@@ -890,7 +956,10 @@
       sel.value=cv;
     }
     
-    function getTier(t){return t==='A+'?'aplus':t.toLowerCase();}
+    function getTier(t){
+      if(!t) return 'c';
+      return t==='A+'?'aplus':t.toLowerCase();
+    }
     function fmt(ts){if(!ts)return'N/A';const d=new Date(ts);return d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}
     function fmtDate(ts){if(!ts)return'N/A';const d=new Date(ts);return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
     function showEmpty(cid,icon,title,desc){document.getElementById(cid).innerHTML=`<div class="empty"><i data-lucide="${icon}" class="empty-icon"></i><div class="empty-title">${title}</div><div class="empty-desc">${desc}</div></div>`;lucide.createIcons();}

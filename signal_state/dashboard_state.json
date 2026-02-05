@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-02-05T03:01:23.659793+00:00",
-  "active_signals": 0,
+  "timestamp": "2026-02-05T03:15:59.087300+00:00",
+  "active_signals": 2,
   "active_signals_by_mode": {
-    "aggressive": 0,
-    "conservative": 0
+    "aggressive": 2,
+    "conservative": 2
   },
   "session": "ASIAN",
   "mode": "conservative",
@@ -16,12 +16,202 @@
   },
   "market_state": {
     "volatility": "CALM",
-    "sentiment_bias": "MIXED",
+    "sentiment_bias": "BEARISH",
     "session": "ASIAN"
   },
   "signals_by_mode": {
-    "aggressive": [],
-    "conservative": []
+    "aggressive": [
+      {
+        "signal_id": "GBPUSD_SELL_6007a3f20fba",
+        "id": "GBPUSD_SELL_6007a3f20fba",
+        "pair": "GBPUSD",
+        "direction": "SELL",
+        "score": 45,
+        "technical_score": 45,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 30.2,
+        "adx": 29.1,
+        "atr": 0.00059,
+        "volume_ratio": 0,
+        "session": "ASIAN",
+        "entry_price": 1.36245,
+        "sl": 1.36364,
+        "tp": 1.35979,
+        "risk_reward": 2.25,
+        "spread": 0.0002,
+        "timestamp": "2026-02-05T03:15:54.075996+00:00",
+        "status": "OPEN",
+        "hold_time": "INTRADAY",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "momentum",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-05T03:15:54.075996+00:00",
+          "expires_at": "2026-02-05T03:30:54.075996+00:00",
+          "session_active": false,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "AUDUSD_SELL_eff8d47b397f",
+        "id": "AUDUSD_SELL_eff8d47b397f",
+        "pair": "AUDUSD",
+        "direction": "SELL",
+        "score": 48,
+        "technical_score": 48,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 32.2,
+        "adx": 25.2,
+        "atr": 0.00069,
+        "volume_ratio": 0,
+        "session": "ASIAN",
+        "entry_price": 0.6973,
+        "sl": 0.69868,
+        "tp": 0.69419,
+        "risk_reward": 2.25,
+        "spread": 0.00018,
+        "timestamp": "2026-02-05T03:15:54.275793+00:00",
+        "status": "OPEN",
+        "hold_time": "INTRADAY",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "momentum",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-05T03:15:54.275793+00:00",
+          "expires_at": "2026-02-05T03:30:54.275793+00:00",
+          "session_active": false,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      }
+    ],
+    "conservative": [
+      {
+        "signal_id": "GBPUSD_SELL_6007a3f20fba",
+        "id": "GBPUSD_SELL_6007a3f20fba",
+        "pair": "GBPUSD",
+        "direction": "SELL",
+        "score": 45,
+        "technical_score": 45,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 30.2,
+        "adx": 29.1,
+        "atr": 0.00059,
+        "volume_ratio": 0,
+        "session": "ASIAN",
+        "entry_price": 1.36245,
+        "sl": 1.36364,
+        "tp": 1.35979,
+        "risk_reward": 2.25,
+        "spread": 0.0002,
+        "timestamp": "2026-02-05T03:15:54.075996+00:00",
+        "status": "OPEN",
+        "hold_time": "INTRADAY",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "momentum",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-05T03:15:54.075996+00:00",
+          "expires_at": "2026-02-05T03:30:54.075996+00:00",
+          "session_active": false,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "AUDUSD_SELL_eff8d47b397f",
+        "id": "AUDUSD_SELL_eff8d47b397f",
+        "pair": "AUDUSD",
+        "direction": "SELL",
+        "score": 48,
+        "technical_score": 48,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 32.2,
+        "adx": 25.2,
+        "atr": 0.00069,
+        "volume_ratio": 0,
+        "session": "ASIAN",
+        "entry_price": 0.6973,
+        "sl": 0.69868,
+        "tp": 0.69419,
+        "risk_reward": 2.25,
+        "spread": 0.00018,
+        "timestamp": "2026-02-05T03:15:54.275793+00:00",
+        "status": "OPEN",
+        "hold_time": "INTRADAY",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "momentum",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-05T03:15:54.275793+00:00",
+          "expires_at": "2026-02-05T03:30:54.275793+00:00",
+          "session_active": false,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      }
+    ]
   },
   "historical_signals": [
     {
@@ -232,8 +422,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 0,
-    "total_risk_pips": 0,
+    "theoretical_max_pips": 25.7,
+    "total_risk_pips": 25.699999999999612,
     "max_daily_risk": 250
   },
   "analytics": {
@@ -356,7 +546,7 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-02-05T03:01:23.659835+00:00",
+    "last_update": "2026-02-05T03:15:59.087354+00:00",
     "signal_only_mode": true,
     "version": "2.1.2-MULTI"
   }

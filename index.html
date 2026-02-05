@@ -424,6 +424,14 @@
       overflow: hidden;
     }
     
+    /* ✅ FIX 3: History table scrolling */
+    .history-scroll-container {
+      max-height: 600px;
+      overflow-x: auto;
+      overflow-y: auto;
+      position: relative;
+    }
+    
     .filters { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
     .filter { display: flex; flex-direction: column; gap: 8px; }
     .filter-label { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
@@ -439,8 +447,13 @@
     }
     .filter-input:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px rgba(255,107,53,0.1); }
     
-    table { width: 100%; border-collapse: collapse; }
-    thead { background: var(--elevated); }
+    table { width: 100%; min-width: 1000px; border-collapse: collapse; }
+    thead { 
+      background: var(--elevated);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
     th {
       padding: 16px;
       text-align: left;
@@ -450,6 +463,7 @@
       letter-spacing: 1px;
       color: var(--text-dim);
       border-bottom: 2px solid var(--border);
+      white-space: nowrap;
     }
     tbody tr { border-bottom: 1px solid var(--border); transition: background 0.2s; }
     tbody tr:hover { background: rgba(255,107,53,0.05); }
@@ -459,11 +473,28 @@
       font-family: 'Orbitron', monospace;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 150px;
+      white-space: nowrap;
     }
     .win { color: var(--green); font-weight: 900; }
     .loss { color: var(--red); font-weight: 900; }
     .exp { color: var(--text-muted); font-weight: 700; }
+    
+    /* Scrollbar styling */
+    .history-scroll-container::-webkit-scrollbar {
+      height: 10px;
+      width: 10px;
+    }
+    .history-scroll-container::-webkit-scrollbar-track {
+      background: var(--elevated);
+      border-radius: 5px;
+    }
+    .history-scroll-container::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, var(--orange), var(--blue));
+      border-radius: 5px;
+    }
+    .history-scroll-container::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(135deg, #ff8c61, #6bb8fe);
+    }
     
     /* Analytics */
     .analytics { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 24px; }
@@ -540,10 +571,11 @@
           <div class="brand-icon"><i data-lucide="activity"></i></div>
           <div class="brand-text">
             <h1>TRADE BEACON</h1>
-            <p>MARKET INTELLIGENCE v2.1.2</p>
+            <p>MARKET INTELLIGENCE v2.1.3</p>
           </div>
         </div>
         <div class="header-stats">
+          <!-- ✅ FIX 1: Deduplicated signal count -->
           <div class="mini-stat"><div class="mini-stat-label">ACTIVE</div><div class="mini-stat-value" id="hActive">0</div></div>
           <div class="mini-stat"><div class="mini-stat-label">WIN RATE</div><div class="mini-stat-value" id="hWR">0%</div></div>
           <div class="mini-stat"><div class="mini-stat-label">PIPS</div><div class="mini-stat-value" id="hPips">0</div></div>
@@ -582,11 +614,22 @@
         <div class="filter"><label class="filter-label">Status</label><select id="filterStatus" class="filter-input"><option value="all">All</option><option value="WIN">Wins</option><option value="LOSS">Losses</option><option value="EXPIRED">Expired</option></select></div>
         <div class="filter"><label class="filter-label">Pair</label><select id="filterPair" class="filter-input"><option value="all">All Pairs</option></select></div>
       </div>
-      <div class="history-wrap"><table><thead><tr><th>DATE</th><th>PAIR</th><th>DIR</th><th>TIER</th><th>RESULT</th><th>PIPS</th><th>SESSION</th></tr></thead><tbody id="historyBody"></tbody></table></div>
+      <!-- ✅ FIX 3: Scrollable container -->
+      <div class="history-wrap">
+        <div class="history-scroll-container">
+          <table>
+            <thead>
+              <tr><th>DATE</th><th>PAIR</th><th>DIR</th><th>TIER</th><th>RESULT</th><th>PIPS</th><th>SESSION</th></tr>
+            </thead>
+            <tbody id="historyBody"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <div id="tabAnalytics" class="tab-content">
       <div class="analytics">
+        <!-- ✅ FIX 2: Proper tier labels in analytics -->
         <div class="analytics-card"><h3 class="analytics-title"><i data-lucide="award" style="width:24px;height:24px;color:var(--orange)"></i>Performance by Tier</h3><div id="tierAnalytics"></div></div>
         <div class="analytics-card"><h3 class="analytics-title"><i data-lucide="globe-2" style="width:24px;height:24px;color:var(--blue)"></i>Performance by Session</h3><div id="sessionAnalytics"></div></div>
         <div class="analytics-card"><h3 class="analytics-title"><i data-lucide="trending-up" style="width:24px;height:24px;color:var(--green)"></i>Top Performing Pairs</h3><div id="pairAnalytics"></div></div>
@@ -598,45 +641,94 @@
   <script>
     lucide.createIcons();
     let mode='aggressive',data=null;
+    
     document.addEventListener('DOMContentLoaded',()=>{
-      mode=localStorage.getItem('tbMode')||'aggressive';updateModeBtns();load();setInterval(load,60000);initFilters();updateSess();setInterval(updateSess,60000);
+      mode=localStorage.getItem('tbMode')||'aggressive';
+      updateModeBtns();
+      load();
+      setInterval(load,30000);  // ✅ Changed to 30 seconds for better refresh rate
+      initFilters();
+      updateSess();
+      setInterval(updateSess,60000);
     });
+    
     async function load(){
       try{
-        const r=await fetch('signal_state/dashboard_state.json');data=await r.json();updateMetrics();renderSignals();renderHistory();renderAnalytics();
-      }catch(e){console.error('Load error:',e);showEmpty('signalsGrid','alert-triangle','Unable to load','Check system');}
+        const r=await fetch('signal_state/dashboard_state.json');
+        data=await r.json();
+        updateMetrics();
+        renderSignals();
+        renderHistory();
+        renderAnalytics();
+      }catch(e){
+        console.error('Load error:',e);
+        showEmpty('signalsGrid','alert-triangle','Unable to load','Check system');
+      }
     }
-    function switchMode(m){mode=m;localStorage.setItem('tbMode',m);updateModeBtns();renderSignals();lucide.createIcons();}
-    function updateModeBtns(){document.getElementById('modeAgg').classList.toggle('active',mode==='aggressive');document.getElementById('modeCon').classList.toggle('active',mode==='conservative');lucide.createIcons();}
-    function switchTab(t){document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));event.target.closest('.tab').classList.add('active');document.getElementById({signals:'tabSignals',history:'tabHistory',analytics:'tabAnalytics'}[t]).classList.add('active');lucide.createIcons();}
+    
+    function switchMode(m){
+      mode=m;
+      localStorage.setItem('tbMode',m);
+      updateModeBtns();
+      renderSignals();
+      lucide.createIcons();
+    }
+    
+    function updateModeBtns(){
+      document.getElementById('modeAgg').classList.toggle('active',mode==='aggressive');
+      document.getElementById('modeCon').classList.toggle('active',mode==='conservative');
+      lucide.createIcons();
+    }
+    
+    function switchTab(t){
+      document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));
+      event.target.closest('.tab').classList.add('active');
+      document.getElementById({signals:'tabSignals',history:'tabHistory',analytics:'tabAnalytics'}[t]).classList.add('active');
+      lucide.createIcons();
+    }
+    
+    // ✅ FIX 1: Updated metrics calculation with deduplication
     function updateMetrics(){
       if(!data)return;
-      const all=[...(data.signals_by_mode?.aggressive||[]),...(data.signals_by_mode?.conservative||[])];
-      const uniq=[...new Map(all.map(s=>[s.signal_id,s])).values()];
+      
+      // Deduplicate signals across modes
+      const aggSignals = data.signals_by_mode?.aggressive || [];
+      const consSignals = data.signals_by_mode?.conservative || [];
+      const allSignals = [...aggSignals, ...consSignals];
+      const uniqueSignals = [...new Map(allSignals.map(s=>[s.signal_id,s])).values()];
+      
       const st=data.stats||{};
       const wr=st.win_rate||0,tp=st.total_pips||0,ex=st.expectancy||0,tt=st.total_trades||0;
-      document.getElementById('hActive').textContent=uniq.length;
+      
+      // Use deduplicated count
+      document.getElementById('hActive').textContent=uniqueSignals.length;
       document.getElementById('hWR').textContent=wr.toFixed(1)+'%';
       document.getElementById('hPips').textContent=tp>0?'+'+tp.toFixed(0):tp.toFixed(0);
-      document.getElementById('mSignals').textContent=uniq.length;
+      document.getElementById('mSignals').textContent=uniqueSignals.length;
       document.getElementById('mWR').textContent=wr.toFixed(1)+'%';
       document.getElementById('mWRSub').textContent=`${st.wins||0}/${tt} trades`;
       document.getElementById('mPips').textContent=tp>0?'+'+tp.toFixed(1):tp.toFixed(1);
       document.getElementById('mPipsSub').textContent=tt>0?`From ${tt} trades`:'Lifetime';
       document.getElementById('mExp').textContent=ex>0?'+'+ex.toFixed(1):ex.toFixed(1);
+      
       const today=new Date().toISOString().split('T')[0];
-      const tc=uniq.filter(s=>s.timestamp&&s.timestamp.startsWith(today)).length;
+      const tc=uniqueSignals.filter(s=>s.timestamp&&s.timestamp.startsWith(today)).length;
       document.getElementById('mToday').textContent=tc;
       document.getElementById('mTodaySub').textContent=tc===0?'No signals':'Generated today';
     }
+    
     function renderSignals(){
       const g=document.getElementById('signalsGrid');
       if(!data){g.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-muted)">Loading...</div>';return;}
+      
       let sigs=data.signals_by_mode?.[mode]||[];
       const pm=new Map();
       sigs.forEach(s=>{const p=s.pair;const ex=pm.get(p);if(!ex||new Date(s.timestamp)>new Date(ex.timestamp))pm.set(p,s);});
       sigs=Array.from(pm.values()).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+      
       if(sigs.length===0){showEmpty('signalsGrid','radio','No signals',`No ${mode} signals`);return;}
+      
       g.innerHTML=sigs.map(s=>{
         const sc=s.score||50;
         const sp=Math.min(100,sc);
@@ -644,6 +736,7 @@
         const off=c-(sp/100)*c;
         let col='#6b7280';
         if(sc>=80)col='#fbbf24';else if(sc>=70)col='#00f2a9';else if(sc>=60)col='#4facfe';
+        
         return`<div class="card">
           <div class="tier tier-${getTier(s.tier)}">${s.tier}</div>
           <div class="strength">
@@ -676,41 +769,72 @@
       }).join('');
       lucide.createIcons();
     }
+    
     function renderHistory(){
       const b=document.getElementById('historyBody');
       let sigs=data?.historical_signals||[];
-      if(sigs.length===0){b.innerHTML='<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">No data</td></tr>';return;}
+      
+      if(sigs.length===0){
+        b.innerHTML='<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">No data</td></tr>';
+        return;
+      }
+      
       sigs=sigs.filter(s=>s.status&&['WIN','LOSS','EXPIRED'].includes(s.status));
+      
       const sf=document.getElementById('filterStatus')?.value||'all',pf=document.getElementById('filterPair')?.value||'all';
       const sd=document.getElementById('dateStart')?.value,ed=document.getElementById('dateEnd')?.value;
+      
       if(sf!=='all')sigs=sigs.filter(s=>s.status===sf);
       if(pf!=='all')sigs=sigs.filter(s=>s.pair===pf);
       if(sd)sigs=sigs.filter(s=>s.timestamp>=sd);
       if(ed)sigs=sigs.filter(s=>s.timestamp<=ed+'T23:59:59');
+      
       sigs.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
-      if(sigs.length===0){b.innerHTML='<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">No matches</td></tr>';return;}
+      
+      if(sigs.length===0){
+        b.innerHTML='<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">No matches</td></tr>';
+        return;
+      }
+      
       b.innerHTML=sigs.map(s=>{
         const rc=s.status==='WIN'?'win':s.status==='LOSS'?'loss':'exp';
         const pv=s.pips||0;
         const rt=s.status==='WIN'?`+${pv.toFixed(1)}`:s.status==='LOSS'?`${pv.toFixed(1)}`:'EXPIRED';
         return`<tr><td>${fmtDate(s.timestamp)}</td><td style="font-weight:900">${s.pair}</td><td>${s.direction}</td><td><span class="tier tier-${getTier(s.tier)}" style="font-size:10px;padding:4px 8px">${s.tier}</span></td><td class="${rc}">${s.status}</td><td class="${rc}">${rt}</td><td>${s.session||'N/A'}</td></tr>`;
       }).join('');
+      
       updatePairFilter(sigs);
     }
+    
     function renderAnalytics(){
       if(!data)return;
-      const an=data.analytics||{};
-      renderTier(an.by_tier||{});renderSess(an.by_session||{});renderPair(an.by_pair||{});renderMode(an.by_mode||{});
+      const an=data.performance_stats||data.analytics||{};
+      renderTier(an.by_tier||{});
+      renderSess(an.by_session||{});
+      renderPair(an.by_pair||{});
+      renderMode(an.by_mode||{});
     }
+    
+    // ✅ FIX 2: Proper tier rendering with all labels
     function renderTier(ts){
       const c=document.getElementById('tierAnalytics');
       const tiers=['A+','A','B','C'];
+      
       c.innerHTML=tiers.map(t=>{
-        const d=ts[t]||{trades:0,wins:0,win_rate:0};
+        const d=ts[t]||{trades:0,wins:0,losses:0,win_rate:0,total_pips:0,avg_pips:0};
         const wr=d.win_rate||0;
-        return`<div class="analytics-item"><div><span class="tier tier-${getTier(t)}" style="font-size:11px;padding:4px 10px">${t}</span><span class="analytics-label" style="margin-left:12px">${d.trades} trades</span></div><div class="analytics-value" style="color:${wr>=60?'var(--green)':'var(--text)'}">${wr.toFixed(1)}%</div></div><div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;
+        
+        return`<div class="analytics-item">
+          <div>
+            <span class="tier tier-${getTier(t)}" style="font-size:11px;padding:4px 10px">${t}</span>
+            <span class="analytics-label" style="margin-left:12px">${d.trades} trades</span>
+          </div>
+          <div class="analytics-value" style="color:${wr>=60?'var(--green)':'var(--text)'}">${wr.toFixed(1)}%</div>
+        </div>
+        <div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;
       }).join('');
     }
+    
     function renderSess(ss){
       const c=document.getElementById('sessionAnalytics');
       const ses=Object.keys(ss).sort();
@@ -719,6 +843,7 @@
         return`<div class="analytics-item"><div class="analytics-label">${s}</div><div class="analytics-value">${d.trades} trades • ${wr.toFixed(1)}%</div></div><div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;
       }).join('');
     }
+    
     function renderPair(ps){
       const c=document.getElementById('pairAnalytics');
       const pairs=Object.entries(ps).sort((a,b)=>(b[1].total_pips||0)-(a[1].total_pips||0)).slice(0,10);
@@ -728,15 +853,17 @@
         return`<div class="analytics-item"><div class="analytics-label" style="font-weight:800">${p}</div><div class="analytics-value" style="color:${pips>0?'var(--green)':'var(--red)'}">${pips>0?'+':''}${pips.toFixed(1)} pips</div></div><div style="font-size:12px;color:var(--text-dim);margin-top:4px">${d.trades} trades • ${wr.toFixed(1)}% WR</div>`;
       }).join('');
     }
+    
     function renderMode(ms){
       const c=document.getElementById('modeAnalytics');
       const modes=['all','aggressive','conservative'];
       c.innerHTML=modes.map(m=>{
         const d=ms[m]||{trades:0,wins:0,win_rate:0,total_pips:0};
         const wr=d.win_rate||0;const pips=d.total_pips||0;
-        return`<div class="analytics-item"><div class="analytics-label" style="text-transform:uppercase;font-weight:800">${m}</div><div class="analytics-value">${d.trades} trades</div></div><div style="display:flex;justify-content:space-between;margin-top:12px;font-size:14px"><span style="color:var(--text-dim)">Win Rate: ${wr.toFixed(1)}%</span><span style="color:${pips>0?'var(--green)':'var(--red)'};font-weight:900">${pips>0?'+':''}${pips.toFixed(1)} pips</span></div><div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;
+        return`<div class="analytics-item"><div class="analytics-label" style="text-transform:uppercase;font-weight:800">${m}</div><div class="analytics-value">${d.trades} trades</div></div><div style="display:flex;justify-content:space-between;margin-top:12px;font-size:14px"><span style="color:var(--text-dim)">Win Rate: ${wr.toFixed(1)}%</span><span style="color:${pips>0?'var(--green)':'var(--red)'}; font-weight:900">${pips>0?'+':''}${pips.toFixed(1)} pips</span></div><div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;
       }).join('');
     }
+    
     function updateSess(){
       const now=new Date();const h=now.getUTCHours();
       let s='LATE_US';
@@ -744,6 +871,7 @@
       document.getElementById('mSession').textContent=s;
       document.getElementById('mTime').textContent=now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC';
     }
+    
     function initFilters(){
       const ed=document.getElementById('dateEnd'),sd=document.getElementById('dateStart');
       const today=new Date().toISOString().split('T')[0];
@@ -753,6 +881,7 @@
       document.getElementById('filterStatus').addEventListener('change',renderHistory);
       document.getElementById('filterPair').addEventListener('change',renderHistory);
     }
+    
     function updatePairFilter(sigs){
       const pairs=[...new Set(sigs.map(s=>s.pair))].sort();
       const sel=document.getElementById('filterPair');
@@ -760,6 +889,7 @@
       sel.innerHTML='<option value="all">All Pairs</option>'+pairs.map(p=>`<option value="${p}">${p}</option>`).join('');
       sel.value=cv;
     }
+    
     function getTier(t){return t==='A+'?'aplus':t.toLowerCase();}
     function fmt(ts){if(!ts)return'N/A';const d=new Date(ts);return d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}
     function fmtDate(ts){if(!ts)return'N/A';const d=new Date(ts);return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}

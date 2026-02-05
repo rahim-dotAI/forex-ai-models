@@ -228,6 +228,12 @@ class PerformanceTracker:
             if "sentiment_applied" not in signal:
                 signal["sentiment_applied"] = False
                 needs_migration = True
+            if "sentiment_score" not in signal:
+                signal["sentiment_score"] = 0.0
+                needs_migration = True
+            if "sentiment_adjustment" not in signal:
+                signal["sentiment_adjustment"] = 0.0
+                needs_migration = True
             if "estimated_win_rate" not in signal:
                 signal["estimated_win_rate"] = None
                 needs_migration = True
@@ -512,6 +518,8 @@ class PerformanceTracker:
         signal.setdefault("eligible_modes", ["aggressive"])
         signal.setdefault("tier", "C")
         signal.setdefault("sentiment_applied", False)
+        signal.setdefault("sentiment_score", 0.0)
+        signal.setdefault("sentiment_adjustment", 0.0)
         signal.setdefault("estimated_win_rate", None)
         
         # Add to signals list
@@ -533,7 +541,10 @@ class PerformanceTracker:
                      score: int = None, session: str = None,
                      entry_time: str = None, exit_time: str = None,
                      tier: str = None, eligible_modes: List[str] = None,
-                     sentiment_applied: bool = False, estimated_win_rate: float = None,
+                     sentiment_applied: bool = False, 
+                     sentiment_score: float = 0.0,
+                     sentiment_adjustment: float = 0.0,
+                     estimated_win_rate: float = None,
                      **kwargs):
         """
         Record trade outcome when it hits SL/TP or expires.
@@ -542,6 +553,8 @@ class PerformanceTracker:
             tier: Quality tier (A+, A, B, C)
             eligible_modes: List of modes this signal qualifies for
             sentiment_applied: Whether sentiment analysis was applied
+            sentiment_score: Net sentiment value (-1.0 to +1.0)
+            sentiment_adjustment: Score adjustment from sentiment
             estimated_win_rate: Micro-backtest estimated win probability
         """
         # Find existing signal
@@ -578,6 +591,8 @@ class PerformanceTracker:
                 "tier": normalize_tier(tier),
                 "eligible_modes": eligible_modes or ["aggressive"],
                 "sentiment_applied": sentiment_applied,
+                "sentiment_score": sentiment_score,
+                "sentiment_adjustment": sentiment_adjustment,
                 "estimated_win_rate": estimated_win_rate,
                 "timestamp": entry_time or datetime.now(timezone.utc).isoformat(),
                 "exit_time": exit_time or datetime.now(timezone.utc).isoformat()

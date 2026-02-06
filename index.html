@@ -734,17 +734,17 @@
         <i data-lucide="zap" style="width: 14px; height: 14px; vertical-align: middle; color: var(--orange);"></i>
         Building the future of trading intelligence
       </div>
-      <a href="/cdn-cgi/l/email-protection#620c030903160d0c03000b10035122050f030b0e4c010d0f" style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: linear-gradient(135deg, var(--orange), #ff8c61); border-radius: 10px; color: white; text-decoration: none; font-weight: 700; font-size: 13px; letter-spacing: 0.5px; box-shadow: var(--glow-orange); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 0 40px rgba(255,107,53,0.6)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 0 30px rgba(255,107,53,0.4)'">
+      <button onclick="window.location.href='mailto:' + 'nakatonabira3' + '@' + 'gmail.com'" style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: linear-gradient(135deg, var(--orange), #ff8c61); border: none; border-radius: 10px; color: white; font-weight: 700; font-size: 13px; letter-spacing: 0.5px; box-shadow: var(--glow-orange); transition: all 0.3s; cursor: pointer; font-family: 'Rajdhani', sans-serif;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 0 40px rgba(255,107,53,0.6)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 0 30px rgba(255,107,53,0.4)'">
         <i data-lucide="mail" style="width: 16px; height: 16px;"></i>
         SHARE YOUR THOUGHTS
-      </a>
+      </button>
       <div style="margin-top: 16px; font-size: 10px; color: var(--text-muted); font-family: 'Orbitron', monospace;">
-        <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="214f404a40554e4f40434853401261464c40484d0f424e4c">[email&#160;protected]</a>
+        <span>nakatonabira3<span style="display:none">-removethis-</span>@<span style="display:none">-removethis-</span>gmail.com</span>
       </div>
     </div>
   </footer>
 
-  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  <script>
     lucide.createIcons();
     let mode = 'aggressive';
     let data = null;
@@ -753,12 +753,47 @@
     document.addEventListener('DOMContentLoaded', () => {
       mode = localStorage.getItem('tbMode') || 'aggressive';
       updateModeBtns();
+      checkMarketStatus(); // Check if weekend
       load();
       setInterval(load, 30000);
       initFilters();
       updateSess();
       setInterval(updateSess, 60000);
     });
+    
+    function checkMarketStatus() {
+      const now = new Date();
+      const day = now.getUTCDay(); // 0 = Sunday, 6 = Saturday
+      const hour = now.getUTCHours();
+      
+      // Market closed: Friday 22:00 UTC to Sunday 22:00 UTC
+      const isWeekend = (day === 6 && hour >= 22) || day === 0 || (day === 1 && hour < 22);
+      
+      const statusBadge = document.querySelector('.status-badge');
+      const statusText = statusBadge.querySelector('span');
+      const statusDot = statusBadge.querySelector('.status-dot');
+      
+      if (isWeekend) {
+        statusText.textContent = 'MARKET CLOSED';
+        statusBadge.style.background = 'rgba(107, 114, 128, 0.1)';
+        statusBadge.style.borderColor = 'rgba(107, 114, 128, 0.3)';
+        statusBadge.style.color = 'var(--text-muted)';
+        statusDot.style.background = 'var(--text-muted)';
+        statusDot.style.boxShadow = '0 0 10px var(--text-muted)';
+        
+        // Add weekend notice
+        const container = document.querySelector('.container');
+        const notice = document.createElement('div');
+        notice.id = 'weekend-notice';
+        notice.style.cssText = 'background: rgba(107, 114, 128, 0.1); border: 1px solid rgba(107, 114, 128, 0.3); border-radius: 12px; padding: 16px 24px; margin-bottom: 24px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 12px;';
+        notice.innerHTML = `
+          <i data-lucide="moon" style="width:20px;height:20px;color:var(--text-muted)"></i>
+          <span style="color:var(--text-dim);font-size:14px;font-weight:600;">Weekend Mode • Market reopens <strong>Monday 00:00 UTC</strong></span>
+        `;
+        container.insertBefore(notice, container.querySelector('.metrics'));
+        lucide.createIcons();
+      }
+    }
     
     async function load() {
       try {

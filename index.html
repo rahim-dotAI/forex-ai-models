@@ -289,6 +289,16 @@
       animation: pulse 2s ease-in-out infinite;
     }
     
+    /* Flash animation for newly updated cards */
+    @keyframes flashUpdate {
+      0%, 100% { box-shadow: var(--shadow); border-color: var(--border); }
+      50% { box-shadow: 0 0 40px rgba(251, 191, 36, 0.8); border-color: var(--yellow); }
+    }
+    
+    .card.just-updated {
+      animation: flashUpdate 2s ease-in-out 3;
+    }
+    
     .signal-tier {
       display: inline-block;
       padding: 6px 12px;
@@ -724,17 +734,17 @@
         <i data-lucide="zap" style="width: 14px; height: 14px; vertical-align: middle; color: var(--orange);"></i>
         Building the future of trading intelligence
       </div>
-      <a href="mailto:nakatonabira3@gmail.com" style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: linear-gradient(135deg, var(--orange), #ff8c61); border-radius: 10px; color: white; text-decoration: none; font-weight: 700; font-size: 13px; letter-spacing: 0.5px; box-shadow: var(--glow-orange); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 0 40px rgba(255,107,53,0.6)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 0 30px rgba(255,107,53,0.4)'">
+      <a href="/cdn-cgi/l/email-protection#620c030903160d0c03000b10035122050f030b0e4c010d0f" style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: linear-gradient(135deg, var(--orange), #ff8c61); border-radius: 10px; color: white; text-decoration: none; font-weight: 700; font-size: 13px; letter-spacing: 0.5px; box-shadow: var(--glow-orange); transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 0 40px rgba(255,107,53,0.6)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 0 30px rgba(255,107,53,0.4)'">
         <i data-lucide="mail" style="width: 16px; height: 16px;"></i>
         SHARE YOUR THOUGHTS
       </a>
       <div style="margin-top: 16px; font-size: 10px; color: var(--text-muted); font-family: 'Orbitron', monospace;">
-        nakatonabira3@gmail.com
+        <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="214f404a40554e4f40434853401261464c40484d0f424e4c">[email&#160;protected]</a>
       </div>
     </div>
   </footer>
 
-  <script>
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
     lucide.createIcons();
     let mode = 'aggressive';
     let data = null;
@@ -833,6 +843,8 @@
       // Sort newest first
       sigs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
+      const justUpdated = []; // Track which cards just updated
+
       sigs.forEach(signal => {
 
         const key = `${signal.pair}_${signal.direction}`;
@@ -859,6 +871,9 @@
           state.current = signal;
           state.history.unshift(signal);
           state.updates++;
+          
+          // Mark this card as just updated
+          justUpdated.push(key);
 
           // Keep only last 10 history items
           if (state.history.length > 10) {
@@ -877,12 +892,22 @@
         return;
       }
 
-      g.innerHTML = cards.map(state => createSignalCard(state)).join('');
+      g.innerHTML = cards.map(state => createSignalCard(state, justUpdated.includes(`${state.pair}_${state.direction}`))).join('');
       lucide.createIcons();
+      
+      // Scroll to first updated card if any
+      if (justUpdated.length > 0) {
+        setTimeout(() => {
+          const firstUpdated = document.querySelector('.card.just-updated');
+          if (firstUpdated) {
+            firstUpdated.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 100);
+      }
     }
     
     // ✅ CREATE SIGNAL CARD with change tracking
-    function createSignalCard(state) {
+    function createSignalCard(state, justUpdated = false) {
       const s = state.current;
       const prev = state.previous;
       const hasChanges = prev !== null;
@@ -905,7 +930,7 @@
       else if (sc >= 70) col = '#00f2a9';
       else if (sc >= 60) col = '#4facfe';
       
-      return `<div class="card">
+      return `<div class="card${justUpdated ? ' just-updated' : ''}" id="card-${s.pair.replace('/', '-')}-${s.direction}">
         ${state.updates > 0 ? `<div class="update-badge">
           <i data-lucide="refresh-cw" style="width:12px;height:12px"></i>
           UPDATED ${state.updates}x

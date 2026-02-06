@@ -550,32 +550,82 @@
       "estimated_win_rate": null,
       "timestamp": "2026-02-06T19:46:18.632234+00:00",
       "exit_time": "2026-02-06T20:01:18.877032+00:00"
+    },
+    {
+      "id": "USDCHF_SELL_3b136694f451",
+      "signal_id": "USDCHF_SELL_3b136694f451",
+      "pair": "USDCHF",
+      "direction": "SELL",
+      "entry_price": 1.36577,
+      "exit_price": 1.36113,
+      "sl": 1.36783,
+      "tp": 1.36113,
+      "status": "WIN",
+      "pips": 46.39999999999977,
+      "confidence": "MODERATE",
+      "score": 58.0,
+      "session": "US",
+      "tier": "C",
+      "eligible_modes": [
+        "aggressive"
+      ],
+      "sentiment_applied": false,
+      "sentiment_score": 0.0,
+      "sentiment_adjustment": 0.0,
+      "estimated_win_rate": null,
+      "timestamp": "2026-02-06T20:01:20.532886+00:00",
+      "exit_time": "2026-02-06T20:16:07.232904+00:00"
+    },
+    {
+      "id": "GBPJPY_BUY_f5ac4faf2903",
+      "signal_id": "GBPJPY_BUY_f5ac4faf2903",
+      "pair": "GBPJPY",
+      "direction": "BUY",
+      "entry_price": 185.677,
+      "exit_price": 186.02229,
+      "sl": 185.52354,
+      "tp": 186.02229,
+      "status": "WIN",
+      "pips": 34.529000000000565,
+      "confidence": "MODERATE",
+      "score": 45,
+      "session": "US",
+      "tier": "C",
+      "eligible_modes": [
+        "aggressive"
+      ],
+      "sentiment_applied": false,
+      "sentiment_score": 0.0,
+      "sentiment_adjustment": 0.0,
+      "estimated_win_rate": null,
+      "timestamp": "2026-02-06T20:01:20.662708+00:00",
+      "exit_time": "2026-02-06T20:16:07.586399+00:00"
     }
   ],
   "stats": {
-    "total_trades": 18,
-    "total_resolved": 18,
-    "wins": 12,
+    "total_trades": 20,
+    "total_resolved": 20,
+    "wins": 14,
     "losses": 6,
     "expired": 5,
-    "win_rate": 66.7,
-    "total_pips": 504.4,
-    "avg_win": 54.1,
+    "win_rate": 70.0,
+    "total_pips": 585.3,
+    "avg_win": 52.1,
     "avg_loss": 24.1,
-    "expectancy_pips": 28.02,
+    "expectancy_pips": 29.27,
     "validated": false,
     "by_mode": {
       "all": {
-        "trades": 18,
-        "wins": 12,
-        "total_pips": 504.39799999999514,
-        "win_rate": 66.7
+        "trades": 20,
+        "wins": 14,
+        "total_pips": 585.3269999999955,
+        "win_rate": 70.0
       },
       "aggressive": {
-        "trades": 18,
-        "wins": 12,
-        "total_pips": 504.39799999999514,
-        "win_rate": 66.7
+        "trades": 20,
+        "wins": 14,
+        "total_pips": 585.3269999999955,
+        "win_rate": 70.0
       },
       "conservative": {
         "trades": 1,
@@ -594,23 +644,23 @@
         "win_rate": 100.0
       },
       "GBPJPY": {
-        "trades": 16,
-        "wins": 11,
-        "total_pips": 419.1979999999944,
-        "win_rate": 68.8
+        "trades": 17,
+        "wins": 12,
+        "total_pips": 453.726999999995,
+        "win_rate": 70.6
       },
       "USDCHF": {
-        "trades": 1,
-        "wins": 0,
-        "total_pips": -18.899999999999473,
-        "win_rate": 0.0
+        "trades": 2,
+        "wins": 1,
+        "total_pips": 27.5000000000003,
+        "win_rate": 50.0
       }
     },
     "by_session": {
       "US": {
-        "trades": 1,
-        "wins": 1,
-        "total_pips": 104.10000000000029,
+        "trades": 3,
+        "wins": 3,
+        "total_pips": 185.02900000000062,
         "win_rate": 100.0
       },
       "LATE_US": {
@@ -634,18 +684,18 @@
     },
     "by_confidence": {
       "MODERATE": {
-        "trades": 18,
-        "wins": 12,
-        "total_pips": 504.39799999999514,
-        "win_rate": 66.7
+        "trades": 20,
+        "wins": 14,
+        "total_pips": 585.3269999999955,
+        "win_rate": 70.0
       }
     },
     "by_tier": {
       "C": {
-        "trades": 18,
-        "wins": 12,
-        "total_pips": 504.39799999999514,
-        "win_rate": 66.7
+        "trades": 20,
+        "wins": 14,
+        "total_pips": 585.3269999999955,
+        "win_rate": 70.0
       }
     },
     "by_mode": {
@@ -656,10 +706,10 @@
         "win_rate": 0.0
       },
       "aggressive": {
-        "trades": 18,
-        "wins": 12,
-        "total_pips": 504.39799999999514,
-        "win_rate": 66.7
+        "trades": 20,
+        "wins": 14,
+        "total_pips": 585.3269999999955,
+        "win_rate": 70.0
       },
       "conservative": {
         "trades": 1,
@@ -673,9 +723,9 @@
         "C_US": {
           "tier": "C",
           "session": "US",
-          "trades": 1,
-          "wins": 1,
-          "total_pips": 104.10000000000029,
+          "trades": 3,
+          "wins": 3,
+          "total_pips": 185.02900000000062,
           "win_rate": 100.0
         },
         "C_LATE_US": {
@@ -707,10 +757,10 @@
         "aggressive_C": {
           "mode": "aggressive",
           "tier": "C",
-          "trades": 18,
-          "wins": 12,
-          "total_pips": 504.39799999999514,
-          "win_rate": 66.7
+          "trades": 20,
+          "wins": 14,
+          "total_pips": 585.3269999999955,
+          "win_rate": 70.0
         },
         "conservative_C": {
           "mode": "conservative",
@@ -726,6 +776,6 @@
   "daily": {},
   "metadata": {
     "created_at": "2026-01-28T16:31:06.713234+00:00",
-    "last_updated": "2026-02-06T20:01:18.877503+00:00"
+    "last_updated": "2026-02-06T20:16:07.586812+00:00"
   }
 }

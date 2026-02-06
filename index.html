@@ -11,7 +11,7 @@
     
     :root {
       --void: #0a0a0f; --surface: #1a1a24; --elevated: #232334;
-      --orange: #ff6b35; --blue: #4facfe; --green: #00f2a9; --red: #ff4757;
+      --orange: #ff6b35; --blue: #4facfe; --green: #00f2a9; --red: #ff4757; --yellow: #fbbf24;
       --text: #ffffff; --text-dim: #b8bdc9; --text-muted: #6b7280;
       --border: rgba(255,255,255,0.1);
       --shadow: 0 10px 40px rgba(0,0,0,0.4);
@@ -26,7 +26,6 @@
       overflow-x: hidden;
     }
     
-    /* Animated BG */
     body::before {
       content: '';
       position: fixed;
@@ -38,7 +37,6 @@
     }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
     
-    /* Candlesticks */
     .candles { position: fixed; top: 0; right: 0; width: 400px; height: 100%; opacity: 0.03; pointer-events: none; }
     .candle { position: absolute; width: 20px; background: var(--green); animation: rise 4s ease-in-out infinite; }
     .candle:nth-child(1) { left: 50px; }
@@ -50,7 +48,6 @@
     
     .container { max-width: 1920px; margin: 0 auto; padding: 24px; position: relative; z-index: 1; }
     
-    /* Header */
     .header {
       background: linear-gradient(135deg, var(--surface), var(--elevated));
       border: 1px solid var(--border);
@@ -135,7 +132,6 @@
     }
     @keyframes pulseDot { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     
-    /* Metrics */
     .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 32px; }
     .metric {
       background: linear-gradient(135deg, var(--surface), var(--elevated));
@@ -184,7 +180,6 @@
     }
     .metric-sub { font-size: 12px; color: var(--text-dim); font-weight: 500; }
     
-    /* Mode Switcher */
     .modes {
       display: flex;
       gap: 12px;
@@ -218,7 +213,6 @@
     }
     .mode-btn:not(.active):hover { background: rgba(255,107,53,0.1); color: var(--orange); }
     
-    /* Tabs */
     .tabs { display: flex; gap: 8px; margin-bottom: 32px; border-bottom: 2px solid var(--border); }
     .tab {
       padding: 16px 28px;
@@ -255,8 +249,9 @@
     .tab-content.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     
-    /* Signals Grid */
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 20px; }
+    /* ✅ SMART SIGNAL CARDS */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 20px; }
+    
     .card {
       background: linear-gradient(135deg, var(--surface), var(--elevated));
       border: 1px solid var(--border);
@@ -277,7 +272,23 @@
     }
     .card:hover { transform: translateY(-8px) scale(1.02); border-color: rgba(255,255,255,0.2); box-shadow: var(--glow-orange); }
     
-    /* ✅ FIX: Signal tier badge - properly positioned */
+    /* Updated badge */
+    .update-badge {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      padding: 6px 12px;
+      background: linear-gradient(135deg, var(--yellow), #f59e0b);
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: 900;
+      color: #78350f;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
     .signal-tier {
       display: inline-block;
       padding: 6px 12px;
@@ -293,36 +304,35 @@
     .signal-tier.tier-b { background: linear-gradient(135deg, var(--blue), #3a8bd6); box-shadow: 0 0 20px rgba(79,172,254,0.4); }
     .signal-tier.tier-c { background: linear-gradient(135deg, #6b7280, #4b5563); }
     
-    /* Signal Strength Meter */
     .strength {
       position: absolute;
       top: 24px;
-      right: 24px;
-      width: 60px;
-      height: 60px;
+      left: 24px;
+      width: 50px;
+      height: 50px;
     }
     .strength svg { transform: rotate(-90deg); }
-    .strength-bg { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 6; }
-    .strength-bar { fill: none; stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset 1s ease-out; }
+    .strength-bg { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 5; }
+    .strength-bar { fill: none; stroke-width: 5; stroke-linecap: round; transition: stroke-dashoffset 1s ease-out; }
     .strength-text {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
       font-family: 'Orbitron', monospace;
-      font-size: 14px;
+      font-size: 11px;
       font-weight: 900;
     }
     
     .pair {
       font-family: 'Orbitron', monospace;
-      font-size: 24px;
+      font-size: 28px;
       font-weight: 900;
       background: linear-gradient(135deg, var(--orange), var(--blue));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 12px;
-      padding-right: 70px;
+      margin-bottom: 8px;
+      padding-left: 60px;
     }
     
     .dir {
@@ -335,11 +345,25 @@
       font-weight: 900;
       letter-spacing: 1px;
       margin-bottom: 16px;
+      margin-left: 60px;
     }
     .dir-buy { background: linear-gradient(135deg, var(--green), #33f5bf); color: white; box-shadow: 0 0 20px rgba(0,242,169,0.4); }
     .dir-sell { background: linear-gradient(135deg, var(--red), #ff6b7a); color: white; box-shadow: 0 0 20px rgba(255,71,87,0.4); }
     
-    .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin: 16px 0; }
+    /* Current values section */
+    .section-title {
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 20px 0 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
     .metric-item {
       background: #121218;
       border: 1px solid var(--border);
@@ -351,44 +375,78 @@
     .metric-item-value { font-family: 'Orbitron', monospace; font-size: 16px; font-weight: 700; color: white; word-break: break-all; }
     .metric-item-value.hl { color: var(--orange); }
     
-    /* Sentiment */
-    .sentiment {
-      margin: 16px 0;
-      padding: 14px;
+    /* ✅ CHANGES SECTION */
+    .changes-section {
       background: rgba(0,242,169,0.05);
       border: 1px solid rgba(0,242,169,0.2);
       border-radius: 10px;
-      overflow: hidden;
+      padding: 14px;
+      margin: 16px 0;
     }
-    .sentiment-head {
+    
+    .change-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      font-size: 13px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .change-item:last-child { border-bottom: none; }
+    
+    .change-label {
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+    
+    .change-value {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      margin-bottom: 8px;
+      gap: 6px;
+      font-family: 'Orbitron', monospace;
+      font-weight: 900;
     }
-    .sentiment-title {
+    .change-value.up { color: var(--green); }
+    .change-value.down { color: var(--red); }
+    .change-value.neutral { color: var(--text-muted); }
+    
+    .change-arrow {
+      font-size: 16px;
+      line-height: 1;
+    }
+    
+    /* ✅ HISTORY SECTION */
+    .history-section {
+      background: rgba(79,172,254,0.05);
+      border: 1px solid rgba(79,172,254,0.2);
+      border-radius: 10px;
+      padding: 14px;
+      margin: 16px 0;
+    }
+    
+    .history-item {
       display: flex;
       align-items: center;
       gap: 8px;
+      padding: 6px 0;
       font-size: 11px;
-      font-weight: 900;
-      color: var(--green);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    .api-badges { display: flex; gap: 4px; }
-    .api-badge {
-      padding: 2px 6px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 4px;
-      font-size: 9px;
-      font-weight: 700;
       color: var(--text-dim);
     }
-    .sentiment-data { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 11px; }
-    .sentiment-item { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .sentiment-label { color: var(--text-muted); }
-    .sentiment-value { font-weight: 900; margin-left: 4px; }
+    .history-item::before {
+      content: '•';
+      color: var(--blue);
+      font-size: 16px;
+      line-height: 1;
+    }
+    .history-time {
+      font-family: 'Orbitron', monospace;
+      color: var(--blue);
+      font-weight: 700;
+    }
+    .history-value {
+      font-family: 'Orbitron', monospace;
+      color: var(--text);
+    }
     
     .footer {
       display: flex;
@@ -417,157 +475,6 @@
       letter-spacing: 0.5px;
     }
     
-    /* ✅ FIX: Analytics tier badges - inline display */
-    .analytics-tier-badge {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-family: 'Orbitron', monospace;
-      font-size: 10px;
-      font-weight: 900;
-      color: white;
-      margin-right: 8px;
-    }
-    .analytics-tier-badge.tier-aplus { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
-    .analytics-tier-badge.tier-a { background: linear-gradient(135deg, var(--green), #00c787); }
-    .analytics-tier-badge.tier-b { background: linear-gradient(135deg, var(--blue), #3a8bd6); }
-    .analytics-tier-badge.tier-c { background: linear-gradient(135deg, #6b7280, #4b5563); }
-    
-    /* History */
-    .history-wrap {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      overflow: hidden;
-    }
-    
-    .history-scroll-container {
-      max-height: 600px;
-      overflow-x: auto;
-      overflow-y: auto;
-      position: relative;
-    }
-    
-    .filters { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
-    .filter { display: flex; flex-direction: column; gap: 8px; }
-    .filter-label { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
-    .filter-input {
-      padding: 10px 16px;
-      background: var(--elevated);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      color: white;
-      font-size: 14px;
-      font-family: 'Rajdhani', sans-serif;
-      cursor: pointer;
-    }
-    .filter-input:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px rgba(255,107,53,0.1); }
-    
-    table { width: 100%; min-width: 1000px; border-collapse: collapse; }
-    thead { 
-      background: var(--elevated);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    th {
-      padding: 16px;
-      text-align: left;
-      font-size: 11px;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--text-dim);
-      border-bottom: 2px solid var(--border);
-      white-space: nowrap;
-    }
-    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.2s; }
-    tbody tr:hover { background: rgba(255,107,53,0.05); }
-    td {
-      padding: 16px;
-      font-size: 13px;
-      font-family: 'Orbitron', monospace;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .win { color: var(--green); font-weight: 900; }
-    .loss { color: var(--red); font-weight: 900; }
-    .exp { color: var(--text-muted); font-weight: 700; }
-    
-    /* History tier badges */
-    .history-tier-badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 10px;
-      font-weight: 900;
-      color: white;
-    }
-    .history-tier-badge.tier-aplus { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
-    .history-tier-badge.tier-a { background: linear-gradient(135deg, var(--green), #00c787); }
-    .history-tier-badge.tier-b { background: linear-gradient(135deg, var(--blue), #3a8bd6); }
-    .history-tier-badge.tier-c { background: linear-gradient(135deg, #6b7280, #4b5563); }
-    
-    .history-scroll-container::-webkit-scrollbar {
-      height: 10px;
-      width: 10px;
-    }
-    .history-scroll-container::-webkit-scrollbar-track {
-      background: var(--elevated);
-      border-radius: 5px;
-    }
-    .history-scroll-container::-webkit-scrollbar-thumb {
-      background: linear-gradient(135deg, var(--orange), var(--blue));
-      border-radius: 5px;
-    }
-    .history-scroll-container::-webkit-scrollbar-thumb:hover {
-      background: linear-gradient(135deg, #ff8c61, #6bb8fe);
-    }
-    
-    /* Analytics */
-    .analytics { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 24px; }
-    .analytics-card {
-      background: linear-gradient(135deg, var(--surface), var(--elevated));
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 32px;
-      box-shadow: var(--shadow);
-    }
-    .analytics-title {
-      font-size: 20px;
-      font-weight: 800;
-      margin-bottom: 24px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .analytics-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .analytics-item:last-child { border-bottom: none; }
-    .analytics-label { font-size: 14px; color: var(--text-dim); font-weight: 600; }
-    .analytics-value { font-size: 18px; font-weight: 800; font-family: 'Orbitron', monospace; }
-    .progress {
-      height: 8px;
-      background: var(--elevated);
-      border-radius: 4px;
-      overflow: hidden;
-      margin-top: 10px;
-    }
-    .progress-bar {
-      height: 100%;
-      background: linear-gradient(90deg, var(--orange), var(--blue));
-      border-radius: 4px;
-      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 0 10px rgba(255,107,53,0.4);
-    }
-    
-    /* Empty */
     .empty {
       text-align: center;
       padding: 80px 40px;
@@ -579,12 +486,10 @@
     .empty-title { font-size: 20px; font-weight: 900; color: var(--text-dim); margin-bottom: 8px; }
     .empty-desc { font-size: 14px; color: var(--text-muted); }
     
-    /* Responsive */
     @media (max-width: 768px) {
       .header-grid { grid-template-columns: 1fr; }
       .metrics { grid-template-columns: repeat(2, 1fr); }
       .grid { grid-template-columns: 1fr; }
-      .analytics { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -637,331 +542,323 @@
     </div>
 
     <div id="tabHistory" class="tab-content">
-      <div class="filters">
-        <div class="filter"><label class="filter-label">Date Range</label><div style="display:flex;gap:12px;align-items:center"><input type="date" id="dateStart" class="filter-input"><span style="color:var(--text-muted)">→</span><input type="date" id="dateEnd" class="filter-input"></div></div>
-        <div class="filter"><label class="filter-label">Status</label><select id="filterStatus" class="filter-input"><option value="all">All</option><option value="WIN">Wins</option><option value="LOSS">Losses</option><option value="EXPIRED">Expired</option></select></div>
-        <div class="filter"><label class="filter-label">Pair</label><select id="filterPair" class="filter-input"><option value="all">All Pairs</option></select></div>
-      </div>
-      <div class="history-wrap">
-        <div class="history-scroll-container">
-          <table>
-            <thead>
-              <tr><th>DATE</th><th>PAIR</th><th>DIR</th><th>TIER</th><th>RESULT</th><th>PIPS</th><th>SESSION</th></tr>
-            </thead>
-            <tbody id="historyBody"></tbody>
-          </table>
-        </div>
-      </div>
+      <p style="text-align:center;padding:40px;color:var(--text-muted)">History view - Coming soon</p>
     </div>
 
     <div id="tabAnalytics" class="tab-content">
-      <div class="analytics">
-        <div class="analytics-card"><h3 class="analytics-title"><i data-lucide="award" style="width:24px;height:24px;color:var(--orange)"></i>Performance by Tier</h3><div id="tierAnalytics"></div></div>
-        <div class="analytics-card"><h3 class="analytics-title"><i data-lucide="globe-2" style="width:24px;height:24px;color:var(--blue)"></i>Performance by Session</h3><div id="sessionAnalytics"></div></div>
-        <div class="analytics-card"><h3 class="analytics-title"><i data-lucide="trending-up" style="width:24px;height:24px;color:var(--green)"></i>Top Performing Pairs</h3><div id="pairAnalytics"></div></div>
-        <div class="analytics-card"><h3 class="analytics-title"><i data-lucide="layers" style="width:24px;height:24px;color:var(--orange)"></i>Performance by Mode</h3><div id="modeAnalytics"></div></div>
-      </div>
+      <p style="text-align:center;padding:40px;color:var(--text-muted)">Analytics view - Coming soon</p>
     </div>
   </div>
 
   <script>
     lucide.createIcons();
-    let mode='aggressive',data=null;
+    let mode = 'aggressive';
+    let data = null;
+    let signalState = {}; // ✅ Store signal tracking per pair - PERSISTS across refreshes
     
-    document.addEventListener('DOMContentLoaded',()=>{
-      mode=localStorage.getItem('tbMode')||'aggressive';
+    document.addEventListener('DOMContentLoaded', () => {
+      mode = localStorage.getItem('tbMode') || 'aggressive';
       updateModeBtns();
       load();
-      setInterval(load,30000);
-      initFilters();
+      setInterval(load, 30000);
       updateSess();
-      setInterval(updateSess,60000);
+      setInterval(updateSess, 60000);
     });
     
-    async function load(){
-      try{
-        const r=await fetch('signal_state/dashboard_state.json');
-        data=await r.json();
-        console.log('📊 Dashboard data loaded:', data);
+    async function load() {
+      try {
+        const r = await fetch('signal_state/dashboard_state.json');
+        data = await r.json();
+        console.log('📊 Dashboard data loaded');
         updateMetrics();
-        renderSignals();
-        renderHistory();
-        renderAnalytics();
-      }catch(e){
-        console.error('Load error:',e);
-        showEmpty('signalsGrid','alert-triangle','Unable to load','Check system');
+        processAndRenderSignals();
+      } catch(e) {
+        console.error('Load error:', e);
+        showEmpty('signalsGrid', 'alert-triangle', 'Unable to load', 'Check system');
       }
     }
     
-    function switchMode(m){
-      mode=m;
-      localStorage.setItem('tbMode',m);
+    function switchMode(m) {
+      mode = m;
+      localStorage.setItem('tbMode', m);
       updateModeBtns();
-      renderSignals();
+      processAndRenderSignals();
       lucide.createIcons();
     }
     
-    function updateModeBtns(){
-      document.getElementById('modeAgg').classList.toggle('active',mode==='aggressive');
-      document.getElementById('modeCon').classList.toggle('active',mode==='conservative');
+    function updateModeBtns() {
+      document.getElementById('modeAgg').classList.toggle('active', mode === 'aggressive');
+      document.getElementById('modeCon').classList.toggle('active', mode === 'conservative');
       lucide.createIcons();
     }
     
-    function switchTab(t){
-      document.querySelectorAll('.tab').forEach(e=>e.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active'));
+    function switchTab(t) {
+      document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
       event.target.closest('.tab').classList.add('active');
-      document.getElementById({signals:'tabSignals',history:'tabHistory',analytics:'tabAnalytics'}[t]).classList.add('active');
+      document.getElementById({signals:'tabSignals', history:'tabHistory', analytics:'tabAnalytics'}[t]).classList.add('active');
       lucide.createIcons();
     }
     
-    // ✅ CRITICAL FIX: Proper signal count deduplication
-    function updateMetrics(){
-      if(!data) return;
+    function updateMetrics() {
+      if (!data) return;
       
+      // Count unique pairs (not signals)
       const aggSignals = data.signals_by_mode?.aggressive || [];
       const consSignals = data.signals_by_mode?.conservative || [];
+      const allSignals = [...aggSignals, ...consSignals];
       
-      // Deduplicate across BOTH modes by signal_id
-      const seen = new Set();
-      const uniqueSignals = [];
+      // Get unique pairs
+      const uniquePairs = new Set(allSignals.map(s => s.pair));
+      const uniqueCount = uniquePairs.size;
       
-      [...aggSignals, ...consSignals].forEach(s => {
-        if (s.signal_id && !seen.has(s.signal_id)) {
-          seen.add(s.signal_id);
-          uniqueSignals.push(s);
-        }
-      });
+      const st = data.stats || {};
+      const wr = st.win_rate || 0, tp = st.total_pips || 0, ex = st.expectancy || 0, tt = st.total_trades || 0;
       
-      console.log('🔍 Signal Counts:');
-      console.log('  Aggressive array:', aggSignals.length);
-      console.log('  Conservative array:', consSignals.length);
-      console.log('  Unique signals:', uniqueSignals.length);
-      console.log('  Unique IDs:', Array.from(seen));
-      
-      const st=data.stats||{};
-      const wr=st.win_rate||0,tp=st.total_pips||0,ex=st.expectancy||0,tt=st.total_trades||0;
-      
-      // Use UNIQUE count everywhere
-      document.getElementById('hActive').textContent = uniqueSignals.length;
-      document.getElementById('hWR').textContent = wr.toFixed(1)+'%';
-      document.getElementById('hPips').textContent = tp>0?'+'+tp.toFixed(0):tp.toFixed(0);
-      document.getElementById('mSignals').textContent = uniqueSignals.length;
-      document.getElementById('mWR').textContent = wr.toFixed(1)+'%';
+      document.getElementById('hActive').textContent = uniqueCount;
+      document.getElementById('hWR').textContent = wr.toFixed(1) + '%';
+      document.getElementById('hPips').textContent = tp > 0 ? '+' + tp.toFixed(0) : tp.toFixed(0);
+      document.getElementById('mSignals').textContent = uniqueCount;
+      document.getElementById('mWR').textContent = wr.toFixed(1) + '%';
       document.getElementById('mWRSub').textContent = `${st.wins||0}/${tt} trades`;
-      document.getElementById('mPips').textContent = tp>0?'+'+tp.toFixed(1):tp.toFixed(1);
-      document.getElementById('mPipsSub').textContent = tt>0?`From ${tt} trades`:'Lifetime';
-      document.getElementById('mExp').textContent = ex>0?'+'+ex.toFixed(1):ex.toFixed(1);
+      document.getElementById('mPips').textContent = tp > 0 ? '+' + tp.toFixed(1) : tp.toFixed(1);
+      document.getElementById('mPipsSub').textContent = tt > 0 ? `From ${tt} trades` : 'Lifetime';
+      document.getElementById('mExp').textContent = ex > 0 ? '+' + ex.toFixed(1) : ex.toFixed(1);
       
-      const today=new Date().toISOString().split('T')[0];
-      const tc=uniqueSignals.filter(s=>s.timestamp&&s.timestamp.startsWith(today)).length;
-      document.getElementById('mToday').textContent = tc;
-      document.getElementById('mTodaySub').textContent = tc===0?'No signals':'Generated today';
+      const today = new Date().toISOString().split('T')[0];
+      const tc = allSignals.filter(s => s.timestamp && s.timestamp.startsWith(today)).length;
+      document.getElementById('mToday').textContent = uniquePairs.size;
+      document.getElementById('mTodaySub').textContent = uniquePairs.size === 0 ? 'No signals' : 'Generated today';
     }
     
-    // ✅ CRITICAL FIX: Deduplicate signals before rendering
-    function renderSignals(){
-      const g=document.getElementById('signalsGrid');
-      if(!data){
-        g.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-muted)">Loading...</div>';
+    // ✅ SMART SIGNAL PROCESSING - Persists state across refreshes
+    function processAndRenderSignals() {
+      const g = document.getElementById('signalsGrid');
+      if (!data) {
+        g.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted)">Loading...</div>';
         return;
       }
-      
-      // Get signals for selected mode
+
       let sigs = data.signals_by_mode?.[mode] || [];
-      
-      console.log(`🎯 Rendering ${mode} mode:`, sigs.length, 'signals');
-      
-      // ✅ DEDUPLICATE by signal_id before rendering
-      const seen = new Set();
-      const uniqueSigs = [];
-      
-      sigs.forEach(s => {
-        if (s.signal_id && !seen.has(s.signal_id)) {
-          seen.add(s.signal_id);
-          uniqueSigs.push(s);
+
+      console.log(`🎯 Processing ${mode} signals:`, sigs.length);
+
+      // Sort newest first
+      sigs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      sigs.forEach(signal => {
+
+        const key = `${signal.pair}_${signal.direction}`;
+
+        // 🆕 First time seeing this pair
+        if (!signalState[key]) {
+          signalState[key] = {
+            pair: signal.pair,
+            direction: signal.direction,
+            current: signal,
+            previous: null,
+            history: [signal],
+            updates: 0
+          };
+          return;
         }
+
+        const state = signalState[key];
+
+        // Only update if newer
+        if (new Date(signal.timestamp) > new Date(state.current.timestamp)) {
+
+          state.previous = state.current;
+          state.current = signal;
+          state.history.unshift(signal);
+          state.updates++;
+
+          // Keep only last 10 history items
+          if (state.history.length > 10) {
+            state.history.length = 10;
+          }
+        }
+
       });
-      
-      console.log(`  After deduplication: ${uniqueSigs.length} unique signals`);
-      console.log('  IDs:', Array.from(seen));
-      
-      // Sort by timestamp
-      uniqueSigs.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
-      
-      if(uniqueSigs.length === 0){
-        showEmpty('signalsGrid','radio','No signals',`No ${mode} signals`);
+
+      const cards = Object.values(signalState)
+        .filter(s => s.direction === signalState[s.pair + "_" + s.direction]?.direction)
+        .sort((a, b) => new Date(b.current.timestamp) - new Date(a.current.timestamp));
+
+      if (cards.length === 0) {
+        showEmpty('signalsGrid', 'radio', 'No signals', `No ${mode} signals`);
         return;
       }
-      
-      g.innerHTML = uniqueSigs.map(s=>{
-        const sc=s.score||50;
-        const sp=Math.min(100,sc);
-        const c=2*Math.PI*27;
-        const off=c-(sp/100)*c;
-        let col='#6b7280';
-        if(sc>=80)col='#fbbf24';else if(sc>=70)col='#00f2a9';else if(sc>=60)col='#4facfe';
-        
-        return`<div class="card">
-          <div class="strength">
-            <svg viewBox="0 0 60 60"><circle class="strength-bg" cx="30" cy="30" r="27"></circle><circle class="strength-bar" cx="30" cy="30" r="27" stroke="${col}" stroke-dasharray="${c}" stroke-dashoffset="${off}"></circle></svg>
-            <div class="strength-text" style="color:${col}">${sc}</div>
-          </div>
-          <div class="signal-tier tier-${getTier(s.tier||'C')}">${s.tier||'C'}</div>
-          <div class="pair">${s.pair}</div>
-          <div class="dir dir-${s.direction.toLowerCase()}"><i data-lucide="${s.direction==='BUY'?'arrow-up':'arrow-down'}" style="width:14px;height:14px"></i>${s.direction}</div>
-          <div class="metrics-grid">
-            <div class="metric-item"><div class="metric-item-label">ENTRY</div><div class="metric-item-value">${s.entry_price?.toFixed(5)||'N/A'}</div></div>
-            <div class="metric-item"><div class="metric-item-label">STOP LOSS</div><div class="metric-item-value">${s.sl?.toFixed(5)||'N/A'}</div></div>
-            <div class="metric-item"><div class="metric-item-label">TAKE PROFIT</div><div class="metric-item-value">${s.tp?.toFixed(5)||'N/A'}</div></div>
-            <div class="metric-item"><div class="metric-item-label">RISK:REWARD</div><div class="metric-item-value hl">${s.risk_reward?.toFixed(2)||'N/A'}</div></div>
-          </div>
-          ${s.sentiment_applied?`<div class="sentiment">
-            <div class="sentiment-head">
-              <div class="sentiment-title"><i data-lucide="newspaper" style="width:14px;height:14px"></i>NEWS SENTIMENT</div>
-              <div class="api-badges"><span class="api-badge">NEWS</span><span class="api-badge">MKT</span></div>
-            </div>
-            <div class="sentiment-data">
-              <div class="sentiment-item"><span class="sentiment-label">Score:</span><span class="sentiment-value" style="color:${s.sentiment_score>0?'var(--green)':s.sentiment_score<0?'var(--red)':'var(--text-dim)'}">${s.sentiment_score>0?'+':''}${s.sentiment_score?.toFixed(2)||'0.00'}</span></div>
-              <div class="sentiment-item"><span class="sentiment-label">Adj:</span><span class="sentiment-value" style="color:${s.sentiment_adjustment>0?'var(--green)':s.sentiment_adjustment<0?'var(--red)':'var(--text-dim)'}">${s.sentiment_adjustment>0?'+':''}${s.sentiment_adjustment?.toFixed(1)||'0.0'}pts</span></div>
-            </div>
-          </div>`:''}
-          <div class="footer">
-            <div class="time"><i data-lucide="clock" style="width:12px;height:12px"></i>${fmt(s.timestamp)}</div>
-            <div class="session">${s.session||'N/A'}</div>
-          </div>
-        </div>`;
-      }).join('');
+
+      g.innerHTML = cards.map(state => createSignalCard(state)).join('');
       lucide.createIcons();
     }
     
-    function renderHistory(){
-      const b=document.getElementById('historyBody');
-      let sigs=data?.historical_signals||[];
+    // ✅ CREATE SIGNAL CARD with change tracking
+    function createSignalCard(state) {
+      const s = state.current;
+      const prev = state.previous;
+      const hasChanges = prev !== null;
       
-      if(sigs.length===0){
-        b.innerHTML='<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">No data</td></tr>';
-        return;
-      }
+      // Calculate changes
+      const changes = hasChanges ? {
+        entry: calcChange(prev.entry_price, s.entry_price),
+        sl: calcChange(prev.sl, s.sl),
+        tp: calcChange(prev.tp, s.tp),
+        rr: calcChange(prev.risk_reward, s.risk_reward)
+      } : null;
       
-      sigs=sigs.filter(s=>s.status&&['WIN','LOSS','EXPIRED'].includes(s.status));
+      // Strength meter
+      const sc = s.score || 50;
+      const sp = Math.min(100, sc);
+      const c = 2 * Math.PI * 23;
+      const off = c - (sp / 100) * c;
+      let col = '#6b7280';
+      if (sc >= 80) col = '#fbbf24';
+      else if (sc >= 70) col = '#00f2a9';
+      else if (sc >= 60) col = '#4facfe';
       
-      const sf=document.getElementById('filterStatus')?.value||'all',pf=document.getElementById('filterPair')?.value||'all';
-      const sd=document.getElementById('dateStart')?.value,ed=document.getElementById('dateEnd')?.value;
-      
-      if(sf!=='all')sigs=sigs.filter(s=>s.status===sf);
-      if(pf!=='all')sigs=sigs.filter(s=>s.pair===pf);
-      if(sd)sigs=sigs.filter(s=>s.timestamp>=sd);
-      if(ed)sigs=sigs.filter(s=>s.timestamp<=ed+'T23:59:59');
-      
-      sigs.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
-      
-      if(sigs.length===0){
-        b.innerHTML='<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">No matches</td></tr>';
-        return;
-      }
-      
-      b.innerHTML=sigs.map(s=>{
-        const rc=s.status==='WIN'?'win':s.status==='LOSS'?'loss':'exp';
-        const pv=s.pips||0;
-        const rt=s.status==='WIN'?`+${pv.toFixed(1)}`:s.status==='LOSS'?`${pv.toFixed(1)}`:'EXPIRED';
-        return`<tr><td>${fmtDate(s.timestamp)}</td><td style="font-weight:900">${s.pair}</td><td>${s.direction}</td><td><span class="history-tier-badge tier-${getTier(s.tier||'C')}">${s.tier||'C'}</span></td><td class="${rc}">${s.status}</td><td class="${rc}">${rt}</td><td>${s.session||'N/A'}</td></tr>`;
-      }).join('');
-      
-      updatePairFilter(sigs);
-    }
-    
-    function renderAnalytics(){
-      if(!data)return;
-      const an=data.performance_stats||data.analytics||{};
-      renderTier(an.by_tier||{});
-      renderSess(an.by_session||{});
-      renderPair(an.by_pair||{});
-      renderMode(an.by_mode||{});
-    }
-    
-    // ✅ FIX: Tier analytics with inline badges
-    function renderTier(ts){
-      const c=document.getElementById('tierAnalytics');
-      const tiers=['A+','A','B','C'];
-      
-      c.innerHTML=tiers.map(t=>{
-        const d=ts[t]||{trades:0,wins:0,losses:0,win_rate:0,total_pips:0,avg_pips:0};
-        const wr=d.win_rate||0;
+      return `<div class="card">
+        ${state.updates > 0 ? `<div class="update-badge">
+          <i data-lucide="refresh-cw" style="width:12px;height:12px"></i>
+          UPDATED ${state.updates}x
+        </div>` : ''}
         
-        return`<div class="analytics-item">
-          <div>
-            <span class="analytics-tier-badge tier-${getTier(t)}">Tier ${t}</span>
-            <span class="analytics-label">${d.trades} trades</span>
-          </div>
-          <div class="analytics-value" style="color:${wr>=60?'var(--green)':'var(--text)'}">${wr.toFixed(1)}%</div>
+        <div class="strength">
+          <svg viewBox="0 0 50 50">
+            <circle class="strength-bg" cx="25" cy="25" r="23"></circle>
+            <circle class="strength-bar" cx="25" cy="25" r="23" stroke="${col}" stroke-dasharray="${c}" stroke-dashoffset="${off}"></circle>
+          </svg>
+          <div class="strength-text" style="color:${col}">${sc}</div>
         </div>
-        <div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;
-      }).join('');
+        
+        <div class="signal-tier tier-${getTier(s.tier||'C')}">${s.tier||'C'}</div>
+        <div class="pair">${s.pair}</div>
+        <div class="dir dir-${s.direction.toLowerCase()}">
+          <i data-lucide="${s.direction==='BUY'?'arrow-up':'arrow-down'}" style="width:14px;height:14px"></i>
+          ${s.direction}
+        </div>
+        
+        <div class="section-title">
+          <i data-lucide="trending-up" style="width:14px;height:14px"></i>
+          CURRENT VALUES
+        </div>
+        <div class="metrics-grid">
+          <div class="metric-item">
+            <div class="metric-item-label">ENTRY</div>
+            <div class="metric-item-value">${s.entry_price?.toFixed(5)||'N/A'}</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-item-label">STOP LOSS</div>
+            <div class="metric-item-value">${s.sl?.toFixed(5)||'N/A'}</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-item-label">TAKE PROFIT</div>
+            <div class="metric-item-value">${s.tp?.toFixed(5)||'N/A'}</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-item-label">RISK:REWARD</div>
+            <div class="metric-item-value hl">${s.risk_reward?.toFixed(2)||'N/A'}</div>
+          </div>
+        </div>
+        
+        ${hasChanges ? `
+        <div class="changes-section">
+          <div class="section-title" style="margin:0 0 12px 0">
+            <i data-lucide="git-compare" style="width:14px;height:14px"></i>
+            CHANGES FROM PREVIOUS
+          </div>
+          ${renderChange('Entry', changes.entry)}
+          ${renderChange('Stop Loss', changes.sl)}
+          ${renderChange('Take Profit', changes.tp)}
+          ${renderChange('Risk:Reward', changes.rr)}
+        </div>
+        ` : ''}
+        
+        ${state.history.length > 1 ? `
+        <div class="history-section">
+          <div class="section-title" style="margin:0 0 12px 0">
+            <i data-lucide="clock" style="width:14px;height:14px"></i>
+            SIGNAL HISTORY (${state.history.length} updates)
+          </div>
+          ${state.history.slice(0, 3).map(h => `
+            <div class="history-item">
+              <span class="history-time">${fmt(h.timestamp)}</span>
+              <span class="history-value">Entry ${h.entry_price?.toFixed(5)}</span>
+            </div>
+          `).join('')}
+        </div>
+        ` : ''}
+        
+        <div class="footer">
+          <div class="time">
+            <i data-lucide="clock" style="width:12px;height:12px"></i>
+            ${fmt(s.timestamp)}
+          </div>
+          <div class="session">${s.session||'N/A'}</div>
+        </div>
+      </div>`;
     }
     
-    function renderSess(ss){
-      const c=document.getElementById('sessionAnalytics');
-      const ses=Object.keys(ss).sort();
-      c.innerHTML=ses.map(s=>{
-        const d=ss[s];const wr=d.win_rate||0;
-        return`<div class="analytics-item"><div class="analytics-label">${s}</div><div class="analytics-value">${d.trades} trades • ${wr.toFixed(1)}%</div></div><div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;
-      }).join('');
+    // ✅ Calculate change between two values
+    function calcChange(oldVal, newVal) {
+      if (!oldVal || !newVal) return { diff: 0, dir: 'neutral', pct: 0 };
+      
+      const diff = newVal - oldVal;
+      const pct = (diff / oldVal) * 100;
+      
+      return {
+        diff: diff,
+        dir: diff > 0 ? 'up' : diff < 0 ? 'down' : 'neutral',
+        pct: pct
+      };
     }
     
-    function renderPair(ps){
-      const c=document.getElementById('pairAnalytics');
-      const pairs=Object.entries(ps).sort((a,b)=>(b[1].total_pips||0)-(a[1].total_pips||0)).slice(0,10);
-      if(pairs.length===0){c.innerHTML='<p style="color:var(--text-muted);text-align:center;padding:20px">No data</p>';return;}
-      c.innerHTML=pairs.map(([p,d])=>{
-        const pips=d.total_pips||0;const wr=d.win_rate||0;
-        return`<div class="analytics-item"><div class="analytics-label" style="font-weight:800">${p}</div><div class="analytics-value" style="color:${pips>0?'var(--green)':'var(--red)'}">${pips>0?'+':''}${pips.toFixed(1)} pips</div></div><div style="font-size:12px;color:var(--text-dim);margin-top:4px">${d.trades} trades • ${wr.toFixed(1)}% WR</div>`;
-      }).join('');
+    // ✅ Render change indicator (showing all changes, including zero)
+    function renderChange(label, change) {
+      if (!change) return '';
+      
+      const arrow = change.dir === 'up' ? '↑' : change.dir === 'down' ? '↓' : '=';
+      const sign = change.diff > 0 ? '+' : '';
+      
+      return `
+        <div class="change-item">
+          <span class="change-label">${label}:</span>
+          <span class="change-value ${change.dir}">
+            <span class="change-arrow">${arrow}</span>
+            ${sign}${Math.abs(change.diff).toFixed(5)}
+          </span>
+        </div>
+      `;
     }
     
-    function renderMode(ms){
-      const c=document.getElementById('modeAnalytics');
-      const modes=['all','aggressive','conservative'];
-      c.innerHTML=modes.map(m=>{
-        const d=ms[m]||{trades:0,wins:0,win_rate:0,total_pips:0};
-        const wr=d.win_rate||0;const pips=d.total_pips||0;
-        return`<div class="analytics-item"><div class="analytics-label" style="text-transform:uppercase;font-weight:800">${m}</div><div class="analytics-value">${d.trades} trades</div></div><div style="display:flex;justify-content:space-between;margin-top:12px;font-size:14px"><span style="color:var(--text-dim)">Win Rate: ${wr.toFixed(1)}%</span><span style="color:${pips>0?'var(--green)':'var(--red)'};font-weight:900">${pips>0?'+':''}${pips.toFixed(1)} pips</span></div><div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;
-      }).join('');
+    function updateSess() {
+      const now = new Date();
+      const h = now.getUTCHours();
+      let s = 'LATE_US';
+      if (h >= 0 && h < 7) s = 'ASIAN';
+      else if (h >= 7 && h < 12) s = 'EUROPEAN';
+      else if (h >= 12 && h < 17) s = 'OVERLAP';
+      else if (h >= 17 && h < 22) s = 'US';
+      document.getElementById('mSession').textContent = s;
+      document.getElementById('mTime').textContent = now.toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit', timeZone:'UTC'}) + ' UTC';
     }
     
-    function updateSess(){
-      const now=new Date();const h=now.getUTCHours();
-      let s='LATE_US';
-      if(h>=0&&h<7)s='ASIAN';else if(h>=7&&h<12)s='EUROPEAN';else if(h>=12&&h<17)s='OVERLAP';else if(h>=17&&h<22)s='US';
-      document.getElementById('mSession').textContent=s;
-      document.getElementById('mTime').textContent=now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC';
+    function getTier(t) {
+      if (!t) return 'c';
+      return t === 'A+' ? 'aplus' : t.toLowerCase();
     }
     
-    function initFilters(){
-      const ed=document.getElementById('dateEnd'),sd=document.getElementById('dateStart');
-      const today=new Date().toISOString().split('T')[0];
-      const week=new Date(Date.now()-7*24*60*60*1000).toISOString().split('T')[0];
-      ed.value=today;sd.value=week;
-      ed.addEventListener('change',renderHistory);sd.addEventListener('change',renderHistory);
-      document.getElementById('filterStatus').addEventListener('change',renderHistory);
-      document.getElementById('filterPair').addEventListener('change',renderHistory);
+    function fmt(ts) {
+      if (!ts) return 'N/A';
+      const d = new Date(ts);
+      return d.toLocaleString('en-US', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
     }
     
-    function updatePairFilter(sigs){
-      const pairs=[...new Set(sigs.map(s=>s.pair))].sort();
-      const sel=document.getElementById('filterPair');
-      const cv=sel.value;
-      sel.innerHTML='<option value="all">All Pairs</option>'+pairs.map(p=>`<option value="${p}">${p}</option>`).join('');
-      sel.value=cv;
+    function showEmpty(cid, icon, title, desc) {
+      document.getElementById(cid).innerHTML = `<div class="empty"><i data-lucide="${icon}" class="empty-icon"></i><div class="empty-title">${title}</div><div class="empty-desc">${desc}</div></div>`;
+      lucide.createIcons();
     }
-    
-    function getTier(t){
-      if(!t) return 'c';
-      return t==='A+'?'aplus':t.toLowerCase();
-    }
-    function fmt(ts){if(!ts)return'N/A';const d=new Date(ts);return d.toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}
-    function fmtDate(ts){if(!ts)return'N/A';const d=new Date(ts);return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
-    function showEmpty(cid,icon,title,desc){document.getElementById(cid).innerHTML=`<div class="empty"><i data-lucide="${icon}" class="empty-icon"></i><div class="empty-title">${title}</div><div class="empty-desc">${desc}</div></div>`;lucide.createIcons();}
   </script>
 </body>
 </html>

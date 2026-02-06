@@ -131,8 +131,9 @@
       background: var(--green);
       border-radius: 50%;
       box-shadow: 0 0 10px var(--green);
-      animation: pulse 2s ease-in-out infinite;
+      animation: pulseDot 2s ease-in-out infinite;
     }
+    @keyframes pulseDot { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     
     /* Metrics */
     .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 32px; }
@@ -261,7 +262,6 @@
       border: 1px solid var(--border);
       border-radius: 16px;
       padding: 24px;
-      padding-top: 50px; /* ✅ FIX: Space for tier badge */
       position: relative;
       overflow: hidden;
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -277,29 +277,27 @@
     }
     .card:hover { transform: translateY(-8px) scale(1.02); border-color: rgba(255,255,255,0.2); box-shadow: var(--glow-orange); }
     
-    /* ✅ FIX: Tier badge positioning */
-    .tier {
-      position: absolute;
-      top: 12px;
-      left: 12px;
+    /* ✅ FIX: Signal tier badge - properly positioned */
+    .signal-tier {
+      display: inline-block;
       padding: 6px 12px;
       border-radius: 8px;
       font-family: 'Orbitron', monospace;
       font-size: 11px;
       font-weight: 900;
       color: white;
-      z-index: 5;
+      margin-bottom: 12px;
     }
-    .tier-aplus { background: linear-gradient(135deg, #fbbf24, #f59e0b); box-shadow: 0 0 20px rgba(251,191,36,0.5); }
-    .tier-a { background: linear-gradient(135deg, var(--green), #00c787); box-shadow: 0 0 20px rgba(0,242,169,0.4); }
-    .tier-b { background: linear-gradient(135deg, var(--blue), #3a8bd6); box-shadow: 0 0 20px rgba(79,172,254,0.4); }
-    .tier-c { background: linear-gradient(135deg, #6b7280, #4b5563); }
+    .signal-tier.tier-aplus { background: linear-gradient(135deg, #fbbf24, #f59e0b); box-shadow: 0 0 20px rgba(251,191,36,0.5); }
+    .signal-tier.tier-a { background: linear-gradient(135deg, var(--green), #00c787); box-shadow: 0 0 20px rgba(0,242,169,0.4); }
+    .signal-tier.tier-b { background: linear-gradient(135deg, var(--blue), #3a8bd6); box-shadow: 0 0 20px rgba(79,172,254,0.4); }
+    .signal-tier.tier-c { background: linear-gradient(135deg, #6b7280, #4b5563); }
     
     /* Signal Strength Meter */
     .strength {
       position: absolute;
-      top: 12px;
-      right: 12px;
+      top: 24px;
+      right: 24px;
       width: 60px;
       height: 60px;
     }
@@ -324,7 +322,7 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       margin-bottom: 12px;
-      padding-right: 70px; /* ✅ FIX: Space for strength meter */
+      padding-right: 70px;
     }
     
     .dir {
@@ -419,6 +417,22 @@
       letter-spacing: 0.5px;
     }
     
+    /* ✅ FIX: Analytics tier badges - inline display */
+    .analytics-tier-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-family: 'Orbitron', monospace;
+      font-size: 10px;
+      font-weight: 900;
+      color: white;
+      margin-right: 8px;
+    }
+    .analytics-tier-badge.tier-aplus { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+    .analytics-tier-badge.tier-a { background: linear-gradient(135deg, var(--green), #00c787); }
+    .analytics-tier-badge.tier-b { background: linear-gradient(135deg, var(--blue), #3a8bd6); }
+    .analytics-tier-badge.tier-c { background: linear-gradient(135deg, #6b7280, #4b5563); }
+    
     /* History */
     .history-wrap {
       background: var(--surface);
@@ -480,6 +494,20 @@
     .win { color: var(--green); font-weight: 900; }
     .loss { color: var(--red); font-weight: 900; }
     .exp { color: var(--text-muted); font-weight: 700; }
+    
+    /* History tier badges */
+    .history-tier-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 900;
+      color: white;
+    }
+    .history-tier-badge.tier-aplus { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+    .history-tier-badge.tier-a { background: linear-gradient(135deg, var(--green), #00c787); }
+    .history-tier-badge.tier-b { background: linear-gradient(135deg, var(--blue), #3a8bd6); }
+    .history-tier-badge.tier-c { background: linear-gradient(135deg, #6b7280, #4b5563); }
     
     .history-scroll-container::-webkit-scrollbar {
       height: 10px;
@@ -551,21 +579,6 @@
     .empty-title { font-size: 20px; font-weight: 900; color: var(--text-dim); margin-bottom: 8px; }
     .empty-desc { font-size: 14px; color: var(--text-muted); }
     
-    /* Debug info */
-    .debug-info {
-      position: fixed;
-      bottom: 10px;
-      right: 10px;
-      background: rgba(0,0,0,0.8);
-      padding: 10px;
-      border-radius: 8px;
-      font-family: 'Orbitron', monospace;
-      font-size: 10px;
-      color: var(--green);
-      z-index: 9999;
-      display: none; /* Hidden by default, toggle with Ctrl+D */
-    }
-    
     /* Responsive */
     @media (max-width: 768px) {
       .header-grid { grid-template-columns: 1fr; }
@@ -578,15 +591,6 @@
 <body>
   <div class="candles">
     <div class="candle"></div><div class="candle"></div><div class="candle"></div><div class="candle"></div><div class="candle"></div>
-  </div>
-
-  <!-- ✅ Debug Info Panel -->
-  <div class="debug-info" id="debugInfo">
-    <div>Total Signals: <span id="dbgTotal">0</span></div>
-    <div>Agg Signals: <span id="dbgAgg">0</span></div>
-    <div>Cons Signals: <span id="dbgCons">0</span></div>
-    <div>Unique IDs: <span id="dbgUnique">0</span></div>
-    <div>Display Mode: <span id="dbgMode">--</span></div>
   </div>
 
   <div class="container">
@@ -672,21 +676,13 @@
       initFilters();
       updateSess();
       setInterval(updateSess,60000);
-      
-      // Toggle debug with Ctrl+D
-      document.addEventListener('keydown', (e) => {
-        if (e.ctrlKey && e.key === 'd') {
-          e.preventDefault();
-          const debug = document.getElementById('debugInfo');
-          debug.style.display = debug.style.display === 'none' ? 'block' : 'none';
-        }
-      });
     });
     
     async function load(){
       try{
         const r=await fetch('signal_state/dashboard_state.json');
         data=await r.json();
+        console.log('📊 Dashboard data loaded:', data);
         updateMetrics();
         renderSignals();
         renderHistory();
@@ -719,44 +715,34 @@
       lucide.createIcons();
     }
     
-    // ✅ FIX 1: Complete signal count deduplication
+    // ✅ CRITICAL FIX: Proper signal count deduplication
     function updateMetrics(){
       if(!data) return;
-      
-      console.log('=== SIGNAL COUNT DEBUG ===');
-      console.log('Raw data:', data.signals_by_mode);
       
       const aggSignals = data.signals_by_mode?.aggressive || [];
       const consSignals = data.signals_by_mode?.conservative || [];
       
-      console.log('Aggressive count:', aggSignals.length);
-      console.log('Conservative count:', consSignals.length);
+      // Deduplicate across BOTH modes by signal_id
+      const seen = new Set();
+      const uniqueSignals = [];
       
-      // Deduplicate by signal_id
-      const allSignals = [...aggSignals, ...consSignals];
-      const uniqueMap = new Map();
-      allSignals.forEach(s => {
-        if (s.signal_id && !uniqueMap.has(s.signal_id)) {
-          uniqueMap.set(s.signal_id, s);
+      [...aggSignals, ...consSignals].forEach(s => {
+        if (s.signal_id && !seen.has(s.signal_id)) {
+          seen.add(s.signal_id);
+          uniqueSignals.push(s);
         }
       });
-      const uniqueSignals = Array.from(uniqueMap.values());
       
-      console.log('Total before dedup:', allSignals.length);
-      console.log('Unique after dedup:', uniqueSignals.length);
-      console.log('Unique IDs:', Array.from(uniqueMap.keys()));
-      
-      // Update debug panel
-      document.getElementById('dbgTotal').textContent = allSignals.length;
-      document.getElementById('dbgAgg').textContent = aggSignals.length;
-      document.getElementById('dbgCons').textContent = consSignals.length;
-      document.getElementById('dbgUnique').textContent = uniqueSignals.length;
-      document.getElementById('dbgMode').textContent = mode;
+      console.log('🔍 Signal Counts:');
+      console.log('  Aggressive array:', aggSignals.length);
+      console.log('  Conservative array:', consSignals.length);
+      console.log('  Unique signals:', uniqueSignals.length);
+      console.log('  Unique IDs:', Array.from(seen));
       
       const st=data.stats||{};
       const wr=st.win_rate||0,tp=st.total_pips||0,ex=st.expectancy||0,tt=st.total_trades||0;
       
-      // Use deduplicated count
+      // Use UNIQUE count everywhere
       document.getElementById('hActive').textContent = uniqueSignals.length;
       document.getElementById('hWR').textContent = wr.toFixed(1)+'%';
       document.getElementById('hPips').textContent = tp>0?'+'+tp.toFixed(0):tp.toFixed(0);
@@ -773,6 +759,7 @@
       document.getElementById('mTodaySub').textContent = tc===0?'No signals':'Generated today';
     }
     
+    // ✅ CRITICAL FIX: Deduplicate signals before rendering
     function renderSignals(){
       const g=document.getElementById('signalsGrid');
       if(!data){
@@ -780,22 +767,34 @@
         return;
       }
       
-      // Get mode-specific signals without per-pair deduplication
+      // Get signals for selected mode
       let sigs = data.signals_by_mode?.[mode] || [];
       
-      console.log(`=== RENDERING ${mode.toUpperCase()} SIGNALS ===`);
-      console.log('Signal count:', sigs.length);
-      console.log('Signals:', sigs.map(s => `${s.pair} ${s.signal_id}`));
+      console.log(`🎯 Rendering ${mode} mode:`, sigs.length, 'signals');
       
-      // Sort by timestamp (newest first)
-      sigs = sigs.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+      // ✅ DEDUPLICATE by signal_id before rendering
+      const seen = new Set();
+      const uniqueSigs = [];
       
-      if(sigs.length === 0){
+      sigs.forEach(s => {
+        if (s.signal_id && !seen.has(s.signal_id)) {
+          seen.add(s.signal_id);
+          uniqueSigs.push(s);
+        }
+      });
+      
+      console.log(`  After deduplication: ${uniqueSigs.length} unique signals`);
+      console.log('  IDs:', Array.from(seen));
+      
+      // Sort by timestamp
+      uniqueSigs.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+      
+      if(uniqueSigs.length === 0){
         showEmpty('signalsGrid','radio','No signals',`No ${mode} signals`);
         return;
       }
       
-      g.innerHTML = sigs.map(s=>{
+      g.innerHTML = uniqueSigs.map(s=>{
         const sc=s.score||50;
         const sp=Math.min(100,sc);
         const c=2*Math.PI*27;
@@ -804,11 +803,11 @@
         if(sc>=80)col='#fbbf24';else if(sc>=70)col='#00f2a9';else if(sc>=60)col='#4facfe';
         
         return`<div class="card">
-          <div class="tier tier-${getTier(s.tier)}">${s.tier || 'C'}</div>
           <div class="strength">
             <svg viewBox="0 0 60 60"><circle class="strength-bg" cx="30" cy="30" r="27"></circle><circle class="strength-bar" cx="30" cy="30" r="27" stroke="${col}" stroke-dasharray="${c}" stroke-dashoffset="${off}"></circle></svg>
             <div class="strength-text" style="color:${col}">${sc}</div>
           </div>
+          <div class="signal-tier tier-${getTier(s.tier||'C')}">${s.tier||'C'}</div>
           <div class="pair">${s.pair}</div>
           <div class="dir dir-${s.direction.toLowerCase()}"><i data-lucide="${s.direction==='BUY'?'arrow-up':'arrow-down'}" style="width:14px;height:14px"></i>${s.direction}</div>
           <div class="metrics-grid">
@@ -866,7 +865,7 @@
         const rc=s.status==='WIN'?'win':s.status==='LOSS'?'loss':'exp';
         const pv=s.pips||0;
         const rt=s.status==='WIN'?`+${pv.toFixed(1)}`:s.status==='LOSS'?`${pv.toFixed(1)}`:'EXPIRED';
-        return`<tr><td>${fmtDate(s.timestamp)}</td><td style="font-weight:900">${s.pair}</td><td>${s.direction}</td><td><span class="tier tier-${getTier(s.tier)}" style="font-size:10px;padding:4px 8px">${s.tier||'C'}</span></td><td class="${rc}">${s.status}</td><td class="${rc}">${rt}</td><td>${s.session||'N/A'}</td></tr>`;
+        return`<tr><td>${fmtDate(s.timestamp)}</td><td style="font-weight:900">${s.pair}</td><td>${s.direction}</td><td><span class="history-tier-badge tier-${getTier(s.tier||'C')}">${s.tier||'C'}</span></td><td class="${rc}">${s.status}</td><td class="${rc}">${rt}</td><td>${s.session||'N/A'}</td></tr>`;
       }).join('');
       
       updatePairFilter(sigs);
@@ -881,7 +880,7 @@
       renderMode(an.by_mode||{});
     }
     
-    // ✅ FIX 2: Proper tier labels with all tiers
+    // ✅ FIX: Tier analytics with inline badges
     function renderTier(ts){
       const c=document.getElementById('tierAnalytics');
       const tiers=['A+','A','B','C'];
@@ -892,8 +891,8 @@
         
         return`<div class="analytics-item">
           <div>
-            <span class="tier tier-${getTier(t)}" style="font-size:11px;padding:4px 10px">Tier ${t}</span>
-            <span class="analytics-label" style="margin-left:12px">${d.trades} trades</span>
+            <span class="analytics-tier-badge tier-${getTier(t)}">Tier ${t}</span>
+            <span class="analytics-label">${d.trades} trades</span>
           </div>
           <div class="analytics-value" style="color:${wr>=60?'var(--green)':'var(--text)'}">${wr.toFixed(1)}%</div>
         </div>

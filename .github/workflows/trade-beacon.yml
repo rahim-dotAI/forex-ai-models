@@ -109,23 +109,23 @@ jobs:
           if [ "$IS_HOLIDAY" = "true" ] || [ "$IS_WEEKEND" = "true" ]; then
             if [ "$FORCE_RUN" = "true" ]; then
               echo "⚠️  Market closed but FORCE RUN enabled"
-              echo "market_open=true" >> $GITHUB_OUTPUT
+              echo "should_run=true" >> $GITHUB_OUTPUT
             else
               echo "🛑 Market is CLOSED - skipping execution"
               echo "   Current time: $(date -u +"%Y-%m-%d %H:%M UTC")"
               echo "   Day of week: $CURRENT_DAY (1=Mon, 7=Sun)"
-              echo "market_open=false" >> $GITHUB_OUTPUT
+              echo "should_run=false" >> $GITHUB_OUTPUT
             fi
           else
             echo "✅ Market is OPEN - proceeding with execution"
-            echo "market_open=true" >> $GITHUB_OUTPUT
+            echo "should_run=true" >> $GITHUB_OUTPUT
           fi
       
-      - name: Exit if market closed
-        if: steps.market_check.outputs.market_open == 'false'
+      - name: Market Closed Notice
+        if: steps.market_check.outputs.should_run == 'false'
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "🛑 FOREX MARKET CLOSED"
+          echo "🛑 FOREX MARKET CLOSED - SKIPPING ALL STEPS"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo ""
           echo "Current time: $(date -u +"%Y-%m-%d %H:%M UTC")"
@@ -138,12 +138,13 @@ jobs:
           echo "with 'force_run' parameter set to true"
           echo ""
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          exit 0
       
       - name: Checkout repository
+        if: steps.market_check.outputs.should_run == 'true'
         uses: actions/checkout@v4
       
       - name: Setup Python environment
+        if: steps.market_check.outputs.should_run == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
@@ -151,12 +152,14 @@ jobs:
           cache-dependency-path: requirements.txt
       
       - name: Install dependencies
+        if: steps.market_check.outputs.should_run == 'true'
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           sudo apt-get update && sudo apt-get install -y jq bc
       
       - name: Verify system files
+        if: steps.market_check.outputs.should_run == 'true'
         run: |
           echo "🔍 Verifying critical files..."
           for f in $ENTRY_SCRIPT requirements.txt performance_tracker.py config.json; do
@@ -175,6 +178,7 @@ jobs:
           python -m py_compile performance_tracker.py
           echo "✅ Python syntax validation passed"
       
+        if: steps.market_check.outputs.should_run == 'true'
       - name: Validate tracker version alignment
         run: |
           echo "🔍 Validating PerformanceTracker version..."

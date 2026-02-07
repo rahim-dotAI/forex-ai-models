@@ -767,7 +767,8 @@
       const hour = now.getUTCHours();
       
       // Market closed: Friday 22:00 UTC to Sunday 22:00 UTC
-      const isWeekend = (day === 6 && hour >= 22) || day === 0 || (day === 1 && hour < 22);
+      // Friday after 22:00, all of Saturday (day 6), all of Sunday until 22:00
+      const isWeekend = (day === 5 && hour >= 22) || day === 6 || (day === 0 && hour < 22);
       
       const statusBadge = document.querySelector('.status-badge');
       const statusText = statusBadge.querySelector('span');
@@ -781,17 +782,28 @@
         statusDot.style.background = 'var(--text-muted)';
         statusDot.style.boxShadow = '0 0 10px var(--text-muted)';
         
-        // Add weekend notice
+        // Add weekend notice with replay button
         const container = document.querySelector('.container');
-        const notice = document.createElement('div');
-        notice.id = 'weekend-notice';
-        notice.style.cssText = 'background: rgba(107, 114, 128, 0.1); border: 1px solid rgba(107, 114, 128, 0.3); border-radius: 12px; padding: 16px 24px; margin-bottom: 24px; text-align: center; display: flex; align-items: center; justify-content: center; gap: 12px;';
-        notice.innerHTML = `
-          <i data-lucide="moon" style="width:20px;height:20px;color:var(--text-muted)"></i>
-          <span style="color:var(--text-dim);font-size:14px;font-weight:600;">Weekend Mode • Market reopens <strong>Monday 00:00 UTC</strong></span>
-        `;
-        container.insertBefore(notice, container.querySelector('.metrics'));
-        lucide.createIcons();
+        if (!document.getElementById('weekend-notice')) {
+          const notice = document.createElement('div');
+          notice.id = 'weekend-notice';
+          notice.style.cssText = 'background: rgba(107, 114, 128, 0.1); border: 1px solid rgba(107, 114, 128, 0.3); border-radius: 12px; padding: 16px 24px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;';
+          notice.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <i data-lucide="moon" style="width:20px;height:20px;color:var(--text-muted)"></i>
+              <span style="color:var(--text-dim);font-size:14px;font-weight:600;">Weekend Mode • Market reopens <strong>Monday 00:00 UTC</strong></span>
+            </div>
+            <button id="replayBtn" onclick="playWeeklyReplay()" style="padding: 10px 20px; background: linear-gradient(135deg, var(--orange), #ff8c61); border: none; border-radius: 8px; color: white; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: 'Rajdhani', sans-serif; letter-spacing: 0.5px; box-shadow: var(--glow-orange); transition: all 0.3s;">
+              <i data-lucide="play" style="width:14px;height:14px"></i>
+              PLAY WEEKLY REPLAY
+            </button>
+            <div id="replayProgress" style="display:none; width:100%; height:4px; background:var(--elevated); border-radius:2px; overflow:hidden; margin-top:8px;">
+              <div id="replayBar" style="height:100%; width:0%; background:linear-gradient(90deg, var(--orange), var(--blue)); transition: width 0.3s;"></div>
+            </div>
+          `;
+          container.insertBefore(notice, container.querySelector('.metrics'));
+          lucide.createIcons();
+        }
       }
     }
     
@@ -1232,6 +1244,147 @@
     
     function showEmpty(cid, icon, title, desc) {
       document.getElementById(cid).innerHTML = `<div class="empty"><i data-lucide="${icon}" class="empty-icon"></i><div class="empty-title">${title}</div><div class="empty-desc">${desc}</div></div>`;
+      lucide.createIcons();
+    }
+    
+    // ✅ WEEKLY REPLAY ANIMATION
+    let isReplaying = false;
+    
+    function getWeeklySignals() {
+      if (!data) return [];
+      const now = new Date();
+      const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); // 7 days ago
+      
+      const aggSignals = data.signals_by_mode?.aggressive || [];
+      const consSignals = data.signals_by_mode?.conservative || [];
+      const allSignals = [...aggSignals, ...consSignals];
+      
+      // Deduplicate and filter by week
+      const seen = new Set();
+      const weeklySignals = [];
+      
+      allSignals.forEach(s => {
+        if (s.signal_id && !seen.has(s.signal_id) && new Date(s.timestamp) >= startOfWeek) {
+          seen.add(s.signal_id);
+          weeklySignals.push(s);
+        }
+      });
+      
+      // Sort oldest first for chronological replay
+      return weeklySignals.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    }
+    
+    async function playWeeklyReplay() {
+      if (isReplaying) return;
+      
+      isReplaying = true;
+      const btn = document.getElementById('replayBtn');
+      const progress = document.getElementById('replayProgress');
+      const bar = document.getElementById('replayBar');
+      
+      // Change button state
+      btn.innerHTML = '<i data-lucide="pause" style="width:14px;height:14px"></i>REPLAYING...';
+      btn.disabled = true;
+      btn.style.opacity = '0.6';
+      progress.style.display = 'block';
+      lucide.createIcons();
+      
+      const signals = getWeeklySignals();
+      
+      if (signals.length === 0) {
+        alert('No signals from the past week to replay!');
+        resetReplayButton();
+        return;
+      }
+      
+      const grid = document.getElementById('signalsGrid');
+      const tempState = {}; // Temporary state for replay
+      
+      // Clear grid and start replay
+      grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-dim);font-size:18px;font-weight:700;">📽️ Starting Weekly Replay...</div>';
+      
+      await new Promise(r => setTimeout(r, 1000));
+      
+      for (let i = 0; i < signals.length; i++) {
+        const s = signals[i];
+        const key = `${s.pair}_${s.direction}`;
+        
+        const justUpdated = [];
+        
+        if (!tempState[key]) {
+          tempState[key] = {
+            pair: s.pair,
+            direction: s.direction,
+            current: s,
+            previous: null,
+            history: [s],
+            updates: 0
+          };
+        } else {
+          const state = tempState[key];
+          state.previous = state.current;
+          state.current = s;
+          state.history.unshift(s);
+          state.updates++;
+          justUpdated.push(key);
+          
+          if (state.history.length > 10) state.history.length = 10;
+        }
+        
+        // Render current state
+        const cards = Object.values(tempState).sort((a, b) => 
+          new Date(b.current.timestamp) - new Date(a.current.timestamp)
+        );
+        
+        grid.innerHTML = cards.map(state => 
+          createSignalCard(state, justUpdated.includes(`${state.pair}_${state.direction}`))
+        ).join('');
+        lucide.createIcons();
+        
+        // Update progress bar
+        bar.style.width = ((i + 1) / signals.length * 100) + '%';
+        
+        // Scroll to updated card if any
+        if (justUpdated.length > 0) {
+          const firstUpdated = document.querySelector('.card.just-updated');
+          if (firstUpdated) {
+            firstUpdated.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }
+        
+        // Show timestamp in console
+        console.log(`🎬 Replay [${i + 1}/${signals.length}]: ${s.pair} ${s.direction} at ${fmt(s.timestamp)}`);
+        
+        // Delay between signals (faster for more signals)
+        const delay = signals.length > 20 ? 500 : 800;
+        await new Promise(r => setTimeout(r, delay));
+      }
+      
+      // Replay complete
+      await new Promise(r => setTimeout(r, 1000));
+      grid.innerHTML = '<div style="text-align:center;padding:60px 40px;background:var(--surface);border:1px solid var(--border);border-radius:16px;"><i data-lucide="check-circle" style="width:64px;height:64px;color:var(--green);margin:0 auto 20px;display:block;"></i><div style="font-size:24px;font-weight:900;color:var(--green);margin-bottom:12px;">Weekly Replay Complete!</div><div style="font-size:14px;color:var(--text-dim);">Replayed ${signals.length} signals from the past 7 days</div></div>';
+      lucide.createIcons();
+      
+      // Reset after 3 seconds
+      await new Promise(r => setTimeout(r, 3000));
+      processAndRenderSignals(); // Return to normal view
+      resetReplayButton();
+    }
+    
+    function resetReplayButton() {
+      isReplaying = false;
+      const btn = document.getElementById('replayBtn');
+      const progress = document.getElementById('replayProgress');
+      const bar = document.getElementById('replayBar');
+      
+      if (btn) {
+        btn.innerHTML = '<i data-lucide="play" style="width:14px;height:14px"></i>PLAY WEEKLY REPLAY';
+        btn.disabled = false;
+        btn.style.opacity = '1';
+      }
+      if (progress) progress.style.display = 'none';
+      if (bar) bar.style.width = '0%';
+      
       lucide.createIcons();
     }
   </script>

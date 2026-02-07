@@ -2,7 +2,7 @@ name: Trade Beacon v2.1.2 – Forex Signal Generator
 
 on:
   schedule:
-    # Run every 15 minutes during market hours (Mon-Fri)
+    # Run every 15 minutes during market hours (Mon-Fri) - BUT we'll check for weekends/holidays in code
     - cron: "*/15 * * * 1-5"
   
   repository_dispatch:
@@ -32,6 +32,12 @@ on:
         required: false
         type: boolean
         default: false
+      
+      force_run:
+        description: 'Force run even on weekends/holidays'
+        required: false
+        type: boolean
+        default: false
 
 env:
   PYTHON_VERSION: "3.10"
@@ -49,6 +55,91 @@ jobs:
     runs-on: ubuntu-22.04
     
     steps:
+      - name: Check if market is open
+        id: market_check
+        run: |
+          echo "🕐 Checking market status..."
+          
+          # Get current UTC time
+          CURRENT_DAY=$(date -u +%u)  # 1=Monday, 7=Sunday
+          CURRENT_HOUR=$(date -u +%H)
+          CURRENT_DATE=$(date -u +%Y-%m-%d)
+          
+          # Major forex market holidays (add more as needed)
+          # Format: YYYY-MM-DD
+          HOLIDAYS=(
+            "2025-01-01"  # New Year's Day
+            "2025-04-18"  # Good Friday
+            "2025-04-21"  # Easter Monday
+            "2025-05-26"  # Spring Bank Holiday (UK)
+            "2025-07-04"  # Independence Day (US)
+            "2025-08-25"  # Summer Bank Holiday (UK)
+            "2025-12-25"  # Christmas Day
+            "2025-12-26"  # Boxing Day
+            "2026-01-01"  # New Year's Day 2026
+          )
+          
+          # Check if today is a holiday
+          IS_HOLIDAY=false
+          for holiday in "${HOLIDAYS[@]}"; do
+            if [ "$CURRENT_DATE" = "$holiday" ]; then
+              IS_HOLIDAY=true
+              echo "📅 Today is a forex market holiday: $holiday"
+              break
+            fi
+          done
+          
+          # Check if weekend
+          # Friday after 22:00 UTC, all of Saturday (6), all of Sunday (7) until 22:00 UTC
+          IS_WEEKEND=false
+          if [ "$CURRENT_DAY" -eq 5 ] && [ "$CURRENT_HOUR" -ge 22 ]; then
+            IS_WEEKEND=true
+            echo "📅 Weekend mode: Friday after 22:00 UTC"
+          elif [ "$CURRENT_DAY" -eq 6 ]; then
+            IS_WEEKEND=true
+            echo "📅 Weekend mode: Saturday"
+          elif [ "$CURRENT_DAY" -eq 7 ] && [ "$CURRENT_HOUR" -lt 22 ]; then
+            IS_WEEKEND=true
+            echo "📅 Weekend mode: Sunday before 22:00 UTC"
+          fi
+          
+          # Determine if we should run
+          FORCE_RUN="${{ github.event.inputs.force_run }}"
+          
+          if [ "$IS_HOLIDAY" = "true" ] || [ "$IS_WEEKEND" = "true" ]; then
+            if [ "$FORCE_RUN" = "true" ]; then
+              echo "⚠️  Market closed but FORCE RUN enabled"
+              echo "market_open=true" >> $GITHUB_OUTPUT
+            else
+              echo "🛑 Market is CLOSED - skipping execution"
+              echo "   Current time: $(date -u +"%Y-%m-%d %H:%M UTC")"
+              echo "   Day of week: $CURRENT_DAY (1=Mon, 7=Sun)"
+              echo "market_open=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "✅ Market is OPEN - proceeding with execution"
+            echo "market_open=true" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Exit if market closed
+        if: steps.market_check.outputs.market_open == 'false'
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🛑 FOREX MARKET CLOSED"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          echo "Current time: $(date -u +"%Y-%m-%d %H:%M UTC")"
+          echo ""
+          echo "Market hours: Sunday 22:00 UTC - Friday 22:00 UTC"
+          echo ""
+          echo "Next market open: Check forex calendar for next trading session"
+          echo ""
+          echo "To force run during closed hours, use workflow_dispatch"
+          echo "with 'force_run' parameter set to true"
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          exit 0
+      
       - name: Checkout repository
         uses: actions/checkout@v4
       

@@ -641,57 +641,65 @@
     }
     .countdown-candle {
       position: relative;
-      width: 60px;
+      width: 70px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 12px;
     }
     .candle-stick {
-      width: 40px;
-      background: linear-gradient(180deg, var(--red), #c23542);
-      border-radius: 4px;
+      width: 45px;
+      border-radius: 3px;
       position: relative;
-      box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
-      animation: candleFlicker 2s ease-in-out infinite;
+      transition: all 0.5s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     }
+    /* Wick (the thin line) */
     .candle-stick::before {
-      content: '';
-      position: absolute;
-      top: -8px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 2px;
-      height: 8px;
-      background: var(--red);
-    }
-    .candle-stick::after {
       content: '';
       position: absolute;
       top: -15px;
       left: 50%;
       transform: translateX(-50%);
-      width: 12px;
-      height: 12px;
-      background: radial-gradient(circle, #ffeb3b, #ff9800);
-      border-radius: 50%;
-      filter: blur(4px);
-      animation: flame 1.5s ease-in-out infinite;
+      width: 3px;
+      height: 15px;
+      background: currentColor;
+      opacity: 0.7;
     }
-    @keyframes candleFlicker {
-      0%, 100% { transform: scaleY(1); opacity: 1; }
-      50% { transform: scaleY(0.98); opacity: 0.95; }
+    .candle-stick::after {
+      content: '';
+      position: absolute;
+      bottom: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 3px;
+      height: 15px;
+      background: currentColor;
+      opacity: 0.7;
     }
-    @keyframes flame {
-      0%, 100% { transform: translateX(-50%) scale(1); opacity: 1; }
-      50% { transform: translateX(-50%) scale(1.1, 0.9); opacity: 0.8; }
+    /* Green candle (bullish) */
+    .candle-green {
+      background: linear-gradient(180deg, #00f2a9, #00c787);
+      color: #00f2a9;
+      border: 2px solid #00f2a9;
+    }
+    /* Red candle (bearish) */
+    .candle-red {
+      background: linear-gradient(180deg, #ff4757, #c23542);
+      color: #ff4757;
+      border: 2px solid #ff4757;
+    }
+    /* Yellow/Orange candle (transitioning) */
+    .candle-orange {
+      background: linear-gradient(180deg, #fbbf24, #f59e0b);
+      color: #fbbf24;
+      border: 2px solid #fbbf24;
     }
     .countdown-number {
       font-family: 'Orbitron', monospace;
       font-size: 32px;
       font-weight: 900;
-      color: var(--red);
-      text-shadow: 0 0 20px rgba(255, 71, 87, 0.6);
+      text-shadow: 0 0 10px currentColor;
     }
     .countdown-label {
       font-size: 10px;
@@ -911,29 +919,43 @@
       const countdownEl = document.getElementById('countdown');
       if (!countdownEl) return;
       
+      // Determine candle colors based on urgency
+      // Days: green (far away)
+      // Hours: orange if <12 hours, green otherwise
+      // Minutes: red if <30 mins, orange if <60 mins, green otherwise
+      // Seconds: always red (most urgent)
+      
+      const totalHours = days * 24 + hours;
+      const totalMinutes = totalHours * 60 + minutes;
+      
+      let dayColor = 'candle-green';
+      let hourColor = totalHours < 12 ? 'candle-orange' : 'candle-green';
+      let minColor = totalMinutes < 30 ? 'candle-red' : (totalMinutes < 60 ? 'candle-orange' : 'candle-green');
+      let secColor = 'candle-red';
+      
       countdownEl.innerHTML = `
         ${days > 0 ? `
         <div class="countdown-candle">
-          <div class="candle-stick" style="height: ${60 + days * 5}px;"></div>
-          <div class="countdown-number">${days}</div>
+          <div class="candle-stick ${dayColor}" style="height: ${Math.max(60, 60 + days * 8)}px;"></div>
+          <div class="countdown-number" style="color: ${dayColor === 'candle-green' ? 'var(--green)' : dayColor === 'candle-orange' ? 'var(--yellow)' : 'var(--red)'}">${days}</div>
           <div class="countdown-label">DAY${days !== 1 ? 'S' : ''}</div>
         </div>` : ''}
         
         <div class="countdown-candle">
-          <div class="candle-stick" style="height: ${60 + hours * 2}px;"></div>
-          <div class="countdown-number">${String(hours).padStart(2, '0')}</div>
+          <div class="candle-stick ${hourColor}" style="height: ${Math.max(60, 60 + hours * 3)}px;"></div>
+          <div class="countdown-number" style="color: ${hourColor === 'candle-green' ? 'var(--green)' : hourColor === 'candle-orange' ? 'var(--yellow)' : 'var(--red)'}">${String(hours).padStart(2, '0')}</div>
           <div class="countdown-label">HOURS</div>
         </div>
         
         <div class="countdown-candle">
-          <div class="candle-stick" style="height: ${60 + Math.floor(minutes / 2)}px;"></div>
-          <div class="countdown-number">${String(minutes).padStart(2, '0')}</div>
+          <div class="candle-stick ${minColor}" style="height: ${Math.max(60, 60 + Math.floor(minutes / 2))}px;"></div>
+          <div class="countdown-number" style="color: ${minColor === 'candle-green' ? 'var(--green)' : minColor === 'candle-orange' ? 'var(--yellow)' : 'var(--red)'}">${String(minutes).padStart(2, '0')}</div>
           <div class="countdown-label">MINS</div>
         </div>
         
         <div class="countdown-candle">
-          <div class="candle-stick" style="height: ${60 + Math.floor(seconds / 2)}px;"></div>
-          <div class="countdown-number">${String(seconds).padStart(2, '0')}</div>
+          <div class="candle-stick ${secColor}" style="height: ${Math.max(60, 60 + Math.floor(seconds / 2))}px;"></div>
+          <div class="countdown-number" style="color: var(--red)">${String(seconds).padStart(2, '0')}</div>
           <div class="countdown-label">SECS</div>
         </div>
       `;

@@ -632,6 +632,75 @@
       letter-spacing: 0.5px;
     }
     
+    /* Weekend Mode Countdown */
+    .countdown-container {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 24px;
+    }
+    .countdown-candle {
+      position: relative;
+      width: 60px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .candle-stick {
+      width: 40px;
+      background: linear-gradient(180deg, var(--red), #c23542);
+      border-radius: 4px;
+      position: relative;
+      box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+      animation: candleFlicker 2s ease-in-out infinite;
+    }
+    .candle-stick::before {
+      content: '';
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2px;
+      height: 8px;
+      background: var(--red);
+    }
+    .candle-stick::after {
+      content: '';
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 12px;
+      height: 12px;
+      background: radial-gradient(circle, #ffeb3b, #ff9800);
+      border-radius: 50%;
+      filter: blur(4px);
+      animation: flame 1.5s ease-in-out infinite;
+    }
+    @keyframes candleFlicker {
+      0%, 100% { transform: scaleY(1); opacity: 1; }
+      50% { transform: scaleY(0.98); opacity: 0.95; }
+    }
+    @keyframes flame {
+      0%, 100% { transform: translateX(-50%) scale(1); opacity: 1; }
+      50% { transform: translateX(-50%) scale(1.1, 0.9); opacity: 0.8; }
+    }
+    .countdown-number {
+      font-family: 'Orbitron', monospace;
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--red);
+      text-shadow: 0 0 20px rgba(255, 71, 87, 0.6);
+    }
+    .countdown-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+    
     .empty {
       text-align: center;
       padding: 80px 40px;
@@ -776,35 +845,98 @@
       
       if (isWeekend) {
         statusText.textContent = 'MARKET CLOSED';
-        statusBadge.style.background = 'rgba(107, 114, 128, 0.1)';
-        statusBadge.style.borderColor = 'rgba(107, 114, 128, 0.3)';
-        statusBadge.style.color = 'var(--text-muted)';
-        statusDot.style.background = 'var(--text-muted)';
-        statusDot.style.boxShadow = '0 0 10px var(--text-muted)';
+        statusBadge.style.background = 'rgba(255, 71, 87, 0.1)';
+        statusBadge.style.borderColor = 'rgba(255, 71, 87, 0.3)';
+        statusBadge.style.color = 'var(--red)';
+        statusDot.style.background = 'var(--red)';
+        statusDot.style.boxShadow = '0 0 10px var(--red)';
         
-        // Add weekend notice with replay button
+        // Calculate time until Monday 00:00 UTC
+        const nextMonday = new Date(now);
+        nextMonday.setUTCDate(now.getUTCDate() + ((1 + 7 - now.getUTCDay()) % 7 || 7));
+        nextMonday.setUTCHours(0, 0, 0, 0);
+        
+        // Add weekend notice with countdown
         const container = document.querySelector('.container');
         if (!document.getElementById('weekend-notice')) {
           const notice = document.createElement('div');
           notice.id = 'weekend-notice';
-          notice.style.cssText = 'background: rgba(107, 114, 128, 0.1); border: 1px solid rgba(107, 114, 128, 0.3); border-radius: 12px; padding: 16px 24px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;';
+          notice.style.cssText = 'background: linear-gradient(135deg, rgba(255,71,87,0.1), rgba(194,53,66,0.1)); border: 1px solid rgba(255,71,87,0.3); border-radius: 16px; padding: 32px 24px; margin-bottom: 24px;';
           notice.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 12px;">
-              <i data-lucide="moon" style="width:20px;height:20px;color:var(--text-muted)"></i>
-              <span style="color:var(--text-dim);font-size:14px;font-weight:600;">Weekend Mode • Market reopens <strong>Monday 00:00 UTC</strong></span>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 20px;">
+              <i data-lucide="power-off" style="width:24px;height:24px;color:var(--red)"></i>
+              <span style="color:var(--red);font-size:18px;font-weight:900;letter-spacing:1px;">FOREX MARKET CLOSED</span>
             </div>
-            <button id="replayBtn" onclick="playWeeklyReplay()" style="padding: 10px 20px; background: linear-gradient(135deg, var(--orange), #ff8c61); border: none; border-radius: 8px; color: white; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: 'Rajdhani', sans-serif; letter-spacing: 0.5px; box-shadow: var(--glow-orange); transition: all 0.3s;">
-              <i data-lucide="play" style="width:14px;height:14px"></i>
-              PLAY WEEKLY REPLAY
-            </button>
-            <div id="replayProgress" style="display:none; width:100%; height:4px; background:var(--elevated); border-radius:2px; overflow:hidden; margin-top:8px;">
+            
+            <div style="text-align: center; margin-bottom: 24px;">
+              <div style="font-size: 14px; color: var(--text-dim); margin-bottom: 8px;">Market reopens in:</div>
+              <div id="countdown" class="countdown-container"></div>
+            </div>
+            
+            <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+              <button id="replayBtn" onclick="playWeeklyReplay()" style="padding: 12px 24px; background: linear-gradient(135deg, var(--orange), #ff8c61); border: none; border-radius: 10px; color: white; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: 'Rajdhani', sans-serif; letter-spacing: 0.5px; box-shadow: var(--glow-orange); transition: all 0.3s;">
+                <i data-lucide="play" style="width:16px;height:16px"></i>
+                PLAY WEEKLY REPLAY
+              </button>
+            </div>
+            
+            <div id="replayProgress" style="display:none; width:100%; height:6px; background:var(--elevated); border-radius:3px; overflow:hidden; margin-top:16px;">
               <div id="replayBar" style="height:100%; width:0%; background:linear-gradient(90deg, var(--orange), var(--blue)); transition: width 0.3s;"></div>
             </div>
           `;
           container.insertBefore(notice, container.querySelector('.metrics'));
           lucide.createIcons();
+          
+          // Start countdown
+          updateCountdown(nextMonday);
+          setInterval(() => updateCountdown(nextMonday), 1000);
         }
       }
+    }
+    
+    function updateCountdown(targetDate) {
+      const now = new Date();
+      const diff = targetDate - now;
+      
+      if (diff <= 0) {
+        location.reload(); // Reload when market opens
+        return;
+      }
+      
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      const countdownEl = document.getElementById('countdown');
+      if (!countdownEl) return;
+      
+      countdownEl.innerHTML = `
+        ${days > 0 ? `
+        <div class="countdown-candle">
+          <div class="candle-stick" style="height: ${60 + days * 5}px;"></div>
+          <div class="countdown-number">${days}</div>
+          <div class="countdown-label">DAY${days !== 1 ? 'S' : ''}</div>
+        </div>` : ''}
+        
+        <div class="countdown-candle">
+          <div class="candle-stick" style="height: ${60 + hours * 2}px;"></div>
+          <div class="countdown-number">${String(hours).padStart(2, '0')}</div>
+          <div class="countdown-label">HOURS</div>
+        </div>
+        
+        <div class="countdown-candle">
+          <div class="candle-stick" style="height: ${60 + Math.floor(minutes / 2)}px;"></div>
+          <div class="countdown-number">${String(minutes).padStart(2, '0')}</div>
+          <div class="countdown-label">MINS</div>
+        </div>
+        
+        <div class="countdown-candle">
+          <div class="candle-stick" style="height: ${60 + Math.floor(seconds / 2)}px;"></div>
+          <div class="countdown-number">${String(seconds).padStart(2, '0')}</div>
+          <div class="countdown-label">SECS</div>
+        </div>
+      `;
     }
     
     async function load() {

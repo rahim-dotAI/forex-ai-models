@@ -178,8 +178,8 @@ jobs:
           python -m py_compile performance_tracker.py
           echo "✅ Python syntax validation passed"
       
-        if: steps.market_check.outputs.should_run == 'true'
       - name: Validate tracker version alignment
+        if: steps.market_check.outputs.should_run == 'true'
         run: |
           echo "🔍 Validating PerformanceTracker version..."
           TRACKER_VER=$(python -c "from performance_tracker import TRACKER_VERSION; print(TRACKER_VERSION)" 2>/dev/null || echo "unknown")
@@ -198,6 +198,7 @@ jobs:
           fi
       
       - name: Validate configuration
+        if: steps.market_check.outputs.should_run == 'true'
         run: |
           echo "🔍 Validating config.json..."
           jq empty config.json || exit 1
@@ -237,6 +238,7 @@ jobs:
           echo "🔥 PERFORMANCE RESET COMPLETE - All history cleared"
       
       - name: Clean stale pause files
+        if: steps.market_check.outputs.should_run == 'true'
         run: |
           echo "🧹 Checking for stale pause files..."
           
@@ -311,6 +313,7 @@ jobs:
           fi
       
       - name: Pre-run health check
+        if: steps.market_check.outputs.should_run == 'true'
         run: |
           echo "🏥 Running pre-flight health check..."
           
@@ -351,6 +354,7 @@ jobs:
           echo "✅ Pre-flight check complete - system ready"
       
       - name: Display active configuration
+        if: steps.market_check.outputs.should_run == 'true'
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "📋 ACTIVE CONFIGURATION"
@@ -439,6 +443,7 @@ jobs:
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
       
       - name: Run Trade Beacon v2.1.2
+        if: steps.market_check.outputs.should_run == 'true'
         env:
           NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
           MARKETAUX_API_KEY: ${{ secrets.MARKETAUX_API_KEY }}
@@ -609,6 +614,7 @@ jobs:
           fi
       
       - name: Commit state changes
+        if: steps.market_check.outputs.should_run == 'true'
         run: |
           git config user.name "Trade Beacon v2.1.2 [bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -641,6 +647,7 @@ jobs:
           fi
       
       - name: Push changes
+        if: steps.market_check.outputs.should_run == 'true'
         run: |
           git push origin HEAD:main || {
             echo "⚠️  Push failed, will retry on next run"

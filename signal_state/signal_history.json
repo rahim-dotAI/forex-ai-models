@@ -700,32 +700,57 @@
       "estimated_win_rate": null,
       "timestamp": "2026-02-09T11:01:21.131792+00:00",
       "exit_time": "2026-02-09T11:15:56.017377+00:00"
+    },
+    {
+      "id": "EURGBP_BUY_b20324533a82",
+      "signal_id": "EURGBP_BUY_b20324533a82",
+      "pair": "EURGBP",
+      "direction": "BUY",
+      "entry_price": 0.87356,
+      "exit_price": 0.87207,
+      "sl": 0.87207,
+      "tp": 0.87691,
+      "status": "LOSS",
+      "pips": -14.899999999999913,
+      "confidence": "MODERATE",
+      "score": 47,
+      "session": "OVERLAP",
+      "tier": "C",
+      "eligible_modes": [
+        "aggressive"
+      ],
+      "sentiment_applied": false,
+      "sentiment_score": 0.0,
+      "sentiment_adjustment": 0.0,
+      "estimated_win_rate": null,
+      "timestamp": "2026-02-09T15:01:14.242788+00:00",
+      "exit_time": "2026-02-09T15:16:02.158621+00:00"
     }
   ],
   "stats": {
-    "total_trades": 24,
-    "total_resolved": 24,
+    "total_trades": 25,
+    "total_resolved": 25,
     "wins": 17,
-    "losses": 7,
+    "losses": 8,
     "expired": 5,
-    "win_rate": 70.8,
-    "total_pips": 710.7,
+    "win_rate": 68.0,
+    "total_pips": 695.8,
     "avg_win": 51.4,
-    "avg_loss": 23.3,
-    "expectancy_pips": 29.61,
+    "avg_loss": 22.3,
+    "expectancy_pips": 27.83,
     "validated": false,
     "by_mode": {
       "all": {
-        "trades": 24,
+        "trades": 25,
         "wins": 17,
-        "total_pips": 710.6969999999991,
-        "win_rate": 70.8
+        "total_pips": 695.7969999999992,
+        "win_rate": 68.0
       },
       "aggressive": {
-        "trades": 24,
+        "trades": 25,
         "wins": 17,
-        "total_pips": 710.6969999999991,
-        "win_rate": 70.8
+        "total_pips": 695.7969999999992,
+        "win_rate": 68.0
       },
       "conservative": {
         "trades": 1,
@@ -754,6 +779,12 @@
         "wins": 1,
         "total_pips": 27.5000000000003,
         "win_rate": 50.0
+      },
+      "EURGBP": {
+        "trades": 1,
+        "wins": 0,
+        "total_pips": -14.899999999999913,
+        "win_rate": 0.0
       }
     },
     "by_session": {
@@ -780,22 +811,28 @@
         "wins": 7,
         "total_pips": 327.80200000000235,
         "win_rate": 87.5
+      },
+      "OVERLAP": {
+        "trades": 1,
+        "wins": 0,
+        "total_pips": -14.899999999999913,
+        "win_rate": 0.0
       }
     },
     "by_confidence": {
       "MODERATE": {
-        "trades": 24,
+        "trades": 25,
         "wins": 17,
-        "total_pips": 710.6969999999991,
-        "win_rate": 70.8
+        "total_pips": 695.7969999999992,
+        "win_rate": 68.0
       }
     },
     "by_tier": {
       "C": {
-        "trades": 24,
+        "trades": 25,
         "wins": 17,
-        "total_pips": 710.6969999999991,
-        "win_rate": 70.8
+        "total_pips": 695.7969999999992,
+        "win_rate": 68.0
       }
     },
     "by_mode": {
@@ -806,10 +843,10 @@
         "win_rate": 0.0
       },
       "aggressive": {
-        "trades": 24,
+        "trades": 25,
         "wins": 17,
-        "total_pips": 710.6969999999991,
-        "win_rate": 70.8
+        "total_pips": 695.7969999999992,
+        "win_rate": 68.0
       },
       "conservative": {
         "trades": 1,
@@ -851,16 +888,24 @@
           "wins": 7,
           "total_pips": 327.80200000000235,
           "win_rate": 87.5
+        },
+        "C_OVERLAP": {
+          "tier": "C",
+          "session": "OVERLAP",
+          "trades": 1,
+          "wins": 0,
+          "total_pips": -14.899999999999913,
+          "win_rate": 0.0
         }
       },
       "mode_by_tier": {
         "aggressive_C": {
           "mode": "aggressive",
           "tier": "C",
-          "trades": 24,
+          "trades": 25,
           "wins": 17,
-          "total_pips": 710.6969999999991,
-          "win_rate": 70.8
+          "total_pips": 695.7969999999992,
+          "win_rate": 68.0
         },
         "conservative_C": {
           "mode": "conservative",
@@ -876,6 +921,6 @@
   "daily": {},
   "metadata": {
     "created_at": "2026-01-28T16:31:06.713234+00:00",
-    "last_updated": "2026-02-09T11:15:56.017816+00:00"
+    "last_updated": "2026-02-09T15:16:02.159063+00:00"
   }
 }

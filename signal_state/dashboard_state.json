@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-02-10T02:31:14.951259+00:00",
-  "active_signals": 1,
+  "timestamp": "2026-02-10T02:46:01.500177+00:00",
+  "active_signals": 2,
   "active_signals_by_mode": {
-    "aggressive": 1,
-    "conservative": 1
+    "aggressive": 2,
+    "conservative": 2
   },
   "session": "ASIAN",
   "mode": "conservative",
@@ -67,9 +67,103 @@
           "atr_target_multiplier": 4.5
         },
         "estimated_win_rate": null
+      },
+      {
+        "signal_id": "USDCAD_SELL_6c094e862525",
+        "id": "USDCAD_SELL_6c094e862525",
+        "pair": "USDCAD",
+        "direction": "SELL",
+        "score": 45,
+        "technical_score": 45,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 33.4,
+        "adx": 36.4,
+        "atr": 0.00103,
+        "volume_ratio": 0,
+        "session": "ASIAN",
+        "entry_price": 1.35515,
+        "sl": 1.3572,
+        "tp": 1.35054,
+        "risk_reward": 2.25,
+        "spread": 0.0002,
+        "timestamp": "2026-02-10T02:31:10.421904+00:00",
+        "status": "OPEN",
+        "hold_time": "INTRADAY",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-10T02:31:10.421904+00:00",
+          "expires_at": "2026-02-10T02:46:10.421904+00:00",
+          "session_active": false,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
       }
     ],
     "conservative": [
+      {
+        "signal_id": "USDCAD_SELL_6c094e862525",
+        "id": "USDCAD_SELL_6c094e862525",
+        "pair": "USDCAD",
+        "direction": "SELL",
+        "score": 45,
+        "technical_score": 45,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 33.4,
+        "adx": 36.4,
+        "atr": 0.00103,
+        "volume_ratio": 0,
+        "session": "ASIAN",
+        "entry_price": 1.35515,
+        "sl": 1.3572,
+        "tp": 1.35054,
+        "risk_reward": 2.25,
+        "spread": 0.0002,
+        "timestamp": "2026-02-10T02:31:10.421904+00:00",
+        "status": "OPEN",
+        "hold_time": "INTRADAY",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-10T02:31:10.421904+00:00",
+          "expires_at": "2026-02-10T02:46:10.421904+00:00",
+          "session_active": false,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      },
       {
         "signal_id": "USDCAD_SELL_6c094e862525",
         "id": "USDCAD_SELL_6c094e862525",
@@ -1063,8 +1157,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 20.5,
-    "total_risk_pips": 20.499999999998852,
+    "theoretical_max_pips": 41.0,
+    "total_risk_pips": 40.999999999997705,
     "max_daily_risk": 250
   },
   "analytics": {
@@ -1227,7 +1321,7 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-02-10T02:31:14.951298+00:00",
+    "last_update": "2026-02-10T02:46:01.500233+00:00",
     "signal_only_mode": true,
     "version": "2.1.2-MULTI"
   }

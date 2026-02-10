@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-02-10T08:01:34.901063+00:00",
-  "active_signals": 3,
+  "timestamp": "2026-02-10T08:08:40.105677+00:00",
+  "active_signals": 11,
   "active_signals_by_mode": {
-    "aggressive": 3,
-    "conservative": 3
+    "aggressive": 11,
+    "conservative": 11
   },
   "session": "EUROPEAN",
   "mode": "conservative",
@@ -22,6 +22,151 @@
   "signals_by_mode": {
     "aggressive": [
       {
+        "signal_id": "USDJPY_SELL_047f5e041e4b",
+        "id": "USDJPY_SELL_047f5e041e4b",
+        "pair": "USDJPY",
+        "direction": "SELL",
+        "score": 45,
+        "technical_score": 45,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 54.9,
+        "adx": 26.7,
+        "atr": 0.13514,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 155.55099,
+        "sl": 155.82127,
+        "tp": 154.94288,
+        "risk_reward": 2.25,
+        "spread": 0.002,
+        "timestamp": "2026-02-10T08:08:30.648351+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-10T08:08:30.648351+00:00",
+          "expires_at": "2026-02-10T08:23:30.648351+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "EURJPY_SELL_70d0e58fb780",
+        "id": "EURJPY_SELL_70d0e58fb780",
+        "pair": "EURJPY",
+        "direction": "SELL",
+        "score": 62.0,
+        "technical_score": 62,
+        "sentiment_score": -0.03,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 57.2,
+        "adx": 35.0,
+        "atr": 0.13723,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 185.254,
+        "sl": 185.52846,
+        "tp": 184.63645,
+        "risk_reward": 2.25,
+        "spread": 0.002,
+        "timestamp": "2026-02-10T08:08:31.178274+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": true,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-10T08:08:31.178274+00:00",
+          "expires_at": "2026-02-10T08:23:31.178274+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "sentiment_adjustment": -0.1,
+        "score_before_sentiment": 62,
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "GBPJPY_SELL_57bb4fa4f09a",
+        "id": "GBPJPY_SELL_57bb4fa4f09a",
+        "pair": "GBPJPY",
+        "direction": "SELL",
+        "score": 63.0,
+        "technical_score": 62,
+        "sentiment_score": 0.15,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 57.2,
+        "adx": 35.0,
+        "atr": 0.13723,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 185.254,
+        "sl": 185.52846,
+        "tp": 184.63645,
+        "risk_reward": 2.25,
+        "spread": 0.003,
+        "timestamp": "2026-02-10T08:08:31.203197+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": true,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-10T08:08:31.203197+00:00",
+          "expires_at": "2026-02-10T08:23:31.203197+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "sentiment_adjustment": 0.7,
+        "score_before_sentiment": 62,
+        "estimated_win_rate": null
+      },
+      {
         "signal_id": "USDJPY_SELL_d74a18c11482",
         "id": "USDJPY_SELL_d74a18c11482",
         "pair": "USDJPY",
@@ -120,26 +265,26 @@
         "estimated_win_rate": null
       },
       {
-        "signal_id": "GBPJPY_SELL_aa6f94276a9a",
-        "id": "GBPJPY_SELL_aa6f94276a9a",
-        "pair": "GBPJPY",
+        "signal_id": "USDJPY_SELL_d74a18c11482",
+        "id": "USDJPY_SELL_d74a18c11482",
+        "pair": "USDJPY",
         "direction": "SELL",
-        "score": 63.0,
-        "technical_score": 62,
-        "sentiment_score": 0.15,
+        "score": 59.0,
+        "technical_score": 60,
+        "sentiment_score": -0.15,
         "confidence": "MODERATE",
         "tier": "C",
-        "rsi": 58.2,
-        "adx": 34.6,
-        "atr": 0.1338,
+        "rsi": 57.2,
+        "adx": 26.5,
+        "atr": 0.13099,
         "volume_ratio": 0,
         "session": "EUROPEAN",
-        "entry_price": 185.276,
-        "sl": 185.54361,
-        "tp": 184.67388,
+        "entry_price": 155.59599,
+        "sl": 155.85798,
+        "tp": 155.00652,
         "risk_reward": 2.25,
-        "spread": 0.003,
-        "timestamp": "2026-02-10T08:01:23.922874+00:00",
+        "spread": 0.002,
+        "timestamp": "2026-02-10T08:01:23.026023+00:00",
         "status": "OPEN",
         "hold_time": "SWING",
         "eligible_modes": [
@@ -157,20 +302,410 @@
           "market_state": "TRENDING_STRONG",
           "timeframe": "15m",
           "valid_for_minutes": 15,
-          "generated_at": "2026-02-10T08:01:23.922874+00:00",
-          "expires_at": "2026-02-10T08:16:23.922874+00:00",
+          "generated_at": "2026-02-10T08:01:23.026023+00:00",
+          "expires_at": "2026-02-10T08:16:23.026023+00:00",
           "session_active": true,
           "signal_generator_version": "2.1.2",
           "atr_stop_multiplier": 2.0,
           "atr_target_multiplier": 4.5
         },
-        "sentiment_adjustment": 0.7,
+        "sentiment_adjustment": -0.7,
+        "score_before_sentiment": 60,
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "EURJPY_SELL_57af20b9da8f",
+        "id": "EURJPY_SELL_57af20b9da8f",
+        "pair": "EURJPY",
+        "direction": "SELL",
+        "score": 62.0,
+        "technical_score": 62,
+        "sentiment_score": -0.03,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 58.2,
+        "adx": 34.6,
+        "atr": 0.1338,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 185.276,
+        "sl": 185.54361,
+        "tp": 184.67388,
+        "risk_reward": 2.25,
+        "spread": 0.002,
+        "timestamp": "2026-02-10T08:01:23.897214+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": true,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-10T08:01:23.897214+00:00",
+          "expires_at": "2026-02-10T08:16:23.897214+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "sentiment_adjustment": -0.1,
+        "score_before_sentiment": 62,
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "USDJPY_SELL_d74a18c11482",
+        "id": "USDJPY_SELL_d74a18c11482",
+        "pair": "USDJPY",
+        "direction": "SELL",
+        "score": 59.0,
+        "technical_score": 60,
+        "sentiment_score": -0.15,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 57.2,
+        "adx": 26.5,
+        "atr": 0.13099,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 155.59599,
+        "sl": 155.85798,
+        "tp": 155.00652,
+        "risk_reward": 2.25,
+        "spread": 0.002,
+        "timestamp": "2026-02-10T08:01:23.026023+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": true,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-10T08:01:23.026023+00:00",
+          "expires_at": "2026-02-10T08:16:23.026023+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "sentiment_adjustment": -0.7,
+        "score_before_sentiment": 60,
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "EURJPY_SELL_57af20b9da8f",
+        "id": "EURJPY_SELL_57af20b9da8f",
+        "pair": "EURJPY",
+        "direction": "SELL",
+        "score": 62.0,
+        "technical_score": 62,
+        "sentiment_score": -0.03,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 58.2,
+        "adx": 34.6,
+        "atr": 0.1338,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 185.276,
+        "sl": 185.54361,
+        "tp": 184.67388,
+        "risk_reward": 2.25,
+        "spread": 0.002,
+        "timestamp": "2026-02-10T08:01:23.897214+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": true,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-10T08:01:23.897214+00:00",
+          "expires_at": "2026-02-10T08:16:23.897214+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "sentiment_adjustment": -0.1,
+        "score_before_sentiment": 62,
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "USDJPY_SELL_d74a18c11482",
+        "id": "USDJPY_SELL_d74a18c11482",
+        "pair": "USDJPY",
+        "direction": "SELL",
+        "score": 59.0,
+        "technical_score": 60,
+        "sentiment_score": -0.15,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 57.2,
+        "adx": 26.5,
+        "atr": 0.13099,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 155.59599,
+        "sl": 155.85798,
+        "tp": 155.00652,
+        "risk_reward": 2.25,
+        "spread": 0.002,
+        "timestamp": "2026-02-10T08:01:23.026023+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": true,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-10T08:01:23.026023+00:00",
+          "expires_at": "2026-02-10T08:16:23.026023+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "sentiment_adjustment": -0.7,
+        "score_before_sentiment": 60,
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "EURJPY_SELL_57af20b9da8f",
+        "id": "EURJPY_SELL_57af20b9da8f",
+        "pair": "EURJPY",
+        "direction": "SELL",
+        "score": 62.0,
+        "technical_score": 62,
+        "sentiment_score": -0.03,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 58.2,
+        "adx": 34.6,
+        "atr": 0.1338,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 185.276,
+        "sl": 185.54361,
+        "tp": 184.67388,
+        "risk_reward": 2.25,
+        "spread": 0.002,
+        "timestamp": "2026-02-10T08:01:23.897214+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": true,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-10T08:01:23.897214+00:00",
+          "expires_at": "2026-02-10T08:16:23.897214+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "sentiment_adjustment": -0.1,
         "score_before_sentiment": 62,
         "estimated_win_rate": null
       }
     ],
     "conservative": [
       {
+        "signal_id": "USDJPY_SELL_047f5e041e4b",
+        "id": "USDJPY_SELL_047f5e041e4b",
+        "pair": "USDJPY",
+        "direction": "SELL",
+        "score": 45,
+        "technical_score": 45,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 54.9,
+        "adx": 26.7,
+        "atr": 0.13514,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 155.55099,
+        "sl": 155.82127,
+        "tp": 154.94288,
+        "risk_reward": 2.25,
+        "spread": 0.002,
+        "timestamp": "2026-02-10T08:08:30.648351+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-10T08:08:30.648351+00:00",
+          "expires_at": "2026-02-10T08:23:30.648351+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "EURJPY_SELL_70d0e58fb780",
+        "id": "EURJPY_SELL_70d0e58fb780",
+        "pair": "EURJPY",
+        "direction": "SELL",
+        "score": 62.0,
+        "technical_score": 62,
+        "sentiment_score": -0.03,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 57.2,
+        "adx": 35.0,
+        "atr": 0.13723,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 185.254,
+        "sl": 185.52846,
+        "tp": 184.63645,
+        "risk_reward": 2.25,
+        "spread": 0.002,
+        "timestamp": "2026-02-10T08:08:31.178274+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": true,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-10T08:08:31.178274+00:00",
+          "expires_at": "2026-02-10T08:23:31.178274+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "sentiment_adjustment": -0.1,
+        "score_before_sentiment": 62,
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "GBPJPY_SELL_57bb4fa4f09a",
+        "id": "GBPJPY_SELL_57bb4fa4f09a",
+        "pair": "GBPJPY",
+        "direction": "SELL",
+        "score": 63.0,
+        "technical_score": 62,
+        "sentiment_score": 0.15,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 57.2,
+        "adx": 35.0,
+        "atr": 0.13723,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 185.254,
+        "sl": 185.52846,
+        "tp": 184.63645,
+        "risk_reward": 2.25,
+        "spread": 0.003,
+        "timestamp": "2026-02-10T08:08:31.203197+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": true,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-10T08:08:31.203197+00:00",
+          "expires_at": "2026-02-10T08:23:31.203197+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "sentiment_adjustment": 0.7,
+        "score_before_sentiment": 62,
+        "estimated_win_rate": null
+      },
+      {
         "signal_id": "USDJPY_SELL_d74a18c11482",
         "id": "USDJPY_SELL_d74a18c11482",
         "pair": "USDJPY",
@@ -269,26 +804,26 @@
         "estimated_win_rate": null
       },
       {
-        "signal_id": "GBPJPY_SELL_aa6f94276a9a",
-        "id": "GBPJPY_SELL_aa6f94276a9a",
-        "pair": "GBPJPY",
+        "signal_id": "USDJPY_SELL_d74a18c11482",
+        "id": "USDJPY_SELL_d74a18c11482",
+        "pair": "USDJPY",
         "direction": "SELL",
-        "score": 63.0,
-        "technical_score": 62,
-        "sentiment_score": 0.15,
+        "score": 59.0,
+        "technical_score": 60,
+        "sentiment_score": -0.15,
         "confidence": "MODERATE",
         "tier": "C",
-        "rsi": 58.2,
-        "adx": 34.6,
-        "atr": 0.1338,
+        "rsi": 57.2,
+        "adx": 26.5,
+        "atr": 0.13099,
         "volume_ratio": 0,
         "session": "EUROPEAN",
-        "entry_price": 185.276,
-        "sl": 185.54361,
-        "tp": 184.67388,
+        "entry_price": 155.59599,
+        "sl": 155.85798,
+        "tp": 155.00652,
         "risk_reward": 2.25,
-        "spread": 0.003,
-        "timestamp": "2026-02-10T08:01:23.922874+00:00",
+        "spread": 0.002,
+        "timestamp": "2026-02-10T08:01:23.026023+00:00",
         "status": "OPEN",
         "hold_time": "SWING",
         "eligible_modes": [
@@ -306,14 +841,259 @@
           "market_state": "TRENDING_STRONG",
           "timeframe": "15m",
           "valid_for_minutes": 15,
-          "generated_at": "2026-02-10T08:01:23.922874+00:00",
-          "expires_at": "2026-02-10T08:16:23.922874+00:00",
+          "generated_at": "2026-02-10T08:01:23.026023+00:00",
+          "expires_at": "2026-02-10T08:16:23.026023+00:00",
           "session_active": true,
           "signal_generator_version": "2.1.2",
           "atr_stop_multiplier": 2.0,
           "atr_target_multiplier": 4.5
         },
-        "sentiment_adjustment": 0.7,
+        "sentiment_adjustment": -0.7,
+        "score_before_sentiment": 60,
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "EURJPY_SELL_57af20b9da8f",
+        "id": "EURJPY_SELL_57af20b9da8f",
+        "pair": "EURJPY",
+        "direction": "SELL",
+        "score": 62.0,
+        "technical_score": 62,
+        "sentiment_score": -0.03,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 58.2,
+        "adx": 34.6,
+        "atr": 0.1338,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 185.276,
+        "sl": 185.54361,
+        "tp": 184.67388,
+        "risk_reward": 2.25,
+        "spread": 0.002,
+        "timestamp": "2026-02-10T08:01:23.897214+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": true,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-10T08:01:23.897214+00:00",
+          "expires_at": "2026-02-10T08:16:23.897214+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "sentiment_adjustment": -0.1,
+        "score_before_sentiment": 62,
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "USDJPY_SELL_d74a18c11482",
+        "id": "USDJPY_SELL_d74a18c11482",
+        "pair": "USDJPY",
+        "direction": "SELL",
+        "score": 59.0,
+        "technical_score": 60,
+        "sentiment_score": -0.15,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 57.2,
+        "adx": 26.5,
+        "atr": 0.13099,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 155.59599,
+        "sl": 155.85798,
+        "tp": 155.00652,
+        "risk_reward": 2.25,
+        "spread": 0.002,
+        "timestamp": "2026-02-10T08:01:23.026023+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": true,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-10T08:01:23.026023+00:00",
+          "expires_at": "2026-02-10T08:16:23.026023+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "sentiment_adjustment": -0.7,
+        "score_before_sentiment": 60,
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "EURJPY_SELL_57af20b9da8f",
+        "id": "EURJPY_SELL_57af20b9da8f",
+        "pair": "EURJPY",
+        "direction": "SELL",
+        "score": 62.0,
+        "technical_score": 62,
+        "sentiment_score": -0.03,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 58.2,
+        "adx": 34.6,
+        "atr": 0.1338,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 185.276,
+        "sl": 185.54361,
+        "tp": 184.67388,
+        "risk_reward": 2.25,
+        "spread": 0.002,
+        "timestamp": "2026-02-10T08:01:23.897214+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": true,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-10T08:01:23.897214+00:00",
+          "expires_at": "2026-02-10T08:16:23.897214+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "sentiment_adjustment": -0.1,
+        "score_before_sentiment": 62,
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "USDJPY_SELL_d74a18c11482",
+        "id": "USDJPY_SELL_d74a18c11482",
+        "pair": "USDJPY",
+        "direction": "SELL",
+        "score": 59.0,
+        "technical_score": 60,
+        "sentiment_score": -0.15,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 57.2,
+        "adx": 26.5,
+        "atr": 0.13099,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 155.59599,
+        "sl": 155.85798,
+        "tp": 155.00652,
+        "risk_reward": 2.25,
+        "spread": 0.002,
+        "timestamp": "2026-02-10T08:01:23.026023+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": true,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-10T08:01:23.026023+00:00",
+          "expires_at": "2026-02-10T08:16:23.026023+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "sentiment_adjustment": -0.7,
+        "score_before_sentiment": 60,
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "EURJPY_SELL_57af20b9da8f",
+        "id": "EURJPY_SELL_57af20b9da8f",
+        "pair": "EURJPY",
+        "direction": "SELL",
+        "score": 62.0,
+        "technical_score": 62,
+        "sentiment_score": -0.03,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 58.2,
+        "adx": 34.6,
+        "atr": 0.1338,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 185.276,
+        "sl": 185.54361,
+        "tp": 184.67388,
+        "risk_reward": 2.25,
+        "spread": 0.002,
+        "timestamp": "2026-02-10T08:01:23.897214+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": true,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-10T08:01:23.897214+00:00",
+          "expires_at": "2026-02-10T08:16:23.897214+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "sentiment_adjustment": -0.1,
         "score_before_sentiment": 62,
         "estimated_win_rate": null
       }
@@ -1170,6 +1950,31 @@
       "estimated_win_rate": null,
       "timestamp": "2026-02-10T06:01:30.725740+00:00",
       "exit_time": "2026-02-10T06:02:51.213479+00:00"
+    },
+    {
+      "id": "GBPJPY_SELL_aa6f94276a9a",
+      "signal_id": "GBPJPY_SELL_aa6f94276a9a",
+      "pair": "GBPJPY",
+      "direction": "SELL",
+      "entry_price": 185.276,
+      "exit_price": 185.54361,
+      "sl": 185.54361,
+      "tp": 184.67388,
+      "status": "LOSS",
+      "pips": -26.760999999999058,
+      "confidence": "MODERATE",
+      "score": 63.0,
+      "session": "EUROPEAN",
+      "tier": "C",
+      "eligible_modes": [
+        "aggressive"
+      ],
+      "sentiment_applied": false,
+      "sentiment_score": 0.0,
+      "sentiment_adjustment": 0.0,
+      "estimated_win_rate": null,
+      "timestamp": "2026-02-10T08:01:23.922874+00:00",
+      "exit_time": "2026-02-10T08:08:29.315789+00:00"
     }
   ],
   "api_usage": {
@@ -1183,23 +1988,23 @@
     }
   },
   "stats": {
-    "total_trades": 29,
-    "win_rate": 69.0,
-    "total_pips": 761.7,
+    "total_trades": 30,
+    "win_rate": 66.7,
+    "total_pips": 734.9,
     "wins": 20,
-    "losses": 9,
-    "expectancy": 26.26
+    "losses": 10,
+    "expectancy": 24.5
   },
   "performance_stats": {
-    "total_trades": 29,
+    "total_trades": 30,
     "wins": 20,
-    "losses": 9,
+    "losses": 10,
     "expired": 7,
-    "win_rate": 69.0,
-    "total_pips": 761.7,
+    "win_rate": 66.7,
+    "total_pips": 734.9,
     "avg_win": 0,
     "avg_loss": 0,
-    "expectancy": 26.26,
+    "expectancy": 24.5,
     "by_mode": {
       "all": {
         "trades": 0,
@@ -1208,10 +2013,10 @@
         "win_rate": 0.0
       },
       "aggressive": {
-        "trades": 29,
+        "trades": 30,
         "wins": 20,
-        "total_pips": 761.6539999999989,
-        "win_rate": 69.0
+        "total_pips": 734.8929999999998,
+        "win_rate": 66.7
       },
       "conservative": {
         "trades": 1,
@@ -1222,10 +2027,10 @@
     },
     "by_tier": {
       "C": {
-        "trades": 29,
+        "trades": 30,
         "wins": 20,
-        "total_pips": 761.6539999999989,
-        "win_rate": 69.0
+        "total_pips": 734.8929999999998,
+        "win_rate": 66.7
       }
     },
     "by_session": {
@@ -1248,10 +2053,10 @@
         "win_rate": 36.4
       },
       "EUROPEAN": {
-        "trades": 8,
+        "trades": 9,
         "wins": 7,
-        "total_pips": 327.80200000000235,
-        "win_rate": 87.5
+        "total_pips": 301.0410000000033,
+        "win_rate": 77.8
       },
       "OVERLAP": {
         "trades": 1,
@@ -1268,10 +2073,10 @@
         "win_rate": 100.0
       },
       "GBPJPY": {
-        "trades": 21,
+        "trades": 22,
         "wins": 14,
-        "total_pips": 523.0539999999991,
-        "win_rate": 66.7
+        "total_pips": 496.293,
+        "win_rate": 63.6
       },
       "USDCHF": {
         "trades": 2,
@@ -1288,8 +2093,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 79.7,
-    "total_risk_pips": 79.72099999999784,
+    "theoretical_max_pips": 293.8,
+    "total_risk_pips": 293.75999999999465,
     "max_daily_risk": 250
   },
   "analytics": {
@@ -1301,10 +2106,10 @@
         "win_rate": 100.0
       },
       "GBPJPY": {
-        "trades": 21,
+        "trades": 22,
         "wins": 14,
-        "total_pips": 523.0539999999991,
-        "win_rate": 66.7
+        "total_pips": 496.293,
+        "win_rate": 63.6
       },
       "USDCHF": {
         "trades": 2,
@@ -1339,10 +2144,10 @@
         "win_rate": 36.4
       },
       "EUROPEAN": {
-        "trades": 8,
+        "trades": 9,
         "wins": 7,
-        "total_pips": 327.80200000000235,
-        "win_rate": 87.5
+        "total_pips": 301.0410000000033,
+        "win_rate": 77.8
       },
       "OVERLAP": {
         "trades": 1,
@@ -1353,18 +2158,18 @@
     },
     "by_confidence": {
       "MODERATE": {
-        "trades": 29,
+        "trades": 30,
         "wins": 20,
-        "total_pips": 761.6539999999989,
-        "win_rate": 69.0
+        "total_pips": 734.8929999999998,
+        "win_rate": 66.7
       }
     },
     "by_tier": {
       "C": {
-        "trades": 29,
+        "trades": 30,
         "wins": 20,
-        "total_pips": 761.6539999999989,
-        "win_rate": 69.0
+        "total_pips": 734.8929999999998,
+        "win_rate": 66.7
       }
     },
     "by_mode": {
@@ -1375,10 +2180,10 @@
         "win_rate": 0.0
       },
       "aggressive": {
-        "trades": 29,
+        "trades": 30,
         "wins": 20,
-        "total_pips": 761.6539999999989,
-        "win_rate": 69.0
+        "total_pips": 734.8929999999998,
+        "win_rate": 66.7
       },
       "conservative": {
         "trades": 1,
@@ -1416,10 +2221,10 @@
         "C_EUROPEAN": {
           "tier": "C",
           "session": "EUROPEAN",
-          "trades": 8,
+          "trades": 9,
           "wins": 7,
-          "total_pips": 327.80200000000235,
-          "win_rate": 87.5
+          "total_pips": 301.0410000000033,
+          "win_rate": 77.8
         },
         "C_OVERLAP": {
           "tier": "C",
@@ -1434,10 +2239,10 @@
         "aggressive_C": {
           "mode": "aggressive",
           "tier": "C",
-          "trades": 29,
+          "trades": 30,
           "wins": 20,
-          "total_pips": 761.6539999999989,
-          "win_rate": 69.0
+          "total_pips": 734.8929999999998,
+          "win_rate": 66.7
         },
         "conservative_C": {
           "mode": "conservative",
@@ -1452,7 +2257,7 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-02-10T08:01:34.901119+00:00",
+    "last_update": "2026-02-10T08:08:40.105739+00:00",
     "signal_only_mode": true,
     "version": "2.1.2-MULTI"
   }

@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-02-10T13:01:22.285210+00:00",
-  "active_signals": 1,
+  "timestamp": "2026-02-10T13:16:03.464170+00:00",
+  "active_signals": 3,
   "active_signals_by_mode": {
-    "aggressive": 1,
-    "conservative": 1
+    "aggressive": 3,
+    "conservative": 3
   },
   "session": "OVERLAP",
   "mode": "conservative",
@@ -15,12 +15,106 @@
     "pause_reason": null
   },
   "market_state": {
-    "volatility": "CALM",
+    "volatility": "HIGH",
     "sentiment_bias": "BEARISH",
     "session": "OVERLAP"
   },
   "signals_by_mode": {
     "aggressive": [
+      {
+        "signal_id": "GBPJPY_SELL_6e14eb486103",
+        "id": "GBPJPY_SELL_6e14eb486103",
+        "pair": "GBPJPY",
+        "direction": "SELL",
+        "score": 47,
+        "technical_score": 47,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 40.4,
+        "adx": 25.7,
+        "atr": 0.17837,
+        "volume_ratio": 0,
+        "session": "OVERLAP",
+        "entry_price": 212.077,
+        "sl": 212.43373,
+        "tp": 211.27435,
+        "risk_reward": 2.25,
+        "spread": 0.003,
+        "timestamp": "2026-02-10T13:15:59.407097+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-10T13:15:59.407097+00:00",
+          "expires_at": "2026-02-10T13:30:59.407097+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "USDCHF_SELL_8dfec5bc65db",
+        "id": "USDCHF_SELL_8dfec5bc65db",
+        "pair": "USDCHF",
+        "direction": "SELL",
+        "score": 52,
+        "technical_score": 52,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 56.0,
+        "adx": 18.9,
+        "atr": 0.0005,
+        "volume_ratio": 0,
+        "session": "OVERLAP",
+        "entry_price": 0.76675,
+        "sl": 0.76776,
+        "tp": 0.76448,
+        "risk_reward": 2.25,
+        "spread": 0.0002,
+        "timestamp": "2026-02-10T13:01:17.689951+00:00",
+        "status": "OPEN",
+        "hold_time": "INTRADAY",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "CONSOLIDATING",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-10T13:01:17.689951+00:00",
+          "expires_at": "2026-02-10T13:16:17.689951+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      },
       {
         "signal_id": "USDCHF_SELL_8dfec5bc65db",
         "id": "USDCHF_SELL_8dfec5bc65db",
@@ -70,6 +164,100 @@
       }
     ],
     "conservative": [
+      {
+        "signal_id": "GBPJPY_SELL_6e14eb486103",
+        "id": "GBPJPY_SELL_6e14eb486103",
+        "pair": "GBPJPY",
+        "direction": "SELL",
+        "score": 47,
+        "technical_score": 47,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 40.4,
+        "adx": 25.7,
+        "atr": 0.17837,
+        "volume_ratio": 0,
+        "session": "OVERLAP",
+        "entry_price": 212.077,
+        "sl": 212.43373,
+        "tp": 211.27435,
+        "risk_reward": 2.25,
+        "spread": 0.003,
+        "timestamp": "2026-02-10T13:15:59.407097+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-10T13:15:59.407097+00:00",
+          "expires_at": "2026-02-10T13:30:59.407097+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "USDCHF_SELL_8dfec5bc65db",
+        "id": "USDCHF_SELL_8dfec5bc65db",
+        "pair": "USDCHF",
+        "direction": "SELL",
+        "score": 52,
+        "technical_score": 52,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 56.0,
+        "adx": 18.9,
+        "atr": 0.0005,
+        "volume_ratio": 0,
+        "session": "OVERLAP",
+        "entry_price": 0.76675,
+        "sl": 0.76776,
+        "tp": 0.76448,
+        "risk_reward": 2.25,
+        "spread": 0.0002,
+        "timestamp": "2026-02-10T13:01:17.689951+00:00",
+        "status": "OPEN",
+        "hold_time": "INTRADAY",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "CONSOLIDATING",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-10T13:01:17.689951+00:00",
+          "expires_at": "2026-02-10T13:16:17.689951+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      },
       {
         "signal_id": "USDCHF_SELL_8dfec5bc65db",
         "id": "USDCHF_SELL_8dfec5bc65db",
@@ -1238,8 +1426,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 10.1,
-    "total_risk_pips": 10.099999999999554,
+    "theoretical_max_pips": 55.9,
+    "total_risk_pips": 55.872999999998996,
     "max_daily_risk": 250
   },
   "analytics": {
@@ -1402,7 +1590,7 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-02-10T13:01:22.285281+00:00",
+    "last_update": "2026-02-10T13:16:03.464229+00:00",
     "signal_only_mode": true,
     "version": "2.1.2-MULTI"
   }

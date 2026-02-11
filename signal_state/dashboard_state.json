@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-02-11T03:16:02.517091+00:00",
-  "active_signals": 0,
+  "timestamp": "2026-02-11T03:31:14.486230+00:00",
+  "active_signals": 1,
   "active_signals_by_mode": {
-    "aggressive": 0,
-    "conservative": 0
+    "aggressive": 1,
+    "conservative": 1
   },
   "session": "ASIAN",
   "mode": "conservative",
@@ -15,13 +15,109 @@
     "pause_reason": null
   },
   "market_state": {
-    "volatility": "CALM",
-    "sentiment_bias": "MIXED",
+    "volatility": "HIGH",
+    "sentiment_bias": "BEARISH",
     "session": "ASIAN"
   },
   "signals_by_mode": {
-    "aggressive": [],
-    "conservative": []
+    "aggressive": [
+      {
+        "signal_id": "GBPJPY_SELL_ccd3c7097f78",
+        "id": "GBPJPY_SELL_ccd3c7097f78",
+        "pair": "GBPJPY",
+        "direction": "SELL",
+        "score": 48,
+        "technical_score": 48,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 30.9,
+        "adx": 46.1,
+        "atr": 0.1461,
+        "volume_ratio": 0,
+        "session": "ASIAN",
+        "entry_price": 209.95,
+        "sl": 210.2422,
+        "tp": 209.29254,
+        "risk_reward": 2.25,
+        "spread": 0.003,
+        "timestamp": "2026-02-11T03:31:10.056956+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-11T03:31:10.056956+00:00",
+          "expires_at": "2026-02-11T03:46:10.056956+00:00",
+          "session_active": false,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      }
+    ],
+    "conservative": [
+      {
+        "signal_id": "GBPJPY_SELL_ccd3c7097f78",
+        "id": "GBPJPY_SELL_ccd3c7097f78",
+        "pair": "GBPJPY",
+        "direction": "SELL",
+        "score": 48,
+        "technical_score": 48,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 30.9,
+        "adx": 46.1,
+        "atr": 0.1461,
+        "volume_ratio": 0,
+        "session": "ASIAN",
+        "entry_price": 209.95,
+        "sl": 210.2422,
+        "tp": 209.29254,
+        "risk_reward": 2.25,
+        "spread": 0.003,
+        "timestamp": "2026-02-11T03:31:10.056956+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-11T03:31:10.056956+00:00",
+          "expires_at": "2026-02-11T03:46:10.056956+00:00",
+          "session_active": false,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      }
+    ]
   },
   "historical_signals": [
     {
@@ -1417,8 +1513,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 0,
-    "total_risk_pips": 0,
+    "theoretical_max_pips": 29.2,
+    "total_risk_pips": 29.220000000000823,
     "max_daily_risk": 250
   },
   "analytics": {
@@ -1581,7 +1677,7 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-02-11T03:16:02.517129+00:00",
+    "last_update": "2026-02-11T03:31:14.486278+00:00",
     "signal_only_mode": true,
     "version": "2.1.2-MULTI"
   }

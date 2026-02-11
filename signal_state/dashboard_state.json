@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-02-11T05:45:54.833837+00:00",
-  "active_signals": 0,
+  "timestamp": "2026-02-11T05:59:48.299125+00:00",
+  "active_signals": 1,
   "active_signals_by_mode": {
-    "aggressive": 0,
-    "conservative": 0
+    "aggressive": 1,
+    "conservative": 1
   },
   "session": "ASIAN",
   "mode": "conservative",
@@ -16,12 +16,108 @@
   },
   "market_state": {
     "volatility": "CALM",
-    "sentiment_bias": "MIXED",
+    "sentiment_bias": "BEARISH",
     "session": "ASIAN"
   },
   "signals_by_mode": {
-    "aggressive": [],
-    "conservative": []
+    "aggressive": [
+      {
+        "signal_id": "USDCAD_SELL_94b53565851a",
+        "id": "USDCAD_SELL_94b53565851a",
+        "pair": "USDCAD",
+        "direction": "SELL",
+        "score": 45,
+        "technical_score": 45,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 34.8,
+        "adx": 33.7,
+        "atr": 0.00091,
+        "volume_ratio": 0,
+        "session": "ASIAN",
+        "entry_price": 1.35206,
+        "sl": 1.35389,
+        "tp": 1.34795,
+        "risk_reward": 2.25,
+        "spread": 0.0002,
+        "timestamp": "2026-02-11T05:59:43.692884+00:00",
+        "status": "OPEN",
+        "hold_time": "INTRADAY",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-11T05:59:43.692884+00:00",
+          "expires_at": "2026-02-11T06:14:43.692884+00:00",
+          "session_active": false,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      }
+    ],
+    "conservative": [
+      {
+        "signal_id": "USDCAD_SELL_94b53565851a",
+        "id": "USDCAD_SELL_94b53565851a",
+        "pair": "USDCAD",
+        "direction": "SELL",
+        "score": 45,
+        "technical_score": 45,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 34.8,
+        "adx": 33.7,
+        "atr": 0.00091,
+        "volume_ratio": 0,
+        "session": "ASIAN",
+        "entry_price": 1.35206,
+        "sl": 1.35389,
+        "tp": 1.34795,
+        "risk_reward": 2.25,
+        "spread": 0.0002,
+        "timestamp": "2026-02-11T05:59:43.692884+00:00",
+        "status": "OPEN",
+        "hold_time": "INTRADAY",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-11T05:59:43.692884+00:00",
+          "expires_at": "2026-02-11T06:14:43.692884+00:00",
+          "session_active": false,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      }
+    ]
   },
   "historical_signals": [
     {
@@ -1417,8 +1513,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 0,
-    "total_risk_pips": 0,
+    "theoretical_max_pips": 18.3,
+    "total_risk_pips": 18.299999999999983,
     "max_daily_risk": 250
   },
   "analytics": {
@@ -1581,7 +1677,7 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-02-11T05:45:54.833873+00:00",
+    "last_update": "2026-02-11T05:59:48.299198+00:00",
     "signal_only_mode": true,
     "version": "2.1.2-MULTI"
   }

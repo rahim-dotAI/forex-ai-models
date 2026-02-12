@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-12T12:31:38.565559+00:00",
+  "timestamp": "2026-02-12T12:46:01.888842+00:00",
   "active_signals": 1,
   "active_signals_by_mode": {
     "aggressive": 1,
@@ -22,8 +22,8 @@
   "signals_by_mode": {
     "aggressive": [
       {
-        "signal_id": "USDCHF_SELL_e769dc2ba2f7",
-        "id": "USDCHF_SELL_e769dc2ba2f7",
+        "signal_id": "USDCHF_SELL_07390059e1e9",
+        "id": "USDCHF_SELL_07390059e1e9",
         "pair": "USDCHF",
         "direction": "SELL",
         "score": 45,
@@ -31,17 +31,17 @@
         "sentiment_score": 0,
         "confidence": "MODERATE",
         "tier": "C",
-        "rsi": 37.1,
-        "adx": 38.8,
-        "atr": 0.0006,
+        "rsi": 50.7,
+        "adx": 31.3,
+        "atr": 0.00068,
         "volume_ratio": 0,
         "session": "EUROPEAN",
-        "entry_price": 0.76775,
-        "sl": 0.76895,
-        "tp": 0.76506,
+        "entry_price": 0.76908,
+        "sl": 0.77045,
+        "tp": 0.766,
         "risk_reward": 2.25,
         "spread": 0.0002,
-        "timestamp": "2026-02-12T12:31:33.955057+00:00",
+        "timestamp": "2026-02-12T12:45:57.276049+00:00",
         "status": "OPEN",
         "hold_time": "INTRADAY",
         "eligible_modes": [
@@ -59,8 +59,8 @@
           "market_state": "TRENDING_STRONG",
           "timeframe": "15m",
           "valid_for_minutes": 15,
-          "generated_at": "2026-02-12T12:31:33.955057+00:00",
-          "expires_at": "2026-02-12T12:46:33.955057+00:00",
+          "generated_at": "2026-02-12T12:45:57.276049+00:00",
+          "expires_at": "2026-02-12T13:00:57.276049+00:00",
           "session_active": true,
           "signal_generator_version": "2.1.2",
           "atr_stop_multiplier": 2.0,
@@ -71,8 +71,8 @@
     ],
     "conservative": [
       {
-        "signal_id": "USDCHF_SELL_e769dc2ba2f7",
-        "id": "USDCHF_SELL_e769dc2ba2f7",
+        "signal_id": "USDCHF_SELL_07390059e1e9",
+        "id": "USDCHF_SELL_07390059e1e9",
         "pair": "USDCHF",
         "direction": "SELL",
         "score": 45,
@@ -80,17 +80,17 @@
         "sentiment_score": 0,
         "confidence": "MODERATE",
         "tier": "C",
-        "rsi": 37.1,
-        "adx": 38.8,
-        "atr": 0.0006,
+        "rsi": 50.7,
+        "adx": 31.3,
+        "atr": 0.00068,
         "volume_ratio": 0,
         "session": "EUROPEAN",
-        "entry_price": 0.76775,
-        "sl": 0.76895,
-        "tp": 0.76506,
+        "entry_price": 0.76908,
+        "sl": 0.77045,
+        "tp": 0.766,
         "risk_reward": 2.25,
         "spread": 0.0002,
-        "timestamp": "2026-02-12T12:31:33.955057+00:00",
+        "timestamp": "2026-02-12T12:45:57.276049+00:00",
         "status": "OPEN",
         "hold_time": "INTRADAY",
         "eligible_modes": [
@@ -108,8 +108,8 @@
           "market_state": "TRENDING_STRONG",
           "timeframe": "15m",
           "valid_for_minutes": 15,
-          "generated_at": "2026-02-12T12:31:33.955057+00:00",
-          "expires_at": "2026-02-12T12:46:33.955057+00:00",
+          "generated_at": "2026-02-12T12:45:57.276049+00:00",
+          "expires_at": "2026-02-12T13:00:57.276049+00:00",
           "session_active": true,
           "signal_generator_version": "2.1.2",
           "atr_stop_multiplier": 2.0,
@@ -2042,6 +2042,31 @@
       "estimated_win_rate": null,
       "timestamp": "2026-02-12T07:57:26.407630+00:00",
       "exit_time": "2026-02-12T08:01:20.744785+00:00"
+    },
+    {
+      "id": "USDCHF_SELL_e769dc2ba2f7",
+      "signal_id": "USDCHF_SELL_e769dc2ba2f7",
+      "pair": "USDCHF",
+      "direction": "SELL",
+      "entry_price": 0.76775,
+      "exit_price": 0.76895,
+      "sl": 0.76895,
+      "tp": 0.76506,
+      "status": "LOSS",
+      "pips": -11.999999999999789,
+      "confidence": "MODERATE",
+      "score": 45,
+      "session": "EUROPEAN",
+      "tier": "C",
+      "eligible_modes": [
+        "aggressive"
+      ],
+      "sentiment_applied": false,
+      "sentiment_score": 0.0,
+      "sentiment_adjustment": 0.0,
+      "estimated_win_rate": null,
+      "timestamp": "2026-02-12T12:31:33.955057+00:00",
+      "exit_time": "2026-02-12T12:45:55.566141+00:00"
     }
   ],
   "api_usage": {
@@ -2055,23 +2080,23 @@
     }
   },
   "stats": {
-    "total_trades": 70,
-    "win_rate": 31.4,
-    "total_pips": -253.8,
+    "total_trades": 71,
+    "win_rate": 31.0,
+    "total_pips": -265.8,
     "wins": 22,
-    "losses": 48,
-    "expectancy": -3.63
+    "losses": 49,
+    "expectancy": -3.74
   },
   "performance_stats": {
-    "total_trades": 70,
+    "total_trades": 71,
     "wins": 22,
-    "losses": 48,
+    "losses": 49,
     "expired": 19,
-    "win_rate": 31.4,
-    "total_pips": -253.8,
+    "win_rate": 31.0,
+    "total_pips": -265.8,
     "avg_win": 0,
     "avg_loss": 0,
-    "expectancy": -3.63,
+    "expectancy": -3.74,
     "by_mode": {
       "all": {
         "trades": 0,
@@ -2080,10 +2105,10 @@
         "win_rate": 0.0
       },
       "aggressive": {
-        "trades": 70,
+        "trades": 71,
         "wins": 22,
-        "total_pips": -253.8190000000157,
-        "win_rate": 31.4
+        "total_pips": -265.8190000000155,
+        "win_rate": 31.0
       },
       "conservative": {
         "trades": 1,
@@ -2094,10 +2119,10 @@
     },
     "by_tier": {
       "C": {
-        "trades": 70,
+        "trades": 71,
         "wins": 22,
-        "total_pips": -253.8190000000157,
-        "win_rate": 31.4
+        "total_pips": -265.8190000000155,
+        "win_rate": 31.0
       }
     },
     "by_session": {
@@ -2120,10 +2145,10 @@
         "win_rate": 21.1
       },
       "EUROPEAN": {
-        "trades": 25,
+        "trades": 26,
         "wins": 8,
-        "total_pips": -62.630000000006646,
-        "win_rate": 32.0
+        "total_pips": -74.63000000000643,
+        "win_rate": 30.8
       },
       "OVERLAP": {
         "trades": 3,
@@ -2146,10 +2171,10 @@
         "win_rate": 24.6
       },
       "USDCHF": {
-        "trades": 2,
+        "trades": 3,
         "wins": 1,
-        "total_pips": 27.5000000000003,
-        "win_rate": 50.0
+        "total_pips": 15.50000000000051,
+        "win_rate": 33.3
       },
       "EURGBP": {
         "trades": 1,
@@ -2166,8 +2191,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 12.0,
-    "total_risk_pips": 11.999999999999789,
+    "theoretical_max_pips": 13.7,
+    "total_risk_pips": 13.699999999999823,
     "max_daily_risk": 250
   },
   "analytics": {
@@ -2185,10 +2210,10 @@
         "win_rate": 24.6
       },
       "USDCHF": {
-        "trades": 2,
+        "trades": 3,
         "wins": 1,
-        "total_pips": 27.5000000000003,
-        "win_rate": 50.0
+        "total_pips": 15.50000000000051,
+        "win_rate": 33.3
       },
       "EURGBP": {
         "trades": 1,
@@ -2223,10 +2248,10 @@
         "win_rate": 21.1
       },
       "EUROPEAN": {
-        "trades": 25,
+        "trades": 26,
         "wins": 8,
-        "total_pips": -62.630000000006646,
-        "win_rate": 32.0
+        "total_pips": -74.63000000000643,
+        "win_rate": 30.8
       },
       "OVERLAP": {
         "trades": 3,
@@ -2237,18 +2262,18 @@
     },
     "by_confidence": {
       "MODERATE": {
-        "trades": 70,
+        "trades": 71,
         "wins": 22,
-        "total_pips": -253.8190000000157,
-        "win_rate": 31.4
+        "total_pips": -265.8190000000155,
+        "win_rate": 31.0
       }
     },
     "by_tier": {
       "C": {
-        "trades": 70,
+        "trades": 71,
         "wins": 22,
-        "total_pips": -253.8190000000157,
-        "win_rate": 31.4
+        "total_pips": -265.8190000000155,
+        "win_rate": 31.0
       }
     },
     "by_mode": {
@@ -2259,10 +2284,10 @@
         "win_rate": 0.0
       },
       "aggressive": {
-        "trades": 70,
+        "trades": 71,
         "wins": 22,
-        "total_pips": -253.8190000000157,
-        "win_rate": 31.4
+        "total_pips": -265.8190000000155,
+        "win_rate": 31.0
       },
       "conservative": {
         "trades": 1,
@@ -2300,10 +2325,10 @@
         "C_EUROPEAN": {
           "tier": "C",
           "session": "EUROPEAN",
-          "trades": 25,
+          "trades": 26,
           "wins": 8,
-          "total_pips": -62.630000000006646,
-          "win_rate": 32.0
+          "total_pips": -74.63000000000643,
+          "win_rate": 30.8
         },
         "C_OVERLAP": {
           "tier": "C",
@@ -2318,10 +2343,10 @@
         "aggressive_C": {
           "mode": "aggressive",
           "tier": "C",
-          "trades": 70,
+          "trades": 71,
           "wins": 22,
-          "total_pips": -253.8190000000157,
-          "win_rate": 31.4
+          "total_pips": -265.8190000000155,
+          "win_rate": 31.0
         },
         "conservative_C": {
           "mode": "conservative",
@@ -2336,7 +2361,7 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-02-12T12:31:38.565604+00:00",
+    "last_update": "2026-02-12T12:46:01.888896+00:00",
     "signal_only_mode": true,
     "version": "2.1.2-MULTI"
   }

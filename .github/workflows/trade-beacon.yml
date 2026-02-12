@@ -1,4 +1,13 @@
-name: Trade Beacon v2.1.2 – Forex Signal Generator
+name: Trade Beacon v2.1.3-OPTIMIZED – Forex Signal Generator
+
+# PERFORMANCE OPTIMIZATIONS v2.1.3:
+# - Lowered tier thresholds (A+: 75, A: 68, B: 60) for better signal quality
+# - Balanced Conservative/Aggressive thresholds (55/50 instead of 60/60)
+# - Added session-specific thresholds (block ASIAN/LATE_US/OVERLAP poor performers)
+# - Added pair limits (max 2 GBPJPY, block EURGBP, allow 5 GBPUSD)
+# - Increased ATR stop multiplier (2.5x from 2.0x) to reduce stop-outs
+# - Increased minimum R:R (2.5 from 2.0) for better risk-adjusted trades
+# - Target: 65-75% win rate, 15-20 signals per run, balanced mode distribution
 
 on:
   schedule:
@@ -44,7 +53,7 @@ env:
   ENTRY_SCRIPT: "trade_beacon.py"
 
 concurrency:
-  group: trade-beacon-v2.1.2-${{ github.ref }}-${{ github.event_name }}
+  group: trade-beacon-v2.1.3-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: false
 
 permissions:
@@ -65,8 +74,7 @@ jobs:
           CURRENT_HOUR=$(date -u +%H)
           CURRENT_DATE=$(date -u +%Y-%m-%d)
           
-          # Major forex market holidays (add more as needed)
-          # Format: YYYY-MM-DD
+          # Major forex market holidays
           HOLIDAYS=(
             "2025-01-01"  # New Year's Day
             "2025-04-18"  # Good Friday
@@ -74,9 +82,21 @@ jobs:
             "2025-05-26"  # Spring Bank Holiday (UK)
             "2025-07-04"  # Independence Day (US)
             "2025-08-25"  # Summer Bank Holiday (UK)
+            "2025-11-27"  # Thanksgiving (US)
             "2025-12-25"  # Christmas Day
             "2025-12-26"  # Boxing Day
             "2026-01-01"  # New Year's Day 2026
+            "2026-01-19"  # MLK Day (US)
+            "2026-02-16"  # Presidents Day (US)
+            "2026-04-03"  # Good Friday 2026
+            "2026-04-06"  # Easter Monday 2026
+            "2026-05-04"  # Early May Bank Holiday (UK)
+            "2026-05-25"  # Spring Bank Holiday (UK)
+            "2026-07-03"  # Independence Day (US, observed)
+            "2026-08-31"  # Summer Bank Holiday (UK)
+            "2026-11-26"  # Thanksgiving (US)
+            "2026-12-25"  # Christmas Day
+            "2026-12-28"  # Boxing Day (observed)
           )
           
           # Check if today is a holiday
@@ -187,12 +207,14 @@ jobs:
           BEACON_VER=$(grep -oP 'signal_generator_version\s*=\s*"\K[^"]+' $ENTRY_SCRIPT | head -1 || echo "unknown")
           
           echo "Tracker version: $TRACKER_VER"
-          echo "Beacon version: $BEACON_VER"
+          echo "Beacon version:  $BEACON_VER"
           
-          if [[ "$TRACKER_VER" == *"MULTI"* ]] && [[ "$BEACON_VER" == *"MULTI"* ]]; then
-            echo "✅ Multi-mode versions aligned"
+          if [[ "$TRACKER_VER" == *"OPTIMIZED"* ]] && [[ "$BEACON_VER" == *"OPTIMIZED"* ]]; then
+            echo "✅ v2.1.3-OPTIMIZED versions aligned"
+          elif [[ "$TRACKER_VER" == *"MULTI"* ]] && [[ "$BEACON_VER" == *"MULTI"* ]]; then
+            echo "⚠️  Running on v2.1.2-MULTI — auto-migration will run on first execution"
           elif [ "$TRACKER_VER" != "$BEACON_VER" ]; then
-            echo "⚠️  Version mismatch detected (non-fatal)"
+            echo "⚠️  Version mismatch (non-fatal — migration will handle automatically)"
           else
             echo "✅ Versions aligned: $TRACKER_VER"
           fi
@@ -203,12 +225,43 @@ jobs:
           echo "🔍 Validating config.json..."
           jq empty config.json || exit 1
           
+          # Check version field
+          CONFIG_VER=$(jq -r '.version // "unknown"' config.json)
+          echo "Config version: $CONFIG_VER"
+          if [[ "$CONFIG_VER" == *"OPTIMIZED"* ]]; then
+            echo "✅ Config version: v2.1.3-OPTIMIZED"
+          else
+            echo "⚠️  Config version not set to OPTIMIZED — consider updating"
+          fi
+          
           # Check required config fields - BOTH modes must exist
-          jq -e '.settings.aggressive' config.json > /dev/null || exit 1
-          jq -e '.settings.conservative' config.json > /dev/null || exit 1
+          jq -e '.settings.aggressive' config.json > /dev/null || { echo "❌ Missing aggressive settings"; exit 1; }
+          jq -e '.settings.conservative' config.json > /dev/null || { echo "❌ Missing conservative settings"; exit 1; }
+          
           jq -e '.tiers' config.json > /dev/null || {
-            echo "⚠️  Tier thresholds not found - using defaults"
+            echo "⚠️  Tier thresholds not found - using defaults (A+:75, A:68, B:60)"
           }
+          
+          # Check v2.1.3 optimization fields
+          jq -e '.advanced.session_thresholds' config.json > /dev/null || {
+            echo "⚠️  Session thresholds not found - using defaults (ASIAN:65, LATE_US:65, OVERLAP:999)"
+          }
+          jq -e '.advanced.pair_limits' config.json > /dev/null || {
+            echo "⚠️  Pair limits not found - using defaults (GBPJPY:2, EURGBP:0, GBPUSD:5)"
+          }
+          jq -e '.sentiment' config.json > /dev/null || {
+            echo "⚠️  Sentiment block not found - using defaults (threshold:60)"
+          }
+          
+          # Validate v2.1.3 threshold values
+          AGG_THRESH=$(jq -r '.settings.aggressive.threshold // 50' config.json)
+          CONS_THRESH=$(jq -r '.settings.conservative.threshold // 55' config.json)
+          ATR_STOP=$(jq -r '.settings.aggressive.atr_stop_multiplier // 2.5' config.json)
+          MIN_RR=$(jq -r '.settings.aggressive.min_risk_reward // 2.5' config.json)
+          SENT_THRESH=$(jq -r '.sentiment.min_score_threshold // 60' config.json)
+          
+          echo "✅ Mode thresholds: Aggressive=$AGG_THRESH, Conservative=$CONS_THRESH"
+          echo "✅ ATR Stop: ${ATR_STOP}x  |  Min R:R: ${MIN_RR}  |  Sentiment threshold: ${SENT_THRESH}"
           
           # Snapshot original config for forensic baseline (once)
           if [ ! -f config.runtime.base.json ]; then
@@ -217,7 +270,7 @@ jobs:
             echo "📸 Created config baseline snapshot"
           fi
           
-          echo "✅ Configuration valid"
+          echo "✅ Configuration valid (v2.1.3-OPTIMIZED)"
           
           # Display mode info
           MODE=$(jq -r '.mode // "conservative"' config.json)
@@ -322,11 +375,8 @@ jobs:
             PAUSED_UNTIL=$(jq -r '.paused_until // "unknown"' signal_state/trading_paused.json)
             echo "⛔ Trading is currently paused until: $PAUSED_UNTIL"
             echo "⛔ Skipping execution to prevent signal emission during cooldown"
-            
-            # Create status report
             echo "paused" > signal_state/run_status.txt
             echo "System paused - no execution" >> signal_state/run_status.txt
-            
             exit 0
           fi
           
@@ -336,21 +386,37 @@ jobs:
             jq -r '.stats | "Total Trades: \(.total_trades // 0) | Win Rate: \(.win_rate // 0)% | Total Pips: \(.total_pips // 0) | Expectancy: \(.expectancy_pips // 0)"' \
               signal_state/signal_history.json || echo "No stats available yet"
             
-            # Display multi-mode stats if available (including 'all' mode)
+            # Multi-mode stats
             if jq -e '.stats.by_mode' signal_state/signal_history.json > /dev/null 2>&1; then
               echo ""
               echo "📊 Multi-Mode Breakdown:"
-              
-              # Check if 'all' mode exists
               if jq -e '.stats.by_mode.all' signal_state/signal_history.json > /dev/null 2>&1; then
                 echo "  All: $(jq -r '.stats.by_mode.all.trades // 0' signal_state/signal_history.json) trades, $(jq -r '.stats.by_mode.all.win_rate // 0' signal_state/signal_history.json)% WR"
               fi
-              
-              echo "  Aggressive: $(jq -r '.stats.by_mode.aggressive.trades // 0' signal_state/signal_history.json) trades, $(jq -r '.stats.by_mode.aggressive.win_rate // 0' signal_state/signal_history.json)% WR"
+              echo "  Aggressive:   $(jq -r '.stats.by_mode.aggressive.trades // 0' signal_state/signal_history.json) trades, $(jq -r '.stats.by_mode.aggressive.win_rate // 0' signal_state/signal_history.json)% WR"
               echo "  Conservative: $(jq -r '.stats.by_mode.conservative.trades // 0' signal_state/signal_history.json) trades, $(jq -r '.stats.by_mode.conservative.win_rate // 0' signal_state/signal_history.json)% WR"
+            fi
+            
+            # Tier breakdown (v2.1.3 thresholds)
+            if jq -e '.analytics.by_tier' signal_state/signal_history.json > /dev/null 2>&1; then
+              echo ""
+              echo "🏆 Tier Breakdown (A+≥75, A≥68, B≥60):"
+              jq -r '.analytics.by_tier // {} | to_entries | sort_by(.key) | .[] |
+                "  Tier \(.key): \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
+                signal_state/signal_history.json 2>/dev/null || echo "  No tier data yet"
+            fi
+            
+            # Pair performance snapshot
+            if jq -e '.analytics.by_pair' signal_state/signal_history.json > /dev/null 2>&1; then
+              echo ""
+              echo "💱 Pair Performance:"
+              jq -r '.analytics.by_pair // {} | to_entries | sort_by(-.value.total_pips) | .[] |
+                "  \(.key): \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
+                signal_state/signal_history.json 2>/dev/null || echo "  No pair data yet"
             fi
           fi
           
+          echo ""
           echo "✅ Pre-flight check complete - system ready"
       
       - name: Display active configuration
@@ -401,10 +467,26 @@ jobs:
           fi
           
           echo ""
-          echo "[Tier Thresholds]"
-          echo "  A+ Minimum Score: $(jq -r '.tiers.A_plus_min_score // 80' config.json)"
-          echo "  A Minimum Score: $(jq -r '.tiers.A_min_score // 72' config.json)"
-          echo "  B Minimum Score: $(jq -r '.tiers.B_min_score // 65' config.json)"
+          echo "[Tier Thresholds - v2.1.3-OPTIMIZED]"
+          echo "  A+ Minimum Score: $(jq -r '.tiers.A_plus_min_score // 75' config.json)"
+          echo "  A  Minimum Score: $(jq -r '.tiers.A_min_score // 68' config.json)"
+          echo "  B  Minimum Score: $(jq -r '.tiers.B_min_score // 60' config.json)"
+          echo "  C  Entry Level:   below B threshold"
+          echo ""
+          
+          echo "[Session Thresholds - v2.1.3-OPTIMIZED]"
+          echo "  EUROPEAN: $(jq -r '.advanced.session_thresholds.EUROPEAN // 50' config.json) (target session 57% WR)"
+          echo "  US:       $(jq -r '.advanced.session_thresholds.US // 50' config.json) (target session 77% WR)"
+          echo "  ASIAN:    $(jq -r '.advanced.session_thresholds.ASIAN // 65' config.json) (raised threshold - 33% WR)"
+          echo "  LATE_US:  $(jq -r '.advanced.session_thresholds.LATE_US // 65' config.json) (raised threshold - 42% WR)"
+          echo "  OVERLAP:  $(jq -r '.advanced.session_thresholds.OVERLAP // 999' config.json) (blocked - 0% WR)"
+          echo ""
+          
+          echo "[Pair Limits - v2.1.3-OPTIMIZED]"
+          echo "  GBPUSD: max $(jq -r '.advanced.pair_limits.GBPUSD // 5' config.json) signals (100% WR)"
+          echo "  GBPJPY: max $(jq -r '.advanced.pair_limits.GBPJPY // 2' config.json) signals (42% WR - flood prevention)"
+          echo "  EURGBP: max $(jq -r '.advanced.pair_limits.EURGBP // 0' config.json) signals (BLOCKED - 0% WR)"
+          echo "  Default: max $(jq -r '.advanced.pair_limits.default // 3' config.json) signals per pair"
           echo ""
           
           echo "[System Settings]"
@@ -430,7 +512,15 @@ jobs:
             else
               echo "  MarketAux: ❌ Missing"
             fi
-            echo "  Threshold: Score ≥60 (conserves API quota)"
+            SENT_THRESH=$(jq -r '.sentiment.min_score_threshold // 60' config.json)
+            SENT_CACHE=$(jq -r '.sentiment.cache_ttl_minutes // 30' config.json)
+            echo "  Min Score Threshold: $SENT_THRESH (only signals ≥$SENT_THRESH receive sentiment analysis)"
+            echo "  Cache TTL: ${SENT_CACHE} minutes"
+            echo "  Rate Limit: $(jq -r '.sentiment.rate_limit_seconds // 2' config.json)s between API calls"
+          else
+            echo ""
+            echo "[Sentiment Analysis: DISABLED]"
+            echo "  Enable via workflow_dispatch sentiment=true or set use_sentiment=true in config.json"
           fi
           echo ""
           
@@ -442,14 +532,14 @@ jobs:
           
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
       
-      - name: Run Trade Beacon v2.1.2
+      - name: Run Trade Beacon v2.1.3-OPTIMIZED
         if: steps.market_check.outputs.should_run == 'true'
         env:
           NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
           MARKETAUX_API_KEY: ${{ secrets.MARKETAUX_API_KEY }}
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
         run: |
-          echo "🚀 Starting Trade Beacon v2.1.2..."
+          echo "🚀 Starting Trade Beacon v2.1.3-OPTIMIZED..."
           python $ENTRY_SCRIPT
           EXIT_CODE=$?
           
@@ -517,7 +607,7 @@ jobs:
         if: always()
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "📊 TRADE BEACON v2.1.2 PERFORMANCE SUMMARY"
+          echo "📊 TRADE BEACON v2.1.3-OPTIMIZED PERFORMANCE SUMMARY"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           
           if [ -f signal_state/signal_history.json ]; then
@@ -534,7 +624,7 @@ jobs:
               "Avg Win: \(.avg_win // 0) pips\n" +
               "Avg Loss: \(.avg_loss // 0) pips\n" +
               "Expectancy: \(.expectancy_pips // 0) pips/trade\n" +
-              "Validated: \(.validated // false)"' \
+              "Validated (100+ trades): \(.validated // false)"' \
               signal_state/signal_history.json || echo "Stats not available"
             
             # Multi-mode stats (including 'all' mode)
@@ -546,14 +636,20 @@ jobs:
                 signal_state/signal_history.json 2>/dev/null || echo "No mode-specific data"
             fi
             
-            # Tier stats
+            # NEW: Tier stats (v2.1.3 thresholds: A+:75, A:68, B:60)
             if jq -e '.analytics.by_tier' signal_state/signal_history.json > /dev/null 2>&1; then
               echo ""
-              echo "🏆 Performance by Tier:"
-              jq -r '.analytics.by_tier // {} | to_entries[] | 
+              echo "🏆 Performance by Tier (v2.1.3: A+≥75, A≥68, B≥60):"
+              jq -r '.analytics.by_tier // {} | to_entries | sort_by(.key) | .[] | 
                 "Tier \(.key): \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
                 signal_state/signal_history.json 2>/dev/null || echo "No tier data"
             fi
+            
+            echo ""
+            echo "💱 Analytics by Pair (sorted by pips):"
+            jq -r '.analytics.by_pair // {} | to_entries | sort_by(-.value.total_pips) | .[] |
+              "\(.key): \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
+              signal_state/signal_history.json 2>/dev/null || echo "No pair data"
             
             echo ""
             echo "📊 Analytics by Session:"
@@ -566,6 +662,24 @@ jobs:
             jq -r '.analytics.by_confidence // {} | to_entries[] | 
               "\(.key): \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
               signal_state/signal_history.json 2>/dev/null || echo "No confidence data"
+            
+            # Cross-analytics (tier x session)
+            if jq -e '.analytics.cross_analytics.tier_by_session' signal_state/signal_history.json > /dev/null 2>&1; then
+              echo ""
+              echo "🔀 Cross Analytics (Tier × Session):"
+              jq -r '.analytics.cross_analytics.tier_by_session // {} | to_entries[] |
+                "\(.value.tier) in \(.value.session): \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
+                signal_state/signal_history.json 2>/dev/null || echo "No cross-analytics data"
+            fi
+            
+            # Cross-analytics (mode x tier)
+            if jq -e '.analytics.cross_analytics.mode_by_tier' signal_state/signal_history.json > /dev/null 2>&1; then
+              echo ""
+              echo "🔀 Cross Analytics (Mode × Tier):"
+              jq -r '.analytics.cross_analytics.mode_by_tier // {} | to_entries[] |
+                "\(.value.mode) / Tier \(.value.tier): \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
+                signal_state/signal_history.json 2>/dev/null || echo "No cross-analytics data"
+            fi
           else
             echo "⚠️  No performance history available yet"
           fi
@@ -616,7 +730,7 @@ jobs:
       - name: Commit state changes
         if: steps.market_check.outputs.should_run == 'true'
         run: |
-          git config user.name "Trade Beacon v2.1.2 [bot]"
+          git config user.name "Trade Beacon v2.1.3-OPTIMIZED [bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
           # Add all state files
@@ -634,7 +748,7 @@ jobs:
             SESSION=$(jq -r '.session // "UNKNOWN"' signal_state/dashboard_state.json 2>/dev/null || echo "UNKNOWN")
             MODE=$(jq -r '.mode // "conservative"' config.json)
             
-            git commit -m "📊 Trade Beacon v2.1.2 update [$TIMESTAMP]
+            git commit -m "📊 Trade Beacon v2.1.3-OPTIMIZED update [$TIMESTAMP]
             
             Mode: $MODE
             Session: $SESSION
@@ -659,7 +773,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: trade-beacon-v2.1.2-run-${{ github.run_number }}
+          name: trade-beacon-v2.1.3-optimized-run-${{ github.run_number }}
           path: |
             signal_state/
             signals.csv

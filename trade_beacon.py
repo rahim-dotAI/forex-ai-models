@@ -3,6 +3,14 @@ Trade Beacon v2.1.2 - Forex Signal Generator (INSTITUTIONAL GRADE)
 MULTI-MODE EDITION: Generates Aggressive + Conservative signals simultaneously
 with tier-based selective enhancement (sentiment/backtest only on top-tier)
 
+PERFORMANCE OPTIMIZATIONS v2.1.3:
+- Lowered tier thresholds (A+: 75, A: 68, B: 60) to generate quality signals
+- Balanced Conservative/Aggressive thresholds (55/50 instead of 60/60)
+- Added session-specific thresholds (block ASIAN/LATE_US/OVERLAP poor performers)
+- Added pair limits (max 2 GBPJPY, block EURGBP, allow 5 GBPUSD)
+- Increased ATR stop multiplier (2.5x from 2.0x) to reduce stop-outs
+- Increased minimum R:R (2.5 from 2.0) for better risk-adjusted trades
+
 FIXED: Line 1162 - Changed PERFORMANCE_TRACKER.signals to PERFORMANCE_TRACKER.history.get("signals", [])
 """
 
@@ -105,20 +113,84 @@ def _default_config():
         "mode": "conservative",
         "use_sentiment": False,
         "settings": {
-            "aggressive": {"threshold": 60, "min_adx": 20, "rsi_oversold": 30, "rsi_overbought": 70, "min_risk_reward": 2.0, "atr_stop_multiplier": 1.8, "atr_target_multiplier": 4.0, "max_correlated_signals": 2},
-            "conservative": {"threshold": 60, "min_adx": 20, "rsi_oversold": 30, "rsi_overbought": 70, "min_risk_reward": 2.2, "atr_stop_multiplier": 2.0, "atr_target_multiplier": 4.5, "max_correlated_signals": 1}
+            "aggressive": {
+                "threshold": 50,  # UPDATED: was 60
+                "min_adx": 18,     # UPDATED: was 20
+                "rsi_oversold": 30, 
+                "rsi_overbought": 70, 
+                "min_risk_reward": 2.5,  # UPDATED: was 2.0
+                "atr_stop_multiplier": 2.5,  # UPDATED: was 1.8
+                "atr_target_multiplier": 5.0,  # UPDATED: was 4.0
+                "max_correlated_signals": 2
+            },
+            "conservative": {
+                "threshold": 55,  # UPDATED: was 60
+                "min_adx": 20, 
+                "rsi_oversold": 30, 
+                "rsi_overbought": 70, 
+                "min_risk_reward": 2.5,  # UPDATED: was 2.2
+                "atr_stop_multiplier": 2.5,  # UPDATED: was 2.0
+                "atr_target_multiplier": 5.0,  # UPDATED: was 4.5
+                "max_correlated_signals": 1
+            }
         },
         "advanced": {
             "enable_session_filtering": True,
             "enable_correlation_filter": True,
             "cache_ttl_minutes": 5,
             "parallel_workers": 3,
-            "session_bonuses": {"ASIAN": {"JPY_pairs": 3, "AUD_NZD_pairs": 3, "other": 0}, "EUROPEAN": {"EUR_GBP_pairs": 3, "EUR_GBP_crosses": 2, "other": 0}, "OVERLAP": {"all_major_pairs": 2}, "US": {"USD_majors": 3, "other": 0}, "LATE_US": {"all_major_pairs": 0}},
-            "validation": {"max_signal_age_seconds": 900, "min_sl_pips": {"JPY_pairs": 20, "other": 12}, "max_spread_ratio": 0.25, "max_sl_distance_pct": 0.02, "max_tp_distance_pct": 0.05, "require_direction": True, "reject_missing_pips": True}
+            "session_bonuses": {
+                "ASIAN": {"JPY_pairs": 3, "AUD_NZD_pairs": 3, "other": 0}, 
+                "EUROPEAN": {"EUR_GBP_pairs": 3, "EUR_GBP_crosses": 2, "other": 0}, 
+                "OVERLAP": {"all_major_pairs": 2}, 
+                "US": {"USD_majors": 3, "other": 0}, 
+                "LATE_US": {"all_major_pairs": 0}
+            },
+            "session_thresholds": {
+                "ASIAN": 65,      # UPDATED: Block poor performance (33% WR)
+                "EUROPEAN": 50,   # Keep normal (57% WR)
+                "US": 50,         # Keep normal (77% WR)
+                "LATE_US": 65,    # UPDATED: Block poor performance (42% WR)
+                "OVERLAP": 999    # UPDATED: Block completely (0% WR)
+            },
+            "pair_limits": {
+                "GBPUSD": 5,      # UPDATED: Allow more (100% WR)
+                "GBPJPY": 2,      # UPDATED: Limit heavily (42% WR, was flooding with 33 signals)
+                "EURGBP": 0,      # UPDATED: Block completely (0% WR)
+                "default": 3      # Default limit for other pairs
+            },
+            "validation": {
+                "max_signal_age_seconds": 900, 
+                "min_sl_pips": {"JPY_pairs": 20, "other": 12}, 
+                "max_spread_ratio": 0.25, 
+                "max_sl_distance_pct": 0.02, 
+                "max_tp_distance_pct": 0.05, 
+                "require_direction": True, 
+                "reject_missing_pips": True
+            }
         },
-        "risk_management": {"max_daily_risk_pips": 150, "max_open_positions": 3, "stop_trading_on_drawdown_pips": 100, "equity_protection": {"enable": False, "max_consecutive_losses": 3, "pause_minutes_after_hit": 120}},
-        "performance_tracking": {"enable": True, "history_file": "signal_state/signal_history.json", "idempotency": {"enabled": True}, "analytics": {"track_by_pair": True}},
-        "performance_tuning": {"auto_adjust_thresholds": False, "min_trades_for_optimization": 50, "target_win_rate": 0.5, "optimization_inputs": {"min_expectancy": 0.5}}
+        "risk_management": {
+            "max_daily_risk_pips": 150, 
+            "max_open_positions": 3, 
+            "stop_trading_on_drawdown_pips": 100, 
+            "equity_protection": {
+                "enable": False, 
+                "max_consecutive_losses": 3, 
+                "pause_minutes_after_hit": 120
+            }
+        },
+        "performance_tracking": {
+            "enable": True, 
+            "history_file": "signal_state/signal_history.json", 
+            "idempotency": {"enabled": True}, 
+            "analytics": {"track_by_pair": True}
+        },
+        "performance_tuning": {
+            "auto_adjust_thresholds": False, 
+            "min_trades_for_optimization": 50, 
+            "target_win_rate": 0.5, 
+            "optimization_inputs": {"min_expectancy": 0.5}
+        }
     }
 
 # API validation
@@ -287,20 +359,23 @@ def calculate_eligible_modes(score: int, adx: float, config: Dict) -> List[str]:
             modes.append(mode_name)
     return modes
 
-# NEW: Tier classification system
+# NEW: Tier classification system - UPDATED THRESHOLDS
 def classify_signal_tier(score: int) -> str:
     """
     Classify signal quality into tiers:
-    A+ = Institutional grade (80+)
-    A  = Premium (72-79)
-    B  = Standard (65-71)
-    C  = Entry level (60-64)
+    A+ = Institutional grade (75+) - LOWERED from 80
+    A  = Premium (68-74) - LOWERED from 72
+    B  = Standard (60-67) - LOWERED from 65
+    C  = Entry level (45-59) - LOWERED from 60
+    
+    PERFORMANCE OPTIMIZATION: Lowered all thresholds by 5-7 points
+    to ensure we generate A/B tier signals instead of only C tier.
     """
-    if score >= 80:
+    if score >= 75:
         return "A+"
-    elif score >= 72:
+    elif score >= 68:
         return "A"
-    elif score >= 65:
+    elif score >= 60:
         return "B"
     else:
         return "C"
@@ -377,8 +452,8 @@ def validate_signal_quality(signal: Dict, config: Dict) -> Tuple[bool, List[str]
         warnings.append(f"SL too tight: {sl_pips:.1f}")
         return False, warnings
     
-    # R:R (use minimum from either mode)
-    min_rr = min(mode_settings.get("min_risk_reward", 2.0), 2.0)
+    # R:R (use minimum from either mode) - UPDATED to 2.5
+    min_rr = min(mode_settings.get("min_risk_reward", 2.5), 2.5)
     if signal['risk_reward'] < min_rr:
         warnings.append(f"Poor R:R: {signal['risk_reward']:.2f}")
         return False, warnings
@@ -568,9 +643,24 @@ def resolve_active_signals():
                 elif outcome == "EXPIRED": pips = price_to_pips(pair, exit_p - entry) if direction == "BUY" else price_to_pips(pair, entry - exit_p)
                 
                 if PERFORMANCE_TRACKER:
-                    PERFORMANCE_TRACKER.record_trade(signal_id=sid, pair=pair, direction=direction, entry_price=entry, exit_price=exit_p, sl=sl, tp=tp, outcome=outcome, pips=pips, confidence=sig.get("confidence"), score=sig.get("score"), session=sig.get("session"), entry_time=sig.get("timestamp"), exit_time=datetime.now(timezone.utc).isoformat())
+                    PERFORMANCE_TRACKER.record_trade(
+                        signal_id=sid, pair=pair, direction=direction,
+                        entry_price=entry, exit_price=exit_p, sl=sl, tp=tp,
+                        outcome=outcome, pips=pips,
+                        confidence=sig.get("confidence"),
+                        score=sig.get("score"),
+                        session=sig.get("session"),
+                        entry_time=sig.get("timestamp"),
+                        exit_time=datetime.now(timezone.utc).isoformat(),
+                        tier=sig.get("tier"),
+                        eligible_modes=sig.get("eligible_modes"),
+                        sentiment_applied=sig.get("sentiment_applied", False),
+                        sentiment_score=sig.get("sentiment_score", 0.0),
+                        sentiment_adjustment=sig.get("sentiment_adjustment", 0.0),
+                        estimated_win_rate=sig.get("estimated_win_rate")
+                    )
                     resolved += 1
-                    log.info(f"{'✅' if outcome == 'WIN' else '❌'} {pair} {direction} - {outcome} ({pips:+.1f}p)")
+                    log.info(f"{'✅' if outcome == 'WIN' else '❌'} {pair} {direction} - {outcome} ({pips:+.1f}p) [{sig.get('tier', 'C')}]")
             else:
                 active.append(sig)
         except Exception as e:
@@ -588,6 +678,44 @@ def resolve_active_signals():
         log.info(f"✅ Resolved {resolved}, {len(active)} active")
     
     return resolved
+
+# NEW: Pair limit filter - PERFORMANCE OPTIMIZATION
+def filter_pair_limits(signals: List[Dict], config: Dict) -> List[Dict]:
+    """
+    Limit signals per pair to prevent over-concentration.
+    PERFORMANCE OPTIMIZATION: Prevents flooding (e.g., 33 GBPJPY signals)
+    """
+    pair_limits = config.get("advanced", {}).get("pair_limits", {
+        "GBPUSD": 5,    # 100% WR - allow more
+        "GBPJPY": 2,    # 42% WR - limit heavily
+        "EURGBP": 0,    # 0% WR - block completely
+        "default": 3    # Default limit for other pairs
+    })
+    
+    pair_counts = {}
+    filtered = []
+    
+    # Sort by score to keep best signals
+    for sig in sorted(signals, key=lambda x: x['score'], reverse=True):
+        pair = sig['pair']
+        limit = pair_limits.get(pair, pair_limits.get("default", 3))
+        
+        # Block completely if limit is 0
+        if limit == 0:
+            log.info(f"⛔ Blocked {pair} (blocklist - 0% WR)")
+            continue
+        
+        count = pair_counts.get(pair, 0)
+        if count < limit:
+            filtered.append(sig)
+            pair_counts[pair] = count + 1
+        else:
+            log.info(f"⚠️ Skipped {pair} (max {limit} signals reached)")
+    
+    if len(filtered) < len(signals):
+        log.info(f"📊 Pair limits: {len(signals)} → {len(filtered)} signals")
+    
+    return filtered
 
 # Signal generation
 def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
@@ -657,6 +785,14 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
     if bull == bear:
         return None, ok
     
+    # PERFORMANCE OPTIMIZATION: Session-specific threshold check
+    session_thresholds = CONFIG.get("advanced", {}).get("session_thresholds", {})
+    session_min_threshold = session_thresholds.get(session, min_threshold)
+    
+    if diff < session_min_threshold:
+        # log.info(f"⚠️ {pair.replace('=X', '')} rejected: score {diff} < session threshold {session_min_threshold} ({session})")
+        return None, ok
+    
     if diff < min_threshold:
         return None, ok
     
@@ -667,19 +803,22 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
     elif diff >= 65: conf = "STRONG"
     else: conf = "MODERATE"
     
-    # NEW: Tier classification
+    # NEW: Tier classification (with updated thresholds)
     tier = classify_signal_tier(diff)
     
-    # SL/TP (use conservative multipliers as baseline)
+    # SL/TP (use updated conservative multipliers as baseline)
+    # PERFORMANCE OPTIMIZATION: Increased from 2.0/4.5 to 2.5/5.0
     spread = get_spread(pair)
-    atr_stop, atr_tgt = 2.0, 4.5
+    atr_stop, atr_tgt = 2.5, 5.0  # UPDATED: was 2.0, 4.5
     if direction == "BUY":
         sl, tp = curr - atr_stop * atr, curr + atr_tgt * atr
     else:
         sl, tp = curr + atr_stop * atr, curr - atr_tgt * atr
     
     rr = abs(tp - curr) / abs(curr - sl) if abs(curr - sl) > 0 else 0
-    if rr < 2.0:  # Minimum R:R for any mode
+    
+    # PERFORMANCE OPTIMIZATION: Increased minimum R:R from 2.0 to 2.5
+    if rr < 2.5:  # UPDATED: was 2.0
         return None, ok
     if rr > 10:  # Reject pathological spikes
         return None, ok
@@ -703,7 +842,7 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
         "metadata": {
             "signal_type": get_signal_type(e12, e26, e200, r, a), "market_state": classify_market_state(a, atr, curr),
             "timeframe": INTERVAL, "valid_for_minutes": 15, "generated_at": now.isoformat(), "expires_at": expires.isoformat(),
-            "session_active": session in ("EUROPEAN", "US", "OVERLAP"), "signal_generator_version": "2.1.2",
+            "session_active": session in ("EUROPEAN", "US", "OVERLAP"), "signal_generator_version": "2.1.3-OPTIMIZED",
             "atr_stop_multiplier": atr_stop, "atr_target_multiplier": atr_tgt
         }
     }
@@ -805,7 +944,7 @@ def filter_correlated_signals_enhanced(signals: List[Dict], max_corr: int = 1, e
     return filtered
 
 def check_risk_limits(signals: List[Dict], config: Dict, mode: str) -> Tuple[List[Dict], List[str]]:
-    """Apply risk limits per mode"""
+    """Apply risk limits per mode with UPDATED pair filtering"""
     risk = config.get("risk_management", {})
     mode_settings = config["settings"][mode]
     warnings = []
@@ -826,6 +965,9 @@ def check_risk_limits(signals: List[Dict], config: Dict, mode: str) -> Tuple[Lis
             total_risk += risk_pips
         else:
             warnings.append(f"Skipped {sig['pair']} - {mode} risk limit")
+    
+    # PERFORMANCE OPTIMIZATION: Apply pair limits BEFORE correlation filter
+    filtered = filter_pair_limits(filtered, config)
     
     if config.get("advanced", {}).get("enable_correlation_filter", True):
         max_corr = mode_settings.get("max_correlated_signals", 1)
@@ -1212,7 +1354,7 @@ def write_dashboard_state(signals: list, downloads: int, news_calls: int = 0, mk
         "risk_management": {"theoretical_max_pips": calculate_daily_pips(signals), "total_risk_pips": sum(price_to_pips(s.get('pair', ''), abs(s.get('entry_price', 0) - s.get('sl', 0))) for s in signals), "max_daily_risk": cfg.get("risk_management", {}).get("max_daily_risk_pips", 150)},
         "analytics": perf.get("analytics", {}),
         "equity_curve": perf.get("equity", {}).get("curve", []),
-        "system": {"last_update": datetime.now(timezone.utc).isoformat(), "signal_only_mode": SIGNAL_ONLY_MODE, "version": "2.1.2-MULTI"}
+        "system": {"last_update": datetime.now(timezone.utc).isoformat(), "signal_only_mode": SIGNAL_ONLY_MODE, "version": "2.1.3-OPTIMIZED"}
     }
     
     output_dir = Path("signal_state")
@@ -1239,7 +1381,7 @@ def write_health_check(signals, downloads, news, mkt, can_trade, pause, mode):
         "issues": issues,
         "can_trade": can_trade,
         "api_status": {"yfinance": "ok" if downloads > 0 else "degraded", "newsapi": "ok" if news > 0 else "disabled", "marketaux": "ok" if mkt > 0 else "disabled"},
-        "system_info": {"mode": mode, "pairs_monitored": len(PAIRS), "version": "2.1.2-MULTI"}
+        "system_info": {"mode": mode, "pairs_monitored": len(PAIRS), "version": "2.1.3-OPTIMIZED"}
     }
     
     with open(Path("signal_state/health.json"), "w") as f:
@@ -1351,7 +1493,7 @@ def main():
     opt_cfg = optimize_thresholds_if_needed(CONFIG) if CONFIG.get("performance_tuning", {}).get("auto_adjust_thresholds", False) else CONFIG
     opt_mode = opt_cfg["mode"]
     
-    log.info(f"🚀 Trade Beacon v2.1.2-MULTI - {'Generating ALL SIGNALS (Maximum Mode)' if opt_cfg.get('mode') == 'all' else 'Generating ALL signal types'} | Sentiment={'ON' if USE_SENTIMENT else 'OFF'}")
+    log.info(f"🚀 Trade Beacon v2.1.3-OPTIMIZED - {'Generating ALL SIGNALS (Maximum Mode)' if opt_cfg.get('mode') == 'all' else 'Generating ALL signal types'} | Sentiment={'ON' if USE_SENTIMENT else 'OFF'}")
     log.info(f"📊 Monitoring {len(PAIRS)} pairs")
     if opt_cfg.get("mode") == "all":
         log.info(f"🎯 ALL MODE: Score≥{opt_cfg['settings']['aggressive']['threshold']} ADX≥{opt_cfg['settings']['aggressive']['min_adx']} (No mode filtering)")
@@ -1389,25 +1531,27 @@ def main():
             
             time.sleep(0.5)
     
-    # NEW: Apply sentiment ONLY to high-confidence signals (score >= 60) to conserve API quota
+    # Apply sentiment ONLY to high-confidence signals (score >= 60) to conserve API quota
     if USE_SENTIMENT and new_signals:
         try:
             # Filter for high-confidence signals only (score >= 60)
             high_confidence = [s for s in new_signals if s.get("score", 0) >= 60]
-            
+
             if high_confidence:
                 news = NewsAggregator()
                 log.info(f"💭 Applying sentiment to {len(high_confidence)}/{len(new_signals)} high-confidence signals (score ≥60)")
-                
+
                 enhanced = enhance_with_sentiment(high_confidence, news)
-                enhanced_ids = {s["signal_id"] for s in enhanced}
-                
-                # Mark which signals received sentiment analysis
-                for s in new_signals:
-                    if s["signal_id"] not in enhanced_ids:
-                        s["sentiment_applied"] = False
-                        s["sentiment_score"] = 0
-                
+
+                # ✅ FIXED: Merge enhanced signals back by signal_id
+                enhanced_map = {s["signal_id"]: s for s in enhanced}
+                for i, sig in enumerate(new_signals):
+                    if sig["signal_id"] in enhanced_map:
+                        new_signals[i] = enhanced_map[sig["signal_id"]]
+                    else:
+                        new_signals[i]["sentiment_applied"] = False
+                        new_signals[i]["sentiment_score"] = 0
+
                 log.info(f"✅ Sentiment analysis complete: {len(enhanced)} signals enhanced")
             else:
                 log.info(f"ℹ️  No signals meet sentiment threshold (score ≥60), skipping to conserve API quota")
@@ -1420,10 +1564,14 @@ def main():
                 s["sentiment_applied"] = False
                 s["sentiment_score"] = 0
     
-    # NEW: Apply micro-backtest to high-potential signals
+    # Apply micro-backtest to high-potential signals (A+ and A tier)
+    # Uses sentiment-adjusted scores if sentiment was applied
     elite = select_high_potential(new_signals)
     for s in elite:
+        # Use sentiment-adjusted score if available
+        effective_score = s.get("score", 0)
         s["estimated_win_rate"] = quick_micro_backtest(s)
+        log.info(f"🎲 {s['pair']} [{s['tier']}] sentiment_applied={s.get('sentiment_applied', False)} score={effective_score} estimated_wr={s['estimated_win_rate']:.2f}")
     
     # Filter by estimated win rate (keep only >55% probability)
     log.info(f"🎲 Micro-backtest: {len(elite)} elite signals analyzed")
@@ -1447,7 +1595,7 @@ def main():
     # Split signals by mode and apply mode-specific risk limits
     mode_buckets = split_signals_by_mode(new_signals)
     
-    # Apply risk limits per mode
+    # Apply risk limits per mode (includes pair limits now)
     agg_filtered, agg_warnings = check_risk_limits(mode_buckets["aggressive"], opt_cfg, "aggressive")
     cons_filtered, cons_warnings = check_risk_limits(mode_buckets["conservative"], opt_cfg, "conservative")
     
@@ -1481,7 +1629,7 @@ def main():
         mode_buckets = split_signals_by_mode(all_new)
         
         print("\n" + "="*100)
-        print(f"🎯 MULTI-MODE SIGNALS (v2.1.2-MULTI - INSTITUTIONAL GRADE)")
+        print(f"🎯 MULTI-MODE SIGNALS (v2.1.3-OPTIMIZED - INSTITUTIONAL GRADE)")
         print("="*100)
         
         if mode_buckets["aggressive"]:
@@ -1504,7 +1652,7 @@ def main():
         log.info("📄 signals.csv written")
     
     mark_success()
-    log.info("✅ Run completed - v2.1.2-MULTI INSTITUTIONAL GRADE")
+    log.info("✅ Run completed - v2.1.3-OPTIMIZED INSTITUTIONAL GRADE")
 
 if __name__ == "__main__":
     main()

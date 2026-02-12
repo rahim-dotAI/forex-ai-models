@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-02-12T08:53:38.201619+00:00",
-  "active_signals": 1,
+  "timestamp": "2026-02-12T09:01:21.949776+00:00",
+  "active_signals": 2,
   "active_signals_by_mode": {
-    "aggressive": 1,
-    "conservative": 1
+    "aggressive": 2,
+    "conservative": 2
   },
   "session": "EUROPEAN",
   "mode": "conservative",
@@ -21,6 +21,53 @@
   },
   "signals_by_mode": {
     "aggressive": [
+      {
+        "signal_id": "USDCAD_BUY_4d139a88d8b3",
+        "id": "USDCAD_BUY_4d139a88d8b3",
+        "pair": "USDCAD",
+        "direction": "BUY",
+        "score": 50,
+        "technical_score": 50,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 43.6,
+        "adx": 21.8,
+        "atr": 0.00112,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 1.35715,
+        "sl": 1.35491,
+        "tp": 1.36219,
+        "risk_reward": 2.25,
+        "spread": 0.0002,
+        "timestamp": "2026-02-12T08:53:33.679995+00:00",
+        "status": "OPEN",
+        "hold_time": "INTRADAY",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_MODERATE",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-12T08:53:33.679995+00:00",
+          "expires_at": "2026-02-12T09:08:33.679995+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      },
       {
         "signal_id": "USDCAD_BUY_4d139a88d8b3",
         "id": "USDCAD_BUY_4d139a88d8b3",
@@ -116,33 +163,57 @@
           "atr_target_multiplier": 4.5
         },
         "estimated_win_rate": null
+      },
+      {
+        "signal_id": "USDCAD_BUY_4d139a88d8b3",
+        "id": "USDCAD_BUY_4d139a88d8b3",
+        "pair": "USDCAD",
+        "direction": "BUY",
+        "score": 50,
+        "technical_score": 50,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 43.6,
+        "adx": 21.8,
+        "atr": 0.00112,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 1.35715,
+        "sl": 1.35491,
+        "tp": 1.36219,
+        "risk_reward": 2.25,
+        "spread": 0.0002,
+        "timestamp": "2026-02-12T08:53:33.679995+00:00",
+        "status": "OPEN",
+        "hold_time": "INTRADAY",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_MODERATE",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-12T08:53:33.679995+00:00",
+          "expires_at": "2026-02-12T09:08:33.679995+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
       }
     ]
   },
   "historical_signals": [
-    {
-      "id": "GBPJPY_BUY_85fcd44d2a6d",
-      "signal_id": "GBPJPY_BUY_85fcd44d2a6d",
-      "pair": "GBPJPY",
-      "direction": "BUY",
-      "entry_price": 185.286,
-      "exit_price": 185.80958,
-      "sl": 185.05329,
-      "tp": 185.80958,
-      "status": "WIN",
-      "pips": 52.35800000000097,
-      "confidence": "MODERATE",
-      "score": 47,
-      "session": "EUROPEAN",
-      "tier": "C",
-      "eligible_modes": [
-        "aggressive"
-      ],
-      "sentiment_applied": false,
-      "estimated_win_rate": null,
-      "timestamp": "2026-02-05T09:01:15.792837+00:00",
-      "exit_time": "2026-02-05T09:03:18.706126+00:00"
-    },
     {
       "id": "GBPJPY_BUY_59e40e7d5c2d",
       "signal_id": "GBPJPY_BUY_59e40e7d5c2d",
@@ -2281,8 +2352,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 22.4,
-    "total_risk_pips": 22.400000000000198,
+    "theoretical_max_pips": 44.8,
+    "total_risk_pips": 44.800000000000395,
     "max_daily_risk": 250
   },
   "analytics": {
@@ -2451,7 +2522,7 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-02-12T08:53:38.201670+00:00",
+    "last_update": "2026-02-12T09:01:21.949834+00:00",
     "signal_only_mode": true,
     "version": "2.1.2-MULTI"
   }

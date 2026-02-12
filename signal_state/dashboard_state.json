@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-02-12T12:15:56.662407+00:00",
-  "active_signals": 0,
+  "timestamp": "2026-02-12T12:31:38.565559+00:00",
+  "active_signals": 1,
   "active_signals_by_mode": {
-    "aggressive": 0,
-    "conservative": 0
+    "aggressive": 1,
+    "conservative": 1
   },
   "session": "EUROPEAN",
   "mode": "conservative",
@@ -16,12 +16,108 @@
   },
   "market_state": {
     "volatility": "CALM",
-    "sentiment_bias": "MIXED",
+    "sentiment_bias": "BEARISH",
     "session": "EUROPEAN"
   },
   "signals_by_mode": {
-    "aggressive": [],
-    "conservative": []
+    "aggressive": [
+      {
+        "signal_id": "USDCHF_SELL_e769dc2ba2f7",
+        "id": "USDCHF_SELL_e769dc2ba2f7",
+        "pair": "USDCHF",
+        "direction": "SELL",
+        "score": 45,
+        "technical_score": 45,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 37.1,
+        "adx": 38.8,
+        "atr": 0.0006,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 0.76775,
+        "sl": 0.76895,
+        "tp": 0.76506,
+        "risk_reward": 2.25,
+        "spread": 0.0002,
+        "timestamp": "2026-02-12T12:31:33.955057+00:00",
+        "status": "OPEN",
+        "hold_time": "INTRADAY",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-12T12:31:33.955057+00:00",
+          "expires_at": "2026-02-12T12:46:33.955057+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      }
+    ],
+    "conservative": [
+      {
+        "signal_id": "USDCHF_SELL_e769dc2ba2f7",
+        "id": "USDCHF_SELL_e769dc2ba2f7",
+        "pair": "USDCHF",
+        "direction": "SELL",
+        "score": 45,
+        "technical_score": 45,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 37.1,
+        "adx": 38.8,
+        "atr": 0.0006,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 0.76775,
+        "sl": 0.76895,
+        "tp": 0.76506,
+        "risk_reward": 2.25,
+        "spread": 0.0002,
+        "timestamp": "2026-02-12T12:31:33.955057+00:00",
+        "status": "OPEN",
+        "hold_time": "INTRADAY",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-12T12:31:33.955057+00:00",
+          "expires_at": "2026-02-12T12:46:33.955057+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.2",
+          "atr_stop_multiplier": 2.0,
+          "atr_target_multiplier": 4.5
+        },
+        "estimated_win_rate": null
+      }
+    ]
   },
   "historical_signals": [
     {
@@ -2070,8 +2166,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 0,
-    "total_risk_pips": 0,
+    "theoretical_max_pips": 12.0,
+    "total_risk_pips": 11.999999999999789,
     "max_daily_risk": 250
   },
   "analytics": {
@@ -2240,7 +2336,7 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-02-12T12:15:56.662446+00:00",
+    "last_update": "2026-02-12T12:31:38.565604+00:00",
     "signal_only_mode": true,
     "version": "2.1.2-MULTI"
   }

@@ -1,36 +1,36 @@
 {
-  "mode": "all",
-  "use_sentiment": true,
-  "tiers": {
-    "A_plus_min_score": 80,
-    "A_min_score": 72,
-    "B_min_score": 65
-  },
+  "mode": "conservative",
+  "use_sentiment": false,
   "settings": {
     "aggressive": {
-      "threshold": 45,
-      "min_adx": 15,
+      "threshold": 50,
+      "min_adx": 18,
       "rsi_oversold": 30,
       "rsi_overbought": 70,
-      "min_risk_reward": 1.8,
-      "atr_stop_multiplier": 1.8,
-      "atr_target_multiplier": 4.0,
-      "max_correlated_signals": 3
+      "min_risk_reward": 2.5,
+      "atr_stop_multiplier": 2.5,
+      "atr_target_multiplier": 5.0,
+      "max_correlated_signals": 2
     },
     "conservative": {
-      "threshold": 45,
-      "min_adx": 15,
+      "threshold": 55,
+      "min_adx": 20,
       "rsi_oversold": 30,
       "rsi_overbought": 70,
-      "min_risk_reward": 1.8,
-      "atr_stop_multiplier": 1.8,
-      "atr_target_multiplier": 4.0,
-      "max_correlated_signals": 3
+      "min_risk_reward": 2.5,
+      "atr_stop_multiplier": 2.5,
+      "atr_target_multiplier": 5.0,
+      "max_correlated_signals": 1
     }
+  },
+  "tiers": {
+    "A_plus_min_score": 75,
+    "A_min_score": 68,
+    "B_min_score": 60
   },
   "advanced": {
     "enable_session_filtering": true,
-    "enable_correlation_filter": false,
+    "enable_correlation_filter": true,
     "cache_ttl_minutes": 5,
     "parallel_workers": 3,
     "session_bonuses": {
@@ -45,7 +45,7 @@
         "other": 0
       },
       "OVERLAP": {
-        "all_major_pairs": 2
+        "all_major_pairs": 0
       },
       "US": {
         "USD_majors": 3,
@@ -55,23 +55,36 @@
         "all_major_pairs": 0
       }
     },
+    "session_thresholds": {
+      "ASIAN": 65,
+      "EUROPEAN": 50,
+      "US": 50,
+      "LATE_US": 65,
+      "OVERLAP": 999
+    },
+    "pair_limits": {
+      "GBPUSD": 5,
+      "GBPJPY": 2,
+      "EURGBP": 0,
+      "default": 3
+    },
     "validation": {
       "max_signal_age_seconds": 900,
-      "require_direction": true,
-      "reject_missing_pips": true,
       "min_sl_pips": {
-        "JPY_pairs": 15,
-        "other": 10
+        "JPY_pairs": 20,
+        "other": 12
       },
-      "max_spread_ratio": 0.35,
-      "max_sl_distance_pct": 0.025,
-      "max_tp_distance_pct": 0.06
+      "max_spread_ratio": 0.25,
+      "max_sl_distance_pct": 0.02,
+      "max_tp_distance_pct": 0.05,
+      "require_direction": true,
+      "reject_missing_pips": true
     }
   },
   "risk_management": {
-    "max_daily_risk_pips": 250,
-    "max_open_positions": 5,
-    "stop_trading_on_drawdown_pips": 150,
+    "max_daily_risk_pips": 150,
+    "max_open_positions": 3,
+    "stop_trading_on_drawdown_pips": 100,
     "equity_protection": {
       "enable": false,
       "max_consecutive_losses": 3,
@@ -85,35 +98,20 @@
       "enabled": true
     },
     "analytics": {
-      "track_by_pair": true
+      "track_by_pair": true,
+      "track_by_tier": true,
+      "track_by_session": true,
+      "track_by_mode": true
     }
   },
   "performance_tuning": {
     "auto_adjust_thresholds": false,
     "min_trades_for_optimization": 50,
-    "target_win_rate": 0.5,
+    "target_win_rate": 0.65,
+    "target_expectancy_pips": 20,
+    "optimization_interval_days": 14,
     "optimization_inputs": {
-      "min_expectancy": 0.5
+      "min_expectancy": 15
     }
-  },
-  "_comments": {
-    "mode": "Set to 'all' to generate maximum signals while maintaining quality",
-    "changes": [
-      "Lowered threshold from 50/58 to 45 (both modes) - generates more signals",
-      "Lowered min_adx from 18 to 15 - less strict on trend strength",
-      "Lowered min_risk_reward from 2.0/2.2 to 1.8 - accepts slightly lower R:R",
-      "Disabled correlation_filter - allows multiple correlated pairs",
-      "Increased max_correlated_signals to 3 - more signals from same region",
-      "Increased max_open_positions to 5 - can hold more signals",
-      "Increased max_daily_risk_pips to 250 - higher risk tolerance",
-      "Relaxed validation thresholds - more lenient signal acceptance"
-    ],
-    "quality_controls_kept": [
-      "Tier classification still active (A+, A, B, C)",
-      "Session filtering still active (pairs still get session bonuses)",
-      "Basic validation still active (no malformed signals)",
-      "Risk:Reward minimum of 1.8 (still profitable expectancy)",
-      "ATR-based stops (still dynamic risk management)"
-    ]
   }
 }

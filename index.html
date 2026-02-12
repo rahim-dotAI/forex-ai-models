@@ -799,6 +799,8 @@
         <div class="analytics-card"><h3 class="analytics-title"><i data-lucide="globe-2" style="width:24px;height:24px;color:var(--blue)"></i>Performance by Session</h3><div id="sessionAnalytics"></div></div>
         <div class="analytics-card"><h3 class="analytics-title"><i data-lucide="trending-up" style="width:24px;height:24px;color:var(--green)"></i>Top Performing Pairs</h3><div id="pairAnalytics"></div></div>
         <div class="analytics-card"><h3 class="analytics-title"><i data-lucide="layers" style="width:24px;height:24px;color:var(--orange)"></i>Performance by Mode</h3><div id="modeAnalytics"></div></div>
+        <div class="analytics-card"><h3 class="analytics-title"><i data-lucide="git-merge" style="width:24px;height:24px;color:var(--yellow)"></i>Tier × Session Cross-Analytics</h3><div id="crossTierSessionAnalytics"></div></div>
+        <div class="analytics-card"><h3 class="analytics-title"><i data-lucide="git-branch" style="width:24px;height:24px;color:var(--blue)"></i>Mode × Tier Cross-Analytics</h3><div id="crossModeTierAnalytics"></div></div>
       </div>
     </div>
   </div>
@@ -1126,9 +1128,10 @@
       const sp = Math.min(100, sc);
       const c = 2 * Math.PI * 23;
       const off = c - (sp / 100) * c;
+      // v2.1.3-OPTIMIZED tier thresholds: A+>=75, A>=68, B>=60
       let col = '#6b7280';
-      if (sc >= 80) col = '#fbbf24';
-      else if (sc >= 70) col = '#00f2a9';
+      if (sc >= 75) col = '#fbbf24';
+      else if (sc >= 68) col = '#00f2a9';
       else if (sc >= 60) col = '#4facfe';
       
       return `<div class="card${justUpdated ? ' just-updated' : ''}" id="card-${s.pair.replace('/', '-')}-${s.direction}">
@@ -1208,7 +1211,11 @@
             <i data-lucide="clock" style="width:12px;height:12px"></i>
             ${fmt(s.timestamp)}
           </div>
-          <div class="session">${s.session||'N/A'}</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            ${s.estimated_win_rate != null ? `<div style="padding:4px 10px;background:rgba(0,242,169,0.1);border:1px solid rgba(0,242,169,0.3);border-radius:6px;font-size:10px;font-weight:900;color:var(--green);font-family:'Orbitron',monospace;">${(s.estimated_win_rate*100).toFixed(0)}% WR</div>` : ''}
+            ${s.sentiment_applied ? `<div title="Sentiment: ${s.sentiment_score >= 0 ? '+' : ''}${(s.sentiment_score||0).toFixed(2)}" style="padding:4px 10px;background:rgba(79,172,254,0.1);border:1px solid rgba(79,172,254,0.3);border-radius:6px;font-size:10px;font-weight:900;color:var(--blue);">SENT ${s.sentiment_adjustment >= 0 ? '+' : ''}${(s.sentiment_adjustment||0).toFixed(1)}</div>` : ''}
+            <div class="session">${s.session||'N/A'}</div>
+          </div>
         </div>
       </div>`;
     }
@@ -1290,22 +1297,29 @@
       renderSess(an.by_session || {});
       renderPair(an.by_pair || {});
       renderMode(an.by_mode || {});
+      renderCrossTierSession((an.cross_analytics || {}).tier_by_session || {});
+      renderCrossModeTier((an.cross_analytics || {}).mode_by_tier || {});
     }
     
     function renderTier(ts) {
       const c = document.getElementById('tierAnalytics');
       const tiers = ['A+', 'A', 'B', 'C'];
+      const thresholds = { 'A+': '≥75', 'A': '≥68', 'B': '≥60', 'C': '<60' }; // v2.1.3 thresholds
       
       c.innerHTML = tiers.map(t => {
-        const d = ts[t] || {trades: 0, wins: 0, losses: 0, win_rate: 0, total_pips: 0, avg_pips: 0};
+        const d = ts[t] || {trades: 0, wins: 0, losses: 0, win_rate: 0, total_pips: 0};
         const wr = d.win_rate || 0;
+        const pips = d.total_pips || 0;
         
         return `<div class="analytics-item">
           <div>
             <span class="analytics-tier-badge tier-${getTier(t)}">Tier ${t}</span>
-            <span class="analytics-label">${d.trades} trades</span>
+            <span class="analytics-label">${thresholds[t]} • ${d.trades} trades</span>
           </div>
-          <div class="analytics-value" style="color:${wr >= 60 ? 'var(--green)' : 'var(--text)'}">${wr.toFixed(1)}%</div>
+          <div>
+            <div class="analytics-value" style="color:${wr >= 60 ? 'var(--green)' : 'var(--text)'}; text-align:right">${wr.toFixed(1)}%</div>
+            <div style="font-size:11px;color:${pips >= 0 ? 'var(--green)':'var(--red)'};text-align:right;font-family:'Orbitron',monospace;">${pips >= 0 ? '+':''}${pips.toFixed(1)} pips</div>
+          </div>
         </div>
         <div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;
       }).join('');
@@ -1313,16 +1327,40 @@
     
     function renderSess(ss) {
       const c = document.getElementById('sessionAnalytics');
+      // v2.1.3: EUROPEAN(57%WR) and US(77%WR) are target sessions; others have raised thresholds
+      const sessionStatus = {
+        'EUROPEAN': { label: '✅ Target', color: 'var(--green)' },
+        'US':       { label: '✅ Target', color: 'var(--green)' },
+        'ASIAN':    { label: '⚠️ High Threshold', color: 'var(--yellow)' },
+        'LATE_US':  { label: '⚠️ High Threshold', color: 'var(--yellow)' },
+        'OVERLAP':  { label: '🚫 Blocked', color: 'var(--red)' }
+      };
       const ses = Object.keys(ss).sort();
+      if (ses.length === 0) {
+        // Show all sessions with their v2.1.3 status even if no data
+        const allSessions = ['EUROPEAN', 'US', 'ASIAN', 'LATE_US', 'OVERLAP'];
+        c.innerHTML = allSessions.map(s => {
+          const st = sessionStatus[s] || { label: '', color: 'var(--text-muted)' };
+          return `<div class="analytics-item"><div><span class="analytics-label">${s}</span><span style="font-size:11px;color:${st.color};margin-left:8px;">${st.label}</span></div><div class="analytics-value" style="color:var(--text-muted)">No data</div></div><div class="progress"><div class="progress-bar" style="width:0%"></div></div>`;
+        }).join('');
+        return;
+      }
       c.innerHTML = ses.map(s => {
         const d = ss[s];
         const wr = d.win_rate || 0;
-        return `<div class="analytics-item"><div class="analytics-label">${s}</div><div class="analytics-value">${d.trades} trades • ${wr.toFixed(1)}%</div></div><div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;
+        const st = sessionStatus[s] || { label: '', color: 'var(--text-muted)' };
+        return `<div class="analytics-item"><div><span class="analytics-label">${s}</span><span style="font-size:11px;color:${st.color};margin-left:8px;">${st.label}</span></div><div class="analytics-value">${d.trades} trades • ${wr.toFixed(1)}%</div></div><div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;
       }).join('');
     }
     
     function renderPair(ps) {
       const c = document.getElementById('pairAnalytics');
+      // v2.1.3 pair limits: GBPUSD=5(100%WR), GBPJPY=2(flood prevention), EURGBP=0(blocked)
+      const pairStatus = {
+        'GBPUSD': { label: '✅ Max 5', color: 'var(--green)' },
+        'GBPJPY': { label: '⚠️ Max 2', color: 'var(--yellow)' },
+        'EURGBP': { label: '🚫 Blocked', color: 'var(--red)' }
+      };
       const pairs = Object.entries(ps).sort((a, b) => (b[1].total_pips || 0) - (a[1].total_pips || 0)).slice(0, 10);
       if (pairs.length === 0) {
         c.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px">No data available</p>';
@@ -1331,7 +1369,16 @@
       c.innerHTML = pairs.map(([p, d]) => {
         const pips = d.total_pips || 0;
         const wr = d.win_rate || 0;
-        return `<div class="analytics-item"><div class="analytics-label" style="font-weight:800">${p}</div><div class="analytics-value" style="color:${pips > 0 ? 'var(--green)' : 'var(--red)'}">${pips > 0 ? '+' : ''}${pips.toFixed(1)} pips</div></div><div style="font-size:12px;color:var(--text-dim);margin-top:4px">${d.trades} trades • ${wr.toFixed(1)}% WR</div>`;
+        const st = pairStatus[p];
+        return `<div class="analytics-item">
+          <div>
+            <span class="analytics-label" style="font-weight:800">${p}</span>
+            ${st ? `<span style="font-size:11px;color:${st.color};margin-left:8px;">${st.label}</span>` : ''}
+          </div>
+          <div class="analytics-value" style="color:${pips > 0 ? 'var(--green)' : 'var(--red)'}">${pips > 0 ? '+' : ''}${pips.toFixed(1)} pips</div>
+        </div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:4px;margin-bottom:8px">${d.trades} trades • ${wr.toFixed(1)}% WR</div>
+        <div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;
       }).join('');
     }
     
@@ -1343,6 +1390,61 @@
         const wr = d.win_rate || 0;
         const pips = d.total_pips || 0;
         return `<div class="analytics-item"><div class="analytics-label" style="text-transform:uppercase;font-weight:800">${m}</div><div class="analytics-value">${d.trades} trades</div></div><div style="display:flex;justify-content:space-between;margin-top:12px;font-size:14px"><span style="color:var(--text-dim)">Win Rate: ${wr.toFixed(1)}%</span><span style="color:${pips > 0 ? 'var(--green)' : 'var(--red)'};font-weight:900">${pips > 0 ? '+' : ''}${pips.toFixed(1)} pips</span></div><div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;
+      }).join('');
+    }
+    
+    function renderCrossTierSession(cross) {
+      const c = document.getElementById('crossTierSessionAnalytics');
+      const entries = Object.values(cross).sort((a, b) => (b.total_pips || 0) - (a.total_pips || 0));
+      if (entries.length === 0) {
+        c.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px">No cross-analytics data yet.<br><span style="font-size:12px">Populates after trades resolve.</span></p>';
+        return;
+      }
+      c.innerHTML = entries.map(d => {
+        const wr = d.win_rate || 0;
+        const pips = d.total_pips || 0;
+        return `<div class="analytics-item">
+          <div>
+            <span class="analytics-tier-badge tier-${getTier(d.tier)}">Tier ${d.tier}</span>
+            <span class="analytics-label">${d.session} • ${d.trades} trades</span>
+          </div>
+          <div style="text-align:right">
+            <div class="analytics-value" style="color:${wr >= 60 ? 'var(--green)' : 'var(--text)'}">${wr.toFixed(1)}%</div>
+            <div style="font-size:11px;color:${pips >= 0 ? 'var(--green)':'var(--red)'};font-family:'Orbitron',monospace;">${pips >= 0 ? '+':''}${pips.toFixed(1)} pips</div>
+          </div>
+        </div>
+        <div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;
+      }).join('');
+    }
+    
+    function renderCrossModeTier(cross) {
+      const c = document.getElementById('crossModeTierAnalytics');
+      const entries = Object.values(cross).sort((a, b) => {
+        // Sort by mode first, then tier
+        if (a.mode !== b.mode) return a.mode.localeCompare(b.mode);
+        const tierOrder = { 'A+': 0, 'A': 1, 'B': 2, 'C': 3 };
+        return (tierOrder[a.tier] || 3) - (tierOrder[b.tier] || 3);
+      });
+      if (entries.length === 0) {
+        c.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:20px">No cross-analytics data yet.<br><span style="font-size:12px">Populates after trades resolve.</span></p>';
+        return;
+      }
+      c.innerHTML = entries.map(d => {
+        const wr = d.win_rate || 0;
+        const pips = d.total_pips || 0;
+        const modeColor = d.mode === 'conservative' ? 'var(--blue)' : d.mode === 'aggressive' ? 'var(--orange)' : 'var(--text-dim)';
+        return `<div class="analytics-item">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="analytics-tier-badge tier-${getTier(d.tier)}">Tier ${d.tier}</span>
+            <span style="font-size:12px;font-weight:800;color:${modeColor};text-transform:uppercase;">${d.mode}</span>
+            <span class="analytics-label">${d.trades} trades</span>
+          </div>
+          <div style="text-align:right">
+            <div class="analytics-value" style="color:${wr >= 60 ? 'var(--green)' : 'var(--text)'}">${wr.toFixed(1)}%</div>
+            <div style="font-size:11px;color:${pips >= 0 ? 'var(--green)':'var(--red)'};font-family:'Orbitron',monospace;">${pips >= 0 ? '+':''}${pips.toFixed(1)} pips</div>
+          </div>
+        </div>
+        <div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;
       }).join('');
     }
     

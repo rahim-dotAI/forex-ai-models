@@ -1,4 +1,4 @@
-name: Trade Beacon v2.1.3-OPTIMIZED – Forex Signal Generator
+name: Trade Beacon v2.1.4-SCORING – Forex Signal Generator
 
 # PERFORMANCE OPTIMIZATIONS v2.1.3:
 # - Lowered tier thresholds (A+: 75, A: 68, B: 60) for better signal quality
@@ -53,7 +53,7 @@ env:
   ENTRY_SCRIPT: "trade_beacon.py"
 
 concurrency:
-  group: trade-beacon-v2.1.3-${{ github.ref }}-${{ github.event_name }}
+  group: trade-beacon-v2.1.4-SCORING-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: false
 
 permissions:
@@ -210,7 +210,7 @@ jobs:
           echo "Beacon version:  $BEACON_VER"
           
           if [[ "$TRACKER_VER" == *"OPTIMIZED"* ]] && [[ "$BEACON_VER" == *"OPTIMIZED"* ]]; then
-            echo "✅ v2.1.3-OPTIMIZED versions aligned"
+            echo "✅ v2.1.4-SCORING versions aligned"
           elif [[ "$TRACKER_VER" == *"MULTI"* ]] && [[ "$BEACON_VER" == *"MULTI"* ]]; then
             echo "⚠️  Running on v2.1.2-MULTI — auto-migration will run on first execution"
           elif [ "$TRACKER_VER" != "$BEACON_VER" ]; then
@@ -229,7 +229,7 @@ jobs:
           CONFIG_VER=$(jq -r '.version // "unknown"' config.json)
           echo "Config version: $CONFIG_VER"
           if [[ "$CONFIG_VER" == *"OPTIMIZED"* ]]; then
-            echo "✅ Config version: v2.1.3-OPTIMIZED"
+            echo "✅ Config version: v2.1.4-SCORING"
           else
             echo "⚠️  Config version not set to OPTIMIZED — consider updating"
           fi
@@ -244,7 +244,7 @@ jobs:
           
           # Check v2.1.3 optimization fields
           jq -e '.advanced.session_thresholds' config.json > /dev/null || {
-            echo "⚠️  Session thresholds not found - using defaults (ASIAN:65, LATE_US:65, OVERLAP:999)"
+            echo "⚠️  Session thresholds not found - using defaults (ASIAN:60, LATE_US:55, OVERLAP:60)"
           }
           jq -e '.advanced.pair_limits' config.json > /dev/null || {
             echo "⚠️  Pair limits not found - using defaults (GBPJPY:2, EURGBP:0, GBPUSD:5)"
@@ -270,7 +270,7 @@ jobs:
             echo "📸 Created config baseline snapshot"
           fi
           
-          echo "✅ Configuration valid (v2.1.3-OPTIMIZED)"
+          echo "✅ Configuration valid (v2.1.4-SCORING)"
           
           # Display mode info
           MODE=$(jq -r '.mode // "conservative"' config.json)
@@ -467,22 +467,22 @@ jobs:
           fi
           
           echo ""
-          echo "[Tier Thresholds - v2.1.3-OPTIMIZED]"
+          echo "[Tier Thresholds - v2.1.4-SCORING]"
           echo "  A+ Minimum Score: $(jq -r '.tiers.A_plus_min_score // 75' config.json)"
           echo "  A  Minimum Score: $(jq -r '.tiers.A_min_score // 68' config.json)"
           echo "  B  Minimum Score: $(jq -r '.tiers.B_min_score // 60' config.json)"
           echo "  C  Entry Level:   below B threshold"
           echo ""
           
-          echo "[Session Thresholds - v2.1.3-OPTIMIZED]"
+          echo "[Session Thresholds - v2.1.4-SCORING]"
           echo "  EUROPEAN: $(jq -r '.advanced.session_thresholds.EUROPEAN // 50' config.json) (target session 57% WR)"
           echo "  US:       $(jq -r '.advanced.session_thresholds.US // 50' config.json) (target session 77% WR)"
-          echo "  ASIAN:    $(jq -r '.advanced.session_thresholds.ASIAN // 65' config.json) (raised threshold - 33% WR)"
-          echo "  LATE_US:  $(jq -r '.advanced.session_thresholds.LATE_US // 65' config.json) (raised threshold - 42% WR)"
-          echo "  OVERLAP:  $(jq -r '.advanced.session_thresholds.OVERLAP // 999' config.json) (blocked - 0% WR)"
+          echo "  ASIAN:    $(jq -r '.advanced.session_thresholds.ASIAN // 60' config.json) (raised threshold - 33% WR, was 65)"
+          echo "  LATE_US:  $(jq -r '.advanced.session_thresholds.LATE_US // 55' config.json) (raised threshold - 42% WR, was 65→55)"
+          echo "  OVERLAP:  $(jq -r '.advanced.session_thresholds.OVERLAP // 60' config.json) (raised threshold - 0% WR, was 999→60)"
           echo ""
           
-          echo "[Pair Limits - v2.1.3-OPTIMIZED]"
+          echo "[Pair Limits - v2.1.4-SCORING]"
           echo "  GBPUSD: max $(jq -r '.advanced.pair_limits.GBPUSD // 5' config.json) signals (100% WR)"
           echo "  GBPJPY: max $(jq -r '.advanced.pair_limits.GBPJPY // 2' config.json) signals (42% WR - flood prevention)"
           echo "  EURGBP: max $(jq -r '.advanced.pair_limits.EURGBP // 0' config.json) signals (BLOCKED - 0% WR)"
@@ -532,14 +532,14 @@ jobs:
           
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
       
-      - name: Run Trade Beacon v2.1.3-OPTIMIZED
+      - name: Run Trade Beacon v2.1.4-SCORING
         if: steps.market_check.outputs.should_run == 'true'
         env:
           NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
           MARKETAUX_API_KEY: ${{ secrets.MARKETAUX_API_KEY }}
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
         run: |
-          echo "🚀 Starting Trade Beacon v2.1.3-OPTIMIZED..."
+          echo "🚀 Starting Trade Beacon v2.1.4-SCORING..."
           python $ENTRY_SCRIPT
           EXIT_CODE=$?
           
@@ -607,7 +607,7 @@ jobs:
         if: always()
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "📊 TRADE BEACON v2.1.3-OPTIMIZED PERFORMANCE SUMMARY"
+          echo "📊 TRADE BEACON v2.1.4-SCORING PERFORMANCE SUMMARY"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           
           if [ -f signal_state/signal_history.json ]; then
@@ -730,7 +730,7 @@ jobs:
       - name: Commit state changes
         if: steps.market_check.outputs.should_run == 'true'
         run: |
-          git config user.name "Trade Beacon v2.1.3-OPTIMIZED [bot]"
+          git config user.name "Trade Beacon v2.1.4-SCORING [bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
           # Add all state files
@@ -748,7 +748,7 @@ jobs:
             SESSION=$(jq -r '.session // "UNKNOWN"' signal_state/dashboard_state.json 2>/dev/null || echo "UNKNOWN")
             MODE=$(jq -r '.mode // "conservative"' config.json)
             
-            git commit -m "📊 Trade Beacon v2.1.3-OPTIMIZED update [$TIMESTAMP]
+            git commit -m "📊 Trade Beacon v2.1.4-SCORING update [$TIMESTAMP]
             
             Mode: $MODE
             Session: $SESSION
@@ -773,7 +773,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: trade-beacon-v2.1.3-optimized-run-${{ github.run_number }}
+          name: trade-beacon-v2.1.4-SCORING-optimized-run-${{ github.run_number }}
           path: |
             signal_state/
             signals.csv

@@ -740,29 +740,50 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
         min_threshold = min(CONFIG["settings"]["aggressive"]["threshold"], CONFIG["settings"]["conservative"]["threshold"])
         min_adx = min(CONFIG["settings"]["aggressive"]["min_adx"], CONFIG["settings"]["conservative"]["min_adx"])
     
-    if None in (e12, e26, e200, r, a, curr, atr) or a < min_adx:
+    if None in (e12, e26, e200, r, a, curr, atr):
+        log.info(f"⚠️ {pair.replace('=X','')} skipped: missing indicators")
+        return None, ok
+    
+    if a < min_adx:
+        log.info(f"📉 {pair.replace('=X','')} skipped: ADX {a:.1f} < {min_adx} (low momentum)")
         return None, ok
     
     bull = bear = 0
     
-    # ── 1. EMA STRUCTURE (trend alignment, max 25) ──────────────────────────
-    if e12 > e26 > e200: bull += 25
-    elif e12 < e26 < e200: bear += 25
-    elif e12 > e26 and e26 > e200 * 0.998: bull += 12   # Near-aligned bullish
-    elif e12 < e26 and e26 < e200 * 1.002: bear += 12   # Near-aligned bearish
+    # ── Determine primary trend direction from EMA structure ────────────────
+    # This anchors scoring to a primary direction - prevents counter-signals
+    # from bleeding off the differential
+    full_bull_ema = (e12 > e26 > e200)
+    full_bear_ema = (e12 < e26 < e200)
+    partial_bull  = (e12 > e26 and not full_bull_ema)
+    partial_bear  = (e12 < e26 and not full_bear_ema)
     
-    # ── 2. RSI PULLBACK (counter-trend entry in strong trend, max 15) ───────
+    # ── 1. EMA STRUCTURE (trend alignment, max 25) ───────────────────────────
+    if full_bull_ema:   bull += 25
+    elif full_bear_ema: bear += 25
+    elif partial_bull:  bull += 12
+    elif partial_bear:  bear += 12
+    
+    # ── 2. RSI PULLBACK (pullback entry within established trend, max 15) ────
     rsi_os, rsi_ob = 30, 70
-    if e12 > e26 > e200 and rsi_os + 5 < r < 45: bull += 15
-    elif e12 < e26 < e200 and 55 < r < rsi_ob - 5: bear += 15
+    if full_bull_ema and rsi_os + 5 < r < 45: bull += 15
+    elif full_bear_ema and 55 < r < rsi_ob - 5: bear += 15
     
-    # ── 3. RSI EXTREME (oversold/overbought signal, max 25) ─────────────────
-    if r < rsi_os: bull += 25
-    elif r > rsi_ob: bear += 25
-    elif r < 35: bull += 12    # Near-oversold
-    elif r > 65: bear += 12    # Near-overbought
+    # ── 3. RSI CONFIRMATION (confirms or warns, +15 confirm / -5 warn) ───────
+    # Only add RSI extreme as a confirmation if it ALIGNS with EMA direction
+    # Near-extreme against trend is a warning (small deduction), not a full add
+    if r < rsi_os:
+        bull += 20           # Strong oversold — bullish regardless of EMA
+        if full_bear_ema: bear -= 10   # Oversold but in downtrend: reduce bear
+    elif r > rsi_ob:
+        bear += 20           # Strong overbought — bearish regardless of EMA
+        if full_bull_ema: bull -= 10   # Overbought but in uptrend: reduce bull
+    elif r < 38 and not full_bear_ema:
+        bull += 10           # Near-oversold + not in downtrend
+    elif r > 62 and not full_bull_ema:
+        bear += 10           # Near-overbought + not in uptrend
     
-    # ── 4. ADX TREND STRENGTH (trend quality, max 20) ───────────────────────
+    # ── 4. ADX TREND STRENGTH (quality multiplier, max 20) ──────────────────
     if a > 25:
         if e12 > e26: bull += 20
         else: bear += 20
@@ -773,35 +794,39 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
         if e12 > e26: bull += 8
         else: bear += 8
     
-    # ── 5. EMA MOMENTUM (price distance from EMA, max 10) ───────────────────
-    # Price above/below short EMA indicates momentum
+    # ── 5. EMA MOMENTUM (price vs short EMA, max 10) ─────────────────────────
     ema_dist_pct = abs(curr - e12) / e12 if e12 > 0 else 0
-    if ema_dist_pct > 0.001:   # Price meaningfully separated from EMA
-        if curr > e12: bull += 8
-        else: bear += 8
-    elif ema_dist_pct > 0.0003:
-        if curr > e12: bull += 4
-        else: bear += 4
+    if ema_dist_pct > 0.0008:
+        if curr > e12: bull += 10
+        else: bear += 10
+    elif ema_dist_pct > 0.0002:
+        if curr > e12: bull += 5
+        else: bear += 5
     
-    # ── 6. EMA CROSSOVER MOMENTUM (short-term cross, max 8) ─────────────────
-    # e12 vs e26 gap indicates trend conviction
+    # ── 6. EMA CROSSOVER CONVICTION (e12 vs e26 separation, max 8) ──────────
     ema_cross_pct = abs(e12 - e26) / e26 if e26 > 0 else 0
-    if ema_cross_pct > 0.001:
+    if ema_cross_pct > 0.0008:
         if e12 > e26: bull += 8
         else: bear += 8
-    elif ema_cross_pct > 0.0003:
+    elif ema_cross_pct > 0.0002:
         if e12 > e26: bull += 4
         else: bear += 4
     
-    # ── 7. SESSION BONUS (market-specific activity, max varies) ─────────────
+    # ── 7. SESSION BONUS (pair-session affinity, max varies) ─────────────────
     session = get_market_session()
     bonus = calculate_dynamic_session_bonus(pair.replace("=X", ""), session, CONFIG)
-    if e12 > e26:
-        bull += bonus
-    elif e12 < e26:
-        bear += bonus
+    if e12 > e26: bull += bonus
+    elif e12 < e26: bear += bonus
+    
+    # Clamp negatives to 0 (scores can't go negative)
+    bull = max(0, bull)
+    bear = max(0, bear)
     
     diff = abs(bull - bear)
+    
+    # ── Per-pair score log (always visible in GitHub Actions) ────────────────
+    direction_hint = "BULL" if bull > bear else ("BEAR" if bear > bull else "TIE")
+    log.info(f"📊 {pair.replace('=X','')} | score={diff} ({direction_hint}) bull={bull} bear={bear} | RSI={r:.0f} ADX={a:.0f} | session={session}")
     
     # Reject ambiguous ties (bull == bear means no clear direction)
     if bull == bear:
@@ -812,11 +837,11 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
     session_min_threshold = session_thresholds.get(session, min_threshold)
     
     if diff < session_min_threshold:
-        log.debug(f"⚠️ {pair.replace('=X', '')} rejected: score {diff} < session threshold {session_min_threshold} ({session})")
+        log.info(f"   ↳ BLOCKED: score {diff} < session threshold {session_min_threshold} ({session})")
         return None, ok
     
     if diff < min_threshold:
-        log.debug(f"⚠️ {pair.replace('=X', '')} rejected: score {diff} < min threshold {min_threshold}")
+        log.info(f"   ↳ BLOCKED: score {diff} < min threshold {min_threshold}")
         return None, ok
     
     direction = "BUY" if bull > bear else "SELL"
@@ -830,9 +855,11 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
     tier = classify_signal_tier(diff)
     
     # SL/TP (use updated conservative multipliers as baseline)
-    # PERFORMANCE OPTIMIZATION: Increased from 2.0/4.5 to 2.5/5.0
+    # ATR-based SL/TP — target multiplier must produce RR > min_risk_reward
+    # RR = atr_tgt / atr_stop. With stop=2.5x, target must be >6.25x to beat 2.5 RR
     spread = get_spread(pair)
-    atr_stop, atr_tgt = 2.5, 5.0  # UPDATED: was 2.0, 4.5
+    atr_stop = 2.5
+    atr_tgt  = 7.0   # FIX: was 5.0 → RR was 2.0, always failing 2.5 min RR
     if direction == "BUY":
         sl, tp = curr - atr_stop * atr, curr + atr_tgt * atr
     else:
@@ -840,8 +867,10 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
     
     rr = abs(tp - curr) / abs(curr - sl) if abs(curr - sl) > 0 else 0
     
-    # PERFORMANCE OPTIMIZATION: Increased minimum R:R from 2.0 to 2.5
-    if rr < 2.5:  # UPDATED: was 2.0
+    min_rr = CONFIG.get("advanced", {}).get("min_risk_reward",
+             CONFIG["settings"]["aggressive"].get("min_risk_reward", 2.5))
+    if rr < min_rr:
+        log.info(f"   ↳ BLOCKED: RR {rr:.2f} < min {min_rr} (atr_stop={atr_stop}x atr_tgt={atr_tgt}x)")
         return None, ok
     if rr > 10:  # Reject pathological spikes
         return None, ok

@@ -1,5 +1,5 @@
 """
-Trade Beacon v2.1.2 - Forex Signal Generator (INSTITUTIONAL GRADE)
+Trade Beacon v2.1.4 - Forex Signal Generator (INSTITUTIONAL GRADE)
 MULTI-MODE EDITION: Generates Aggressive + Conservative signals simultaneously
 with tier-based selective enhancement (sentiment/backtest only on top-tier)
 
@@ -362,23 +362,22 @@ def calculate_eligible_modes(score: int, adx: float, config: Dict) -> List[str]:
 # NEW: Tier classification system - UPDATED THRESHOLDS
 def classify_signal_tier(score: int) -> str:
     """
-    Classify signal quality into tiers:
-    A+ = Institutional grade (75+) - LOWERED from 80
-    A  = Premium (68-74) - LOWERED from 72
-    B  = Standard (60-67) - LOWERED from 65
-    C  = Entry level (45-59) - LOWERED from 60
+    Classify signal quality into tiers based on expanded scoring system (max ~110pts):
+    A+ = Institutional grade (≥80) — multiple strong confirmations
+    A  = Premium (68-79)           — strong trend + momentum alignment
+    B  = Standard (55-67)          — decent signal, passes session filter
+    C  = Entry level (<55)         — weak, only passes lowest thresholds
     
-    PERFORMANCE OPTIMIZATION: Lowered all thresholds by 5-7 points
-    to ensure we generate A/B tier signals instead of only C tier.
+    v2.1.4-SCORING: Rescaled for expanded scorer that adds momentum+crossover components.
     """
-    if score >= 75:
-        return "A+"
-    elif score >= 68:
-        return "A"
-    elif score >= 60:
-        return "B"
-    else:
-        return "C"
+    tiers = CONFIG.get("tiers", {})
+    ap = tiers.get("A_plus_min_score", 80)
+    a  = tiers.get("A_min_score", 68)
+    b  = tiers.get("B_min_score", 55)
+    if score >= ap: return "A+"
+    elif score >= a: return "A"
+    elif score >= b: return "B"
+    else: return "C"
 
 def calculate_signal_freshness(ts: datetime) -> dict:
     age = (datetime.now(timezone.utc) - ts).total_seconds() / 60
@@ -746,32 +745,55 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
     
     bull = bear = 0
     
-    # EMA structure
+    # ── 1. EMA STRUCTURE (trend alignment, max 25) ──────────────────────────
     if e12 > e26 > e200: bull += 25
     elif e12 < e26 < e200: bear += 25
+    elif e12 > e26 and e26 > e200 * 0.998: bull += 12   # Near-aligned bullish
+    elif e12 < e26 and e26 < e200 * 1.002: bear += 12   # Near-aligned bearish
     
-    # Pullback
-    rsi_os, rsi_ob = 30, 70  # Use aggressive thresholds for signal generation
+    # ── 2. RSI PULLBACK (counter-trend entry in strong trend, max 15) ───────
+    rsi_os, rsi_ob = 30, 70
     if e12 > e26 > e200 and rsi_os + 5 < r < 45: bull += 15
     elif e12 < e26 < e200 and 55 < r < rsi_ob - 5: bear += 15
     
-    # RSI
+    # ── 3. RSI EXTREME (oversold/overbought signal, max 25) ─────────────────
     if r < rsi_os: bull += 25
     elif r > rsi_ob: bear += 25
+    elif r < 35: bull += 12    # Near-oversold
+    elif r > 65: bear += 12    # Near-overbought
     
-    # ADX
+    # ── 4. ADX TREND STRENGTH (trend quality, max 20) ───────────────────────
     if a > 25:
-        if e12 > e26:
-            bull += 20
-        else:
-            bear += 20
+        if e12 > e26: bull += 20
+        else: bear += 20
+    elif a > 20:
+        if e12 > e26: bull += 14
+        else: bear += 14
     elif a > min_adx:
-        if e12 > e26:
-            bull += 10
-        else:
-            bear += 10
+        if e12 > e26: bull += 8
+        else: bear += 8
     
-    # Session
+    # ── 5. EMA MOMENTUM (price distance from EMA, max 10) ───────────────────
+    # Price above/below short EMA indicates momentum
+    ema_dist_pct = abs(curr - e12) / e12 if e12 > 0 else 0
+    if ema_dist_pct > 0.001:   # Price meaningfully separated from EMA
+        if curr > e12: bull += 8
+        else: bear += 8
+    elif ema_dist_pct > 0.0003:
+        if curr > e12: bull += 4
+        else: bear += 4
+    
+    # ── 6. EMA CROSSOVER MOMENTUM (short-term cross, max 8) ─────────────────
+    # e12 vs e26 gap indicates trend conviction
+    ema_cross_pct = abs(e12 - e26) / e26 if e26 > 0 else 0
+    if ema_cross_pct > 0.001:
+        if e12 > e26: bull += 8
+        else: bear += 8
+    elif ema_cross_pct > 0.0003:
+        if e12 > e26: bull += 4
+        else: bear += 4
+    
+    # ── 7. SESSION BONUS (market-specific activity, max varies) ─────────────
     session = get_market_session()
     bonus = calculate_dynamic_session_bonus(pair.replace("=X", ""), session, CONFIG)
     if e12 > e26:
@@ -785,15 +807,16 @@ def generate_signal(pair: str) -> Tuple[Optional[dict], bool]:
     if bull == bear:
         return None, ok
     
-    # PERFORMANCE OPTIMIZATION: Session-specific threshold check
+    # Session-specific threshold check
     session_thresholds = CONFIG.get("advanced", {}).get("session_thresholds", {})
     session_min_threshold = session_thresholds.get(session, min_threshold)
     
     if diff < session_min_threshold:
-        # log.info(f"⚠️ {pair.replace('=X', '')} rejected: score {diff} < session threshold {session_min_threshold} ({session})")
+        log.debug(f"⚠️ {pair.replace('=X', '')} rejected: score {diff} < session threshold {session_min_threshold} ({session})")
         return None, ok
     
     if diff < min_threshold:
+        log.debug(f"⚠️ {pair.replace('=X', '')} rejected: score {diff} < min threshold {min_threshold}")
         return None, ok
     
     direction = "BUY" if bull > bear else "SELL"
@@ -1493,7 +1516,7 @@ def main():
     opt_cfg = optimize_thresholds_if_needed(CONFIG) if CONFIG.get("performance_tuning", {}).get("auto_adjust_thresholds", False) else CONFIG
     opt_mode = opt_cfg["mode"]
     
-    log.info(f"🚀 Trade Beacon v2.1.3-OPTIMIZED - {'Generating ALL SIGNALS (Maximum Mode)' if opt_cfg.get('mode') == 'all' else 'Generating ALL signal types'} | Sentiment={'ON' if USE_SENTIMENT else 'OFF'}")
+    log.info(f"🚀 Trade Beacon v2.1.4-SCORING - {'Generating ALL SIGNALS (Maximum Mode)' if opt_cfg.get('mode') == 'all' else 'Generating ALL signal types'} | Sentiment={'ON' if USE_SENTIMENT else 'OFF'}")
     log.info(f"📊 Monitoring {len(PAIRS)} pairs")
     if opt_cfg.get("mode") == "all":
         log.info(f"🎯 ALL MODE: Score≥{opt_cfg['settings']['aggressive']['threshold']} ADX≥{opt_cfg['settings']['aggressive']['min_adx']} (No mode filtering)")
@@ -1622,6 +1645,21 @@ def main():
     log.info(f"\n✅ Complete | New: {len(all_new)} | Existing: {len(existing)} | Total: {len(all_signals)}")
     log.info(f"📊 Breakdown - Aggressive: {len(agg_filtered)} | Conservative: {len(cons_filtered)}")
     
+    # Zero-signal diagnostic: explain why no signals were generated
+    if len(all_new) == 0 and len(existing) == 0:
+        current_session = get_market_session()
+        session_thresholds = CONFIG.get("advanced", {}).get("session_thresholds", {})
+        session_min = session_thresholds.get(current_session, min(
+            CONFIG["settings"]["aggressive"]["threshold"],
+            CONFIG["settings"]["conservative"]["threshold"]
+        ))
+        log.info(f"🔍 Zero-signal diagnostic:")
+        log.info(f"   Session: {current_session} | Session threshold: {session_min}")
+        log.info(f"   Aggressive threshold: {CONFIG['settings']['aggressive']['threshold']} | Conservative: {CONFIG['settings']['conservative']['threshold']}")
+        log.info(f"   Effective threshold: max({session_min}, {CONFIG['settings']['aggressive']['threshold']}) = {max(session_min, CONFIG['settings']['aggressive']['threshold'])}")
+        log.info(f"   To pass: score must be ≥ {max(session_min, CONFIG['settings']['aggressive']['threshold'])} (session requirement is the bottleneck)" if session_min > CONFIG['settings']['aggressive']['threshold'] else f"   To pass: score must be ≥ {CONFIG['settings']['aggressive']['threshold']}")
+        log.info(f"   Score range for market conditions today may be below threshold. Check DEBUG logs for per-pair scores.")
+    
     write_dashboard_state(all_signals, downloads, 0, 0, opt_cfg, opt_mode, None)
     
     if all_new:
@@ -1629,7 +1667,7 @@ def main():
         mode_buckets = split_signals_by_mode(all_new)
         
         print("\n" + "="*100)
-        print(f"🎯 MULTI-MODE SIGNALS (v2.1.3-OPTIMIZED - INSTITUTIONAL GRADE)")
+        print(f"🎯 MULTI-MODE SIGNALS (v2.1.4-SCORING - INSTITUTIONAL GRADE)")
         print("="*100)
         
         if mode_buckets["aggressive"]:
@@ -1652,7 +1690,7 @@ def main():
         log.info("📄 signals.csv written")
     
     mark_success()
-    log.info("✅ Run completed - v2.1.3-OPTIMIZED INSTITUTIONAL GRADE")
+    log.info("✅ Run completed - v2.1.4-SCORING INSTITUTIONAL GRADE")
 
 if __name__ == "__main__":
     main()

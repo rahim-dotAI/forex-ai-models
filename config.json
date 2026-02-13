@@ -5,22 +5,22 @@
   "settings": {
     "aggressive": {
       "threshold": 50,
-      "min_adx": 18,
+      "min_adx": 15,
       "rsi_oversold": 30,
       "rsi_overbought": 70,
       "min_risk_reward": 2.5,
       "atr_stop_multiplier": 2.5,
-      "atr_target_multiplier": 5.0,
+      "atr_target_multiplier": 7.0,
       "max_correlated_signals": 2
     },
     "conservative": {
       "threshold": 55,
-      "min_adx": 20,
+      "min_adx": 17,
       "rsi_oversold": 30,
       "rsi_overbought": 70,
       "min_risk_reward": 2.5,
       "atr_stop_multiplier": 2.5,
-      "atr_target_multiplier": 5.0,
+      "atr_target_multiplier": 7.0,
       "max_correlated_signals": 1
     }
   },
@@ -35,6 +35,10 @@
     "enable_correlation_filter": true,
     "cache_ttl_minutes": 5,
     "parallel_workers": 3,
+    "min_risk_reward": 2.5,
+    "atr_stop_multiplier": 2.5,
+    "atr_target_multiplier": 7.0,
+    "_rr_note": "v2.1.4: atr_tgt raised 5.0→7.0 so RR=2.8, passes min_rr=2.5. Was 5.0/2.5=2.0 (ALWAYS BLOCKED)",
     "session_bonuses": {
       "ASIAN":    { "JPY_pairs": 3, "AUD_NZD_pairs": 3, "other": 0 },
       "EUROPEAN": { "EUR_GBP_pairs": 3, "EUR_GBP_crosses": 2, "other": 0 },

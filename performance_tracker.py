@@ -1,9 +1,9 @@
 """
-Performance Tracker v2.1.3-OPTIMIZED - Aligned with Trade Beacon v2.1.3-OPTIMIZED
+Performance Tracker v2.1.4-SCORING - Aligned with Trade Beacon v2.1.4-SCORING
 ============================================================================
 
-CHANGELOG v2.1.3-OPTIMIZED (based on v2.1.2-MULTI):
-- ✅ Updated tier thresholds (A+: 75, A: 68, B: 60) to match v2.1.3 optimizations
+CHANGELOG v2.1.4-SCORING (based on v2.1.2-MULTI):
+- ✅ Updated tier thresholds (A+: 75, A: 68, B: 60) to match v2.1.4 optimizations
 - ✅ Multi-mode support: tracks eligible_modes per signal
 - ✅ Tier tracking: A+, A, B, C quality classification
 - ✅ Enhanced analytics: by tier, by mode, cross-analytics
@@ -15,7 +15,7 @@ CHANGELOG v2.1.3-OPTIMIZED (based on v2.1.2-MULTI):
 - ✅ UTC-only datetime handling
 - ✅ Deterministic ID validation
 - ✅ Status transition guards
-- ✅ AUTOMATIC MIGRATION: Updates old v2.1.2/v2.1.2-MULTI files to v2.1.3-OPTIMIZED on load
+- ✅ AUTOMATIC MIGRATION: Updates old v2.1.2/v2.1.2-MULTI files to v2.1.4-SCORING on load
 - ✅ Cross-analytics: tier_by_session, mode_by_tier
 - ✅ Safe type conversion utilities
 """
@@ -30,7 +30,7 @@ import pandas as pd
 
 log = logging.getLogger("performance-tracker")
 
-TRACKER_VERSION = "2.1.3-OPTIMIZED"
+TRACKER_VERSION = "2.1.4-SCORING"
 
 # Safe type conversion utilities
 def safe_int(val: Any, default: int = 0) -> int:
@@ -50,7 +50,7 @@ def safe_round(val: Any, decimals: int = 2) -> float:
 
 # Normalization functions
 def normalize_session(session: Optional[str]) -> str:
-    """Normalize legacy session names to v2.1.3 taxonomy."""
+    """Normalize legacy session names to v2.1.4 taxonomy."""
     if not session:
         return "UNKNOWN"
     s = session.upper()
@@ -63,7 +63,7 @@ def normalize_session(session: Optional[str]) -> str:
     return "UNKNOWN"
 
 def normalize_confidence(conf: Optional[str]) -> str:
-    """Normalize legacy confidence levels to v2.1.3 tiers."""
+    """Normalize legacy confidence levels to v2.1.4 tiers."""
     if not conf:
         return "UNKNOWN"
     c = conf.upper()
@@ -99,35 +99,37 @@ def map_confidence_to_tier(confidence: str) -> str:
 
 def map_score_to_tier(score: int) -> str:
     """
-    Map score to tier using v2.1.3-OPTIMIZED thresholds.
-    UPDATED: Lowered thresholds to generate A/B tier signals.
-    A+: 75+ (was 80)
-    A:  68-74 (was 72-79)
-    B:  60-67 (was 65-71)
-    C:  below 60
+    Map score to tier using v2.1.4-SCORING thresholds.
+    Rescaled for expanded scorer (max ~110pts, was ~85pts).
+    A+: 80+  — multiple strong confirmations
+    A:  68-79 — strong trend + momentum alignment
+    B:  55-67 — decent signal
+    C:  below 55
     """
-    if score >= 75:
+    if score >= 80:
         return "A+"
     elif score >= 68:
         return "A"
-    elif score >= 60:
+    elif score >= 55:
         return "B"
     else:
         return "C"
 
 def map_score_to_modes(score: int) -> List[str]:
-    """Map score to eligible modes for migration using v2.1.3 thresholds."""
+    """Map score to eligible modes for migration using v2.1.4 thresholds."""
     if score >= 55:
         return ['aggressive', 'conservative']
-    else:
+    elif score >= 50:
         return ['aggressive']
+    else:
+        return []
 
 
 class PerformanceTracker:
     """
     Multi-mode signal performance tracker with tier-based analytics.
 
-    Aligned with Trade Beacon v2.1.3-OPTIMIZED:
+    Aligned with Trade Beacon v2.1.4-SCORING:
     - Multi-mode support: aggressive + conservative
     - Tier classification: A+, A, B, C (updated thresholds)
     - Session taxonomy: ASIAN, EUROPEAN, OVERLAP, US, LATE_US
@@ -189,7 +191,7 @@ class PerformanceTracker:
 
     def _migrate(self, data: Dict, from_version: str) -> Dict:
         """
-        Migrate old data to v2.1.3-OPTIMIZED format.
+        Migrate old data to v2.1.4-SCORING format.
         Handles v2.1.2, v2.1.2-MULTI, and any other previous versions.
         Re-maps tiers using updated thresholds (A+:75, A:68, B:60).
         """
@@ -213,7 +215,7 @@ class PerformanceTracker:
                 if old_conf != signal["confidence"]:
                     needs_migration = True
 
-            # Re-map tier using updated v2.1.3 thresholds
+            # Re-map tier using updated v2.1.4 thresholds
             if "score" in signal:
                 score = safe_int(signal["score"])
                 new_tier = map_score_to_tier(score)
@@ -248,7 +250,7 @@ class PerformanceTracker:
                 migrated_count += 1
 
         # Recalculate all analytics with updated tier thresholds
-        log.info(f"🔄 Recalculating analytics with v2.1.3 tier thresholds...")
+        log.info(f"🔄 Recalculating analytics with v2.1.4 tier thresholds...")
 
         resolved = [s for s in data.get("signals", []) if s.get("status") in ("WIN", "LOSS")]
         expired = [s for s in data.get("signals", []) if s.get("status") == "EXPIRED"]
@@ -501,7 +503,7 @@ class PerformanceTracker:
         Record trade outcome when it hits SL/TP or expires.
 
         Args:
-            tier: Quality tier (A+, A, B, C) - using v2.1.3 thresholds
+            tier: Quality tier (A+, A, B, C) - using v2.1.4 thresholds
             eligible_modes: List of modes this signal qualifies for
             sentiment_applied: Whether sentiment analysis was applied
             sentiment_score: Net sentiment value (-1.0 to +1.0)
@@ -522,7 +524,7 @@ class PerformanceTracker:
             signal["pips"] = pips
             log.info(f"✅ Updated signal {signal_id}: {outcome} ({pips:+.1f} pips)")
         else:
-            # Re-map tier using v2.1.3 thresholds if score available
+            # Re-map tier using v2.1.4 thresholds if score available
             if tier is None and score is not None:
                 tier = map_score_to_tier(safe_int(score))
 

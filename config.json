@@ -1,5 +1,5 @@
 {
-  "version": "2.1.3-OPTIMIZED",
+  "version": "2.1.4-SCORING",
   "mode": "conservative",
   "use_sentiment": false,
   "settings": {
@@ -25,10 +25,10 @@
     }
   },
   "tiers": {
-    "A_plus_min_score": 75,
+    "A_plus_min_score": 80,
     "A_min_score": 68,
-    "B_min_score": 60,
-    "note": "Lowered from 80/72/65 to generate A/B tier signals (v2.1.3)"
+    "B_min_score": 55,
+    "note": "v2.1.4: Rescaled for expanded scorer (max ~110pts). A+≥80, A≥68, B≥55, C<55"
   },
   "advanced": {
     "enable_session_filtering": true,
@@ -43,12 +43,12 @@
       "LATE_US":  { "all_major_pairs": 0 }
     },
     "session_thresholds": {
-      "ASIAN":    65,
+      "ASIAN":    60,
       "EUROPEAN": 50,
       "US":       50,
-      "LATE_US":  65,
-      "OVERLAP":  999,
-      "_note": "ASIAN=33%WR, LATE_US=42%WR blocked; EUROPEAN=57%WR, US=77%WR kept"
+      "LATE_US":  55,
+      "OVERLAP":  60,
+      "_note": "v2.1.4: Expanded scoring (max ~110pts). LATE_US lowered 65→55 (was blocking all signals). OVERLAP 999→60 (allow strong signals only). ASIAN 65→60."
     },
     "pair_limits": {
       "GBPUSD":  5,

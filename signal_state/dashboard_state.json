@@ -1,8 +1,8 @@
 {
-  "timestamp": "2026-02-17T11:01:28.520693+00:00",
-  "active_signals": 0,
+  "timestamp": "2026-02-17T11:07:46.059406+00:00",
+  "active_signals": 1,
   "active_signals_by_mode": {
-    "aggressive": 0,
+    "aggressive": 1,
     "conservative": 0
   },
   "session": "EUROPEAN",
@@ -16,11 +16,58 @@
   },
   "market_state": {
     "volatility": "CALM",
-    "sentiment_bias": "MIXED",
+    "sentiment_bias": "BEARISH",
     "session": "EUROPEAN"
   },
   "signals_by_mode": {
-    "aggressive": [],
+    "aggressive": [
+      {
+        "signal_id": "GBPUSD_SELL_160c84e543ba",
+        "id": "GBPUSD_SELL_160c84e543ba",
+        "pair": "GBPUSD",
+        "direction": "SELL",
+        "score": 52,
+        "technical_score": 52,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 47.7,
+        "adx": 25.3,
+        "atr": 0.00074,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 1.35929,
+        "sl": 1.36115,
+        "tp": 1.35407,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-17T11:07:41.216496+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-17T11:07:41.216496+00:00",
+          "expires_at": "2026-02-17T11:22:41.216496+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      }
+    ],
     "conservative": []
   },
   "historical_signals": [
@@ -1687,8 +1734,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 0,
-    "total_risk_pips": 0,
+    "theoretical_max_pips": 18.6,
+    "total_risk_pips": 18.599999999999728,
     "max_daily_risk": 150
   },
   "analytics": {
@@ -1909,7 +1956,7 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-02-17T11:01:28.520731+00:00",
+    "last_update": "2026-02-17T11:07:46.059457+00:00",
     "signal_only_mode": true,
     "version": "2.1.3-OPTIMIZED"
   }

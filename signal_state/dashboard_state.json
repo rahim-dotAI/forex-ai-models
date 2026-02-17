@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-02-17T07:01:23.354822+00:00",
-  "active_signals": 0,
+  "timestamp": "2026-02-17T07:16:00.333510+00:00",
+  "active_signals": 1,
   "active_signals_by_mode": {
-    "aggressive": 0,
-    "conservative": 0
+    "aggressive": 1,
+    "conservative": 1
   },
   "session": "ASIAN",
   "mode": "conservative",
@@ -15,13 +15,109 @@
     "pause_reason": null
   },
   "market_state": {
-    "volatility": "CALM",
-    "sentiment_bias": "MIXED",
+    "volatility": "HIGH",
+    "sentiment_bias": "BEARISH",
     "session": "ASIAN"
   },
   "signals_by_mode": {
-    "aggressive": [],
-    "conservative": []
+    "aggressive": [
+      {
+        "signal_id": "EURJPY_SELL_b9c8de857180",
+        "id": "EURJPY_SELL_b9c8de857180",
+        "pair": "EURJPY",
+        "direction": "SELL",
+        "score": 66,
+        "technical_score": 66,
+        "sentiment_score": 0,
+        "confidence": "STRONG",
+        "tier": "B",
+        "rsi": 31.7,
+        "adx": 44.6,
+        "atr": 0.14007,
+        "volume_ratio": 0,
+        "session": "ASIAN",
+        "entry_price": 180.951,
+        "sl": 181.30117,
+        "tp": 179.97054,
+        "risk_reward": 2.8,
+        "spread": 0.002,
+        "timestamp": "2026-02-17T07:15:55.859365+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-17T07:15:55.859365+00:00",
+          "expires_at": "2026-02-17T07:30:55.859365+00:00",
+          "session_active": false,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      }
+    ],
+    "conservative": [
+      {
+        "signal_id": "EURJPY_SELL_b9c8de857180",
+        "id": "EURJPY_SELL_b9c8de857180",
+        "pair": "EURJPY",
+        "direction": "SELL",
+        "score": 66,
+        "technical_score": 66,
+        "sentiment_score": 0,
+        "confidence": "STRONG",
+        "tier": "B",
+        "rsi": 31.7,
+        "adx": 44.6,
+        "atr": 0.14007,
+        "volume_ratio": 0,
+        "session": "ASIAN",
+        "entry_price": 180.951,
+        "sl": 181.30117,
+        "tp": 179.97054,
+        "risk_reward": 2.8,
+        "spread": 0.002,
+        "timestamp": "2026-02-17T07:15:55.859365+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-17T07:15:55.859365+00:00",
+          "expires_at": "2026-02-17T07:30:55.859365+00:00",
+          "session_active": false,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      }
+    ]
   },
   "historical_signals": [
     {
@@ -1682,8 +1778,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 0,
-    "total_risk_pips": 0,
+    "theoretical_max_pips": 35.0,
+    "total_risk_pips": 35.017000000001985,
     "max_daily_risk": 150
   },
   "analytics": {
@@ -1904,7 +2000,7 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-02-17T07:01:23.354854+00:00",
+    "last_update": "2026-02-17T07:16:00.333578+00:00",
     "signal_only_mode": true,
     "version": "2.1.3-OPTIMIZED"
   }

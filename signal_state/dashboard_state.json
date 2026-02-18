@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-02-18T17:16:02.087206+00:00",
-  "active_signals": 7,
+  "timestamp": "2026-02-18T17:20:51.901490+00:00",
+  "active_signals": 12,
   "active_signals_by_mode": {
-    "aggressive": 7,
-    "conservative": 3
+    "aggressive": 12,
+    "conservative": 10
   },
   "session": "US",
   "mode": "conservative",
@@ -21,6 +21,146 @@
   },
   "signals_by_mode": {
     "aggressive": [
+      {
+        "signal_id": "USDCAD_BUY_3665d5e8d0dc",
+        "id": "USDCAD_BUY_3665d5e8d0dc",
+        "pair": "USDCAD",
+        "direction": "BUY",
+        "score": 57,
+        "technical_score": 57,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 67.1,
+        "adx": 28.9,
+        "atr": 0.0011,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.36757,
+        "sl": 1.36481,
+        "tp": 1.37529,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-18T17:20:47.316624+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "momentum",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-18T17:20:47.316624+00:00",
+          "expires_at": "2026-02-18T17:35:47.316624+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "GBPUSD_SELL_f483e38a9593",
+        "id": "GBPUSD_SELL_f483e38a9593",
+        "pair": "GBPUSD",
+        "direction": "SELL",
+        "score": 56,
+        "technical_score": 56,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 33.0,
+        "adx": 21.0,
+        "atr": 0.00077,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.35311,
+        "sl": 1.35503,
+        "tp": 1.34773,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-18T17:20:47.248287+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "momentum",
+          "market_state": "TRENDING_MODERATE",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-18T17:20:47.248287+00:00",
+          "expires_at": "2026-02-18T17:35:47.248287+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "EURJPY_BUY_a583adb9ba33",
+        "id": "EURJPY_BUY_a583adb9ba33",
+        "pair": "EURJPY",
+        "direction": "BUY",
+        "score": 54,
+        "technical_score": 54,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 63.7,
+        "adx": 38.9,
+        "atr": 0.1083,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 182.395,
+        "sl": 182.12424,
+        "tp": 183.15314,
+        "risk_reward": 2.8,
+        "spread": 0.002,
+        "timestamp": "2026-02-18T17:20:47.475768+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-18T17:20:47.475768+00:00",
+          "expires_at": "2026-02-18T17:35:47.475768+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
       {
         "signal_id": "USDCAD_BUY_786c2781b4d6",
         "id": "USDCAD_BUY_786c2781b4d6",
@@ -115,54 +255,8 @@
         "estimated_win_rate": null
       },
       {
-        "signal_id": "GBPJPY_BUY_f77613baefe6",
-        "id": "GBPJPY_BUY_f77613baefe6",
-        "pair": "GBPJPY",
-        "direction": "BUY",
-        "score": 54,
-        "technical_score": 54,
-        "sentiment_score": 0,
-        "confidence": "MODERATE",
-        "tier": "C",
-        "rsi": 65.6,
-        "adx": 38.9,
-        "atr": 0.10581,
-        "volume_ratio": 0,
-        "session": "US",
-        "entry_price": 182.42101,
-        "sl": 182.15649,
-        "tp": 183.16165,
-        "risk_reward": 2.8,
-        "spread": 0.003,
-        "timestamp": "2026-02-18T17:15:57.767778+00:00",
-        "status": "OPEN",
-        "hold_time": "SWING",
-        "eligible_modes": [
-          "aggressive"
-        ],
-        "freshness": {
-          "status": "FRESH",
-          "age_minutes": 0.0,
-          "confidence_decay": 100.0
-        },
-        "sentiment_applied": false,
-        "metadata": {
-          "signal_type": "trend-continuation",
-          "market_state": "TRENDING_STRONG",
-          "timeframe": "15m",
-          "valid_for_minutes": 15,
-          "generated_at": "2026-02-18T17:15:57.767778+00:00",
-          "expires_at": "2026-02-18T17:30:57.767778+00:00",
-          "session_active": true,
-          "signal_generator_version": "2.1.3-OPTIMIZED",
-          "atr_stop_multiplier": 2.5,
-          "atr_target_multiplier": 7.0
-        },
-        "estimated_win_rate": null
-      },
-      {
-        "signal_id": "USDCAD_BUY_81c5e8241255",
-        "id": "USDCAD_BUY_81c5e8241255",
+        "signal_id": "USDCAD_BUY_786c2781b4d6",
+        "id": "USDCAD_BUY_786c2781b4d6",
         "pair": "USDCAD",
         "direction": "BUY",
         "score": 57,
@@ -170,17 +264,17 @@
         "sentiment_score": 0,
         "confidence": "MODERATE",
         "tier": "B",
-        "rsi": 66.7,
-        "adx": 27.8,
-        "atr": 0.00108,
+        "rsi": 67.0,
+        "adx": 28.9,
+        "atr": 0.00106,
         "volume_ratio": 0,
         "session": "US",
-        "entry_price": 1.36753,
-        "sl": 1.36483,
-        "tp": 1.37508,
+        "entry_price": 1.36756,
+        "sl": 1.36492,
+        "tp": 1.37495,
         "risk_reward": 2.8,
         "spread": 0.0002,
-        "timestamp": "2026-02-18T17:01:20.718048+00:00",
+        "timestamp": "2026-02-18T17:15:57.274569+00:00",
         "status": "OPEN",
         "hold_time": "SWING",
         "eligible_modes": [
@@ -198,8 +292,8 @@
           "market_state": "TRENDING_STRONG",
           "timeframe": "15m",
           "valid_for_minutes": 15,
-          "generated_at": "2026-02-18T17:01:20.718048+00:00",
-          "expires_at": "2026-02-18T17:16:20.718048+00:00",
+          "generated_at": "2026-02-18T17:15:57.274569+00:00",
+          "expires_at": "2026-02-18T17:30:57.274569+00:00",
           "session_active": true,
           "signal_generator_version": "2.1.3-OPTIMIZED",
           "atr_stop_multiplier": 2.5,
@@ -207,147 +301,6 @@
         },
         "estimated_win_rate": null
       },
-      {
-        "signal_id": "EURUSD_SELL_29198da30aa4",
-        "id": "EURUSD_SELL_29198da30aa4",
-        "pair": "EURUSD",
-        "direction": "SELL",
-        "score": 51,
-        "technical_score": 51,
-        "sentiment_score": 0,
-        "confidence": "MODERATE",
-        "tier": "C",
-        "rsi": 30.4,
-        "adx": 22.7,
-        "atr": 0.00056,
-        "volume_ratio": 0,
-        "session": "US",
-        "entry_price": 1.18133,
-        "sl": 1.18273,
-        "tp": 1.17742,
-        "risk_reward": 2.8,
-        "spread": 0.00015,
-        "timestamp": "2026-02-18T17:01:20.338861+00:00",
-        "status": "OPEN",
-        "hold_time": "SWING",
-        "eligible_modes": [
-          "aggressive"
-        ],
-        "freshness": {
-          "status": "FRESH",
-          "age_minutes": 0.0,
-          "confidence_decay": 100.0
-        },
-        "sentiment_applied": false,
-        "metadata": {
-          "signal_type": "momentum",
-          "market_state": "TRENDING_MODERATE",
-          "timeframe": "15m",
-          "valid_for_minutes": 15,
-          "generated_at": "2026-02-18T17:01:20.338861+00:00",
-          "expires_at": "2026-02-18T17:16:20.338861+00:00",
-          "session_active": true,
-          "signal_generator_version": "2.1.3-OPTIMIZED",
-          "atr_stop_multiplier": 2.5,
-          "atr_target_multiplier": 7.0
-        },
-        "estimated_win_rate": null
-      },
-      {
-        "signal_id": "GBPUSD_SELL_756b433da1e5",
-        "id": "GBPUSD_SELL_756b433da1e5",
-        "pair": "GBPUSD",
-        "direction": "SELL",
-        "score": 51,
-        "technical_score": 51,
-        "sentiment_score": 0,
-        "confidence": "MODERATE",
-        "tier": "C",
-        "rsi": 34.9,
-        "adx": 20.5,
-        "atr": 0.00074,
-        "volume_ratio": 0,
-        "session": "US",
-        "entry_price": 1.35353,
-        "sl": 1.35539,
-        "tp": 1.34832,
-        "risk_reward": 2.8,
-        "spread": 0.0002,
-        "timestamp": "2026-02-18T17:01:20.410582+00:00",
-        "status": "OPEN",
-        "hold_time": "SWING",
-        "eligible_modes": [
-          "aggressive"
-        ],
-        "freshness": {
-          "status": "FRESH",
-          "age_minutes": 0.0,
-          "confidence_decay": 100.0
-        },
-        "sentiment_applied": false,
-        "metadata": {
-          "signal_type": "momentum",
-          "market_state": "TRENDING_MODERATE",
-          "timeframe": "15m",
-          "valid_for_minutes": 15,
-          "generated_at": "2026-02-18T17:01:20.410582+00:00",
-          "expires_at": "2026-02-18T17:16:20.410582+00:00",
-          "session_active": true,
-          "signal_generator_version": "2.1.3-OPTIMIZED",
-          "atr_stop_multiplier": 2.5,
-          "atr_target_multiplier": 7.0
-        },
-        "estimated_win_rate": null
-      },
-      {
-        "signal_id": "USDCAD_BUY_81c5e8241255",
-        "id": "USDCAD_BUY_81c5e8241255",
-        "pair": "USDCAD",
-        "direction": "BUY",
-        "score": 57,
-        "technical_score": 57,
-        "sentiment_score": 0,
-        "confidence": "MODERATE",
-        "tier": "B",
-        "rsi": 66.7,
-        "adx": 27.8,
-        "atr": 0.00108,
-        "volume_ratio": 0,
-        "session": "US",
-        "entry_price": 1.36753,
-        "sl": 1.36483,
-        "tp": 1.37508,
-        "risk_reward": 2.8,
-        "spread": 0.0002,
-        "timestamp": "2026-02-18T17:01:20.718048+00:00",
-        "status": "OPEN",
-        "hold_time": "SWING",
-        "eligible_modes": [
-          "conservative",
-          "aggressive"
-        ],
-        "freshness": {
-          "status": "FRESH",
-          "age_minutes": 0.0,
-          "confidence_decay": 100.0
-        },
-        "sentiment_applied": false,
-        "metadata": {
-          "signal_type": "momentum",
-          "market_state": "TRENDING_STRONG",
-          "timeframe": "15m",
-          "valid_for_minutes": 15,
-          "generated_at": "2026-02-18T17:01:20.718048+00:00",
-          "expires_at": "2026-02-18T17:16:20.718048+00:00",
-          "session_active": true,
-          "signal_generator_version": "2.1.3-OPTIMIZED",
-          "atr_stop_multiplier": 2.5,
-          "atr_target_multiplier": 7.0
-        },
-        "estimated_win_rate": null
-      }
-    ],
-    "conservative": [
       {
         "signal_id": "USDCAD_BUY_786c2781b4d6",
         "id": "USDCAD_BUY_786c2781b4d6",
@@ -396,8 +349,8 @@
         "estimated_win_rate": null
       },
       {
-        "signal_id": "USDCAD_BUY_81c5e8241255",
-        "id": "USDCAD_BUY_81c5e8241255",
+        "signal_id": "USDCAD_BUY_786c2781b4d6",
+        "id": "USDCAD_BUY_786c2781b4d6",
         "pair": "USDCAD",
         "direction": "BUY",
         "score": 57,
@@ -405,17 +358,17 @@
         "sentiment_score": 0,
         "confidence": "MODERATE",
         "tier": "B",
-        "rsi": 66.7,
-        "adx": 27.8,
-        "atr": 0.00108,
+        "rsi": 67.0,
+        "adx": 28.9,
+        "atr": 0.00106,
         "volume_ratio": 0,
         "session": "US",
-        "entry_price": 1.36753,
-        "sl": 1.36483,
-        "tp": 1.37508,
+        "entry_price": 1.36756,
+        "sl": 1.36492,
+        "tp": 1.37495,
         "risk_reward": 2.8,
         "spread": 0.0002,
-        "timestamp": "2026-02-18T17:01:20.718048+00:00",
+        "timestamp": "2026-02-18T17:15:57.274569+00:00",
         "status": "OPEN",
         "hold_time": "SWING",
         "eligible_modes": [
@@ -433,8 +386,8 @@
           "market_state": "TRENDING_STRONG",
           "timeframe": "15m",
           "valid_for_minutes": 15,
-          "generated_at": "2026-02-18T17:01:20.718048+00:00",
-          "expires_at": "2026-02-18T17:16:20.718048+00:00",
+          "generated_at": "2026-02-18T17:15:57.274569+00:00",
+          "expires_at": "2026-02-18T17:30:57.274569+00:00",
           "session_active": true,
           "signal_generator_version": "2.1.3-OPTIMIZED",
           "atr_stop_multiplier": 2.5,
@@ -443,8 +396,8 @@
         "estimated_win_rate": null
       },
       {
-        "signal_id": "USDCAD_BUY_81c5e8241255",
-        "id": "USDCAD_BUY_81c5e8241255",
+        "signal_id": "USDCAD_BUY_786c2781b4d6",
+        "id": "USDCAD_BUY_786c2781b4d6",
         "pair": "USDCAD",
         "direction": "BUY",
         "score": 57,
@@ -452,17 +405,17 @@
         "sentiment_score": 0,
         "confidence": "MODERATE",
         "tier": "B",
-        "rsi": 66.7,
-        "adx": 27.8,
-        "atr": 0.00108,
+        "rsi": 67.0,
+        "adx": 28.9,
+        "atr": 0.00106,
         "volume_ratio": 0,
         "session": "US",
-        "entry_price": 1.36753,
-        "sl": 1.36483,
-        "tp": 1.37508,
+        "entry_price": 1.36756,
+        "sl": 1.36492,
+        "tp": 1.37495,
         "risk_reward": 2.8,
         "spread": 0.0002,
-        "timestamp": "2026-02-18T17:01:20.718048+00:00",
+        "timestamp": "2026-02-18T17:15:57.274569+00:00",
         "status": "OPEN",
         "hold_time": "SWING",
         "eligible_modes": [
@@ -480,8 +433,621 @@
           "market_state": "TRENDING_STRONG",
           "timeframe": "15m",
           "valid_for_minutes": 15,
-          "generated_at": "2026-02-18T17:01:20.718048+00:00",
-          "expires_at": "2026-02-18T17:16:20.718048+00:00",
+          "generated_at": "2026-02-18T17:15:57.274569+00:00",
+          "expires_at": "2026-02-18T17:30:57.274569+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "USDCAD_BUY_786c2781b4d6",
+        "id": "USDCAD_BUY_786c2781b4d6",
+        "pair": "USDCAD",
+        "direction": "BUY",
+        "score": 57,
+        "technical_score": 57,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 67.0,
+        "adx": 28.9,
+        "atr": 0.00106,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.36756,
+        "sl": 1.36492,
+        "tp": 1.37495,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-18T17:15:57.274569+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "momentum",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-18T17:15:57.274569+00:00",
+          "expires_at": "2026-02-18T17:30:57.274569+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "USDCAD_BUY_786c2781b4d6",
+        "id": "USDCAD_BUY_786c2781b4d6",
+        "pair": "USDCAD",
+        "direction": "BUY",
+        "score": 57,
+        "technical_score": 57,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 67.0,
+        "adx": 28.9,
+        "atr": 0.00106,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.36756,
+        "sl": 1.36492,
+        "tp": 1.37495,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-18T17:15:57.274569+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "momentum",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-18T17:15:57.274569+00:00",
+          "expires_at": "2026-02-18T17:30:57.274569+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "USDCAD_BUY_786c2781b4d6",
+        "id": "USDCAD_BUY_786c2781b4d6",
+        "pair": "USDCAD",
+        "direction": "BUY",
+        "score": 57,
+        "technical_score": 57,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 67.0,
+        "adx": 28.9,
+        "atr": 0.00106,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.36756,
+        "sl": 1.36492,
+        "tp": 1.37495,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-18T17:15:57.274569+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "momentum",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-18T17:15:57.274569+00:00",
+          "expires_at": "2026-02-18T17:30:57.274569+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      }
+    ],
+    "conservative": [
+      {
+        "signal_id": "USDCAD_BUY_3665d5e8d0dc",
+        "id": "USDCAD_BUY_3665d5e8d0dc",
+        "pair": "USDCAD",
+        "direction": "BUY",
+        "score": 57,
+        "technical_score": 57,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 67.1,
+        "adx": 28.9,
+        "atr": 0.0011,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.36757,
+        "sl": 1.36481,
+        "tp": 1.37529,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-18T17:20:47.316624+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "momentum",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-18T17:20:47.316624+00:00",
+          "expires_at": "2026-02-18T17:35:47.316624+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "GBPUSD_SELL_f483e38a9593",
+        "id": "GBPUSD_SELL_f483e38a9593",
+        "pair": "GBPUSD",
+        "direction": "SELL",
+        "score": 56,
+        "technical_score": 56,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 33.0,
+        "adx": 21.0,
+        "atr": 0.00077,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.35311,
+        "sl": 1.35503,
+        "tp": 1.34773,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-18T17:20:47.248287+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "momentum",
+          "market_state": "TRENDING_MODERATE",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-18T17:20:47.248287+00:00",
+          "expires_at": "2026-02-18T17:35:47.248287+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "USDCAD_BUY_786c2781b4d6",
+        "id": "USDCAD_BUY_786c2781b4d6",
+        "pair": "USDCAD",
+        "direction": "BUY",
+        "score": 57,
+        "technical_score": 57,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 67.0,
+        "adx": 28.9,
+        "atr": 0.00106,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.36756,
+        "sl": 1.36492,
+        "tp": 1.37495,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-18T17:15:57.274569+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "momentum",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-18T17:15:57.274569+00:00",
+          "expires_at": "2026-02-18T17:30:57.274569+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "USDCAD_BUY_786c2781b4d6",
+        "id": "USDCAD_BUY_786c2781b4d6",
+        "pair": "USDCAD",
+        "direction": "BUY",
+        "score": 57,
+        "technical_score": 57,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 67.0,
+        "adx": 28.9,
+        "atr": 0.00106,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.36756,
+        "sl": 1.36492,
+        "tp": 1.37495,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-18T17:15:57.274569+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "momentum",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-18T17:15:57.274569+00:00",
+          "expires_at": "2026-02-18T17:30:57.274569+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "USDCAD_BUY_786c2781b4d6",
+        "id": "USDCAD_BUY_786c2781b4d6",
+        "pair": "USDCAD",
+        "direction": "BUY",
+        "score": 57,
+        "technical_score": 57,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 67.0,
+        "adx": 28.9,
+        "atr": 0.00106,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.36756,
+        "sl": 1.36492,
+        "tp": 1.37495,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-18T17:15:57.274569+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "momentum",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-18T17:15:57.274569+00:00",
+          "expires_at": "2026-02-18T17:30:57.274569+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "USDCAD_BUY_786c2781b4d6",
+        "id": "USDCAD_BUY_786c2781b4d6",
+        "pair": "USDCAD",
+        "direction": "BUY",
+        "score": 57,
+        "technical_score": 57,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 67.0,
+        "adx": 28.9,
+        "atr": 0.00106,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.36756,
+        "sl": 1.36492,
+        "tp": 1.37495,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-18T17:15:57.274569+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "momentum",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-18T17:15:57.274569+00:00",
+          "expires_at": "2026-02-18T17:30:57.274569+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "USDCAD_BUY_786c2781b4d6",
+        "id": "USDCAD_BUY_786c2781b4d6",
+        "pair": "USDCAD",
+        "direction": "BUY",
+        "score": 57,
+        "technical_score": 57,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 67.0,
+        "adx": 28.9,
+        "atr": 0.00106,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.36756,
+        "sl": 1.36492,
+        "tp": 1.37495,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-18T17:15:57.274569+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "momentum",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-18T17:15:57.274569+00:00",
+          "expires_at": "2026-02-18T17:30:57.274569+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "USDCAD_BUY_786c2781b4d6",
+        "id": "USDCAD_BUY_786c2781b4d6",
+        "pair": "USDCAD",
+        "direction": "BUY",
+        "score": 57,
+        "technical_score": 57,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 67.0,
+        "adx": 28.9,
+        "atr": 0.00106,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.36756,
+        "sl": 1.36492,
+        "tp": 1.37495,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-18T17:15:57.274569+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "momentum",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-18T17:15:57.274569+00:00",
+          "expires_at": "2026-02-18T17:30:57.274569+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "USDCAD_BUY_786c2781b4d6",
+        "id": "USDCAD_BUY_786c2781b4d6",
+        "pair": "USDCAD",
+        "direction": "BUY",
+        "score": 57,
+        "technical_score": 57,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 67.0,
+        "adx": 28.9,
+        "atr": 0.00106,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.36756,
+        "sl": 1.36492,
+        "tp": 1.37495,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-18T17:15:57.274569+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "momentum",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-18T17:15:57.274569+00:00",
+          "expires_at": "2026-02-18T17:30:57.274569+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "USDCAD_BUY_786c2781b4d6",
+        "id": "USDCAD_BUY_786c2781b4d6",
+        "pair": "USDCAD",
+        "direction": "BUY",
+        "score": 57,
+        "technical_score": 57,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 67.0,
+        "adx": 28.9,
+        "atr": 0.00106,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.36756,
+        "sl": 1.36492,
+        "tp": 1.37495,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-18T17:15:57.274569+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "momentum",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-18T17:15:57.274569+00:00",
+          "expires_at": "2026-02-18T17:30:57.274569+00:00",
           "session_active": true,
           "signal_generator_version": "2.1.3-OPTIMIZED",
           "atr_stop_multiplier": 2.5,
@@ -1325,6 +1891,31 @@
       "estimated_win_rate": null,
       "timestamp": "2026-02-18T16:31:06.082473+00:00",
       "exit_time": "2026-02-18T16:46:01.572168+00:00"
+    },
+    {
+      "id": "GBPJPY_BUY_f77613baefe6",
+      "signal_id": "GBPJPY_BUY_f77613baefe6",
+      "pair": "GBPJPY",
+      "direction": "BUY",
+      "entry_price": 182.42101,
+      "exit_price": 183.16165,
+      "sl": 182.15649,
+      "tp": 183.16165,
+      "status": "WIN",
+      "pips": 74.06400000000133,
+      "confidence": "MODERATE",
+      "score": 54,
+      "session": "US",
+      "tier": "C",
+      "eligible_modes": [
+        "aggressive"
+      ],
+      "sentiment_applied": false,
+      "sentiment_score": 0,
+      "sentiment_adjustment": 0.0,
+      "estimated_win_rate": null,
+      "timestamp": "2026-02-18T17:15:57.767778+00:00",
+      "exit_time": "2026-02-18T17:20:45.332203+00:00"
     }
   ],
   "api_usage": {
@@ -1338,23 +1929,23 @@
     }
   },
   "stats": {
-    "total_trades": 87,
-    "win_rate": 27.6,
-    "total_pips": -596.2,
-    "wins": 24,
+    "total_trades": 88,
+    "win_rate": 28.4,
+    "total_pips": -522.2,
+    "wins": 25,
     "losses": 63,
-    "expectancy": -6.85
+    "expectancy": -5.93
   },
   "performance_stats": {
-    "total_trades": 87,
-    "wins": 24,
+    "total_trades": 88,
+    "wins": 25,
     "losses": 63,
     "expired": 19,
-    "win_rate": 27.6,
-    "total_pips": -596.2,
+    "win_rate": 28.4,
+    "total_pips": -522.2,
     "avg_win": 0,
     "avg_loss": 0,
-    "expectancy": -6.85,
+    "expectancy": -5.93,
     "by_mode": {
       "all": {
         "trades": 0,
@@ -1363,10 +1954,10 @@
         "win_rate": 0.0
       },
       "aggressive": {
-        "trades": 87,
-        "wins": 24,
-        "total_pips": -596.2330000000183,
-        "win_rate": 27.6
+        "trades": 88,
+        "wins": 25,
+        "total_pips": -522.1690000000169,
+        "win_rate": 28.4
       },
       "conservative": {
         "trades": 10,
@@ -1383,18 +1974,18 @@
         "win_rate": 18.8
       },
       "C": {
-        "trades": 71,
-        "wins": 21,
-        "total_pips": -403.72600000001796,
-        "win_rate": 29.6
+        "trades": 72,
+        "wins": 22,
+        "total_pips": -329.66200000001663,
+        "win_rate": 30.6
       }
     },
     "by_session": {
       "US": {
-        "trades": 17,
-        "wins": 9,
-        "total_pips": 191.3769999999981,
-        "win_rate": 52.9
+        "trades": 18,
+        "wins": 10,
+        "total_pips": 265.44099999999946,
+        "win_rate": 55.6
       },
       "LATE_US": {
         "trades": 12,
@@ -1429,10 +2020,10 @@
         "win_rate": 70.0
       },
       "GBPJPY": {
-        "trades": 72,
-        "wins": 16,
-        "total_pips": -838.3330000000143,
-        "win_rate": 22.2
+        "trades": 73,
+        "wins": 17,
+        "total_pips": -764.269000000013,
+        "win_rate": 23.3
       },
       "USDCHF": {
         "trades": 3,
@@ -1455,8 +2046,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 165.9,
-    "total_risk_pips": 165.90400000000403,
+    "theoretical_max_pips": 311.5,
+    "total_risk_pips": 311.52800000001656,
     "max_daily_risk": 150
   },
   "analytics": {
@@ -1468,10 +2059,10 @@
         "win_rate": 70.0
       },
       "GBPJPY": {
-        "trades": 72,
-        "wins": 16,
-        "total_pips": -838.3330000000143,
-        "win_rate": 22.2
+        "trades": 73,
+        "wins": 17,
+        "total_pips": -764.269000000013,
+        "win_rate": 23.3
       },
       "USDCHF": {
         "trades": 3,
@@ -1494,10 +2085,10 @@
     },
     "by_session": {
       "US": {
-        "trades": 17,
-        "wins": 9,
-        "total_pips": 191.3769999999981,
-        "win_rate": 52.9
+        "trades": 18,
+        "wins": 10,
+        "total_pips": 265.44099999999946,
+        "win_rate": 55.6
       },
       "LATE_US": {
         "trades": 12,
@@ -1526,10 +2117,10 @@
     },
     "by_confidence": {
       "MODERATE": {
-        "trades": 86,
-        "wins": 24,
-        "total_pips": -560.0190000000171,
-        "win_rate": 27.9
+        "trades": 87,
+        "wins": 25,
+        "total_pips": -485.95500000001573,
+        "win_rate": 28.7
       },
       "STRONG": {
         "trades": 1,
@@ -1546,10 +2137,10 @@
         "win_rate": 18.8
       },
       "C": {
-        "trades": 71,
-        "wins": 21,
-        "total_pips": -403.72600000001796,
-        "win_rate": 29.6
+        "trades": 72,
+        "wins": 22,
+        "total_pips": -329.66200000001663,
+        "win_rate": 30.6
       }
     },
     "by_mode": {
@@ -1560,10 +2151,10 @@
         "win_rate": 0.0
       },
       "aggressive": {
-        "trades": 87,
-        "wins": 24,
-        "total_pips": -596.2330000000183,
-        "win_rate": 27.6
+        "trades": 88,
+        "wins": 25,
+        "total_pips": -522.1690000000169,
+        "win_rate": 28.4
       },
       "conservative": {
         "trades": 10,
@@ -1617,10 +2208,10 @@
         "C_US": {
           "tier": "C",
           "session": "US",
-          "trades": 15,
-          "wins": 7,
-          "total_pips": 40.87699999999805,
-          "win_rate": 46.7
+          "trades": 16,
+          "wins": 8,
+          "total_pips": 114.94099999999938,
+          "win_rate": 50.0
         },
         "C_OVERLAP": {
           "tier": "C",
@@ -1667,17 +2258,17 @@
         "aggressive_C": {
           "mode": "aggressive",
           "tier": "C",
-          "trades": 71,
-          "wins": 21,
-          "total_pips": -403.72600000001796,
-          "win_rate": 29.6
+          "trades": 72,
+          "wins": 22,
+          "total_pips": -329.66200000001663,
+          "win_rate": 30.6
         }
       }
     }
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-02-18T17:16:02.087279+00:00",
+    "last_update": "2026-02-18T17:20:51.901605+00:00",
     "signal_only_mode": true,
     "version": "2.1.3-OPTIMIZED"
   }

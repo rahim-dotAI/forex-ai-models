@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-02-19T15:01:34.664848+00:00",
-  "active_signals": 1,
+  "timestamp": "2026-02-19T15:09:50.075896+00:00",
+  "active_signals": 0,
   "active_signals_by_mode": {
-    "aggressive": 1,
-    "conservative": 1
+    "aggressive": 0,
+    "conservative": 0
   },
   "session": "OVERLAP",
   "mode": "conservative",
@@ -16,108 +16,12 @@
   },
   "market_state": {
     "volatility": "CALM",
-    "sentiment_bias": "BEARISH",
+    "sentiment_bias": "MIXED",
     "session": "OVERLAP"
   },
   "signals_by_mode": {
-    "aggressive": [
-      {
-        "signal_id": "NZDUSD_SELL_7174fd91e571",
-        "id": "NZDUSD_SELL_7174fd91e571",
-        "pair": "NZDUSD",
-        "direction": "SELL",
-        "score": 63,
-        "technical_score": 63,
-        "sentiment_score": 0,
-        "confidence": "MODERATE",
-        "tier": "B",
-        "rsi": 33.0,
-        "adx": 30.9,
-        "atr": 0.00049,
-        "volume_ratio": 0,
-        "session": "OVERLAP",
-        "entry_price": 0.59538,
-        "sl": 0.59661,
-        "tp": 0.59193,
-        "risk_reward": 2.8,
-        "spread": 0.0002,
-        "timestamp": "2026-02-19T15:01:30.049697+00:00",
-        "status": "OPEN",
-        "hold_time": "SWING",
-        "eligible_modes": [
-          "conservative",
-          "aggressive"
-        ],
-        "freshness": {
-          "status": "FRESH",
-          "age_minutes": 0.0,
-          "confidence_decay": 100.0
-        },
-        "sentiment_applied": false,
-        "metadata": {
-          "signal_type": "trend-continuation",
-          "market_state": "TRENDING_STRONG",
-          "timeframe": "15m",
-          "valid_for_minutes": 15,
-          "generated_at": "2026-02-19T15:01:30.049697+00:00",
-          "expires_at": "2026-02-19T15:16:30.049697+00:00",
-          "session_active": true,
-          "signal_generator_version": "2.1.3-OPTIMIZED",
-          "atr_stop_multiplier": 2.5,
-          "atr_target_multiplier": 7.0
-        },
-        "estimated_win_rate": null
-      }
-    ],
-    "conservative": [
-      {
-        "signal_id": "NZDUSD_SELL_7174fd91e571",
-        "id": "NZDUSD_SELL_7174fd91e571",
-        "pair": "NZDUSD",
-        "direction": "SELL",
-        "score": 63,
-        "technical_score": 63,
-        "sentiment_score": 0,
-        "confidence": "MODERATE",
-        "tier": "B",
-        "rsi": 33.0,
-        "adx": 30.9,
-        "atr": 0.00049,
-        "volume_ratio": 0,
-        "session": "OVERLAP",
-        "entry_price": 0.59538,
-        "sl": 0.59661,
-        "tp": 0.59193,
-        "risk_reward": 2.8,
-        "spread": 0.0002,
-        "timestamp": "2026-02-19T15:01:30.049697+00:00",
-        "status": "OPEN",
-        "hold_time": "SWING",
-        "eligible_modes": [
-          "conservative",
-          "aggressive"
-        ],
-        "freshness": {
-          "status": "FRESH",
-          "age_minutes": 0.0,
-          "confidence_decay": 100.0
-        },
-        "sentiment_applied": false,
-        "metadata": {
-          "signal_type": "trend-continuation",
-          "market_state": "TRENDING_STRONG",
-          "timeframe": "15m",
-          "valid_for_minutes": 15,
-          "generated_at": "2026-02-19T15:01:30.049697+00:00",
-          "expires_at": "2026-02-19T15:16:30.049697+00:00",
-          "session_active": true,
-          "signal_generator_version": "2.1.3-OPTIMIZED",
-          "atr_stop_multiplier": 2.5,
-          "atr_target_multiplier": 7.0
-        },
-        "estimated_win_rate": null
-      }
-    ]
+    "aggressive": [],
+    "conservative": []
   },
   "historical_signals": [
     {
@@ -680,6 +584,32 @@
       "estimated_win_rate": null,
       "timestamp": "2026-02-19T13:31:07.301072+00:00",
       "exit_time": "2026-02-19T13:46:07.725956+00:00"
+    },
+    {
+      "id": "NZDUSD_SELL_7174fd91e571",
+      "signal_id": "NZDUSD_SELL_7174fd91e571",
+      "pair": "NZDUSD",
+      "direction": "SELL",
+      "entry_price": 0.59538,
+      "exit_price": 0.59661,
+      "sl": 0.59661,
+      "tp": 0.59193,
+      "status": "LOSS",
+      "pips": -12.299999999999534,
+      "confidence": "MODERATE",
+      "score": 63,
+      "session": "OVERLAP",
+      "tier": "B",
+      "eligible_modes": [
+        "conservative",
+        "aggressive"
+      ],
+      "sentiment_applied": false,
+      "sentiment_score": 0,
+      "sentiment_adjustment": 0.0,
+      "estimated_win_rate": null,
+      "timestamp": "2026-02-19T15:01:30.049697+00:00",
+      "exit_time": "2026-02-19T15:09:43.806422+00:00"
     }
   ],
   "api_usage": {
@@ -693,23 +623,23 @@
     }
   },
   "stats": {
-    "total_trades": 92,
-    "win_rate": 29.3,
-    "total_pips": -421.5,
+    "total_trades": 93,
+    "win_rate": 29.0,
+    "total_pips": -433.8,
     "wins": 27,
-    "losses": 65,
-    "expectancy": -4.58
+    "losses": 66,
+    "expectancy": -4.66
   },
   "performance_stats": {
-    "total_trades": 92,
+    "total_trades": 93,
     "wins": 27,
-    "losses": 65,
+    "losses": 66,
     "expired": 20,
-    "win_rate": 29.3,
-    "total_pips": -421.5,
+    "win_rate": 29.0,
+    "total_pips": -433.8,
     "avg_win": 0,
     "avg_loss": 0,
-    "expectancy": -4.58,
+    "expectancy": -4.66,
     "by_mode": {
       "all": {
         "trades": 0,
@@ -718,24 +648,24 @@
         "win_rate": 0.0
       },
       "aggressive": {
-        "trades": 92,
+        "trades": 93,
         "wins": 27,
-        "total_pips": -421.5220000000172,
-        "win_rate": 29.3
+        "total_pips": -433.82200000001677,
+        "win_rate": 29.0
       },
       "conservative": {
-        "trades": 11,
+        "trades": 12,
         "wins": 1,
-        "total_pips": -203.3620000000016,
-        "win_rate": 9.1
+        "total_pips": -215.66200000000111,
+        "win_rate": 8.3
       }
     },
     "by_tier": {
       "B": {
-        "trades": 17,
+        "trades": 18,
         "wins": 3,
-        "total_pips": -206.20700000000116,
-        "win_rate": 17.6
+        "total_pips": -218.5070000000007,
+        "win_rate": 16.7
       },
       "C": {
         "trades": 75,
@@ -770,9 +700,9 @@
         "win_rate": 25.0
       },
       "OVERLAP": {
-        "trades": 3,
+        "trades": 4,
         "wins": 0,
-        "total_pips": -77.57300000000109,
+        "total_pips": -89.87300000000062,
         "win_rate": 0.0
       }
     },
@@ -806,12 +736,18 @@
         "wins": 0,
         "total_pips": -18.700000000000383,
         "win_rate": 0.0
+      },
+      "NZDUSD": {
+        "trades": 1,
+        "wins": 0,
+        "total_pips": -12.299999999999534,
+        "win_rate": 0.0
       }
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 12.3,
-    "total_risk_pips": 12.299999999999534,
+    "theoretical_max_pips": 0,
+    "total_risk_pips": 0,
     "max_daily_risk": 150
   },
   "analytics": {
@@ -845,6 +781,12 @@
         "wins": 0,
         "total_pips": -18.700000000000383,
         "win_rate": 0.0
+      },
+      "NZDUSD": {
+        "trades": 1,
+        "wins": 0,
+        "total_pips": -12.299999999999534,
+        "win_rate": 0.0
       }
     },
     "by_session": {
@@ -873,18 +815,18 @@
         "win_rate": 25.0
       },
       "OVERLAP": {
-        "trades": 3,
+        "trades": 4,
         "wins": 0,
-        "total_pips": -77.57300000000109,
+        "total_pips": -89.87300000000062,
         "win_rate": 0.0
       }
     },
     "by_confidence": {
       "MODERATE": {
-        "trades": 91,
+        "trades": 92,
         "wins": 27,
-        "total_pips": -385.308000000016,
-        "win_rate": 29.7
+        "total_pips": -397.6080000000156,
+        "win_rate": 29.3
       },
       "STRONG": {
         "trades": 1,
@@ -895,10 +837,10 @@
     },
     "by_tier": {
       "B": {
-        "trades": 17,
+        "trades": 18,
         "wins": 3,
-        "total_pips": -206.20700000000116,
-        "win_rate": 17.6
+        "total_pips": -218.5070000000007,
+        "win_rate": 16.7
       },
       "C": {
         "trades": 75,
@@ -915,16 +857,16 @@
         "win_rate": 0.0
       },
       "aggressive": {
-        "trades": 92,
+        "trades": 93,
         "wins": 27,
-        "total_pips": -421.5220000000172,
-        "win_rate": 29.3
+        "total_pips": -433.82200000001677,
+        "win_rate": 29.0
       },
       "conservative": {
-        "trades": 11,
+        "trades": 12,
         "wins": 1,
-        "total_pips": -203.3620000000016,
-        "win_rate": 9.1
+        "total_pips": -215.66200000000111,
+        "win_rate": 8.3
       }
     },
     "cross_analytics": {
@@ -988,9 +930,9 @@
         "B_OVERLAP": {
           "tier": "B",
           "session": "OVERLAP",
-          "trades": 1,
+          "trades": 2,
           "wins": 0,
-          "total_pips": -12.800000000001699,
+          "total_pips": -25.10000000000123,
           "win_rate": 0.0
         },
         "B_ASIAN": {
@@ -1006,18 +948,18 @@
         "aggressive_B": {
           "mode": "aggressive",
           "tier": "B",
-          "trades": 17,
+          "trades": 18,
           "wins": 3,
-          "total_pips": -206.20700000000116,
-          "win_rate": 17.6
+          "total_pips": -218.5070000000007,
+          "win_rate": 16.7
         },
         "conservative_B": {
           "mode": "conservative",
           "tier": "B",
-          "trades": 11,
+          "trades": 12,
           "wins": 1,
-          "total_pips": -203.3620000000016,
-          "win_rate": 9.1
+          "total_pips": -215.66200000000111,
+          "win_rate": 8.3
         },
         "aggressive_C": {
           "mode": "aggressive",
@@ -1032,7 +974,7 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-02-19T15:01:34.664894+00:00",
+    "last_update": "2026-02-19T15:09:50.075972+00:00",
     "signal_only_mode": true,
     "version": "2.1.3-OPTIMIZED"
   }

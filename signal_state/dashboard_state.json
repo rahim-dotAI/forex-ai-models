@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-02-19T16:04:17.474302+00:00",
-  "active_signals": 7,
+  "timestamp": "2026-02-19T16:16:04.774891+00:00",
+  "active_signals": 14,
   "active_signals_by_mode": {
-    "aggressive": 7,
-    "conservative": 2
+    "aggressive": 14,
+    "conservative": 9
   },
   "session": "US",
   "mode": "conservative",
@@ -21,6 +21,99 @@
   },
   "signals_by_mode": {
     "aggressive": [
+      {
+        "signal_id": "GBPUSD_SELL_78fed0dbfbc4",
+        "id": "GBPUSD_SELL_78fed0dbfbc4",
+        "pair": "GBPUSD",
+        "direction": "SELL",
+        "score": 57,
+        "technical_score": 57,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 40.5,
+        "adx": 32.3,
+        "atr": 0.00107,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.3451,
+        "sl": 1.34778,
+        "tp": 1.33759,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-19T16:16:00.266309+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-19T16:16:00.266309+00:00",
+          "expires_at": "2026-02-19T16:31:00.266309+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "USDCAD_BUY_a85e68ea6819",
+        "id": "USDCAD_BUY_a85e68ea6819",
+        "pair": "USDCAD",
+        "direction": "BUY",
+        "score": 52,
+        "technical_score": 52,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 44.5,
+        "adx": 22.9,
+        "atr": 0.00134,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.36844,
+        "sl": 1.36509,
+        "tp": 1.37782,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-19T16:16:00.619083+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_MODERATE",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-19T16:16:00.619083+00:00",
+          "expires_at": "2026-02-19T16:31:00.619083+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
       {
         "signal_id": "EURUSD_SELL_f4869c4312a0",
         "id": "EURUSD_SELL_f4869c4312a0",
@@ -60,52 +153,6 @@
           "valid_for_minutes": 15,
           "generated_at": "2026-02-19T16:04:12.464305+00:00",
           "expires_at": "2026-02-19T16:19:12.464305+00:00",
-          "session_active": true,
-          "signal_generator_version": "2.1.3-OPTIMIZED",
-          "atr_stop_multiplier": 2.5,
-          "atr_target_multiplier": 7.0
-        },
-        "estimated_win_rate": null
-      },
-      {
-        "signal_id": "GBPUSD_SELL_7176a42626a5",
-        "id": "GBPUSD_SELL_7176a42626a5",
-        "pair": "GBPUSD",
-        "direction": "SELL",
-        "score": 52,
-        "technical_score": 52,
-        "sentiment_score": 0,
-        "confidence": "MODERATE",
-        "tier": "C",
-        "rsi": 44.4,
-        "adx": 37.3,
-        "atr": 0.00075,
-        "volume_ratio": 0,
-        "session": "US",
-        "entry_price": 1.17675,
-        "sl": 1.17861,
-        "tp": 1.17152,
-        "risk_reward": 2.8,
-        "spread": 0.0002,
-        "timestamp": "2026-02-19T16:04:12.491447+00:00",
-        "status": "OPEN",
-        "hold_time": "SWING",
-        "eligible_modes": [
-          "aggressive"
-        ],
-        "freshness": {
-          "status": "FRESH",
-          "age_minutes": 0.0,
-          "confidence_decay": 100.0
-        },
-        "sentiment_applied": false,
-        "metadata": {
-          "signal_type": "trend-continuation",
-          "market_state": "TRENDING_STRONG",
-          "timeframe": "15m",
-          "valid_for_minutes": 15,
-          "generated_at": "2026-02-19T16:04:12.491447+00:00",
-          "expires_at": "2026-02-19T16:19:12.491447+00:00",
           "session_active": true,
           "signal_generator_version": "2.1.3-OPTIMIZED",
           "atr_stop_multiplier": 2.5,
@@ -344,9 +391,620 @@
           "atr_target_multiplier": 7.0
         },
         "estimated_win_rate": null
+      },
+      {
+        "signal_id": "GBPUSD_SELL_7ec4336e3aa0",
+        "id": "GBPUSD_SELL_7ec4336e3aa0",
+        "pair": "GBPUSD",
+        "direction": "SELL",
+        "score": 66,
+        "technical_score": 66,
+        "sentiment_score": 0,
+        "confidence": "STRONG",
+        "tier": "B",
+        "rsi": 31.9,
+        "adx": 37.5,
+        "atr": 0.00157,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.34541,
+        "sl": 1.34932,
+        "tp": 1.33445,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-19T16:01:17.471756+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-19T16:01:17.471756+00:00",
+          "expires_at": "2026-02-19T16:16:17.471756+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "GBPUSD_SELL_7ec4336e3aa0",
+        "id": "GBPUSD_SELL_7ec4336e3aa0",
+        "pair": "GBPUSD",
+        "direction": "SELL",
+        "score": 66,
+        "technical_score": 66,
+        "sentiment_score": 0,
+        "confidence": "STRONG",
+        "tier": "B",
+        "rsi": 31.9,
+        "adx": 37.5,
+        "atr": 0.00157,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.34541,
+        "sl": 1.34932,
+        "tp": 1.33445,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-19T16:01:17.471756+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-19T16:01:17.471756+00:00",
+          "expires_at": "2026-02-19T16:16:17.471756+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "GBPUSD_SELL_7ec4336e3aa0",
+        "id": "GBPUSD_SELL_7ec4336e3aa0",
+        "pair": "GBPUSD",
+        "direction": "SELL",
+        "score": 66,
+        "technical_score": 66,
+        "sentiment_score": 0,
+        "confidence": "STRONG",
+        "tier": "B",
+        "rsi": 31.9,
+        "adx": 37.5,
+        "atr": 0.00157,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.34541,
+        "sl": 1.34932,
+        "tp": 1.33445,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-19T16:01:17.471756+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-19T16:01:17.471756+00:00",
+          "expires_at": "2026-02-19T16:16:17.471756+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "GBPUSD_SELL_7ec4336e3aa0",
+        "id": "GBPUSD_SELL_7ec4336e3aa0",
+        "pair": "GBPUSD",
+        "direction": "SELL",
+        "score": 66,
+        "technical_score": 66,
+        "sentiment_score": 0,
+        "confidence": "STRONG",
+        "tier": "B",
+        "rsi": 31.9,
+        "adx": 37.5,
+        "atr": 0.00157,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.34541,
+        "sl": 1.34932,
+        "tp": 1.33445,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-19T16:01:17.471756+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-19T16:01:17.471756+00:00",
+          "expires_at": "2026-02-19T16:16:17.471756+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "GBPUSD_SELL_7ec4336e3aa0",
+        "id": "GBPUSD_SELL_7ec4336e3aa0",
+        "pair": "GBPUSD",
+        "direction": "SELL",
+        "score": 66,
+        "technical_score": 66,
+        "sentiment_score": 0,
+        "confidence": "STRONG",
+        "tier": "B",
+        "rsi": 31.9,
+        "adx": 37.5,
+        "atr": 0.00157,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.34541,
+        "sl": 1.34932,
+        "tp": 1.33445,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-19T16:01:17.471756+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-19T16:01:17.471756+00:00",
+          "expires_at": "2026-02-19T16:16:17.471756+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "GBPUSD_SELL_7ec4336e3aa0",
+        "id": "GBPUSD_SELL_7ec4336e3aa0",
+        "pair": "GBPUSD",
+        "direction": "SELL",
+        "score": 66,
+        "technical_score": 66,
+        "sentiment_score": 0,
+        "confidence": "STRONG",
+        "tier": "B",
+        "rsi": 31.9,
+        "adx": 37.5,
+        "atr": 0.00157,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.34541,
+        "sl": 1.34932,
+        "tp": 1.33445,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-19T16:01:17.471756+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-19T16:01:17.471756+00:00",
+          "expires_at": "2026-02-19T16:16:17.471756+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
       }
     ],
     "conservative": [
+      {
+        "signal_id": "GBPUSD_SELL_78fed0dbfbc4",
+        "id": "GBPUSD_SELL_78fed0dbfbc4",
+        "pair": "GBPUSD",
+        "direction": "SELL",
+        "score": 57,
+        "technical_score": 57,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 40.5,
+        "adx": 32.3,
+        "atr": 0.00107,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.3451,
+        "sl": 1.34778,
+        "tp": 1.33759,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-19T16:16:00.266309+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-19T16:16:00.266309+00:00",
+          "expires_at": "2026-02-19T16:31:00.266309+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "GBPUSD_SELL_7ec4336e3aa0",
+        "id": "GBPUSD_SELL_7ec4336e3aa0",
+        "pair": "GBPUSD",
+        "direction": "SELL",
+        "score": 66,
+        "technical_score": 66,
+        "sentiment_score": 0,
+        "confidence": "STRONG",
+        "tier": "B",
+        "rsi": 31.9,
+        "adx": 37.5,
+        "atr": 0.00157,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.34541,
+        "sl": 1.34932,
+        "tp": 1.33445,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-19T16:01:17.471756+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-19T16:01:17.471756+00:00",
+          "expires_at": "2026-02-19T16:16:17.471756+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "GBPUSD_SELL_7ec4336e3aa0",
+        "id": "GBPUSD_SELL_7ec4336e3aa0",
+        "pair": "GBPUSD",
+        "direction": "SELL",
+        "score": 66,
+        "technical_score": 66,
+        "sentiment_score": 0,
+        "confidence": "STRONG",
+        "tier": "B",
+        "rsi": 31.9,
+        "adx": 37.5,
+        "atr": 0.00157,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.34541,
+        "sl": 1.34932,
+        "tp": 1.33445,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-19T16:01:17.471756+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-19T16:01:17.471756+00:00",
+          "expires_at": "2026-02-19T16:16:17.471756+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "GBPUSD_SELL_7ec4336e3aa0",
+        "id": "GBPUSD_SELL_7ec4336e3aa0",
+        "pair": "GBPUSD",
+        "direction": "SELL",
+        "score": 66,
+        "technical_score": 66,
+        "sentiment_score": 0,
+        "confidence": "STRONG",
+        "tier": "B",
+        "rsi": 31.9,
+        "adx": 37.5,
+        "atr": 0.00157,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.34541,
+        "sl": 1.34932,
+        "tp": 1.33445,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-19T16:01:17.471756+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-19T16:01:17.471756+00:00",
+          "expires_at": "2026-02-19T16:16:17.471756+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "GBPUSD_SELL_7ec4336e3aa0",
+        "id": "GBPUSD_SELL_7ec4336e3aa0",
+        "pair": "GBPUSD",
+        "direction": "SELL",
+        "score": 66,
+        "technical_score": 66,
+        "sentiment_score": 0,
+        "confidence": "STRONG",
+        "tier": "B",
+        "rsi": 31.9,
+        "adx": 37.5,
+        "atr": 0.00157,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.34541,
+        "sl": 1.34932,
+        "tp": 1.33445,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-19T16:01:17.471756+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-19T16:01:17.471756+00:00",
+          "expires_at": "2026-02-19T16:16:17.471756+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "GBPUSD_SELL_7ec4336e3aa0",
+        "id": "GBPUSD_SELL_7ec4336e3aa0",
+        "pair": "GBPUSD",
+        "direction": "SELL",
+        "score": 66,
+        "technical_score": 66,
+        "sentiment_score": 0,
+        "confidence": "STRONG",
+        "tier": "B",
+        "rsi": 31.9,
+        "adx": 37.5,
+        "atr": 0.00157,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.34541,
+        "sl": 1.34932,
+        "tp": 1.33445,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-19T16:01:17.471756+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-19T16:01:17.471756+00:00",
+          "expires_at": "2026-02-19T16:16:17.471756+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "GBPUSD_SELL_7ec4336e3aa0",
+        "id": "GBPUSD_SELL_7ec4336e3aa0",
+        "pair": "GBPUSD",
+        "direction": "SELL",
+        "score": 66,
+        "technical_score": 66,
+        "sentiment_score": 0,
+        "confidence": "STRONG",
+        "tier": "B",
+        "rsi": 31.9,
+        "adx": 37.5,
+        "atr": 0.00157,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.34541,
+        "sl": 1.34932,
+        "tp": 1.33445,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-19T16:01:17.471756+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-19T16:01:17.471756+00:00",
+          "expires_at": "2026-02-19T16:16:17.471756+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
       {
         "signal_id": "GBPUSD_SELL_7ec4336e3aa0",
         "id": "GBPUSD_SELL_7ec4336e3aa0",
@@ -1030,6 +1688,31 @@
       "estimated_win_rate": null,
       "timestamp": "2026-02-19T15:01:30.049697+00:00",
       "exit_time": "2026-02-19T15:09:43.806422+00:00"
+    },
+    {
+      "id": "GBPUSD_SELL_7176a42626a5",
+      "signal_id": "GBPUSD_SELL_7176a42626a5",
+      "pair": "GBPUSD",
+      "direction": "SELL",
+      "entry_price": 1.17675,
+      "exit_price": 1.17861,
+      "sl": 1.17861,
+      "tp": 1.17152,
+      "status": "LOSS",
+      "pips": -18.599999999999728,
+      "confidence": "MODERATE",
+      "score": 52,
+      "session": "US",
+      "tier": "C",
+      "eligible_modes": [
+        "aggressive"
+      ],
+      "sentiment_applied": false,
+      "sentiment_score": 0,
+      "sentiment_adjustment": 0.0,
+      "estimated_win_rate": null,
+      "timestamp": "2026-02-19T16:04:12.491447+00:00",
+      "exit_time": "2026-02-19T16:15:58.277182+00:00"
     }
   ],
   "api_usage": {
@@ -1043,23 +1726,23 @@
     }
   },
   "stats": {
-    "total_trades": 93,
-    "win_rate": 29.0,
-    "total_pips": -433.8,
+    "total_trades": 94,
+    "win_rate": 28.7,
+    "total_pips": -452.4,
     "wins": 27,
-    "losses": 66,
-    "expectancy": -4.66
+    "losses": 67,
+    "expectancy": -4.81
   },
   "performance_stats": {
-    "total_trades": 93,
+    "total_trades": 94,
     "wins": 27,
-    "losses": 66,
+    "losses": 67,
     "expired": 20,
-    "win_rate": 29.0,
-    "total_pips": -433.8,
+    "win_rate": 28.7,
+    "total_pips": -452.4,
     "avg_win": 0,
     "avg_loss": 0,
-    "expectancy": -4.66,
+    "expectancy": -4.81,
     "by_mode": {
       "all": {
         "trades": 0,
@@ -1068,10 +1751,10 @@
         "win_rate": 0.0
       },
       "aggressive": {
-        "trades": 93,
+        "trades": 94,
         "wins": 27,
-        "total_pips": -433.82200000001677,
-        "win_rate": 29.0
+        "total_pips": -452.4220000000165,
+        "win_rate": 28.7
       },
       "conservative": {
         "trades": 12,
@@ -1088,18 +1771,18 @@
         "win_rate": 16.7
       },
       "C": {
-        "trades": 75,
+        "trades": 76,
         "wins": 24,
-        "total_pips": -215.31500000001594,
-        "win_rate": 32.0
+        "total_pips": -233.91500000001568,
+        "win_rate": 31.6
       }
     },
     "by_session": {
       "US": {
-        "trades": 21,
+        "trades": 22,
         "wins": 12,
-        "total_pips": 383.48799999999994,
-        "win_rate": 57.1
+        "total_pips": 364.8880000000002,
+        "win_rate": 54.5
       },
       "LATE_US": {
         "trades": 12,
@@ -1128,10 +1811,10 @@
     },
     "by_pair": {
       "GBPUSD": {
-        "trades": 12,
+        "trades": 13,
         "wins": 7,
-        "total_pips": 229.09999999999428,
-        "win_rate": 58.3
+        "total_pips": 210.49999999999454,
+        "win_rate": 53.8
       },
       "GBPJPY": {
         "trades": 75,
@@ -1166,17 +1849,17 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 186.4,
-    "total_risk_pips": 186.40000000000322,
+    "theoretical_max_pips": 462.7,
+    "total_risk_pips": 462.7000000000104,
     "max_daily_risk": 150
   },
   "analytics": {
     "by_pair": {
       "GBPUSD": {
-        "trades": 12,
+        "trades": 13,
         "wins": 7,
-        "total_pips": 229.09999999999428,
-        "win_rate": 58.3
+        "total_pips": 210.49999999999454,
+        "win_rate": 53.8
       },
       "GBPJPY": {
         "trades": 75,
@@ -1211,10 +1894,10 @@
     },
     "by_session": {
       "US": {
-        "trades": 21,
+        "trades": 22,
         "wins": 12,
-        "total_pips": 383.48799999999994,
-        "win_rate": 57.1
+        "total_pips": 364.8880000000002,
+        "win_rate": 54.5
       },
       "LATE_US": {
         "trades": 12,
@@ -1243,10 +1926,10 @@
     },
     "by_confidence": {
       "MODERATE": {
-        "trades": 92,
+        "trades": 93,
         "wins": 27,
-        "total_pips": -397.6080000000156,
-        "win_rate": 29.3
+        "total_pips": -416.2080000000153,
+        "win_rate": 29.0
       },
       "STRONG": {
         "trades": 1,
@@ -1263,10 +1946,10 @@
         "win_rate": 16.7
       },
       "C": {
-        "trades": 75,
+        "trades": 76,
         "wins": 24,
-        "total_pips": -215.31500000001594,
-        "win_rate": 32.0
+        "total_pips": -233.91500000001568,
+        "win_rate": 31.6
       }
     },
     "by_mode": {
@@ -1277,10 +1960,10 @@
         "win_rate": 0.0
       },
       "aggressive": {
-        "trades": 93,
+        "trades": 94,
         "wins": 27,
-        "total_pips": -433.82200000001677,
-        "win_rate": 29.0
+        "total_pips": -452.4220000000165,
+        "win_rate": 28.7
       },
       "conservative": {
         "trades": 12,
@@ -1334,10 +2017,10 @@
         "C_US": {
           "tier": "C",
           "session": "US",
-          "trades": 18,
+          "trades": 19,
           "wins": 10,
-          "total_pips": 246.6880000000008,
-          "win_rate": 55.6
+          "total_pips": 228.08800000000107,
+          "win_rate": 52.6
         },
         "C_OVERLAP": {
           "tier": "C",
@@ -1384,17 +2067,17 @@
         "aggressive_C": {
           "mode": "aggressive",
           "tier": "C",
-          "trades": 75,
+          "trades": 76,
           "wins": 24,
-          "total_pips": -215.31500000001594,
-          "win_rate": 32.0
+          "total_pips": -233.91500000001568,
+          "win_rate": 31.6
         }
       }
     }
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-02-19T16:04:17.474372+00:00",
+    "last_update": "2026-02-19T16:16:04.774976+00:00",
     "signal_only_mode": true,
     "version": "2.1.3-OPTIMIZED"
   }

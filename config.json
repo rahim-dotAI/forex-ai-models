@@ -1,5 +1,5 @@
 {
-  "version": "2.1.4-SCORING",
+  "version": "2.1.4.1-TUNED",
   "mode": "conservative",
   "use_sentiment": false,
   "settings": {
@@ -51,15 +51,24 @@
       "EUROPEAN": 50,
       "US":       50,
       "LATE_US":  55,
-      "OVERLAP":  60,
-      "_note": "v2.1.4: Expanded scoring (max ~110pts). LATE_US lowered 65→55 (was blocking all signals). OVERLAP 999→60 (allow strong signals only). ASIAN 65→60."
+      "OVERLAP":  999,
+      "_note": "v2.1.4.1: OVERLAP blocked (999) - 0% WR, 0/2 in v2.1.4 period (1 loss, 1 expired)"
     },
     "pair_limits": {
       "GBPUSD":  5,
       "GBPJPY":  2,
       "EURGBP":  0,
+      "NZDUSD":  1,
       "default": 3,
-      "_note": "GBPUSD=100%WR(max5), GBPJPY=42%WR(max2), EURGBP=0%WR(blocked)"
+      "_note": "v2.1.4.1: GBPUSD(70%WR,max5), GBPJPY(100%WR@v2.1.4,max2), EURGBP(0%WR,blocked), NZDUSD(0%WR@v2.1.4,max1-monitor)"
+    },
+    "directional_filters": {
+      "GBPUSD": {
+        "allowed_directions": ["BUY"],
+        "blocked_directions": ["SELL"],
+        "reason": "GBPUSD SELL 0/3 wins (-49.7 pips), BUY 2/2 wins (+90.9 pips) in v2.1.4"
+      },
+      "_note": "Block specific directions for pairs with directional bias. Empty = allow both."
     },
     "validation": {
       "max_signal_age_seconds": 900,

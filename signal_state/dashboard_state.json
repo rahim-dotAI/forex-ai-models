@@ -1,8 +1,8 @@
 {
-  "timestamp": "2026-02-23T16:01:27.710211+00:00",
-  "active_signals": 1,
+  "timestamp": "2026-02-23T16:03:54.517846+00:00",
+  "active_signals": 2,
   "active_signals_by_mode": {
-    "aggressive": 1,
+    "aggressive": 2,
     "conservative": 0
   },
   "session": "US",
@@ -21,6 +21,52 @@
   },
   "signals_by_mode": {
     "aggressive": [
+      {
+        "signal_id": "USDJPY_SELL_0060fd0ea84f",
+        "id": "USDJPY_SELL_0060fd0ea84f",
+        "pair": "USDJPY",
+        "direction": "SELL",
+        "score": 53,
+        "technical_score": 53,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 37.2,
+        "adx": 23.6,
+        "atr": 0.12924,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 154.40401,
+        "sl": 154.72712,
+        "tp": 153.4993,
+        "risk_reward": 2.8,
+        "spread": 0.002,
+        "timestamp": "2026-02-23T16:03:49.216287+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "momentum",
+          "market_state": "TRENDING_MODERATE",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-23T16:03:49.216287+00:00",
+          "expires_at": "2026-02-23T16:18:49.216287+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
       {
         "signal_id": "USDJPY_SELL_0e3dd273644e",
         "id": "USDJPY_SELL_0e3dd273644e",
@@ -820,8 +866,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 31.6,
-    "total_risk_pips": 31.561000000002082,
+    "theoretical_max_pips": 63.9,
+    "total_risk_pips": 63.87200000000348,
     "max_daily_risk": 150
   },
   "analytics": {
@@ -1048,7 +1094,7 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-02-23T16:01:27.710263+00:00",
+    "last_update": "2026-02-23T16:03:54.517896+00:00",
     "signal_only_mode": true,
     "version": "2.1.3-OPTIMIZED"
   }

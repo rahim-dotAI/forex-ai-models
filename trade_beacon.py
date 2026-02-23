@@ -1,17 +1,27 @@
 """
-Trade Beacon v2.1.4 - Forex Signal Generator (INSTITUTIONAL GRADE)
+Trade Beacon v2.1.4.1-TUNED - Forex Signal Generator (INSTITUTIONAL GRADE)
 MULTI-MODE EDITION: Generates Aggressive + Conservative signals simultaneously
 with tier-based selective enhancement (sentiment/backtest only on top-tier)
 
-PERFORMANCE OPTIMIZATIONS v2.1.3:
-- Lowered tier thresholds (A+: 75, A: 68, B: 60) to generate quality signals
-- Balanced Conservative/Aggressive thresholds (55/50 instead of 60/60)
-- Added session-specific thresholds (block ASIAN/LATE_US/OVERLAP poor performers)
-- Added pair limits (max 2 GBPJPY, block EURGBP, allow 5 GBPUSD)
-- Increased ATR stop multiplier (2.5x from 2.0x) to reduce stop-outs
-- Increased minimum R:R (2.5 from 2.0) for better risk-adjusted trades
+CHANGES v2.1.4.1-TUNED (performance-based tuning):
+- Blocked OVERLAP session completely (0% WR, threshold 60→999)
+- Added directional filtering: GBPUSD BUY-only (SELL 0/3, BUY 2/2 wins)
+- Limited NZDUSD to 1 signal/day for monitoring (0% WR in v2.1.4)
+- Enhanced filter_pair_limits() to support directional blocking
 
-FIXED: Line 1162 - Changed PERFORMANCE_TRACKER.signals to PERFORMANCE_TRACKER.history.get("signals", [])
+CHANGES v2.1.4-SCORING (Feb 13-18):
+- Expanded scoring system (7 components, max ~110pts vs old ~85pts)
+- Fixed R:R impossibility bug (atr_target 5.0→7.0, RR now 2.8 vs broken 2.0)
+- Fixed RSI counter-scoring (RSI signals now directionally consistent)
+- Lowered min_adx gate (18/20→15/17) for low-volatility days
+- Added per-pair INFO logging (score/ADX/RSI visible in every run)
+
+PERFORMANCE OPTIMIZATIONS v2.1.3:
+- Lowered tier thresholds (A+: 80, A: 68, B: 55) for expanded scoring scale
+- Balanced Conservative/Aggressive thresholds (55/50)
+- Session-specific thresholds (EUROPEAN/US: 50, ASIAN: 60, LATE_US: 55, OVERLAP: 999)
+- Pair limits (GBPJPY: 2, GBPUSD: 5, EURGBP: 0, NZDUSD: 1)
+- ATR multipliers (stop: 2.5x, target: 7.0x → RR=2.8)
 """
 
 import logging
@@ -368,7 +378,7 @@ def classify_signal_tier(score: int) -> str:
     B  = Standard (55-67)          — decent signal, passes session filter
     C  = Entry level (<55)         — weak, only passes lowest thresholds
     
-    v2.1.4-SCORING: Rescaled for expanded scorer that adds momentum+crossover components.
+    v2.1.4.1-TUNED: Rescaled for expanded scorer that adds momentum+crossover components.
     """
     tiers = CONFIG.get("tiers", {})
     ap = tiers.get("A_plus_min_score", 80)
@@ -682,14 +692,18 @@ def resolve_active_signals():
 def filter_pair_limits(signals: List[Dict], config: Dict) -> List[Dict]:
     """
     Limit signals per pair to prevent over-concentration.
-    PERFORMANCE OPTIMIZATION: Prevents flooding (e.g., 33 GBPJPY signals)
+    Also filters by direction if pair has directional bias.
+    v2.1.4.1: Added directional filtering (e.g., GBPUSD BUY-only)
     """
     pair_limits = config.get("advanced", {}).get("pair_limits", {
-        "GBPUSD": 5,    # 100% WR - allow more
-        "GBPJPY": 2,    # 42% WR - limit heavily
-        "EURGBP": 0,    # 0% WR - block completely
-        "default": 3    # Default limit for other pairs
+        "GBPUSD": 5,
+        "GBPJPY": 2,
+        "EURGBP": 0,
+        "NZDUSD": 1,
+        "default": 3
     })
+    
+    directional_filters = config.get("advanced", {}).get("directional_filters", {})
     
     pair_counts = {}
     filtered = []
@@ -697,11 +711,27 @@ def filter_pair_limits(signals: List[Dict], config: Dict) -> List[Dict]:
     # Sort by score to keep best signals
     for sig in sorted(signals, key=lambda x: x['score'], reverse=True):
         pair = sig['pair']
+        direction = sig['direction']
+        
+        # Check directional filter first
+        if pair in directional_filters:
+            pair_filter = directional_filters[pair]
+            allowed = pair_filter.get("allowed_directions", [])
+            blocked = pair_filter.get("blocked_directions", [])
+            reason = pair_filter.get("reason", "directional bias")
+            
+            if blocked and direction in blocked:
+                log.info(f"⛔ Blocked {pair} {direction} ({reason})")
+                continue
+            if allowed and direction not in allowed:
+                log.info(f"⛔ Blocked {pair} {direction} (only {allowed} allowed)")
+                continue
+        
+        # Check pair limit
         limit = pair_limits.get(pair, pair_limits.get("default", 3))
         
-        # Block completely if limit is 0
         if limit == 0:
-            log.info(f"⛔ Blocked {pair} (blocklist - 0% WR)")
+            log.info(f"⛔ Blocked {pair} (blocklist)")
             continue
         
         count = pair_counts.get(pair, 0)
@@ -712,7 +742,7 @@ def filter_pair_limits(signals: List[Dict], config: Dict) -> List[Dict]:
             log.info(f"⚠️ Skipped {pair} (max {limit} signals reached)")
     
     if len(filtered) < len(signals):
-        log.info(f"📊 Pair limits: {len(signals)} → {len(filtered)} signals")
+        log.info(f"📊 Filters applied: {len(signals)} → {len(filtered)} signals")
     
     return filtered
 
@@ -1545,7 +1575,7 @@ def main():
     opt_cfg = optimize_thresholds_if_needed(CONFIG) if CONFIG.get("performance_tuning", {}).get("auto_adjust_thresholds", False) else CONFIG
     opt_mode = opt_cfg["mode"]
     
-    log.info(f"🚀 Trade Beacon v2.1.4-SCORING - {'Generating ALL SIGNALS (Maximum Mode)' if opt_cfg.get('mode') == 'all' else 'Generating ALL signal types'} | Sentiment={'ON' if USE_SENTIMENT else 'OFF'}")
+    log.info(f"🚀 Trade Beacon v2.1.4.1-TUNED - {'Generating ALL SIGNALS (Maximum Mode)' if opt_cfg.get('mode') == 'all' else 'Generating ALL signal types'} | Sentiment={'ON' if USE_SENTIMENT else 'OFF'}")
     log.info(f"📊 Monitoring {len(PAIRS)} pairs")
     if opt_cfg.get("mode") == "all":
         log.info(f"🎯 ALL MODE: Score≥{opt_cfg['settings']['aggressive']['threshold']} ADX≥{opt_cfg['settings']['aggressive']['min_adx']} (No mode filtering)")
@@ -1696,7 +1726,7 @@ def main():
         mode_buckets = split_signals_by_mode(all_new)
         
         print("\n" + "="*100)
-        print(f"🎯 MULTI-MODE SIGNALS (v2.1.4-SCORING - INSTITUTIONAL GRADE)")
+        print(f"🎯 MULTI-MODE SIGNALS (v2.1.4.1-TUNED - INSTITUTIONAL GRADE)")
         print("="*100)
         
         if mode_buckets["aggressive"]:
@@ -1719,7 +1749,7 @@ def main():
         log.info("📄 signals.csv written")
     
     mark_success()
-    log.info("✅ Run completed - v2.1.4-SCORING INSTITUTIONAL GRADE")
+    log.info("✅ Run completed - v2.1.4.1-TUNED INSTITUTIONAL GRADE")
 
 if __name__ == "__main__":
     main()

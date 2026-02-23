@@ -1,8 +1,8 @@
 {
-  "timestamp": "2026-02-23T18:31:31.820672+00:00",
-  "active_signals": 1,
+  "timestamp": "2026-02-23T18:34:45.247668+00:00",
+  "active_signals": 2,
   "active_signals_by_mode": {
-    "aggressive": 1,
+    "aggressive": 2,
     "conservative": 0
   },
   "session": "US",
@@ -21,6 +21,52 @@
   },
   "signals_by_mode": {
     "aggressive": [
+      {
+        "signal_id": "USDCAD_BUY_cc8a056dc4ef",
+        "id": "USDCAD_BUY_cc8a056dc4ef",
+        "pair": "USDCAD",
+        "direction": "BUY",
+        "score": 51,
+        "technical_score": 51,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 58.6,
+        "adx": 20.6,
+        "atr": 0.0011,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.3692,
+        "sl": 1.36645,
+        "tp": 1.3769,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-23T18:34:40.656187+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_MODERATE",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-23T18:34:40.656187+00:00",
+          "expires_at": "2026-02-23T18:49:40.656187+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
       {
         "signal_id": "USDCAD_BUY_0f8d496643d2",
         "id": "USDCAD_BUY_0f8d496643d2",
@@ -820,8 +866,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 27.3,
-    "total_risk_pips": 27.29999999999899,
+    "theoretical_max_pips": 54.8,
+    "total_risk_pips": 54.799999999999294,
     "max_daily_risk": 150
   },
   "analytics": {
@@ -1048,7 +1094,7 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-02-23T18:31:31.820774+00:00",
+    "last_update": "2026-02-23T18:34:45.247723+00:00",
     "signal_only_mode": true,
     "version": "2.1.3-OPTIMIZED"
   }

@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-02-25T20:31:04.515638+00:00",
-  "active_signals": 1,
+  "timestamp": "2026-02-25T20:34:46.167815+00:00",
+  "active_signals": 2,
   "active_signals_by_mode": {
-    "aggressive": 1,
-    "conservative": 0
+    "aggressive": 2,
+    "conservative": 1
   },
   "session": "US",
   "mode": "conservative",
@@ -21,6 +21,53 @@
   },
   "signals_by_mode": {
     "aggressive": [
+      {
+        "signal_id": "GBPUSD_BUY_6cb2474255f6",
+        "id": "GBPUSD_BUY_6cb2474255f6",
+        "pair": "GBPUSD",
+        "direction": "BUY",
+        "score": 57,
+        "technical_score": 57,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 61.3,
+        "adx": 32.4,
+        "atr": 0.0006,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.35567,
+        "sl": 1.35419,
+        "tp": 1.35985,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-25T20:34:41.158276+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-25T20:34:41.158276+00:00",
+          "expires_at": "2026-02-25T20:49:41.158276+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
       {
         "signal_id": "GBPUSD_BUY_dfb48d39548d",
         "id": "GBPUSD_BUY_dfb48d39548d",
@@ -68,7 +115,55 @@
         "estimated_win_rate": null
       }
     ],
-    "conservative": []
+    "conservative": [
+      {
+        "signal_id": "GBPUSD_BUY_6cb2474255f6",
+        "id": "GBPUSD_BUY_6cb2474255f6",
+        "pair": "GBPUSD",
+        "direction": "BUY",
+        "score": 57,
+        "technical_score": 57,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 61.3,
+        "adx": 32.4,
+        "atr": 0.0006,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.35567,
+        "sl": 1.35419,
+        "tp": 1.35985,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-25T20:34:41.158276+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-25T20:34:41.158276+00:00",
+          "expires_at": "2026-02-25T20:49:41.158276+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      }
+    ]
   },
   "historical_signals": [
     {
@@ -593,8 +688,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 14.1,
-    "total_risk_pips": 14.100000000001334,
+    "theoretical_max_pips": 28.9,
+    "total_risk_pips": 28.900000000000592,
     "max_daily_risk": 150
   },
   "analytics": {
@@ -821,7 +916,7 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-02-25T20:31:04.515678+00:00",
+    "last_update": "2026-02-25T20:34:46.167886+00:00",
     "signal_only_mode": true,
     "version": "2.1.3-OPTIMIZED"
   }

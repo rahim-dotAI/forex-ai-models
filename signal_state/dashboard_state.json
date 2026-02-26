@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-02-26T16:31:18.904510+00:00",
-  "active_signals": 1,
+  "timestamp": "2026-02-26T16:46:02.068421+00:00",
+  "active_signals": 2,
   "active_signals_by_mode": {
-    "aggressive": 1,
-    "conservative": 0
+    "aggressive": 2,
+    "conservative": 1
   },
   "session": "US",
   "mode": "conservative",
@@ -22,29 +22,30 @@
   "signals_by_mode": {
     "aggressive": [
       {
-        "signal_id": "USDCAD_SELL_0d8aeadbaf07",
-        "id": "USDCAD_SELL_0d8aeadbaf07",
-        "pair": "USDCAD",
+        "signal_id": "NZDUSD_SELL_1312a7ddb3c0",
+        "id": "NZDUSD_SELL_1312a7ddb3c0",
+        "pair": "NZDUSD",
         "direction": "SELL",
-        "score": 52,
-        "technical_score": 52,
+        "score": 59,
+        "technical_score": 59,
         "sentiment_score": 0,
         "confidence": "MODERATE",
-        "tier": "C",
-        "rsi": 44.8,
-        "adx": 27.8,
-        "atr": 0.00048,
+        "tier": "B",
+        "rsi": 39.4,
+        "adx": 28.8,
+        "atr": 0.00052,
         "volume_ratio": 0,
         "session": "US",
-        "entry_price": 0.59794,
-        "sl": 0.59915,
-        "tp": 0.59456,
+        "entry_price": 0.59723,
+        "sl": 0.59852,
+        "tp": 0.59362,
         "risk_reward": 2.8,
         "spread": 0.0002,
-        "timestamp": "2026-02-26T16:31:14.239028+00:00",
+        "timestamp": "2026-02-26T16:45:57.384587+00:00",
         "status": "OPEN",
         "hold_time": "SWING",
         "eligible_modes": [
+          "conservative",
           "aggressive"
         ],
         "freshness": {
@@ -58,8 +59,54 @@
           "market_state": "TRENDING_STRONG",
           "timeframe": "15m",
           "valid_for_minutes": 15,
-          "generated_at": "2026-02-26T16:31:14.239028+00:00",
-          "expires_at": "2026-02-26T16:46:14.239028+00:00",
+          "generated_at": "2026-02-26T16:45:57.384587+00:00",
+          "expires_at": "2026-02-26T17:00:57.384587+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
+      {
+        "signal_id": "AUDUSD_SELL_5919b34e5e06",
+        "id": "AUDUSD_SELL_5919b34e5e06",
+        "pair": "AUDUSD",
+        "direction": "SELL",
+        "score": 50,
+        "technical_score": 50,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "C",
+        "rsi": 38.9,
+        "adx": 34.9,
+        "atr": 0.0007,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 0.70907,
+        "sl": 0.71083,
+        "tp": 0.70414,
+        "risk_reward": 2.8,
+        "spread": 0.00018,
+        "timestamp": "2026-02-26T16:45:57.447897+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "breakout",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-26T16:45:57.447897+00:00",
+          "expires_at": "2026-02-26T17:00:57.447897+00:00",
           "session_active": true,
           "signal_generator_version": "2.1.3-OPTIMIZED",
           "atr_stop_multiplier": 2.5,
@@ -68,7 +115,55 @@
         "estimated_win_rate": null
       }
     ],
-    "conservative": []
+    "conservative": [
+      {
+        "signal_id": "NZDUSD_SELL_1312a7ddb3c0",
+        "id": "NZDUSD_SELL_1312a7ddb3c0",
+        "pair": "NZDUSD",
+        "direction": "SELL",
+        "score": 59,
+        "technical_score": 59,
+        "sentiment_score": 0,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 39.4,
+        "adx": 28.8,
+        "atr": 0.00052,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 0.59723,
+        "sl": 0.59852,
+        "tp": 0.59362,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-02-26T16:45:57.384587+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-02-26T16:45:57.384587+00:00",
+          "expires_at": "2026-02-26T17:00:57.384587+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.3-OPTIMIZED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      }
+    ]
   },
   "historical_signals": [
     {
@@ -355,6 +450,31 @@
       "estimated_win_rate": null,
       "timestamp": "2026-02-25T12:01:24.532361+00:00",
       "exit_time": "2026-02-25T12:15:59.255696+00:00"
+    },
+    {
+      "id": "USDCAD_SELL_0d8aeadbaf07",
+      "signal_id": "USDCAD_SELL_0d8aeadbaf07",
+      "pair": "USDCAD",
+      "direction": "SELL",
+      "entry_price": 0.59794,
+      "exit_price": 0.59915,
+      "sl": 0.59915,
+      "tp": 0.59456,
+      "status": "LOSS",
+      "pips": -12.099999999999334,
+      "confidence": "MODERATE",
+      "score": 52,
+      "session": "US",
+      "tier": "C",
+      "eligible_modes": [
+        "aggressive"
+      ],
+      "sentiment_applied": false,
+      "sentiment_score": 0,
+      "sentiment_adjustment": 0.0,
+      "estimated_win_rate": null,
+      "timestamp": "2026-02-26T16:31:14.239028+00:00",
+      "exit_time": "2026-02-26T16:45:55.697769+00:00"
     }
   ],
   "api_usage": {
@@ -368,23 +488,23 @@
     }
   },
   "stats": {
-    "total_trades": 105,
-    "win_rate": 35.2,
-    "total_pips": 488.5,
+    "total_trades": 106,
+    "win_rate": 34.9,
+    "total_pips": 476.4,
     "wins": 37,
-    "losses": 68,
-    "expectancy": 4.65
+    "losses": 69,
+    "expectancy": 4.49
   },
   "performance_stats": {
-    "total_trades": 105,
+    "total_trades": 106,
     "wins": 37,
-    "losses": 68,
+    "losses": 69,
     "expired": 20,
-    "win_rate": 35.2,
-    "total_pips": 488.5,
+    "win_rate": 34.9,
+    "total_pips": 476.4,
     "avg_win": 0,
     "avg_loss": 0,
-    "expectancy": 4.65,
+    "expectancy": 4.49,
     "by_mode": {
       "all": {
         "trades": 0,
@@ -393,10 +513,10 @@
         "win_rate": 0.0
       },
       "aggressive": {
-        "trades": 105,
+        "trades": 106,
         "wins": 37,
-        "total_pips": 488.4599999999842,
-        "win_rate": 35.2
+        "total_pips": 476.35999999998484,
+        "win_rate": 34.9
       },
       "conservative": {
         "trades": 22,
@@ -413,18 +533,18 @@
         "win_rate": 42.9
       },
       "C": {
-        "trades": 77,
+        "trades": 78,
         "wins": 25,
-        "total_pips": -199.7150000000159,
-        "win_rate": 32.5
+        "total_pips": -211.81500000001523,
+        "win_rate": 32.1
       }
     },
     "by_session": {
       "US": {
-        "trades": 23,
+        "trades": 24,
         "wins": 13,
-        "total_pips": 421.5880000000008,
-        "win_rate": 56.5
+        "total_pips": 409.4880000000015,
+        "win_rate": 54.2
       },
       "LATE_US": {
         "trades": 12,
@@ -477,9 +597,9 @@
         "win_rate": 0.0
       },
       "USDCAD": {
-        "trades": 1,
+        "trades": 2,
         "wins": 0,
-        "total_pips": -18.700000000000383,
+        "total_pips": -30.799999999999716,
         "win_rate": 0.0
       },
       "NZDUSD": {
@@ -491,8 +611,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 12.1,
-    "total_risk_pips": 12.099999999999334,
+    "theoretical_max_pips": 30.5,
+    "total_risk_pips": 30.49999999999997,
     "max_daily_risk": 150
   },
   "analytics": {
@@ -522,9 +642,9 @@
         "win_rate": 0.0
       },
       "USDCAD": {
-        "trades": 1,
+        "trades": 2,
         "wins": 0,
-        "total_pips": -18.700000000000383,
+        "total_pips": -30.799999999999716,
         "win_rate": 0.0
       },
       "NZDUSD": {
@@ -536,10 +656,10 @@
     },
     "by_session": {
       "US": {
-        "trades": 23,
+        "trades": 24,
         "wins": 13,
-        "total_pips": 421.5880000000008,
-        "win_rate": 56.5
+        "total_pips": 409.4880000000015,
+        "win_rate": 54.2
       },
       "LATE_US": {
         "trades": 12,
@@ -568,10 +688,10 @@
     },
     "by_confidence": {
       "MODERATE": {
-        "trades": 101,
+        "trades": 102,
         "wins": 34,
-        "total_pips": 157.45299999998753,
-        "win_rate": 33.7
+        "total_pips": 145.35299999998819,
+        "win_rate": 33.3
       },
       "STRONG": {
         "trades": 4,
@@ -588,10 +708,10 @@
         "win_rate": 42.9
       },
       "C": {
-        "trades": 77,
+        "trades": 78,
         "wins": 25,
-        "total_pips": -199.7150000000159,
-        "win_rate": 32.5
+        "total_pips": -211.81500000001523,
+        "win_rate": 32.1
       }
     },
     "by_mode": {
@@ -602,10 +722,10 @@
         "win_rate": 0.0
       },
       "aggressive": {
-        "trades": 105,
+        "trades": 106,
         "wins": 37,
-        "total_pips": 488.4599999999842,
-        "win_rate": 35.2
+        "total_pips": 476.35999999998484,
+        "win_rate": 34.9
       },
       "conservative": {
         "trades": 22,
@@ -659,10 +779,10 @@
         "C_US": {
           "tier": "C",
           "session": "US",
-          "trades": 19,
+          "trades": 20,
           "wins": 10,
-          "total_pips": 228.08800000000107,
-          "win_rate": 52.6
+          "total_pips": 215.98800000000173,
+          "win_rate": 50.0
         },
         "C_OVERLAP": {
           "tier": "C",
@@ -709,17 +829,17 @@
         "aggressive_C": {
           "mode": "aggressive",
           "tier": "C",
-          "trades": 77,
+          "trades": 78,
           "wins": 25,
-          "total_pips": -199.7150000000159,
-          "win_rate": 32.5
+          "total_pips": -211.81500000001523,
+          "win_rate": 32.1
         }
       }
     }
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-02-26T16:31:18.904563+00:00",
+    "last_update": "2026-02-26T16:46:02.068479+00:00",
     "signal_only_mode": true,
     "version": "2.1.3-OPTIMIZED"
   }

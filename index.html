@@ -818,27 +818,19 @@
     }
 
     function hideTip() {
-      _ttTimeout = setTimeout(() => { if (_tt) _tt.classList.remove('visible'); }, 150);
+      // kept for compatibility but not used in click-only mode
     }
 
     function attachIconListeners() {
       document.querySelectorAll('.info-icon').forEach(icon => {
         if (icon.dataset.bound) return;
         icon.dataset.bound = '1';
-        // Hover (desktop)
-        icon.addEventListener('mouseenter', () => showTip(icon, icon.dataset.tip));
-        icon.addEventListener('mouseleave', hideTip);
-        // Click (mobile / first-click-no-hover)
-        // Use pointerup so it fires before any document pointerdown close handler
-        icon.addEventListener('pointerup', e => {
+        icon.addEventListener('click', e => {
           e.stopPropagation();
-          // If already showing THIS tip, hide it; otherwise show
-          const showing = _tt && _tt.classList.contains('visible');
-          const same = _ttActive === icon.dataset.tip;
-          if (showing && same) {
-            _tt.classList.remove('visible');
-            _ttActive = null;
-          } else {
+          const alreadyOpen = _tt.classList.contains('visible') && _ttActive === icon.dataset.tip;
+          _tt.classList.remove('visible');
+          _ttActive = null;
+          if (!alreadyOpen) {
             showTip(icon, icon.dataset.tip);
           }
         });
@@ -849,13 +841,10 @@
       _tt      = document.getElementById('globalTooltip');
       _ttTitle = document.getElementById('tooltipTitle');
       _ttBody  = document.getElementById('tooltipBody');
-      // Keep open when hovering the tooltip box itself
-      _tt.addEventListener('mouseenter', () => clearTimeout(_ttTimeout));
-      _tt.addEventListener('mouseleave', hideTip);
-      // Close when clicking anywhere outside an info-icon
-      document.addEventListener('pointerdown', e => {
+      // Close when clicking anywhere outside
+      document.addEventListener('click', e => {
         if (!e.target.closest('.info-icon') && !e.target.closest('#globalTooltip')) {
-          if (_tt) _tt.classList.remove('visible');
+          _tt.classList.remove('visible');
           _ttActive = null;
         }
       });

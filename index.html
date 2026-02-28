@@ -793,59 +793,42 @@
     /* ============================================
        TOOLTIP ENGINE
     ============================================ */
-    const tooltip = document.getElementById('globalTooltip');
-    const tipTitle = document.getElementById('tooltipTitle');
-    const tipBody = document.getElementById('tooltipBody');
-    let tipTimeout = null;
+    let _tt, _ttTitle, _ttBody, _ttTimeout;
 
     function showTip(el, tipKey) {
       const def = TIPS[tipKey];
-      if (!def) return;
-      clearTimeout(tipTimeout);
-      tipTitle.textContent = def.title;
-      tipBody.innerHTML = def.body;
-
-      // Position
+      if (!def || !_tt) return;
+      clearTimeout(_ttTimeout);
+      _ttTitle.textContent = def.title;
+      _ttBody.innerHTML = def.body;
       const rect = el.getBoundingClientRect();
       const tw = 300;
-      const th = 200; // estimated
-
-      // Prefer below, flip above if near bottom
       let top = rect.bottom + window.scrollY + 10;
       let left = rect.left + window.scrollX - (tw / 2) + (rect.width / 2);
-
-      // Clamp horizontal
       left = Math.max(12, Math.min(left, window.innerWidth - tw - 12));
-
-      // Flip above if needed
-      const spaceBelow = window.innerHeight - rect.bottom;
-      if (spaceBelow < 220) {
-        top = rect.top + window.scrollY - th - 10;
+      if (window.innerHeight - rect.bottom < 220) {
+        top = rect.top + window.scrollY - 210;
       }
-
-      tooltip.style.top = top + 'px';
-      tooltip.style.left = left + 'px';
-      tooltip.style.width = tw + 'px';
-      tooltip.classList.add('visible');
+      _tt.style.top = top + 'px';
+      _tt.style.left = left + 'px';
+      _tt.style.width = tw + 'px';
+      _tt.classList.add('visible');
     }
 
     function hideTip() {
-      tipTimeout = setTimeout(() => tooltip.classList.remove('visible'), 120);
+      _ttTimeout = setTimeout(() => { if (_tt) _tt.classList.remove('visible'); }, 150);
     }
 
-    // Attach to all static info icons on page load
     function attachIconListeners() {
       document.querySelectorAll('.info-icon').forEach(icon => {
-        if (icon.dataset.listenerAttached) return;
-        icon.dataset.listenerAttached = 'true';
-        // Desktop hover
+        if (icon.dataset.bound) return;
+        icon.dataset.bound = '1';
         icon.addEventListener('mouseenter', () => showTip(icon, icon.dataset.tip));
         icon.addEventListener('mouseleave', hideTip);
-        // Mobile / click toggle
         icon.addEventListener('click', e => {
           e.stopPropagation();
-          if (tooltip.classList.contains('visible')) {
-            tooltip.classList.remove('visible');
+          if (_tt && _tt.classList.contains('visible')) {
+            _tt.classList.remove('visible');
           } else {
             showTip(icon, icon.dataset.tip);
           }
@@ -853,22 +836,15 @@
       });
     }
 
-    // Keep tooltip open when cursor moves onto it
-    tooltip.addEventListener('mouseenter', () => clearTimeout(tipTimeout));
-    tooltip.addEventListener('mouseleave', hideTip);
-
-    // Close on outside click
-    document.addEventListener('click', () => tooltip.classList.remove('visible'));
-
-    // Run on load for static icons
-    attachIconListeners();
-
-    // Also re-run after dynamic card renders (signal cards inject info icons)
-    const _origCreate = lucide.createIcons.bind(lucide);
-    lucide.createIcons = function(...args) {
-      _origCreate(...args);
+    function initTooltips() {
+      _tt      = document.getElementById('globalTooltip');
+      _ttTitle = document.getElementById('tooltipTitle');
+      _ttBody  = document.getElementById('tooltipBody');
+      _tt.addEventListener('mouseenter', () => clearTimeout(_ttTimeout));
+      _tt.addEventListener('mouseleave', hideTip);
+      document.addEventListener('click', () => { if (_tt) _tt.classList.remove('visible'); });
       attachIconListeners();
-    };
+    }
 
     /* ============================================
        DASHBOARD LOGIC (unchanged)
@@ -878,6 +854,7 @@
     let signalState = {};
     
     document.addEventListener('DOMContentLoaded', () => {
+      initTooltips();
       mode = localStorage.getItem('tbMode') || 'aggressive';
       updateModeBtns();
       checkMarketStatus();
@@ -1063,6 +1040,7 @@
       if (cards.length === 0) { showEmpty('signalsGrid','radio','No signals',`No ${mode} signals`); return; }
       g.innerHTML = cards.map(state => createSignalCard(state, justUpdated.includes(`${state.pair}_${state.direction}`))).join('');
       lucide.createIcons();
+      attachIconListeners();
       attachIconListeners();
       if (justUpdated.length > 0) {
         setTimeout(() => {

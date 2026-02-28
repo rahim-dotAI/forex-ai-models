@@ -794,6 +794,7 @@
     function tipClick(el, e) {
       e.stopPropagation();
       e.preventDefault();
+      alert('tipClick fired! tip=' + el.dataset.tip + ' top=' + el.getBoundingClientRect().top + ' scrollY=' + window.scrollY);
       const tt = document.getElementById('globalTooltip');
       const ttTitle = document.getElementById('tooltipTitle');
       const ttBody = document.getElementById('tooltipBody');

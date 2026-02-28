@@ -91,12 +91,10 @@
       box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 20px rgba(79,172,254,0.15);
       pointer-events: auto;
       opacity: 0;
-      transform: translateY(6px) scale(0.97);
-      transition: opacity 0.18s ease, transform 0.18s ease;
+      visibility: hidden;
     }
     .tooltip-box.visible {
-      opacity: 1;
-      transform: translateY(0) scale(1);
+      /* positioning handled by tipClick via requestAnimationFrame */
     }
     .tooltip-title {
       font-family: 'Orbitron', monospace;
@@ -795,12 +793,13 @@
     ============================================ */
     function tipClick(el, e) {
       e.stopPropagation();
+      e.preventDefault();
       const tt = document.getElementById('globalTooltip');
       const ttTitle = document.getElementById('tooltipTitle');
       const ttBody = document.getElementById('tooltipBody');
       const def = TIPS[el.dataset.tip];
-      if (!def) { console.warn('No tip for', el.dataset.tip); return; }
-      // If same icon clicked again while visible, close it
+      if (!def) return;
+      // Toggle off if same icon
       if (tt.classList.contains('visible') && tt.dataset.active === el.dataset.tip) {
         tt.classList.remove('visible');
         tt.dataset.active = '';
@@ -808,30 +807,37 @@
       }
       ttTitle.textContent = def.title;
       ttBody.innerHTML = def.body;
-      const r = el.getBoundingClientRect();
-      const tw = 300;
-      let top = r.bottom + window.scrollY + 12;
-      let left = r.left + window.scrollX - (tw / 2) + (r.width / 2);
-      left = Math.max(12, Math.min(left, window.innerWidth - tw - 12));
-      if (window.innerHeight - r.bottom < 240) top = r.top + window.scrollY - 230;
-      tt.style.top = top + 'px';
-      tt.style.left = left + 'px';
-      tt.style.width = tw + 'px';
-      tt.dataset.active = el.dataset.tip;
+      tt.style.visibility = 'hidden';
+      tt.style.opacity = '0';
       tt.classList.add('visible');
+      // Measure tooltip after render, then position it
+      requestAnimationFrame(function() {
+        const r = el.getBoundingClientRect();
+        const tw = tt.offsetWidth || 300;
+        const th = tt.offsetHeight || 200;
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        // Try below first, then above
+        let top, left;
+        if (r.bottom + th + 12 < vh) {
+          top = r.bottom + window.scrollY + 12;
+        } else {
+          top = r.top + window.scrollY - th - 12;
+        }
+        left = r.left + window.scrollX - (tw / 2) + (r.width / 2);
+        left = Math.max(12, Math.min(left, vw - tw - 12));
+        top = Math.max(window.scrollY + 8, top);
+        tt.style.top = top + 'px';
+        tt.style.left = left + 'px';
+        tt.style.width = '300px';
+        tt.style.visibility = 'visible';
+        tt.style.opacity = '1';
+        tt.dataset.active = el.dataset.tip;
+      });
     }
 
     function attachIconListeners() { /* handled by inline onclick */ }
-    function initTooltips() {
-      // Close when clicking outside
-      document.addEventListener('click', function(e) {
-        if (!e.target.closest('.info-icon') && !e.target.closest('#globalTooltip')) {
-          const tt = document.getElementById('globalTooltip');
-          tt.classList.remove('visible');
-          tt.dataset.active = '';
-        }
-      });
-    }
+    function initTooltips() { /* inline onclick handles everything */ }
 
     /* ============================================
        DASHBOARD LOGIC (unchanged)

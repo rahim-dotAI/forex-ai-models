@@ -89,7 +89,7 @@
       border-radius: 12px;
       padding: 14px 16px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 20px rgba(79,172,254,0.15);
-      pointer-events: none;
+      pointer-events: auto;
       opacity: 0;
       transform: translateY(6px) scale(0.97);
       transition: opacity 0.18s ease, transform 0.18s ease;
@@ -833,31 +833,42 @@
       tipTimeout = setTimeout(() => tooltip.classList.remove('visible'), 120);
     }
 
-    document.addEventListener('mouseover', e => {
-      const icon = e.target.closest('.info-icon');
-      if (icon) showTip(icon, icon.dataset.tip);
-    });
-    document.addEventListener('mouseout', e => {
-      if (e.target.closest('.info-icon')) hideTip();
-    });
-    // Keep tooltip visible when hovering tooltip itself
+    // Attach to all static info icons on page load
+    function attachIconListeners() {
+      document.querySelectorAll('.info-icon').forEach(icon => {
+        if (icon.dataset.listenerAttached) return;
+        icon.dataset.listenerAttached = 'true';
+        // Desktop hover
+        icon.addEventListener('mouseenter', () => showTip(icon, icon.dataset.tip));
+        icon.addEventListener('mouseleave', hideTip);
+        // Mobile / click toggle
+        icon.addEventListener('click', e => {
+          e.stopPropagation();
+          if (tooltip.classList.contains('visible')) {
+            tooltip.classList.remove('visible');
+          } else {
+            showTip(icon, icon.dataset.tip);
+          }
+        });
+      });
+    }
+
+    // Keep tooltip open when cursor moves onto it
     tooltip.addEventListener('mouseenter', () => clearTimeout(tipTimeout));
     tooltip.addEventListener('mouseleave', hideTip);
 
-    // Touch support
-    document.addEventListener('click', e => {
-      const icon = e.target.closest('.info-icon');
-      if (icon) {
-        e.stopPropagation();
-        if (tooltip.classList.contains('visible')) {
-          tooltip.classList.remove('visible');
-        } else {
-          showTip(icon, icon.dataset.tip);
-        }
-        return;
-      }
-      tooltip.classList.remove('visible');
-    });
+    // Close on outside click
+    document.addEventListener('click', () => tooltip.classList.remove('visible'));
+
+    // Run on load for static icons
+    attachIconListeners();
+
+    // Also re-run after dynamic card renders (signal cards inject info icons)
+    const _origCreate = lucide.createIcons.bind(lucide);
+    lucide.createIcons = function(...args) {
+      _origCreate(...args);
+      attachIconListeners();
+    };
 
     /* ============================================
        DASHBOARD LOGIC (unchanged)
@@ -1052,6 +1063,7 @@
       if (cards.length === 0) { showEmpty('signalsGrid','radio','No signals',`No ${mode} signals`); return; }
       g.innerHTML = cards.map(state => createSignalCard(state, justUpdated.includes(`${state.pair}_${state.direction}`))).join('');
       lucide.createIcons();
+      attachIconListeners();
       if (justUpdated.length > 0) {
         setTimeout(() => {
           const firstUpdated = document.querySelector('.card.just-updated');

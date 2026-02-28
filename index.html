@@ -791,9 +791,12 @@
     /* ============================================
        TOOLTIP ENGINE
     ============================================ */
+    let _tipJustOpened = false;
     function tipClick(el, e) {
       e.stopPropagation();
       e.preventDefault();
+      _tipJustOpened = true;
+      setTimeout(() => { _tipJustOpened = false; }, 50);
       const tt = document.getElementById('globalTooltip');
       const ttTitle = document.getElementById('tooltipTitle');
       const ttBody = document.getElementById('tooltipBody');
@@ -836,7 +839,18 @@
     }
 
     function attachIconListeners() { /* handled by inline onclick */ }
-    function initTooltips() { /* inline onclick handles everything */ }
+    function initTooltips() {
+      document.addEventListener('click', function(e) {
+        if (_tipJustOpened) return;
+        if (!e.target.closest('.info-icon') && !e.target.closest('#globalTooltip')) {
+          const tt = document.getElementById('globalTooltip');
+          tt.classList.remove('visible');
+          tt.style.opacity = '0';
+          tt.style.visibility = 'hidden';
+          tt.dataset.active = '';
+        }
+      });
+    }
 
     /* ============================================
        DASHBOARD LOGIC (unchanged)

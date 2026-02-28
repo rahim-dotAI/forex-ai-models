@@ -825,15 +825,18 @@
       // Single delegated listener on document - catches every click on every info-icon
       // regardless of parent overflow, stacking context, or when element was added to DOM
       document.addEventListener('click', function(e) {
+        console.log('CLICK TARGET:', e.target, 'closest info-icon:', e.target.closest('.info-icon'));
         const icon = e.target.closest('.info-icon');
         if (icon) {
           e.stopPropagation();
           const tipKey = icon.dataset.tip;
+          console.log('INFO ICON CLICKED, tipKey:', tipKey, '_tt:', _tt, 'TIPS[tipKey]:', TIPS[tipKey]);
           if (_ttActive === tipKey && _tt.classList.contains('visible')) {
             _tt.classList.remove('visible');
             _ttActive = null;
           } else {
             showTip(icon, tipKey);
+            console.log('showTip called, _tt classes:', _tt.className, '_tt style:', _tt.style.top, _tt.style.left);
           }
           return;
         }

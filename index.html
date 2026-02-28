@@ -166,7 +166,6 @@
       border-radius: 20px;
       padding: 32px;
       margin-bottom: 32px;
-      overflow: hidden;
       box-shadow: var(--shadow);
       position: relative;
     }
@@ -230,7 +229,7 @@
       border: 1px solid var(--border);
       border-radius: 16px; padding: 24px;
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative; overflow: hidden;
+      position: relative;
     }
     .metric::before {
       content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
@@ -297,7 +296,7 @@
       background: linear-gradient(135deg, var(--surface), var(--elevated));
       border: 1px solid var(--border);
       border-radius: 16px; padding: 24px;
-      position: relative; overflow: hidden;
+      position: relative;
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .card::before {
@@ -794,21 +793,20 @@
     /* ============================================
        TOOLTIP ENGINE
     ============================================ */
-    let _tt, _ttTitle, _ttBody, _ttTimeout, _ttActive;
+    let _tt, _ttTitle, _ttBody, _ttActive;
 
     function showTip(el, tipKey) {
       const def = TIPS[tipKey];
       if (!def || !_tt) return;
-      clearTimeout(_ttTimeout);
       _ttTitle.textContent = def.title;
       _ttBody.innerHTML = def.body;
       const rect = el.getBoundingClientRect();
       const tw = 300;
-      let top = rect.bottom + window.scrollY + 10;
+      let top = rect.bottom + window.scrollY + 12;
       let left = rect.left + window.scrollX - (tw / 2) + (rect.width / 2);
       left = Math.max(12, Math.min(left, window.innerWidth - tw - 12));
-      if (window.innerHeight - rect.bottom < 220) {
-        top = rect.top + window.scrollY - 210;
+      if (window.innerHeight - rect.bottom < 240) {
+        top = rect.top + window.scrollY - 220;
       }
       _tt.style.top = top + 'px';
       _tt.style.left = left + 'px';
@@ -817,38 +815,34 @@
       _ttActive = tipKey;
     }
 
-    function hideTip() {
-      // kept for compatibility but not used in click-only mode
-    }
-
-    function attachIconListeners() {
-      document.querySelectorAll('.info-icon').forEach(icon => {
-        if (icon.dataset.bound) return;
-        icon.dataset.bound = '1';
-        icon.addEventListener('click', e => {
-          e.stopPropagation();
-          const alreadyOpen = _tt.classList.contains('visible') && _ttActive === icon.dataset.tip;
-          _tt.classList.remove('visible');
-          _ttActive = null;
-          if (!alreadyOpen) {
-            showTip(icon, icon.dataset.tip);
-          }
-        });
-      });
-    }
+    function attachIconListeners() { /* handled by delegation */ }
 
     function initTooltips() {
       _tt      = document.getElementById('globalTooltip');
       _ttTitle = document.getElementById('tooltipTitle');
       _ttBody  = document.getElementById('tooltipBody');
-      // Close when clicking anywhere outside
-      document.addEventListener('click', e => {
-        if (!e.target.closest('.info-icon') && !e.target.closest('#globalTooltip')) {
+
+      // Single delegated listener on document - catches every click on every info-icon
+      // regardless of parent overflow, stacking context, or when element was added to DOM
+      document.addEventListener('click', function(e) {
+        const icon = e.target.closest('.info-icon');
+        if (icon) {
+          e.stopPropagation();
+          const tipKey = icon.dataset.tip;
+          if (_ttActive === tipKey && _tt.classList.contains('visible')) {
+            _tt.classList.remove('visible');
+            _ttActive = null;
+          } else {
+            showTip(icon, tipKey);
+          }
+          return;
+        }
+        // Click outside — close tooltip
+        if (!e.target.closest('#globalTooltip')) {
           _tt.classList.remove('visible');
           _ttActive = null;
         }
       });
-      attachIconListeners();
     }
 
     /* ============================================

@@ -238,6 +238,7 @@
       transform: scaleX(0); transition: transform 0.4s;
     }
     .metric:hover { transform: translateY(-8px); border-color: rgba(255,255,255,0.2); box-shadow: var(--glow-orange); }
+    .metric:hover .info-icon { transform: none; }
     .metric:hover::before { transform: scaleX(1); }
     .metric-icon {
       width: 48px; height: 48px;
@@ -793,7 +794,7 @@
     /* ============================================
        TOOLTIP ENGINE
     ============================================ */
-    let _tt, _ttTitle, _ttBody, _ttTimeout;
+    let _tt, _ttTitle, _ttBody, _ttTimeout, _ttActive;
 
     function showTip(el, tipKey) {
       const def = TIPS[tipKey];
@@ -813,6 +814,7 @@
       _tt.style.left = left + 'px';
       _tt.style.width = tw + 'px';
       _tt.classList.add('visible');
+      _ttActive = tipKey;
     }
 
     function hideTip() {
@@ -823,12 +825,19 @@
       document.querySelectorAll('.info-icon').forEach(icon => {
         if (icon.dataset.bound) return;
         icon.dataset.bound = '1';
+        // Hover (desktop)
         icon.addEventListener('mouseenter', () => showTip(icon, icon.dataset.tip));
         icon.addEventListener('mouseleave', hideTip);
-        icon.addEventListener('click', e => {
+        // Click (mobile / first-click-no-hover)
+        // Use pointerup so it fires before any document pointerdown close handler
+        icon.addEventListener('pointerup', e => {
           e.stopPropagation();
-          if (_tt && _tt.classList.contains('visible')) {
+          // If already showing THIS tip, hide it; otherwise show
+          const showing = _tt && _tt.classList.contains('visible');
+          const same = _ttActive === icon.dataset.tip;
+          if (showing && same) {
             _tt.classList.remove('visible');
+            _ttActive = null;
           } else {
             showTip(icon, icon.dataset.tip);
           }
@@ -840,9 +849,16 @@
       _tt      = document.getElementById('globalTooltip');
       _ttTitle = document.getElementById('tooltipTitle');
       _ttBody  = document.getElementById('tooltipBody');
+      // Keep open when hovering the tooltip box itself
       _tt.addEventListener('mouseenter', () => clearTimeout(_ttTimeout));
       _tt.addEventListener('mouseleave', hideTip);
-      document.addEventListener('click', () => { if (_tt) _tt.classList.remove('visible'); });
+      // Close when clicking anywhere outside an info-icon
+      document.addEventListener('pointerdown', e => {
+        if (!e.target.closest('.info-icon') && !e.target.closest('#globalTooltip')) {
+          if (_tt) _tt.classList.remove('visible');
+          _ttActive = null;
+        }
+      });
       attachIconListeners();
     }
 

@@ -493,19 +493,19 @@
         <div class="header-stats">
           <div class="mini-stat">
             <div class="mini-stat-label">ACTIVE
-              <span class="info-icon" data-tip="active-signals">i</span>
+              <span class="info-icon" data-tip="active-signals" onclick="tipClick(this,event)">i</span>
             </div>
             <div class="mini-stat-value" id="hActive">0</div>
           </div>
           <div class="mini-stat">
             <div class="mini-stat-label">WIN RATE
-              <span class="info-icon" data-tip="win-rate">i</span>
+              <span class="info-icon" data-tip="win-rate" onclick="tipClick(this,event)">i</span>
             </div>
             <div class="mini-stat-value" id="hWR">0%</div>
           </div>
           <div class="mini-stat">
             <div class="mini-stat-label">PIPS
-              <span class="info-icon" data-tip="pips">i</span>
+              <span class="info-icon" data-tip="pips" onclick="tipClick(this,event)">i</span>
             </div>
             <div class="mini-stat-value" id="hPips">0</div>
           </div>
@@ -517,37 +517,37 @@
     <div class="metrics">
       <div class="metric">
         <div class="metric-icon"><i data-lucide="signal"></i></div>
-        <div class="metric-label">Active Signals <span class="info-icon" data-tip="active-signals">i</span></div>
+        <div class="metric-label">Active Signals <span class="info-icon" data-tip="active-signals" onclick="tipClick(this,event)">i</span></div>
         <div class="metric-value" id="mSignals">0</div>
         <div class="metric-sub">Multi-mode</div>
       </div>
       <div class="metric">
         <div class="metric-icon"><i data-lucide="target"></i></div>
-        <div class="metric-label">Win Rate <span class="info-icon" data-tip="win-rate">i</span></div>
+        <div class="metric-label">Win Rate <span class="info-icon" data-tip="win-rate" onclick="tipClick(this,event)">i</span></div>
         <div class="metric-value" id="mWR">0%</div>
         <div class="metric-sub" id="mWRSub">No trades</div>
       </div>
       <div class="metric">
         <div class="metric-icon"><i data-lucide="trending-up"></i></div>
-        <div class="metric-label">Total Pips <span class="info-icon" data-tip="pips">i</span></div>
+        <div class="metric-label">Total Pips <span class="info-icon" data-tip="pips" onclick="tipClick(this,event)">i</span></div>
         <div class="metric-value" id="mPips">0</div>
         <div class="metric-sub" id="mPipsSub">Lifetime</div>
       </div>
       <div class="metric">
         <div class="metric-icon"><i data-lucide="bar-chart-3"></i></div>
-        <div class="metric-label">Expectancy <span class="info-icon" data-tip="expectancy">i</span></div>
+        <div class="metric-label">Expectancy <span class="info-icon" data-tip="expectancy" onclick="tipClick(this,event)">i</span></div>
         <div class="metric-value" id="mExp">0</div>
         <div class="metric-sub">Pips per trade</div>
       </div>
       <div class="metric">
         <div class="metric-icon"><i data-lucide="calendar"></i></div>
-        <div class="metric-label">Today <span class="info-icon" data-tip="today">i</span></div>
+        <div class="metric-label">Today <span class="info-icon" data-tip="today" onclick="tipClick(this,event)">i</span></div>
         <div class="metric-value" id="mToday">0</div>
         <div class="metric-sub" id="mTodaySub">Signals</div>
       </div>
       <div class="metric">
         <div class="metric-icon"><i data-lucide="globe-2"></i></div>
-        <div class="metric-label">Session <span class="info-icon" data-tip="session">i</span></div>
+        <div class="metric-label">Session <span class="info-icon" data-tip="session" onclick="tipClick(this,event)">i</span></div>
         <div class="metric-value" id="mSession" style="font-size:20px">---</div>
         <div class="metric-sub" id="mTime">---</div>
       </div>
@@ -556,7 +556,7 @@
     <div class="modes">
       <button class="mode-btn active" id="modeAgg" onclick="switchMode('aggressive')"><i data-lucide="zap" style="width:16px;height:16px"></i>AGGRESSIVE</button>
       <button class="mode-btn" id="modeCon" onclick="switchMode('conservative')"><i data-lucide="shield" style="width:16px;height:16px"></i>CONSERVATIVE</button>
-      <span class="info-icon" data-tip="modes" style="margin-right:8px;">i</span>
+      <span class="info-icon" data-tip="modes" onclick="tipClick(this,event)" style="margin-right:8px;">i</span>
     </div>
 
     <nav class="tabs">
@@ -583,10 +583,10 @@
                 <th>DATE</th>
                 <th>PAIR</th>
                 <th>DIR</th>
-                <th>TIER <span class="info-icon" data-tip="tier-badge" style="vertical-align:middle;">i</span></th>
+                <th>TIER <span class="info-icon" data-tip="tier-badge" onclick="tipClick(this,event)" style="vertical-align:middle;">i</span></th>
                 <th>RESULT</th>
                 <th>PIPS</th>
-                <th>SESSION <span class="info-icon" data-tip="session-col" style="vertical-align:middle;">i</span></th>
+                <th>SESSION <span class="info-icon" data-tip="session-col" onclick="tipClick(this,event)" style="vertical-align:middle;">i</span></th>
               </tr>
             </thead>
             <tbody id="historyBody"></tbody>
@@ -601,7 +601,7 @@
           <h3 class="analytics-title">
             <i data-lucide="award" style="width:24px;height:24px;color:var(--orange)"></i>
             Performance by Tier
-            <span class="info-icon" data-tip="perf-tier">i</span>
+            <span class="info-icon" data-tip="perf-tier" onclick="tipClick(this,event)">i</span>
           </h3>
           <div id="tierAnalytics"></div>
         </div>
@@ -609,7 +609,7 @@
           <h3 class="analytics-title">
             <i data-lucide="globe-2" style="width:24px;height:24px;color:var(--blue)"></i>
             Performance by Session
-            <span class="info-icon" data-tip="perf-session">i</span>
+            <span class="info-icon" data-tip="perf-session" onclick="tipClick(this,event)">i</span>
           </h3>
           <div id="sessionAnalytics"></div>
         </div>
@@ -617,7 +617,7 @@
           <h3 class="analytics-title">
             <i data-lucide="trending-up" style="width:24px;height:24px;color:var(--green)"></i>
             Top Performing Pairs
-            <span class="info-icon" data-tip="perf-pairs">i</span>
+            <span class="info-icon" data-tip="perf-pairs" onclick="tipClick(this,event)">i</span>
           </h3>
           <div id="pairAnalytics"></div>
         </div>
@@ -625,7 +625,7 @@
           <h3 class="analytics-title">
             <i data-lucide="layers" style="width:24px;height:24px;color:var(--orange)"></i>
             Performance by Mode
-            <span class="info-icon" data-tip="perf-mode">i</span>
+            <span class="info-icon" data-tip="perf-mode" onclick="tipClick(this,event)">i</span>
           </h3>
           <div id="modeAnalytics"></div>
         </div>
@@ -633,7 +633,7 @@
           <h3 class="analytics-title">
             <i data-lucide="git-merge" style="width:24px;height:24px;color:var(--yellow)"></i>
             Tier × Session Cross-Analytics
-            <span class="info-icon" data-tip="cross-tier-session">i</span>
+            <span class="info-icon" data-tip="cross-tier-session" onclick="tipClick(this,event)">i</span>
           </h3>
           <div id="crossTierSessionAnalytics"></div>
         </div>
@@ -641,7 +641,7 @@
           <h3 class="analytics-title">
             <i data-lucide="git-branch" style="width:24px;height:24px;color:var(--blue)"></i>
             Mode × Tier Cross-Analytics
-            <span class="info-icon" data-tip="cross-mode-tier">i</span>
+            <span class="info-icon" data-tip="cross-mode-tier" onclick="tipClick(this,event)">i</span>
           </h3>
           <div id="crossModeTierAnalytics"></div>
         </div>
@@ -793,61 +793,49 @@
     /* ============================================
        TOOLTIP ENGINE
     ============================================ */
-    let _tt, _ttTitle, _ttBody, _ttActive;
-
-    function showTip(el, tipKey) {
-      const def = TIPS[tipKey];
-      if (!def || !_tt) return;
-      _ttTitle.textContent = def.title;
-      _ttBody.innerHTML = def.body;
-      const rect = el.getBoundingClientRect();
-      const tw = 300;
-      let top = rect.bottom + window.scrollY + 12;
-      let left = rect.left + window.scrollX - (tw / 2) + (rect.width / 2);
-      left = Math.max(12, Math.min(left, window.innerWidth - tw - 12));
-      if (window.innerHeight - rect.bottom < 240) {
-        top = rect.top + window.scrollY - 220;
+    function tipClick(el, e) {
+      e.stopPropagation();
+      const tt = document.getElementById('globalTooltip');
+      const ttTitle = document.getElementById('tooltipTitle');
+      const ttBody = document.getElementById('tooltipBody');
+      const def = TIPS[el.dataset.tip];
+      if (!def) { console.warn('No tip for', el.dataset.tip); return; }
+      // If same icon clicked again while visible, close it
+      if (tt.classList.contains('visible') && tt.dataset.active === el.dataset.tip) {
+        tt.classList.remove('visible');
+        tt.dataset.active = '';
+        return;
       }
-      _tt.style.top = top + 'px';
-      _tt.style.left = left + 'px';
-      _tt.style.width = tw + 'px';
-      _tt.classList.add('visible');
-      _ttActive = tipKey;
+      ttTitle.textContent = def.title;
+      ttBody.innerHTML = def.body;
+      const r = el.getBoundingClientRect();
+      const tw = 300;
+      let top = r.bottom + window.scrollY + 12;
+      let left = r.left + window.scrollX - (tw / 2) + (r.width / 2);
+      left = Math.max(12, Math.min(left, window.innerWidth - tw - 12));
+      if (window.innerHeight - r.bottom < 240) top = r.top + window.scrollY - 230;
+      tt.style.top = top + 'px';
+      tt.style.left = left + 'px';
+      tt.style.width = tw + 'px';
+      tt.dataset.active = el.dataset.tip;
+      tt.classList.add('visible');
     }
 
-    function attachIconListeners() { /* handled by delegation */ }
-
+    function attachIconListeners() { /* handled by inline onclick */ }
     function initTooltips() {
-      _tt      = document.getElementById('globalTooltip');
-      _ttTitle = document.getElementById('tooltipTitle');
-      _ttBody  = document.getElementById('tooltipBody');
-
-      // Single delegated listener on document - catches every click on every info-icon
-      // regardless of parent overflow, stacking context, or when element was added to DOM
+      // Close when clicking outside
       document.addEventListener('click', function(e) {
-        console.log('CLICK TARGET:', e.target, 'closest info-icon:', e.target.closest('.info-icon'));
-        const icon = e.target.closest('.info-icon');
-        if (icon) {
-          e.stopPropagation();
-          const tipKey = icon.dataset.tip;
-          console.log('INFO ICON CLICKED, tipKey:', tipKey, '_tt:', _tt, 'TIPS[tipKey]:', TIPS[tipKey]);
-          if (_ttActive === tipKey && _tt.classList.contains('visible')) {
-            _tt.classList.remove('visible');
-            _ttActive = null;
-          } else {
-            showTip(icon, tipKey);
-            console.log('showTip called, _tt classes:', _tt.className, '_tt style:', _tt.style.top, _tt.style.left);
-          }
-          return;
-        }
-        // Click outside — close tooltip
-        if (!e.target.closest('#globalTooltip')) {
-          _tt.classList.remove('visible');
-          _ttActive = null;
+        if (!e.target.closest('.info-icon') && !e.target.closest('#globalTooltip')) {
+          const tt = document.getElementById('globalTooltip');
+          tt.classList.remove('visible');
+          tt.dataset.active = '';
         }
       });
     }
 
+    /* ============================================
+       DASHBOARD LOGIC (unchanged)
+    ============================================ */
     /* ============================================
        DASHBOARD LOGIC (unchanged)
     ============================================ */
@@ -1081,7 +1069,7 @@
           </svg>
           <div class="strength-text" style="color:${col}">${sc}</div>
         </div>
-        <span class="info-icon" data-tip="score-meter" style="position:absolute;top:78px;left:22px;z-index:10;">i</span>
+        <span class="info-icon" data-tip="score-meter" onclick="tipClick(this,event)" style="position:absolute;top:78px;left:22px;z-index:10;">i</span>
         
         <div class="signal-tier tier-${getTier(s.tier||'C')}">${s.tier||'C'}</div>
         <div class="pair">${s.pair}</div>
@@ -1099,7 +1087,7 @@
           <div class="metric-item"><div class="metric-item-label">STOP LOSS</div><div class="metric-item-value">${s.sl?.toFixed(5)||'N/A'}</div></div>
           <div class="metric-item"><div class="metric-item-label">TAKE PROFIT</div><div class="metric-item-value">${s.tp?.toFixed(5)||'N/A'}</div></div>
           <div class="metric-item">
-            <div class="metric-item-label">RISK:REWARD <span class="info-icon" data-tip="signal-rr">i</span></div>
+            <div class="metric-item-label">RISK:REWARD <span class="info-icon" data-tip="signal-rr" onclick="tipClick(this,event)">i</span></div>
             <div class="metric-item-value hl">${s.risk_reward?.toFixed(2)||'N/A'}</div>
           </div>
         </div>
@@ -1109,7 +1097,7 @@
           <div class="section-title" style="margin:0 0 12px 0">
             <i data-lucide="git-compare" style="width:14px;height:14px"></i>
             CHANGES FROM PREVIOUS
-            <span class="info-icon" data-tip="signal-changes">i</span>
+            <span class="info-icon" data-tip="signal-changes" onclick="tipClick(this,event)">i</span>
           </div>
           ${renderChange('Entry',changes.entry)}
           ${renderChange('Stop Loss',changes.sl)}
@@ -1122,7 +1110,7 @@
           <div class="section-title" style="margin:0 0 12px 0">
             <i data-lucide="clock" style="width:14px;height:14px"></i>
             SIGNAL HISTORY (${state.history.length} updates)
-            <span class="info-icon" data-tip="signal-history">i</span>
+            <span class="info-icon" data-tip="signal-history" onclick="tipClick(this,event)">i</span>
           </div>
           ${state.history.slice(0,3).map(h=>`
             <div class="history-item">
@@ -1134,8 +1122,8 @@
         <div class="footer-card">
           <div class="time"><i data-lucide="clock" style="width:12px;height:12px"></i>${fmt(s.timestamp)}</div>
           <div style="display:flex;align-items:center;gap:8px">
-            ${s.estimated_win_rate!=null?`<div style="padding:4px 10px;background:rgba(0,242,169,0.1);border:1px solid rgba(0,242,169,0.3);border-radius:6px;font-size:10px;font-weight:900;color:var(--green);font-family:'Orbitron',monospace;" title="Estimated win rate from micro-backtest">${(s.estimated_win_rate*100).toFixed(0)}% WR <span class="info-icon" data-tip="signal-wr" style="background:transparent;border:none;color:var(--green);margin-left:0;">i</span></div>`:''}
-            ${s.sentiment_applied?`<div style="padding:4px 10px;background:rgba(79,172,254,0.1);border:1px solid rgba(79,172,254,0.3);border-radius:6px;font-size:10px;font-weight:900;color:var(--blue);">SENT ${s.sentiment_adjustment>=0?'+':''}${(s.sentiment_adjustment||0).toFixed(1)} <span class="info-icon" data-tip="signal-sentiment" style="background:transparent;border:none;color:var(--blue);margin-left:0;">i</span></div>`:''}
+            ${s.estimated_win_rate!=null?`<div style="padding:4px 10px;background:rgba(0,242,169,0.1);border:1px solid rgba(0,242,169,0.3);border-radius:6px;font-size:10px;font-weight:900;color:var(--green);font-family:'Orbitron',monospace;" title="Estimated win rate from micro-backtest">${(s.estimated_win_rate*100).toFixed(0)}% WR <span class="info-icon" data-tip="signal-wr" onclick="tipClick(this,event)" style="background:transparent;border:none;color:var(--green);margin-left:0;">i</span></div>`:''}
+            ${s.sentiment_applied?`<div style="padding:4px 10px;background:rgba(79,172,254,0.1);border:1px solid rgba(79,172,254,0.3);border-radius:6px;font-size:10px;font-weight:900;color:var(--blue);">SENT ${s.sentiment_adjustment>=0?'+':''}${(s.sentiment_adjustment||0).toFixed(1)} <span class="info-icon" data-tip="signal-sentiment" onclick="tipClick(this,event)" style="background:transparent;border:none;color:var(--blue);margin-left:0;">i</span></div>`:''}
             <div class="session">${s.session||'N/A'}</div>
           </div>
         </div>

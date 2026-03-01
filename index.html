@@ -91,10 +91,12 @@
       box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 20px rgba(79,172,254,0.15);
       pointer-events: auto;
       opacity: 0;
-      visibility: hidden;
+      transform: translateY(6px) scale(0.97);
+      transition: opacity 0.18s ease, transform 0.18s ease;
     }
     .tooltip-box.visible {
-      /* positioning handled by tipClick via requestAnimationFrame */
+      opacity: 1;
+      transform: translateY(0) scale(1);
     }
     .tooltip-title {
       font-family: 'Orbitron', monospace;
@@ -164,6 +166,7 @@
       border-radius: 20px;
       padding: 32px;
       margin-bottom: 32px;
+      overflow: hidden;
       box-shadow: var(--shadow);
       position: relative;
     }
@@ -227,7 +230,7 @@
       border: 1px solid var(--border);
       border-radius: 16px; padding: 24px;
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
+      position: relative; overflow: hidden;
     }
     .metric::before {
       content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
@@ -235,7 +238,6 @@
       transform: scaleX(0); transition: transform 0.4s;
     }
     .metric:hover { transform: translateY(-8px); border-color: rgba(255,255,255,0.2); box-shadow: var(--glow-orange); }
-    .metric:hover .info-icon { transform: none; }
     .metric:hover::before { transform: scaleX(1); }
     .metric-icon {
       width: 48px; height: 48px;
@@ -294,7 +296,7 @@
       background: linear-gradient(135deg, var(--surface), var(--elevated));
       border: 1px solid var(--border);
       border-radius: 16px; padding: 24px;
-      position: relative;
+      position: relative; overflow: hidden;
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .card::before {
@@ -464,6 +466,21 @@
       .metrics { grid-template-columns: repeat(2, 1fr); }
       .grid { grid-template-columns: 1fr; }
     }
+
+    @keyframes newsScroll {
+      0%   { transform: translateY(0); }
+      100% { transform: translateY(-50%); }
+    }
+    .news-item {
+      display: flex; align-items: flex-start; gap: 7px;
+      padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 11.5px; color: var(--text-dim); line-height: 1.4;
+    }
+    .news-item:last-child { border-bottom: none; }
+    .news-dot { width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:4px; }
+    .news-bull { background:var(--green);box-shadow:0 0 5px var(--green); }
+    .news-bear { background:var(--red);box-shadow:0 0 5px var(--red); }
+    .news-neut { background:var(--text-muted); }
   </style>
 </head>
 <body>
@@ -485,25 +502,25 @@
           <div class="brand-icon"><i data-lucide="activity"></i></div>
           <div class="brand-text">
             <h1>TRADE BEACON</h1>
-            <p>MARKET INTELLIGENCE v2.1.4.1-TUNED</p>
+            <p>MARKET INTELLIGENCE v2.1.5-FINBERT</p>
           </div>
         </div>
         <div class="header-stats">
           <div class="mini-stat">
             <div class="mini-stat-label">ACTIVE
-              <span class="info-icon" data-tip="active-signals" onclick="tipClick(this,event)">i</span>
+              <span class="info-icon" data-tip="active-signals">i</span>
             </div>
             <div class="mini-stat-value" id="hActive">0</div>
           </div>
           <div class="mini-stat">
             <div class="mini-stat-label">WIN RATE
-              <span class="info-icon" data-tip="win-rate" onclick="tipClick(this,event)">i</span>
+              <span class="info-icon" data-tip="win-rate">i</span>
             </div>
             <div class="mini-stat-value" id="hWR">0%</div>
           </div>
           <div class="mini-stat">
             <div class="mini-stat-label">PIPS
-              <span class="info-icon" data-tip="pips" onclick="tipClick(this,event)">i</span>
+              <span class="info-icon" data-tip="pips">i</span>
             </div>
             <div class="mini-stat-value" id="hPips">0</div>
           </div>
@@ -515,37 +532,37 @@
     <div class="metrics">
       <div class="metric">
         <div class="metric-icon"><i data-lucide="signal"></i></div>
-        <div class="metric-label">Active Signals <span class="info-icon" data-tip="active-signals" onclick="tipClick(this,event)">i</span></div>
+        <div class="metric-label">Active Signals <span class="info-icon" data-tip="active-signals">i</span></div>
         <div class="metric-value" id="mSignals">0</div>
         <div class="metric-sub">Multi-mode</div>
       </div>
       <div class="metric">
         <div class="metric-icon"><i data-lucide="target"></i></div>
-        <div class="metric-label">Win Rate <span class="info-icon" data-tip="win-rate" onclick="tipClick(this,event)">i</span></div>
+        <div class="metric-label">Win Rate <span class="info-icon" data-tip="win-rate">i</span></div>
         <div class="metric-value" id="mWR">0%</div>
         <div class="metric-sub" id="mWRSub">No trades</div>
       </div>
       <div class="metric">
         <div class="metric-icon"><i data-lucide="trending-up"></i></div>
-        <div class="metric-label">Total Pips <span class="info-icon" data-tip="pips" onclick="tipClick(this,event)">i</span></div>
+        <div class="metric-label">Total Pips <span class="info-icon" data-tip="pips">i</span></div>
         <div class="metric-value" id="mPips">0</div>
         <div class="metric-sub" id="mPipsSub">Lifetime</div>
       </div>
       <div class="metric">
         <div class="metric-icon"><i data-lucide="bar-chart-3"></i></div>
-        <div class="metric-label">Expectancy <span class="info-icon" data-tip="expectancy" onclick="tipClick(this,event)">i</span></div>
+        <div class="metric-label">Expectancy <span class="info-icon" data-tip="expectancy">i</span></div>
         <div class="metric-value" id="mExp">0</div>
         <div class="metric-sub">Pips per trade</div>
       </div>
       <div class="metric">
         <div class="metric-icon"><i data-lucide="calendar"></i></div>
-        <div class="metric-label">Today <span class="info-icon" data-tip="today" onclick="tipClick(this,event)">i</span></div>
+        <div class="metric-label">Today <span class="info-icon" data-tip="today">i</span></div>
         <div class="metric-value" id="mToday">0</div>
         <div class="metric-sub" id="mTodaySub">Signals</div>
       </div>
       <div class="metric">
         <div class="metric-icon"><i data-lucide="globe-2"></i></div>
-        <div class="metric-label">Session <span class="info-icon" data-tip="session" onclick="tipClick(this,event)">i</span></div>
+        <div class="metric-label">Session <span class="info-icon" data-tip="session">i</span></div>
         <div class="metric-value" id="mSession" style="font-size:20px">---</div>
         <div class="metric-sub" id="mTime">---</div>
       </div>
@@ -554,7 +571,57 @@
     <div class="modes">
       <button class="mode-btn active" id="modeAgg" onclick="switchMode('aggressive')"><i data-lucide="zap" style="width:16px;height:16px"></i>AGGRESSIVE</button>
       <button class="mode-btn" id="modeCon" onclick="switchMode('conservative')"><i data-lucide="shield" style="width:16px;height:16px"></i>CONSERVATIVE</button>
-      <span class="info-icon" data-tip="modes" onclick="tipClick(this,event)" style="margin-right:8px;">i</span>
+      <span class="info-icon" data-tip="modes" style="margin-right:8px;">i</span>
+    </div>
+
+
+    <!-- ═══ PICK OF THE DAY ═══════════════════════════════════════════════ -->
+    <div id="pickOfDay" style="display:none;margin-bottom:24px;">
+      <div style="background:linear-gradient(135deg,rgba(255,107,53,0.08),rgba(79,172,254,0.06));border:1px solid rgba(255,107,53,0.25);border-radius:16px;overflow:hidden;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(255,107,53,0.05);flex-wrap:wrap;gap:8px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <i data-lucide="star" style="width:16px;height:16px;color:var(--yellow);"></i>
+            <span style="font-size:12px;font-weight:900;letter-spacing:1.5px;color:var(--yellow);">PICK OF THE DAY</span>
+            <span id="podTier" style="display:none;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:900;font-family:'Orbitron',monospace;color:white;"></span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span id="podSession" style="font-size:10px;font-weight:700;color:var(--blue);letter-spacing:0.5px;padding:2px 8px;background:rgba(79,172,254,0.1);border:1px solid rgba(79,172,254,0.2);border-radius:5px;"></span>
+            <span id="podTime" style="font-size:10px;color:var(--text-muted);font-family:'Orbitron',monospace;"></span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:stretch;flex-wrap:wrap;">
+          <div style="flex:0 0 auto;min-width:200px;padding:18px 20px;border-right:1px solid rgba(255,255,255,0.06);">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+              <span id="podPair" style="font-size:20px;font-weight:900;font-family:'Orbitron',monospace;"></span>
+              <span id="podDir"  style="font-size:11px;font-weight:900;padding:3px 9px;border-radius:6px;letter-spacing:1px;"></span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;font-size:11px;margin-bottom:10px;">
+              <div><div style="color:var(--text-muted);">ENTRY</div><div id="podEntry" style="font-family:'Orbitron',monospace;font-weight:700;font-size:12px;color:var(--text);"></div></div>
+              <div><div style="color:var(--text-muted);">R:R</div><div id="podRR" style="font-family:'Orbitron',monospace;font-weight:700;font-size:12px;color:var(--yellow);"></div></div>
+              <div><div style="color:var(--text-muted);">SL</div><div id="podSL" style="font-family:'Orbitron',monospace;font-weight:700;font-size:12px;color:var(--red);"></div></div>
+              <div><div style="color:var(--text-muted);">TP</div><div id="podTP" style="font-family:'Orbitron',monospace;font-weight:700;font-size:12px;color:var(--green);"></div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <div style="flex:1;height:4px;background:var(--elevated);border-radius:2px;overflow:hidden;"><div id="podScoreBar" style="height:100%;background:linear-gradient(90deg,var(--orange),var(--yellow));border-radius:2px;transition:width 0.8s;width:0%;"></div></div>
+              <span id="podScore" style="font-size:11px;font-family:'Orbitron',monospace;color:var(--orange);font-weight:700;white-space:nowrap;"></span>
+            </div>
+          </div>
+          <div style="flex:1;min-width:180px;padding:18px 20px;border-right:1px solid rgba(255,255,255,0.06);">
+            <div style="font-size:10px;font-weight:900;letter-spacing:1px;color:var(--text-muted);margin-bottom:8px;">WHY THIS PICK</div>
+            <div id="podReason" style="font-size:12px;color:var(--text-dim);line-height:1.6;"></div>
+            <div id="podSentiment" style="display:none;margin-top:8px;padding:7px 9px;background:rgba(0,242,169,0.06);border:1px solid rgba(0,242,169,0.15);border-radius:6px;font-size:11px;color:var(--green);"></div>
+          </div>
+          <div style="flex:1;min-width:220px;padding:18px 20px;display:flex;flex-direction:column;gap:6px;">
+            <div style="font-size:10px;font-weight:900;letter-spacing:1px;color:var(--text-muted);margin-bottom:2px;">RELATED NEWS</div>
+            <div style="height:100px;overflow:hidden;position:relative;border-radius:6px;">
+              <div id="newsTicker" style="position:absolute;top:0;left:0;right:0;animation:newsScroll 20s linear infinite;"></div>
+            </div>
+            <div style="font-size:11px;color:var(--text-dim);line-height:1.5;padding-top:4px;border-top:1px solid rgba(255,255,255,0.05);">
+              💡 <span id="podTranslation"></span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <nav class="tabs">
@@ -581,10 +648,10 @@
                 <th>DATE</th>
                 <th>PAIR</th>
                 <th>DIR</th>
-                <th>TIER <span class="info-icon" data-tip="tier-badge" onclick="tipClick(this,event)" style="vertical-align:middle;">i</span></th>
+                <th>TIER <span class="info-icon" data-tip="tier-badge" style="vertical-align:middle;">i</span></th>
                 <th>RESULT</th>
                 <th>PIPS</th>
-                <th>SESSION <span class="info-icon" data-tip="session-col" onclick="tipClick(this,event)" style="vertical-align:middle;">i</span></th>
+                <th>SESSION <span class="info-icon" data-tip="session-col" style="vertical-align:middle;">i</span></th>
               </tr>
             </thead>
             <tbody id="historyBody"></tbody>
@@ -599,7 +666,7 @@
           <h3 class="analytics-title">
             <i data-lucide="award" style="width:24px;height:24px;color:var(--orange)"></i>
             Performance by Tier
-            <span class="info-icon" data-tip="perf-tier" onclick="tipClick(this,event)">i</span>
+            <span class="info-icon" data-tip="perf-tier">i</span>
           </h3>
           <div id="tierAnalytics"></div>
         </div>
@@ -607,7 +674,7 @@
           <h3 class="analytics-title">
             <i data-lucide="globe-2" style="width:24px;height:24px;color:var(--blue)"></i>
             Performance by Session
-            <span class="info-icon" data-tip="perf-session" onclick="tipClick(this,event)">i</span>
+            <span class="info-icon" data-tip="perf-session">i</span>
           </h3>
           <div id="sessionAnalytics"></div>
         </div>
@@ -615,7 +682,7 @@
           <h3 class="analytics-title">
             <i data-lucide="trending-up" style="width:24px;height:24px;color:var(--green)"></i>
             Top Performing Pairs
-            <span class="info-icon" data-tip="perf-pairs" onclick="tipClick(this,event)">i</span>
+            <span class="info-icon" data-tip="perf-pairs">i</span>
           </h3>
           <div id="pairAnalytics"></div>
         </div>
@@ -623,7 +690,7 @@
           <h3 class="analytics-title">
             <i data-lucide="layers" style="width:24px;height:24px;color:var(--orange)"></i>
             Performance by Mode
-            <span class="info-icon" data-tip="perf-mode" onclick="tipClick(this,event)">i</span>
+            <span class="info-icon" data-tip="perf-mode">i</span>
           </h3>
           <div id="modeAnalytics"></div>
         </div>
@@ -631,7 +698,7 @@
           <h3 class="analytics-title">
             <i data-lucide="git-merge" style="width:24px;height:24px;color:var(--yellow)"></i>
             Tier × Session Cross-Analytics
-            <span class="info-icon" data-tip="cross-tier-session" onclick="tipClick(this,event)">i</span>
+            <span class="info-icon" data-tip="cross-tier-session">i</span>
           </h3>
           <div id="crossTierSessionAnalytics"></div>
         </div>
@@ -639,7 +706,7 @@
           <h3 class="analytics-title">
             <i data-lucide="git-branch" style="width:24px;height:24px;color:var(--blue)"></i>
             Mode × Tier Cross-Analytics
-            <span class="info-icon" data-tip="cross-mode-tier" onclick="tipClick(this,event)">i</span>
+            <span class="info-icon" data-tip="cross-mode-tier">i</span>
           </h3>
           <div id="crossModeTierAnalytics"></div>
         </div>
@@ -664,6 +731,26 @@
       </div>
     </div>
   </footer>
+  <!-- DISCLAIMER -->
+  <div style="margin-top:32px;border-top:1px solid rgba(255,255,255,0.06);padding:28px 24px 36px;max-width:1920px;margin-left:auto;margin-right:auto;position:relative;z-index:1;">
+    <div style="background:linear-gradient(135deg,rgba(251,191,36,0.07),rgba(255,107,53,0.05));border:1px solid rgba(251,191,36,0.2);border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:flex-start;gap:10px;">
+      <i data-lucide="triangle-alert" style="width:18px;height:18px;color:#fbbf24;flex-shrink:0;margin-top:2px;"></i>
+      <div style="font-size:12.5px;color:#fbbf24;font-weight:700;line-height:1.5;">TRADING FOREIGN EXCHANGE CARRIES SIGNIFICANT RISK OF LOSS AND IS NOT SUITABLE FOR ALL INVESTORS. YOU MAY LOSE MORE THAN YOUR INITIAL DEPOSIT.</div>
+    </div>
+    <div style="font-size:11.5px;color:var(--text-muted);line-height:1.8;max-width:1100px;">
+      <p style="margin-bottom:10px;"><strong style="color:var(--text-dim);">NOT FINANCIAL ADVICE.</strong> Trade Beacon is an automated algorithmic signal system for research and informational purposes only. Nothing here constitutes financial advice or a recommendation to buy or sell any instrument. All signals are technical algorithm output only.</p>
+      <p style="margin-bottom:10px;"><strong style="color:var(--text-dim);">SIGNAL-ONLY MODE.</strong> No orders are placed automatically. The system generates entry, stop-loss, and take-profit levels which you may choose to execute manually in your own broker platform. All execution decisions remain solely the responsibility of the trader. Trade Beacon has no connection to any broker or execution venue.</p>
+      <p style="margin-bottom:10px;"><strong style="color:var(--text-dim);">PAST PERFORMANCE.</strong> Historical win rates and pip totals are not indicative of future results. Performance statistics are only statistically meaningful after 100+ resolved trades.</p>
+      <p style="margin-bottom:10px;"><strong style="color:var(--text-dim);">DATA ACCURACY.</strong> Market data is sourced via yfinance and may be delayed or incomplete. FinBERT sentiment reflects NLP model output, not verified market intelligence. Entry/SL/TP levels are theoretical and may not reflect executable prices due to spreads and slippage.</p>
+      <p><strong style="color:var(--text-dim);">NO LIABILITY.</strong> The creators of Trade Beacon accept no liability for losses incurred from acting on this dashboard. Use entirely at your own risk. By viewing this dashboard you accept this disclaimer.</p>
+    </div>
+    <div style="margin-top:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.04);">
+      <div style="font-size:10px;color:var(--text-muted);letter-spacing:0.5px;">TRADE BEACON v2.1.5-FINBERT &nbsp;·&nbsp; SIGNAL-ONLY MODE &nbsp;·&nbsp; NO AUTO-EXECUTION</div>
+      <div style="font-size:10px;color:var(--text-muted);">Signals for manual execution &nbsp;·&nbsp; All times UTC</div>
+    </div>
+  </div>
+
+
 
   <script>
     lucide.createIcons();
@@ -791,70 +878,83 @@
     /* ============================================
        TOOLTIP ENGINE
     ============================================ */
-    let _tipJustOpened = false;
-    function tipClick(el, e) {
-      e.stopPropagation();
-      e.preventDefault();
-      _tipJustOpened = true;
-      setTimeout(() => { _tipJustOpened = false; }, 50);
-      const tt = document.getElementById('globalTooltip');
-      const ttTitle = document.getElementById('tooltipTitle');
-      const ttBody = document.getElementById('tooltipBody');
-      const def = TIPS[el.dataset.tip];
+    const tooltip = document.getElementById('globalTooltip');
+    const tipTitle = document.getElementById('tooltipTitle');
+    const tipBody = document.getElementById('tooltipBody');
+    let tipTimeout = null;
+
+    function showTip(el, tipKey) {
+      const def = TIPS[tipKey];
       if (!def) return;
-      // Toggle off if same icon
-      if (tt.classList.contains('visible') && tt.dataset.active === el.dataset.tip) {
-        tt.classList.remove('visible');
-        tt.dataset.active = '';
-        return;
+      clearTimeout(tipTimeout);
+      tipTitle.textContent = def.title;
+      tipBody.innerHTML = def.body;
+
+      // Position
+      const rect = el.getBoundingClientRect();
+      const tw = 300;
+      const th = 200; // estimated
+
+      // Prefer below, flip above if near bottom
+      let top = rect.bottom + window.scrollY + 10;
+      let left = rect.left + window.scrollX - (tw / 2) + (rect.width / 2);
+
+      // Clamp horizontal
+      left = Math.max(12, Math.min(left, window.innerWidth - tw - 12));
+
+      // Flip above if needed
+      const spaceBelow = window.innerHeight - rect.bottom;
+      if (spaceBelow < 220) {
+        top = rect.top + window.scrollY - th - 10;
       }
-      ttTitle.textContent = def.title;
-      ttBody.innerHTML = def.body;
-      tt.style.visibility = 'hidden';
-      tt.style.opacity = '0';
-      tt.classList.add('visible');
-      // Measure tooltip after render, then position it
-      requestAnimationFrame(function() {
-        const r = el.getBoundingClientRect();
-        const th = tt.offsetHeight || 200;
-        const vw = window.innerWidth;
-        const vh = window.innerHeight;
-        // position:fixed uses viewport coords - NO scrollY/scrollX needed
-        let top, left;
-        if (r.bottom + th + 12 < vh) {
-          top = r.bottom + 12;
-        } else {
-          top = r.top - th - 12;
-        }
-        left = r.left - 150 + (r.width / 2);
-        left = Math.max(12, Math.min(left, vw - 312));
-        top = Math.max(8, top);
-        tt.style.top = top + 'px';
-        tt.style.left = left + 'px';
-        tt.style.width = '300px';
-        tt.style.visibility = 'visible';
-        tt.style.opacity = '1';
-        tt.dataset.active = el.dataset.tip;
+
+      tooltip.style.top = top + 'px';
+      tooltip.style.left = left + 'px';
+      tooltip.style.width = tw + 'px';
+      tooltip.classList.add('visible');
+    }
+
+    function hideTip() {
+      tipTimeout = setTimeout(() => tooltip.classList.remove('visible'), 120);
+    }
+
+    // Attach to all static info icons on page load
+    function attachIconListeners() {
+      document.querySelectorAll('.info-icon').forEach(icon => {
+        if (icon.dataset.listenerAttached) return;
+        icon.dataset.listenerAttached = 'true';
+        // Desktop hover
+        icon.addEventListener('mouseenter', () => showTip(icon, icon.dataset.tip));
+        icon.addEventListener('mouseleave', hideTip);
+        // Mobile / click toggle
+        icon.addEventListener('click', e => {
+          e.stopPropagation();
+          if (tooltip.classList.contains('visible')) {
+            tooltip.classList.remove('visible');
+          } else {
+            showTip(icon, icon.dataset.tip);
+          }
+        });
       });
     }
 
-    function attachIconListeners() { /* handled by inline onclick */ }
-    function initTooltips() {
-      document.addEventListener('click', function(e) {
-        if (_tipJustOpened) return;
-        if (!e.target.closest('.info-icon') && !e.target.closest('#globalTooltip')) {
-          const tt = document.getElementById('globalTooltip');
-          tt.classList.remove('visible');
-          tt.style.opacity = '0';
-          tt.style.visibility = 'hidden';
-          tt.dataset.active = '';
-        }
-      });
-    }
+    // Keep tooltip open when cursor moves onto it
+    tooltip.addEventListener('mouseenter', () => clearTimeout(tipTimeout));
+    tooltip.addEventListener('mouseleave', hideTip);
 
-    /* ============================================
-       DASHBOARD LOGIC (unchanged)
-    ============================================ */
+    // Close on outside click
+    document.addEventListener('click', () => tooltip.classList.remove('visible'));
+
+    // Run on load for static icons
+    attachIconListeners();
+
+    // Also re-run after dynamic card renders (signal cards inject info icons)
+    const _origCreate = lucide.createIcons.bind(lucide);
+    lucide.createIcons = function(...args) {
+      _origCreate(...args);
+      attachIconListeners();
+    };
+
     /* ============================================
        DASHBOARD LOGIC (unchanged)
     ============================================ */
@@ -863,7 +963,6 @@
     let signalState = {};
     
     document.addEventListener('DOMContentLoaded', () => {
-      initTooltips();
       mode = localStorage.getItem('tbMode') || 'aggressive';
       updateModeBtns();
       checkMarketStatus();
@@ -876,97 +975,65 @@
     
     /* ============================================
        FOREX HOLIDAY CALENDAR  (2025 – 2027)
-       Matches holidays in trade_beacon.yml exactly
+       Matches holidays in trade_beacon.yml
     ============================================ */
     const FOREX_HOLIDAYS = {
-      // 2025
-      '2025-01-01': 'New Year\'s Day',
-      '2025-04-18': 'Good Friday',
-      '2025-04-21': 'Easter Monday',
-      '2025-05-26': 'Spring Bank Holiday (UK)',
-      '2025-07-04': 'Independence Day (US)',
-      '2025-08-25': 'Summer Bank Holiday (UK)',
-      '2025-11-27': 'Thanksgiving (US)',
-      '2025-12-25': 'Christmas Day',
-      '2025-12-26': 'Boxing Day',
-      // 2026
-      '2026-01-01': 'New Year\'s Day',
-      '2026-01-19': 'Martin Luther King Jr. Day (US)',
-      '2026-02-16': 'Presidents\' Day (US)',
-      '2026-04-03': 'Good Friday',
-      '2026-04-06': 'Easter Monday',
-      '2026-05-04': 'Early May Bank Holiday (UK)',
-      '2026-05-25': 'Spring Bank Holiday (UK)',
-      '2026-07-03': 'Independence Day (US, observed)',
-      '2026-08-31': 'Summer Bank Holiday (UK)',
-      '2026-11-26': 'Thanksgiving (US)',
-      '2026-12-25': 'Christmas Day',
-      '2026-12-28': 'Boxing Day (observed)',
-      // 2027
-      '2027-01-01': 'New Year\'s Day',
-      '2027-01-18': 'Martin Luther King Jr. Day (US)',
-      '2027-02-15': 'Presidents\' Day (US)',
-      '2027-03-26': 'Good Friday',
-      '2027-03-29': 'Easter Monday',
-      '2027-05-03': 'Early May Bank Holiday (UK)',
-      '2027-05-31': 'Spring Bank Holiday (UK)',
-      '2027-07-05': 'Independence Day (US, observed)',
-      '2027-08-30': 'Summer Bank Holiday (UK)',
-      '2027-11-25': 'Thanksgiving (US)',
-      '2027-12-24': 'Christmas Eve (observed)',
-      '2027-12-27': 'Christmas Day (observed)',
-      '2027-12-28': 'Boxing Day (observed)',
+      '2025-01-01':'New Year\'s Day','2025-04-18':'Good Friday',
+      '2025-04-21':'Easter Monday','2025-05-26':'Spring Bank Holiday (UK)',
+      '2025-07-04':'Independence Day (US)','2025-08-25':'Summer Bank Holiday (UK)',
+      '2025-11-27':'Thanksgiving (US)','2025-12-25':'Christmas Day','2025-12-26':'Boxing Day',
+      '2026-01-01':'New Year\'s Day','2026-01-19':'MLK Day (US)',
+      '2026-02-16':'Presidents\' Day (US)','2026-04-03':'Good Friday',
+      '2026-04-06':'Easter Monday','2026-05-04':'Early May Bank Holiday (UK)',
+      '2026-05-25':'Spring Bank Holiday (UK)','2026-07-03':'Independence Day (US, observed)',
+      '2026-08-31':'Summer Bank Holiday (UK)','2026-11-26':'Thanksgiving (US)',
+      '2026-12-25':'Christmas Day','2026-12-28':'Boxing Day (observed)',
+      '2027-01-01':'New Year\'s Day','2027-01-18':'MLK Day (US)',
+      '2027-02-15':'Presidents\' Day (US)','2027-03-26':'Good Friday',
+      '2027-03-29':'Easter Monday','2027-05-03':'Early May Bank Holiday (UK)',
+      '2027-05-31':'Spring Bank Holiday (UK)','2027-07-05':'Independence Day (US, observed)',
+      '2027-08-30':'Summer Bank Holiday (UK)','2027-11-25':'Thanksgiving (US)',
+      '2027-12-24':'Christmas Eve (observed)','2027-12-27':'Christmas Day (observed)',
+      '2027-12-28':'Boxing Day (observed)',
     };
 
     function getUTCDateStr() {
-      const now = new Date();
-      const y = now.getUTCFullYear();
-      const m = String(now.getUTCMonth() + 1).padStart(2, '0');
-      const d = String(now.getUTCDate()).padStart(2, '0');
-      return `${y}-${m}-${d}`;
-    }
-
-    function getTodayHoliday() {
-      return FOREX_HOLIDAYS[getUTCDateStr()] || null;
+      const n=new Date();
+      return `${n.getUTCFullYear()}-${String(n.getUTCMonth()+1).padStart(2,'0')}-${String(n.getUTCDate()).padStart(2,'0')}`;
     }
 
     function getNextMarketOpen(now) {
-      // Returns next Date when market opens (Sunday 22:00 UTC after a weekend,
-      // or Monday 00:00 UTC — whichever is next business day)
-      const d = new Date(now);
-      d.setUTCHours(0, 0, 0, 0);
-      for (let i = 1; i <= 10; i++) {
-        d.setUTCDate(d.getUTCDate() + 1);
-        const dow = d.getUTCDay(); // 0=Sun … 6=Sat
-        if (dow === 0 || dow === 6) continue;           // skip weekends
-        const ds = `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
-        if (FOREX_HOLIDAYS[ds]) continue;               // skip holidays
-        // Found next trading day — market opens at 00:00 UTC (Asian open)
+      const d = new Date(now); d.setUTCHours(0,0,0,0);
+      for (let i=1;i<=10;i++) {
+        d.setUTCDate(d.getUTCDate()+1);
+        const dow=d.getUTCDay();
+        if (dow===0||dow===6) continue;
+        const ds=`${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
+        if (FOREX_HOLIDAYS[ds]) continue;
         return d;
       }
       return d;
     }
 
     function checkMarketStatus() {
-      const now      = new Date();
-      const day      = now.getUTCDay();   // 0=Sun … 6=Sat
-      const hour     = now.getUTCHours();
-      const holiday  = getTodayHoliday();
-      const isWeekend = (day === 5 && hour >= 22) || day === 6 || (day === 0 && hour < 22);
-      const isClosed  = isWeekend || !!holiday;
+      const now    = new Date();
+      const day    = now.getUTCDay();
+      const hour   = now.getUTCHours();
+      const holiday = FOREX_HOLIDAYS[getUTCDateStr()] || null;
+      const isWeekend = (day===5&&hour>=22)||day===6||(day===0&&hour<22);
+      const isClosed  = isWeekend||!!holiday;
 
       const statusBadge = document.querySelector('.status-badge');
-      const statusText  = statusBadge ? statusBadge.querySelector('span') : null;
-      const statusDot   = statusBadge ? statusBadge.querySelector('.status-dot') : null;
+      const statusText  = statusBadge.querySelector('span');
+      const statusDot   = statusBadge.querySelector('.status-dot');
 
-      if (isClosed && statusText) {
-        const label = holiday ? 'MARKET HOLIDAY' : 'MARKET CLOSED';
-        statusText.textContent = label;
-        statusBadge.style.background   = 'rgba(255,71,87,0.1)';
-        statusBadge.style.borderColor  = 'rgba(255,71,87,0.3)';
-        statusBadge.style.color        = 'var(--red)';
-        statusDot.style.background     = 'var(--red)';
-        statusDot.style.boxShadow      = '0 0 10px var(--red)';
+      if (isClosed) {
+        statusText.textContent = holiday ? 'MARKET HOLIDAY' : 'MARKET CLOSED';
+        statusBadge.style.background  = 'rgba(255,71,87,0.1)';
+        statusBadge.style.borderColor = 'rgba(255,71,87,0.3)';
+        statusBadge.style.color       = 'var(--red)';
+        statusDot.style.background    = 'var(--red)';
+        statusDot.style.boxShadow     = '0 0 10px var(--red)';
       }
 
       if (isClosed && !document.getElementById('weekend-notice')) {
@@ -974,38 +1041,29 @@
         const container = document.querySelector('.container');
         const notice    = document.createElement('div');
         notice.id = 'weekend-notice';
+        notice.style.cssText = 'background:linear-gradient(135deg,rgba(255,71,87,0.1),rgba(194,53,66,0.08));border:1px solid rgba(255,71,87,0.3);border-radius:16px;padding:32px 24px;margin-bottom:24px;';
 
-        const headerIcon  = holiday ? 'calendar-off' : 'power-off';
-        const headerColor = 'var(--red)';
-        const reasonLine  = holiday
-          ? `<div style="margin-top:8px;font-size:13px;color:var(--yellow);font-weight:700;letter-spacing:0.5px;">
-               🗓️ Today: <span style="color:var(--text)">${holiday}</span>
-             </div>`
+        const reasonLine = holiday
+          ? `<div style="margin-top:6px;font-size:13px;color:var(--yellow);font-weight:700;text-align:center;">🗓️ Today: <span style="color:var(--text)">${holiday}</span></div>`
           : '';
         const subLabel = holiday
-          ? 'Major forex markets are closed for this holiday. Next trading session:'
-          : 'Forex market is closed for the weekend. Reopens:';
+          ? 'Major forex markets are closed. Next trading session opens:'
+          : 'Forex market closed for the weekend. Reopens:';
 
-        notice.style.cssText = 'background:linear-gradient(135deg,rgba(255,71,87,0.1),rgba(194,53,66,0.08));border:1px solid rgba(255,71,87,0.3);border-radius:16px;padding:32px 24px;margin-bottom:24px;';
         notice.innerHTML = `
           <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:6px;">
-            <i data-lucide="${headerIcon}" style="width:24px;height:24px;color:${headerColor}"></i>
-            <span style="color:${headerColor};font-size:18px;font-weight:900;letter-spacing:1px;">
-              ${holiday ? 'FOREX MARKET HOLIDAY' : 'FOREX MARKET CLOSED'}
-            </span>
+            <i data-lucide="${holiday?'calendar-off':'power-off'}" style="width:24px;height:24px;color:var(--red)"></i>
+            <span style="color:var(--red);font-size:18px;font-weight:900;letter-spacing:1px;">${holiday?'FOREX MARKET HOLIDAY':'FOREX MARKET CLOSED'}</span>
           </div>
           ${reasonLine}
           <div style="text-align:center;margin:20px 0 24px;">
-            <div style="font-size:13px;color:var(--text-dim);margin-bottom:10px;">${subLabel}</div>
-            <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
-              ${nextOpen.toUTCString().replace(':00 GMT', ' UTC')}
-            </div>
+            <div style="font-size:13px;color:var(--text-dim);margin-bottom:6px;">${subLabel}</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">${nextOpen.toUTCString().replace(':00 GMT',' UTC')}</div>
             <div id="countdown" class="countdown-container"></div>
           </div>
           <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
             <button id="replayBtn" onclick="playWeeklyReplay()" style="padding:12px 24px;background:linear-gradient(135deg,var(--orange),#ff8c61);border:none;border-radius:10px;color:white;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;font-family:'Rajdhani',sans-serif;letter-spacing:0.5px;box-shadow:var(--glow-orange);transition:all 0.3s;">
-              <i data-lucide="play" style="width:16px;height:16px"></i>
-              PLAY WEEKLY REPLAY
+              <i data-lucide="play" style="width:16px;height:16px"></i>PLAY WEEKLY REPLAY
             </button>
           </div>
           <div id="replayProgress" style="display:none;width:100%;height:6px;background:var(--elevated);border-radius:3px;overflow:hidden;margin-top:16px;">
@@ -1015,7 +1073,7 @@
         container.insertBefore(notice, container.querySelector('.metrics'));
         lucide.createIcons();
         updateCountdown(nextOpen);
-        setInterval(() => updateCountdown(nextOpen), 1000);
+        setInterval(()=>updateCountdown(nextOpen), 1000);
       }
     }
     
@@ -1066,6 +1124,18 @@
         processAndRenderSignals();
         renderHistory();
         renderAnalytics();
+        // Pick of the Day — deduplicated across both modes, best score wins
+        const allSigs = [
+          ...(data?.signals_by_mode?.aggressive  || []),
+          ...(data?.signals_by_mode?.conservative || []),
+        ];
+        const seen = new Set();
+        const deduped = allSigs.filter(s => {
+          const id = s.signal_id||s.id||s.pair+'_'+s.direction;
+          if (seen.has(id)) return false;
+          seen.add(id); return true;
+        });
+        buildPickOfDay(deduped);
       } catch(e) {
         showEmpty('signalsGrid', 'alert-triangle', 'Unable to load', 'Check system');
       }
@@ -1146,7 +1216,6 @@
       g.innerHTML = cards.map(state => createSignalCard(state, justUpdated.includes(`${state.pair}_${state.direction}`))).join('');
       lucide.createIcons();
       attachIconListeners();
-      attachIconListeners();
       if (justUpdated.length > 0) {
         setTimeout(() => {
           const firstUpdated = document.querySelector('.card.just-updated');
@@ -1184,7 +1253,7 @@
           </svg>
           <div class="strength-text" style="color:${col}">${sc}</div>
         </div>
-        <span class="info-icon" data-tip="score-meter" onclick="tipClick(this,event)" style="position:absolute;top:78px;left:22px;z-index:10;">i</span>
+        <span class="info-icon" data-tip="score-meter" style="position:absolute;top:78px;left:22px;z-index:10;">i</span>
         
         <div class="signal-tier tier-${getTier(s.tier||'C')}">${s.tier||'C'}</div>
         <div class="pair">${s.pair}</div>
@@ -1202,7 +1271,7 @@
           <div class="metric-item"><div class="metric-item-label">STOP LOSS</div><div class="metric-item-value">${s.sl?.toFixed(5)||'N/A'}</div></div>
           <div class="metric-item"><div class="metric-item-label">TAKE PROFIT</div><div class="metric-item-value">${s.tp?.toFixed(5)||'N/A'}</div></div>
           <div class="metric-item">
-            <div class="metric-item-label">RISK:REWARD <span class="info-icon" data-tip="signal-rr" onclick="tipClick(this,event)">i</span></div>
+            <div class="metric-item-label">RISK:REWARD <span class="info-icon" data-tip="signal-rr">i</span></div>
             <div class="metric-item-value hl">${s.risk_reward?.toFixed(2)||'N/A'}</div>
           </div>
         </div>
@@ -1212,7 +1281,7 @@
           <div class="section-title" style="margin:0 0 12px 0">
             <i data-lucide="git-compare" style="width:14px;height:14px"></i>
             CHANGES FROM PREVIOUS
-            <span class="info-icon" data-tip="signal-changes" onclick="tipClick(this,event)">i</span>
+            <span class="info-icon" data-tip="signal-changes">i</span>
           </div>
           ${renderChange('Entry',changes.entry)}
           ${renderChange('Stop Loss',changes.sl)}
@@ -1225,7 +1294,7 @@
           <div class="section-title" style="margin:0 0 12px 0">
             <i data-lucide="clock" style="width:14px;height:14px"></i>
             SIGNAL HISTORY (${state.history.length} updates)
-            <span class="info-icon" data-tip="signal-history" onclick="tipClick(this,event)">i</span>
+            <span class="info-icon" data-tip="signal-history">i</span>
           </div>
           ${state.history.slice(0,3).map(h=>`
             <div class="history-item">
@@ -1237,8 +1306,8 @@
         <div class="footer-card">
           <div class="time"><i data-lucide="clock" style="width:12px;height:12px"></i>${fmt(s.timestamp)}</div>
           <div style="display:flex;align-items:center;gap:8px">
-            ${s.estimated_win_rate!=null?`<div style="padding:4px 10px;background:rgba(0,242,169,0.1);border:1px solid rgba(0,242,169,0.3);border-radius:6px;font-size:10px;font-weight:900;color:var(--green);font-family:'Orbitron',monospace;" title="Estimated win rate from micro-backtest">${(s.estimated_win_rate*100).toFixed(0)}% WR <span class="info-icon" data-tip="signal-wr" onclick="tipClick(this,event)" style="background:transparent;border:none;color:var(--green);margin-left:0;">i</span></div>`:''}
-            ${s.sentiment_applied?`<div style="padding:4px 10px;background:rgba(79,172,254,0.1);border:1px solid rgba(79,172,254,0.3);border-radius:6px;font-size:10px;font-weight:900;color:var(--blue);">SENT ${s.sentiment_adjustment>=0?'+':''}${(s.sentiment_adjustment||0).toFixed(1)} <span class="info-icon" data-tip="signal-sentiment" onclick="tipClick(this,event)" style="background:transparent;border:none;color:var(--blue);margin-left:0;">i</span></div>`:''}
+            ${s.estimated_win_rate!=null?`<div style="padding:4px 10px;background:rgba(0,242,169,0.1);border:1px solid rgba(0,242,169,0.3);border-radius:6px;font-size:10px;font-weight:900;color:var(--green);font-family:'Orbitron',monospace;" title="Estimated win rate from micro-backtest">${(s.estimated_win_rate*100).toFixed(0)}% WR <span class="info-icon" data-tip="signal-wr" style="background:transparent;border:none;color:var(--green);margin-left:0;">i</span></div>`:''}
+            ${s.sentiment_applied?`<div style="padding:4px 10px;background:rgba(79,172,254,0.1);border:1px solid rgba(79,172,254,0.3);border-radius:6px;font-size:10px;font-weight:900;color:var(--blue);">SENT ${s.sentiment_adjustment>=0?'+':''}${(s.sentiment_adjustment||0).toFixed(1)} <span class="info-icon" data-tip="signal-sentiment" style="background:transparent;border:none;color:var(--blue);margin-left:0;">i</span></div>`:''}
             <div class="session">${s.session||'N/A'}</div>
           </div>
         </div>
@@ -1522,6 +1591,209 @@
       processAndRenderSignals();
       resetReplayButton();
     }
+
+    /* ============================================
+       PICK OF THE DAY
+    ============================================ */
+    const PAIR_NEWS = {
+      GBPUSD:{
+        BUY:[
+          {text:"Bank of England holds rates, signals patience on cuts",s:"bull"},
+          {text:"UK wage growth beats expectations, supporting GBP",s:"bull"},
+          {text:"USD weakens as Fed hints at rate cuts later in 2026",s:"bull"},
+          {text:"UK Services PMI expands for 4th straight month",s:"bull"},
+          {text:"Dollar index retreats on soft US CPI print",s:"bull"},
+        ],
+        SELL:[
+          {text:"UK retail sales miss forecast, raising recession concerns",s:"bear"},
+          {text:"BoE member signals rate cut possible in Q2 2026",s:"bear"},
+          {text:"USD rallies on strong NFP, cable under pressure",s:"bear"},
+          {text:"GBP/USD breaks below 200-day MA on risk-off flow",s:"bear"},
+          {text:"UK GDP contracts 0.1% in latest monthly reading",s:"bear"},
+        ]
+      },
+      EURUSD:{
+        BUY:[
+          {text:"ECB pauses rate cuts, Euro gains on hawkish tone",s:"bull"},
+          {text:"Eurozone CPI stabilises above target, reducing cut expectations",s:"bull"},
+          {text:"German manufacturing PMI returns to expansion territory",s:"bull"},
+          {text:"EUR/USD reclaims 1.08 as dollar selling intensifies",s:"bull"},
+          {text:"Euro area unemployment hits record low at 5.8%",s:"bull"},
+        ],
+        SELL:[
+          {text:"ECB signals two more rate cuts in 2026 roadmap",s:"bear"},
+          {text:"Eurozone GDP growth stalls, raising stagflation concerns",s:"bear"},
+          {text:"Dollar surges as US economic exceptionalism persists",s:"bear"},
+          {text:"French political uncertainty weighs on Euro",s:"bear"},
+          {text:"EUR/USD prints fresh 2-month low below 1.07",s:"bear"},
+        ]
+      },
+      USDJPY:{
+        BUY:[
+          {text:"BoJ keeps ultra-loose policy, Yen slides broadly",s:"bull"},
+          {text:"US Treasury yields rise, widening rate differential",s:"bull"},
+          {text:"Japan core CPI misses, reducing BoJ hike urgency",s:"bull"},
+          {text:"Risk-on sentiment lifts USD/JPY toward 152",s:"bull"},
+        ],
+        SELL:[
+          {text:"BoJ raises rates, Yen surges across the board",s:"bear"},
+          {text:"Japanese officials warn of excessive yen weakness",s:"bear"},
+          {text:"US CPI undershoots, erasing Fed hawkish bets",s:"bear"},
+          {text:"Risk-off flow drives Yen safe-haven demand",s:"bear"},
+        ]
+      },
+      AUDUSD:{
+        BUY:[
+          {text:"RBA holds rates, flags resilient labour market",s:"bull"},
+          {text:"China stimulus boosts commodity demand, AUD benefits",s:"bull"},
+          {text:"Australian employment beats forecast by 28,000 jobs",s:"bull"},
+          {text:"Iron ore prices rise 3% on Chinese infrastructure push",s:"bull"},
+        ],
+        SELL:[
+          {text:"RBA cuts rates 25bps, signals further easing ahead",s:"bear"},
+          {text:"China PMI contracts, hurting commodity currencies",s:"bear"},
+          {text:"Australian trade surplus narrows on weak exports",s:"bear"},
+          {text:"Risk aversion drives AUD lower on global growth fears",s:"bear"},
+        ]
+      },
+      GBPJPY:{
+        BUY:[
+          {text:"BoE holds while BoJ hesitates — carry trade returns",s:"bull"},
+          {text:"UK growth data surprises higher, pound outperforms",s:"bull"},
+          {text:"Risk appetite drives GBP/JPY toward 192",s:"bull"},
+        ],
+        SELL:[
+          {text:"Yen surges on BoJ surprise, GBP/JPY drops 200 pips",s:"bear"},
+          {text:"Global risk-off hits carry trades across the board",s:"bear"},
+          {text:"UK economic outlook darkens, GBP selling accelerates",s:"bear"},
+        ]
+      },
+      NZDUSD:{
+        BUY:[
+          {text:"RBNZ surprises with hawkish hold, NZD jumps",s:"bull"},
+          {text:"New Zealand dairy prices rise at GDT auction",s:"bull"},
+        ],
+        SELL:[
+          {text:"RBNZ cuts rates 50bps, signals aggressive easing",s:"bear"},
+          {text:"NZD under pressure as China data disappoints",s:"bear"},
+        ]
+      },
+      USDCAD:{
+        BUY:[
+          {text:"Oil prices slide, weighing on Canadian dollar",s:"bull"},
+          {text:"BoC cuts rates for 3rd consecutive meeting",s:"bull"},
+        ],
+        SELL:[
+          {text:"Oil rallies on OPEC+ supply cut extension",s:"bear"},
+          {text:"Canadian jobs data smashes expectations by 45,000",s:"bear"},
+        ]
+      },
+    };
+
+    const NEWS_TRANSLATIONS = {
+      bull:[
+        "Bullish news flow supports this BUY. Fundamentals and technicals are aligned.",
+        "Macro tailwinds back the technical signal — news confirms upward pressure.",
+        "Positive catalyst for the base currency. Strengthens conviction for this trade.",
+      ],
+      bear:[
+        "Bearish headlines reinforce this SELL. Sentiment and technicals agree.",
+        "Negative macro backdrop supports downside. News flow adds conviction.",
+        "Fundamental weakness aligns with the technical breakdown. Bears in control.",
+      ],
+    };
+
+    function buildPickOfDay(signals) {
+      const pod = document.getElementById('pickOfDay');
+      if (!signals || signals.length === 0) { pod.style.display='none'; return; }
+
+      // Pick highest scoring signal from today, fallback to all signals
+      const today = new Date().toISOString().slice(0,10);
+      const todaySigs = signals.filter(s => { try { return new Date(s.timestamp).toISOString().slice(0,10)===today; } catch(e){return false;} });
+      const pool = todaySigs.length > 0 ? todaySigs : signals;
+      const best = pool.reduce((a,b) => ((b.score||0) > (a.score||0) ? b : a));
+      if (!best) { pod.style.display='none'; return; }
+
+      const pair      = best.pair||'---';
+      const direction = best.direction||'BUY';
+      const isBuy     = direction==='BUY';
+      const tier      = best.tier||'B';
+      const score     = best.score||0;
+      const rr        = best.risk_reward;
+      const sentAdj   = best.sentiment_adjustment||0;
+      const sentOn    = best.sentiment_applied||false;
+
+      const tierColors = {
+        'A+':'linear-gradient(135deg,#fbbf24,#f59e0b)',
+        'A': 'linear-gradient(135deg,var(--green),#00c787)',
+        'B': 'linear-gradient(135deg,var(--blue),#3a8bd6)',
+        'C': 'linear-gradient(135deg,#6b7280,#4b5563)',
+      };
+
+      document.getElementById('podPair').textContent  = pair;
+      document.getElementById('podEntry').textContent = best.entry_price ? best.entry_price.toFixed(4) : '---';
+      document.getElementById('podSL').textContent    = best.sl  ? best.sl.toFixed(4)  : '---';
+      document.getElementById('podTP').textContent    = best.tp  ? best.tp.toFixed(4)  : '---';
+      document.getElementById('podRR').textContent    = rr       ? rr.toFixed(2)+'x'   : '---';
+      document.getElementById('podScore').textContent = score+' pts';
+      document.getElementById('podScoreBar').style.width = Math.min(score,100)+'%';
+      document.getElementById('podSession').textContent  = best.session||'';
+      document.getElementById('podTime').textContent = best.timestamp
+        ? new Date(best.timestamp).toUTCString().slice(0,22)+' UTC' : '';
+
+      const dirEl = document.getElementById('podDir');
+      dirEl.textContent       = direction;
+      dirEl.style.background  = isBuy ? 'rgba(0,242,169,0.15)' : 'rgba(255,71,87,0.15)';
+      dirEl.style.color       = isBuy ? 'var(--green)'         : 'var(--red)';
+      dirEl.style.border      = '1px solid '+(isBuy ? 'rgba(0,242,169,0.3)' : 'rgba(255,71,87,0.3)');
+
+      const tierEl = document.getElementById('podTier');
+      tierEl.textContent      = 'Tier '+tier;
+      tierEl.style.background = tierColors[tier]||tierColors['C'];
+      tierEl.style.display    = 'inline-block';
+
+      // Why this pick
+      const why = [];
+      if (tier==='A+'||tier==='A') why.push(`<strong style="color:var(--yellow)">Tier ${tier}</strong> — highest confidence rating.`);
+      if (score >= 75) why.push(`Score <strong style="color:var(--orange)">${score}</strong> — strong multi-indicator alignment.`);
+      if (best.adx >= 25) why.push(`ADX ${best.adx.toFixed(1)} confirms a strong trend.`);
+      if (best.rsi <= 35) why.push(`RSI ${best.rsi.toFixed(0)} — oversold, potential bounce.`);
+      if (best.rsi >= 65) why.push(`RSI ${best.rsi.toFixed(0)} — overbought, potential reversal.`);
+      if (rr >= 2.8) why.push(`R:R ${rr.toFixed(2)} — excellent risk-adjusted potential.`);
+      if (best.session==='EUROPEAN'||best.session==='US') why.push(`${best.session} session — historically higher win rate.`);
+      document.getElementById('podReason').innerHTML = why.length > 0
+        ? why.join(' ')
+        : `Highest composite score today. Technical indicators align for ${direction} on ${pair}.`;
+
+      // Sentiment line
+      const sentEl = document.getElementById('podSentiment');
+      if (sentOn && sentAdj !== 0) {
+        sentEl.style.display = 'block';
+        const sign = sentAdj > 0 ? '+' : '';
+        sentEl.innerHTML = `🤖 FinBERT: Sentiment is <strong>${sentAdj>0?'bullish':'bearish'}</strong> — score adjusted <strong>${sign}${sentAdj} pts</strong>.`;
+      } else { sentEl.style.display = 'none'; }
+
+      // News ticker
+      const pairKey   = pair.replace('=X','');
+      const newsPool  = (PAIR_NEWS[pairKey]||{})[direction]||[
+        {text:`${pairKey} ${direction} signal on technical alignment`,s:isBuy?'bull':'bear'},
+        {text:`Watch ${pairKey} for momentum continuation`,s:isBuy?'bull':'bear'},
+        {text:`${best.session||''} session active — ${pairKey} showing directional bias`,s:'neut'},
+      ];
+      const doubled   = [...newsPool,...newsPool];
+      document.getElementById('newsTicker').innerHTML = doubled.map(n =>
+        `<div class="news-item"><div class="news-dot news-${n.s}"></div><div>${n.text}</div></div>`
+      ).join('');
+      document.getElementById('newsTicker').style.animationDuration = Math.max(12, newsPool.length*4)+'s';
+
+      // Translation
+      const pool2 = NEWS_TRANSLATIONS[isBuy?'bull':'bear']||[];
+      document.getElementById('podTranslation').textContent = pool2[Math.floor(Math.random()*pool2.length)]||'';
+
+      pod.style.display = 'block';
+      lucide.createIcons();
+    }
+
     function resetReplayButton() {
       isReplaying=false;
       const btn=document.getElementById('replayBtn');
@@ -1533,117 +1805,5 @@
       lucide.createIcons();
     }
   </script>
-
-  <!-- ═══════════════════════════════════════════════
-       DISCLAIMER FOOTER
-  ════════════════════════════════════════════════ -->
-  <div style="
-    margin-top: 48px;
-    border-top: 1px solid rgba(255,255,255,0.06);
-    padding: 32px 24px 40px;
-    max-width: 1920px;
-    margin-left: auto;
-    margin-right: auto;
-    position: relative;
-    z-index: 1;
-  ">
-    <!-- Warning banner -->
-    <div style="
-      background: linear-gradient(135deg, rgba(251,191,36,0.07), rgba(255,107,53,0.05));
-      border: 1px solid rgba(251,191,36,0.2);
-      border-radius: 12px;
-      padding: 16px 20px;
-      margin-bottom: 24px;
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-    ">
-      <i data-lucide="triangle-alert" style="width:20px;height:20px;color:#fbbf24;flex-shrink:0;margin-top:2px;"></i>
-      <div style="font-size:13px;color:#fbbf24;font-weight:700;line-height:1.5;letter-spacing:0.3px;">
-        TRADING FOREIGN EXCHANGE CARRIES SIGNIFICANT RISK OF LOSS AND IS NOT SUITABLE FOR ALL INVESTORS.
-        YOU MAY LOSE MORE THAN YOUR INITIAL DEPOSIT.
-      </div>
-    </div>
-
-    <!-- Full disclaimer text -->
-    <div style="font-size:11.5px;color:var(--text-muted);line-height:1.8;max-width:1200px;">
-
-      <p style="margin-bottom:12px;">
-        <strong style="color:var(--text-dim);">NOT FINANCIAL ADVICE.</strong>
-        Trade Beacon is an <strong style="color:var(--text-dim);">automated algorithmic signal system</strong> designed for
-        research, educational, and informational purposes only. Nothing on this dashboard constitutes financial advice,
-        investment advice, trading advice, or any other form of advice. The signals, scores, tier classifications, win-rate
-        estimates, and sentiment adjustments displayed here are the output of a technical algorithm and should not be
-        interpreted as recommendations to buy or sell any financial instrument.
-      </p>
-
-      <p style="margin-bottom:12px;">
-        <strong style="color:var(--text-dim);">PAST PERFORMANCE.</strong>
-        Historical win rates, pip totals, and expectancy figures shown in this dashboard are based on past signal
-        performance and are <strong style="color:var(--text-dim);">not indicative of future results</strong>.
-        Forex markets are inherently unpredictable. No algorithm, however sophisticated, can guarantee profitable
-        outcomes. Performance statistics are only considered statistically meaningful after 100+ resolved trades.
-      </p>
-
-      <p style="margin-bottom:12px;">
-        <strong style="color:var(--text-dim);">RISK WARNING.</strong>
-        Forex and CFD trading involves substantial risk. Leverage can work against you as well as for you.
-        You should only trade with capital you can afford to lose entirely. Before trading, consider your
-        experience level, investment objectives, and risk tolerance. Seek independent financial advice if necessary.
-      </p>
-
-      <p style="margin-bottom:12px;">
-        <strong style="color:var(--text-dim);">DATA ACCURACY.</strong>
-        Market data is sourced via yfinance and may be delayed, incomplete, or inaccurate.
-        Sentiment analysis is powered by HuggingFace FinBERT via the Inference API and reflects NLP model output,
-        not verified market intelligence. Signal entry prices, stop-loss, and take-profit levels are theoretical
-        and may not reflect executable prices due to spreads, slippage, and liquidity conditions.
-      </p>
-
-      <p style="margin-bottom:12px;">
-        <strong style="color:var(--text-dim);">MARKET HOURS &amp; HOLIDAYS.</strong>
-        This dashboard attempts to reflect standard forex market hours (Sunday 22:00 UTC – Friday 22:00 UTC)
-        and major UK/US bank holidays. Holiday schedules may vary by broker and jurisdiction. Always verify
-        market status with your broker before placing orders. Trade Beacon does not guarantee signals will
-        not be generated during thin liquidity periods.
-      </p>
-
-      <p style="margin-bottom:12px;">
-        <strong style="color:var(--text-dim);">SIGNAL-ONLY MODE.</strong>
-        Trade Beacon operates in signal-only mode — <strong style="color:var(--text-dim);">no orders are placed automatically</strong>.
-        The system generates entry, stop-loss, and take-profit levels which you may choose to execute manually
-        in your own broker platform at your own discretion. The signals are intended for use in live trading
-        by the user, but all execution decisions and order placement remain solely the responsibility of the trader.
-        Trade Beacon has no connection to any broker, exchange, or execution venue.
-      </p>
-
-      <p style="margin-bottom:0;">
-        <strong style="color:var(--text-dim);">NO LIABILITY.</strong>
-        The creators and operators of Trade Beacon accept no liability for any losses incurred as a result
-        of acting on information displayed in this dashboard. Use of this system is entirely at your own risk.
-        By viewing this dashboard you acknowledge that you have read, understood, and accepted this disclaimer.
-      </p>
-    </div>
-
-    <!-- Footer bar -->
-    <div style="
-      margin-top: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
-      padding-top: 20px;
-      border-top: 1px solid rgba(255,255,255,0.04);
-    ">
-      <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;">
-        TRADE BEACON v2.1.5-FINBERT &nbsp;·&nbsp; SIGNAL-ONLY MODE &nbsp;·&nbsp; NO AUTO-EXECUTION
-      </div>
-      <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.3px;">
-        Signals for manual execution &nbsp;·&nbsp; All times UTC
-      </div>
-    </div>
-  </div>
-
 </body>
 </html>

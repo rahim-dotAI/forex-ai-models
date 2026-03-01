@@ -191,9 +191,9 @@ class PerformanceTracker:
 
     def _migrate(self, data: Dict, from_version: str) -> Dict:
         """
-        Migrate old data to v2.1.4-SCORING format.
-        Handles v2.1.2, v2.1.2-MULTI, and any other previous versions.
-        Re-maps tiers using updated thresholds (A+:75, A:68, B:60).
+        Migrate old data to current format.
+        Handles v2.1.2, v2.1.2-MULTI, v2.1.4-SCORING, and any other previous versions.
+        Re-maps tiers using correct thresholds (A+:80, A:68, B:55).
         """
         log.info(f"🔄 Migrating {len(data.get('signals', []))} signals from {from_version}...")
 
@@ -215,14 +215,13 @@ class PerformanceTracker:
                 if old_conf != signal["confidence"]:
                     needs_migration = True
 
-            # Re-map tier using updated v2.1.4 thresholds
+            # Re-map tier using correct thresholds (A+:80, A:68, B:55)
             if "score" in signal:
                 score = safe_int(signal["score"])
                 new_tier = map_score_to_tier(score)
                 if signal.get("tier") != new_tier:
                     signal["tier"] = new_tier
                     needs_migration = True
-                    log.info(f"   ✅ Re-tiered {signal.get('pair', 'UNKNOWN')}: score={score} → {new_tier}")
             elif "tier" not in signal or not signal["tier"]:
                 conf = normalize_confidence(signal.get("confidence", "MODERATE"))
                 signal["tier"] = map_confidence_to_tier(conf)
@@ -233,75 +232,71 @@ class PerformanceTracker:
                 score = safe_int(signal.get("score", 0))
                 signal["eligible_modes"] = map_score_to_modes(score)
                 needs_migration = True
-                log.info(f"   ✅ Added eligible_modes {signal['eligible_modes']} to {signal.get('pair', 'UNKNOWN')}")
 
             # Ensure signal_id exists
             if "signal_id" not in signal and "id" in signal:
                 signal["signal_id"] = signal["id"]
                 needs_migration = True
 
-            # Add backtest/sentiment metadata if missing
+            # Sentiment fields — v2.1.5-FINBERT: sentiment_score is now
+            # directional net score (base_currency - quote_currency sentiment)
+            # rather than raw article score. Default 0.0 is correct for both.
             signal.setdefault("sentiment_applied", False)
             signal.setdefault("sentiment_score", 0.0)
             signal.setdefault("sentiment_adjustment", 0.0)
             signal.setdefault("estimated_win_rate", None)
 
+            # v2.1.5-FINBERT: track which sentiment engine was used
+            signal.setdefault("sentiment_engine", None)
+
             if needs_migration:
                 migrated_count += 1
 
-        # Recalculate all analytics with updated tier thresholds
-        log.info(f"🔄 Recalculating analytics with v2.1.4 tier thresholds...")
-
+        # Recalculate analytics
         resolved = [s for s in data.get("signals", []) if s.get("status") in ("WIN", "LOSS")]
-        expired = [s for s in data.get("signals", []) if s.get("status") == "EXPIRED"]
+        expired  = [s for s in data.get("signals", []) if s.get("status") == "EXPIRED"]
 
         wins: List[float] = []
         losses: List[float] = []
         total_pips = 0.0
         analytics = self._empty_analytics()
-
         mode_stats = {
-            "all": {"trades": 0, "wins": 0, "total_pips": 0.0},
-            "aggressive": {"trades": 0, "wins": 0, "total_pips": 0.0},
-            "conservative": {"trades": 0, "wins": 0, "total_pips": 0.0}
+            "all":          {"trades": 0, "wins": 0, "total_pips": 0.0},
+            "aggressive":   {"trades": 0, "wins": 0, "total_pips": 0.0},
+            "conservative": {"trades": 0, "wins": 0, "total_pips": 0.0},
         }
 
         for s in resolved:
-            pips = safe_float(s.get("pips"))
+            pips       = safe_float(s.get("pips"))
             total_pips += pips
-            pair = s.get("pair", "UNKNOWN")
-            session = normalize_session(s.get("session"))
-            confidence = normalize_confidence(s.get("confidence"))
-            tier = normalize_tier(s.get("tier"))
-            modes = s.get("eligible_modes", ["aggressive"])
-            is_win = s["status"] == "WIN"
-
-            if is_win:
-                wins.append(pips)
-            else:
-                losses.append(abs(pips))
-
+            is_win     = s["status"] == "WIN"
+            if is_win: wins.append(pips)
+            else:      losses.append(abs(pips))
             mode_stats["all"]["trades"] += 1
             mode_stats["all"]["total_pips"] += pips
-            if is_win:
-                mode_stats["all"]["wins"] += 1
-
-            for mode in modes:
+            if is_win: mode_stats["all"]["wins"] += 1
+            for mode in s.get("eligible_modes", ["aggressive"]):
                 if mode in mode_stats:
                     mode_stats[mode]["trades"] += 1
                     mode_stats[mode]["total_pips"] += pips
-                    if is_win:
-                        mode_stats[mode]["wins"] += 1
+                    if is_win: mode_stats[mode]["wins"] += 1
+            self._add_to_analytics(
+                analytics,
+                s.get("pair", "UNKNOWN"),
+                normalize_session(s.get("session")),
+                normalize_confidence(s.get("confidence")),
+                normalize_tier(s.get("tier")),
+                s.get("eligible_modes", ["aggressive"]),
+                pips, is_win
+            )
 
-            self._add_to_analytics(analytics, pair, session, confidence, tier, modes, pips, is_win)
+        total      = len(resolved)
+        win_rate   = (len(wins) / total * 100) if total else 0.0
+        avg_win    = sum(wins) / len(wins)       if wins   else 0.0
+        avg_loss   = sum(losses) / len(losses)   if losses else 0.0
+        expectancy = ((win_rate/100)*avg_win - (1-win_rate/100)*avg_loss) if total else 0.0
 
-        total = len(resolved)
-        win_rate = (len(wins) / total * 100) if total else 0.0
-        avg_win = sum(wins) / len(wins) if wins else 0.0
-        avg_loss = sum(losses) / len(losses) if losses else 0.0
-        expectancy = ((win_rate / 100) * avg_win - (1 - win_rate / 100) * avg_loss) if total else 0.0
-
-        for mode, md in mode_stats.items():
+        for md in mode_stats.values():
             if md["trades"] > 0:
                 md["win_rate"] = safe_round(md["wins"] / md["trades"] * 100, 1)
 
@@ -309,67 +304,81 @@ class PerformanceTracker:
 
         data["analytics"] = analytics
         data["stats"] = {
-            "total_trades": total,
-            "total_resolved": total,
-            "wins": len(wins),
-            "losses": len(losses),
-            "expired": len(expired),
-            "win_rate": safe_round(win_rate, 1),
-            "total_pips": safe_round(total_pips, 1),
-            "avg_win": safe_round(avg_win, 1),
-            "avg_loss": safe_round(avg_loss, 1),
+            "total_trades":    total,
+            "total_resolved":  total,
+            "wins":            len(wins),
+            "losses":          len(losses),
+            "expired":         len(expired),
+            "win_rate":        safe_round(win_rate, 1),
+            "total_pips":      safe_round(total_pips, 1),
+            "avg_win":         safe_round(avg_win, 1),
+            "avg_loss":        safe_round(avg_loss, 1),
             "expectancy_pips": safe_round(expectancy, 2),
-            "validated": total >= 100,
-            "by_mode": mode_stats
+            "validated":       total >= 100,
+            "by_mode":         mode_stats,
         }
         data["version"] = TRACKER_VERSION
-
         log.info(f"✅ Migration complete: {migrated_count} signals updated")
-        log.info(f"   - by_tier: {list(analytics['by_tier'].keys())}")
-        log.info(f"   - by_mode: {list(analytics['by_mode'].keys())}")
-
         return data
 
     def _add_to_analytics(self, analytics: Dict, pair: str, session: str,
                            confidence: str, tier: str, modes: List[str],
                            pips: float, is_win: bool):
-        """Helper to add a resolved trade to all analytics buckets."""
+        """Add a resolved trade to all analytics buckets."""
 
         def _update(group: Dict, key: str):
             group.setdefault(key, {"trades": 0, "wins": 0, "total_pips": 0.0})
-            group[key]["trades"] += 1
+            group[key]["trades"]     += 1
             group[key]["total_pips"] += pips
-            if is_win:
-                group[key]["wins"] += 1
+            if is_win: group[key]["wins"] += 1
 
-        _update(analytics["by_pair"], pair)
-        _update(analytics["by_session"], session)
+        _update(analytics["by_pair"],       pair)
+        _update(analytics["by_session"],    session)
         _update(analytics["by_confidence"], confidence)
-        _update(analytics["by_tier"], tier)
-
+        _update(analytics["by_tier"],       tier)
         for mode in modes:
             _update(analytics["by_mode"], mode)
 
-        # Cross analytics - tier by session
-        tier_session_key = f"{tier}_{session}"
-        analytics["cross_analytics"]["tier_by_session"].setdefault(tier_session_key, {
+        # Cross: tier × session
+        tk = f"{tier}_{session}"
+        analytics["cross_analytics"]["tier_by_session"].setdefault(tk, {
             "tier": tier, "session": session, "trades": 0, "wins": 0, "total_pips": 0.0
         })
-        analytics["cross_analytics"]["tier_by_session"][tier_session_key]["trades"] += 1
-        analytics["cross_analytics"]["tier_by_session"][tier_session_key]["total_pips"] += pips
-        if is_win:
-            analytics["cross_analytics"]["tier_by_session"][tier_session_key]["wins"] += 1
+        analytics["cross_analytics"]["tier_by_session"][tk]["trades"]     += 1
+        analytics["cross_analytics"]["tier_by_session"][tk]["total_pips"] += pips
+        if is_win: analytics["cross_analytics"]["tier_by_session"][tk]["wins"] += 1
 
-        # Cross analytics - mode by tier
+        # Cross: mode × tier
         for mode in modes:
-            mode_tier_key = f"{mode}_{tier}"
-            analytics["cross_analytics"]["mode_by_tier"].setdefault(mode_tier_key, {
+            mk = f"{mode}_{tier}"
+            analytics["cross_analytics"]["mode_by_tier"].setdefault(mk, {
                 "mode": mode, "tier": tier, "trades": 0, "wins": 0, "total_pips": 0.0
             })
-            analytics["cross_analytics"]["mode_by_tier"][mode_tier_key]["trades"] += 1
-            analytics["cross_analytics"]["mode_by_tier"][mode_tier_key]["total_pips"] += pips
-            if is_win:
-                analytics["cross_analytics"]["mode_by_tier"][mode_tier_key]["wins"] += 1
+            analytics["cross_analytics"]["mode_by_tier"][mk]["trades"]     += 1
+            analytics["cross_analytics"]["mode_by_tier"][mk]["total_pips"] += pips
+            if is_win: analytics["cross_analytics"]["mode_by_tier"][mk]["wins"] += 1
+
+        # New in v2.1.5-FINBERT: sentiment effectiveness tracking
+        # Splits by whether sentiment was applied so you can compare
+        # sentiment-enhanced vs pure-technical signal performance
+        # (populated via record_trade, not recalculate — see _add_sentiment_analytics)
+
+    def _add_sentiment_analytics(self, analytics: Dict, is_win: bool,
+                                  pips: float, sentiment_applied: bool,
+                                  sentiment_engine: Optional[str]):
+        """
+        Track sentiment effectiveness separately.
+        Bucket: sentiment_applied=True vs False so you can compare
+        FinBERT-enhanced signals against pure technical ones over time.
+        """
+        key = f"sentiment_{'on' if sentiment_applied else 'off'}"
+        analytics["by_sentiment"].setdefault(key, {
+            "trades": 0, "wins": 0, "total_pips": 0.0,
+            "engine": sentiment_engine or "none"
+        })
+        analytics["by_sentiment"][key]["trades"]     += 1
+        analytics["by_sentiment"][key]["total_pips"] += pips
+        if is_win: analytics["by_sentiment"][key]["wins"] += 1
 
     def _calculate_win_rates(self, analytics: Dict):
         """Calculate win rates for all analytics buckets."""
@@ -385,100 +394,82 @@ class PerformanceTracker:
                 if data["trades"] > 0:
                     data["win_rate"] = safe_round(data["wins"] / data["trades"] * 100, 1)
 
+        # Sentiment analytics
+        for data in analytics.get("by_sentiment", {}).values():
+            if data["trades"] > 0:
+                data["win_rate"] = safe_round(data["wins"] / data["trades"] * 100, 1)
+
     def _save(self):
-        """Save history with UTC timestamp."""
         self.history["metadata"]["last_updated"] = datetime.now(timezone.utc).isoformat()
         with open(self.history_file, "w") as f:
             json.dump(self.history, f, indent=2)
 
     def _empty(self) -> Dict:
-        """Create empty history structure."""
         now = datetime.now(timezone.utc).isoformat()
         return {
-            "version": TRACKER_VERSION,
-            "signals": [],
-            "stats": self._empty_stats(),
+            "version":  TRACKER_VERSION,
+            "signals":  [],
+            "stats":    self._empty_stats(),
             "analytics": self._empty_analytics(),
-            "daily": {},
-            "metadata": {"created_at": now, "last_updated": now}
+            "daily":    {},
+            "metadata": {"created_at": now, "last_updated": now},
         }
 
     def _empty_stats(self) -> Dict:
-        """Empty stats structure with multi-mode support."""
         return {
-            "total_trades": 0,
-            "total_resolved": 0,
-            "wins": 0,
-            "losses": 0,
-            "expired": 0,
-            "win_rate": 0.0,
-            "total_pips": 0.0,
-            "avg_win": 0.0,
-            "avg_loss": 0.0,
-            "expectancy_pips": 0.0,
-            "validated": False,
+            "total_trades": 0, "total_resolved": 0,
+            "wins": 0, "losses": 0, "expired": 0,
+            "win_rate": 0.0, "total_pips": 0.0,
+            "avg_win": 0.0, "avg_loss": 0.0,
+            "expectancy_pips": 0.0, "validated": False,
             "by_mode": {
-                "all": {"trades": 0, "wins": 0, "total_pips": 0.0, "win_rate": 0.0},
-                "aggressive": {"trades": 0, "wins": 0, "total_pips": 0.0, "win_rate": 0.0},
-                "conservative": {"trades": 0, "wins": 0, "total_pips": 0.0, "win_rate": 0.0}
+                "all":          {"trades": 0, "wins": 0, "total_pips": 0.0, "win_rate": 0.0},
+                "aggressive":   {"trades": 0, "wins": 0, "total_pips": 0.0, "win_rate": 0.0},
+                "conservative": {"trades": 0, "wins": 0, "total_pips": 0.0, "win_rate": 0.0},
             },
-            "note": "Stats valid after statistical significance (100+ trades)"
+            "note": "Stats valid after statistical significance (100+ trades)",
         }
 
     def _empty_analytics(self) -> Dict:
-        """Empty analytics structure with tier, mode, and cross dimensions."""
         return {
-            "by_pair": {},
-            "by_session": {},
-            "by_confidence": {},
+            "by_pair": {}, "by_session": {}, "by_confidence": {},
             "by_tier": {},
             "by_mode": {
                 "all": {"trades": 0, "wins": 0, "total_pips": 0.0, "win_rate": 0.0}
             },
+            "by_sentiment": {},   # NEW v2.1.5-FINBERT: sentiment on vs off performance
             "cross_analytics": {
                 "tier_by_session": {},
-                "mode_by_tier": {}
-            }
+                "mode_by_tier":    {},
+            },
         }
 
     def register_signal(self, signal: Dict):
         """
         Register a signal safely (idempotent).
         Status must be: OPEN, EXPIRED, WIN, LOSS
-
-        Supports multi-mode signals with tier classification and sentiment data.
         """
         signal_id = signal.get("id") or signal.get("signal_id")
-
         if not signal_id:
             raise ValueError("Signal must have deterministic id or signal_id")
-
         if len(signal_id) < 20:
-            log.warning(f"⚠️ Non-deterministic signal ID detected: {signal_id}")
+            log.warning(f"⚠️ Non-deterministic signal ID: {signal_id}")
+        if self._find_signal(signal_id):
+            log.debug(f"⏭️ Signal {signal_id} already registered"); return
 
-        existing = self._find_signal(signal_id)
-        if existing:
-            log.debug(f"⏭️ Signal {signal_id} already registered")
-            return
+        if "session"    in signal: signal["session"]    = normalize_session(signal["session"])
+        if "confidence" in signal: signal["confidence"] = normalize_confidence(signal["confidence"])
+        if "tier"       in signal: signal["tier"]       = normalize_tier(signal["tier"])
 
-        # Normalize before storing
-        if "session" in signal:
-            signal["session"] = normalize_session(signal["session"])
-        if "confidence" in signal:
-            signal["confidence"] = normalize_confidence(signal["confidence"])
-        if "tier" in signal:
-            signal["tier"] = normalize_tier(signal["tier"])
-
-        # Ensure multi-mode fields exist
-        signal.setdefault("eligible_modes", ["aggressive"])
-        signal.setdefault("tier", "C")
-        signal.setdefault("sentiment_applied", False)
-        signal.setdefault("sentiment_score", 0.0)
-        signal.setdefault("sentiment_adjustment", 0.0)
-        signal.setdefault("estimated_win_rate", None)
+        signal.setdefault("eligible_modes",        ["aggressive"])
+        signal.setdefault("tier",                  "C")
+        signal.setdefault("sentiment_applied",     False)
+        signal.setdefault("sentiment_score",       0.0)
+        signal.setdefault("sentiment_adjustment",  0.0)
+        signal.setdefault("sentiment_engine",      None)   # "finbert" or None
+        signal.setdefault("estimated_win_rate",    None)
 
         self.history["signals"].append(signal)
-
         today = datetime.now(timezone.utc).date().isoformat()
         self.history["daily"].setdefault(today, [])
         if signal_id not in self.history["daily"][today]:
@@ -497,193 +488,185 @@ class PerformanceTracker:
                      sentiment_applied: bool = False,
                      sentiment_score: float = 0.0,
                      sentiment_adjustment: float = 0.0,
+                     sentiment_engine: str = None,
                      estimated_win_rate: float = None,
                      **kwargs):
         """
         Record trade outcome when it hits SL/TP or expires.
 
-        Args:
-            tier: Quality tier (A+, A, B, C) - using v2.1.4 thresholds
-            eligible_modes: List of modes this signal qualifies for
-            sentiment_applied: Whether sentiment analysis was applied
-            sentiment_score: Net sentiment value (-1.0 to +1.0)
-            sentiment_adjustment: Score adjustment from sentiment
-            estimated_win_rate: Micro-backtest estimated win probability
+        v2.1.5-FINBERT additions:
+            sentiment_engine: 'finbert' | None — which engine provided sentiment
+            sentiment_score:  directional net score (base_currency - quote_currency)
+                              range -1.0 to +1.0. Different from v2.1.4 (was raw article avg)
         """
         signal = self._find_signal(signal_id)
 
-        # Status transition guard
         if signal and signal.get("status") in ("WIN", "LOSS", "EXPIRED"):
-            log.warning(f"⚠️ Signal {signal_id} already resolved with status: {signal['status']}")
-            return
+            log.warning(f"⚠️ {signal_id} already resolved: {signal['status']}"); return
 
         if signal:
-            signal["status"] = outcome
+            signal["status"]     = outcome
             signal["exit_price"] = exit_price
-            signal["exit_time"] = exit_time or datetime.now(timezone.utc).isoformat()
-            signal["pips"] = pips
-            log.info(f"✅ Updated signal {signal_id}: {outcome} ({pips:+.1f} pips)")
+            signal["exit_time"]  = exit_time or datetime.now(timezone.utc).isoformat()
+            signal["pips"]       = pips
+            # Update sentiment fields if they've changed (e.g. applied after initial registration)
+            if sentiment_applied:
+                signal["sentiment_applied"]    = sentiment_applied
+                signal["sentiment_score"]      = sentiment_score
+                signal["sentiment_adjustment"] = sentiment_adjustment
+                signal["sentiment_engine"]     = sentiment_engine or "finbert"
+            log.info(f"✅ Updated {signal_id}: {outcome} ({pips:+.1f} pips)")
         else:
-            # Re-map tier using v2.1.4 thresholds if score available
             if tier is None and score is not None:
                 tier = map_score_to_tier(safe_int(score))
-
             signal = {
-                "id": signal_id,
-                "signal_id": signal_id,
-                "pair": pair,
-                "direction": direction,
-                "entry_price": entry_price,
-                "exit_price": exit_price,
-                "sl": sl,
-                "tp": tp,
-                "status": outcome,
-                "pips": pips,
-                "confidence": normalize_confidence(confidence),
-                "score": score,
-                "session": normalize_session(session),
-                "tier": normalize_tier(tier),
-                "eligible_modes": eligible_modes or map_score_to_modes(safe_int(score)),
-                "sentiment_applied": sentiment_applied,
-                "sentiment_score": sentiment_score,
+                "id":                   signal_id,
+                "signal_id":            signal_id,
+                "pair":                 pair,
+                "direction":            direction,
+                "entry_price":          entry_price,
+                "exit_price":           exit_price,
+                "sl":                   sl,
+                "tp":                   tp,
+                "status":               outcome,
+                "pips":                 pips,
+                "confidence":           normalize_confidence(confidence),
+                "score":                score,
+                "session":              normalize_session(session),
+                "tier":                 normalize_tier(tier),
+                "eligible_modes":       eligible_modes or map_score_to_modes(safe_int(score)),
+                "sentiment_applied":    sentiment_applied,
+                "sentiment_score":      sentiment_score,
                 "sentiment_adjustment": sentiment_adjustment,
-                "estimated_win_rate": estimated_win_rate,
-                "timestamp": entry_time or datetime.now(timezone.utc).isoformat(),
-                "exit_time": exit_time or datetime.now(timezone.utc).isoformat()
+                "sentiment_engine":     sentiment_engine or ("finbert" if sentiment_applied else None),
+                "estimated_win_rate":   estimated_win_rate,
+                "timestamp":            entry_time or datetime.now(timezone.utc).isoformat(),
+                "exit_time":            exit_time  or datetime.now(timezone.utc).isoformat(),
             }
             self.history["signals"].append(signal)
-            log.info(f"✅ Recorded new trade {signal_id}: {outcome} ({pips:+.1f} pips) [{signal['tier']}]")
+            log.info(f"✅ Recorded {signal_id}: {outcome} ({pips:+.1f} pips) [{signal['tier']}]")
 
         self._recalculate()
         self._save()
 
     def _find_signal(self, signal_id: str) -> Optional[Dict]:
-        """Find a signal by ID."""
-        for signal in self.history["signals"]:
-            if signal.get("id") == signal_id or signal.get("signal_id") == signal_id:
-                return signal
+        for s in self.history["signals"]:
+            if s.get("id") == signal_id or s.get("signal_id") == signal_id:
+                return s
         return None
 
     def _recalculate(self):
         """
         Recalculate all statistics from resolved signals.
-
-        RESOLVED = WIN or LOSS (used for stats)
-        EXPIRED = tracked separately (not included in win rate)
+        WIN/LOSS → stats + analytics
+        EXPIRED  → counted separately, not in win rate
         """
-        resolved = [s for s in self.history["signals"] if s.get("status") in ("WIN", "LOSS")]
-        expired = [s for s in self.history["signals"] if s.get("status") == "EXPIRED"]
+        resolved = [s for s in self.history["signals"] if s.get("status") in ("WIN","LOSS")]
+        expired  = [s for s in self.history["signals"] if s.get("status") == "EXPIRED"]
 
         wins: List[float] = []
         losses: List[float] = []
         total_pips = 0.0
-        analytics = self._empty_analytics()
-
+        analytics  = self._empty_analytics()
         mode_stats = {
-            "all": {"trades": 0, "wins": 0, "total_pips": 0.0},
-            "aggressive": {"trades": 0, "wins": 0, "total_pips": 0.0},
-            "conservative": {"trades": 0, "wins": 0, "total_pips": 0.0}
+            "all":          {"trades": 0, "wins": 0, "total_pips": 0.0},
+            "aggressive":   {"trades": 0, "wins": 0, "total_pips": 0.0},
+            "conservative": {"trades": 0, "wins": 0, "total_pips": 0.0},
         }
 
         for s in resolved:
-            pips = safe_float(s.get("pips"))
+            pips       = safe_float(s.get("pips"))
             total_pips += pips
-            pair = s.get("pair", "UNKNOWN")
-            session = normalize_session(s.get("session"))
+            pair       = s.get("pair", "UNKNOWN")
+            session    = normalize_session(s.get("session"))
             confidence = normalize_confidence(s.get("confidence"))
-            tier = normalize_tier(s.get("tier"))
-            modes = s.get("eligible_modes", ["aggressive"])
-            is_win = s["status"] == "WIN"
+            tier       = normalize_tier(s.get("tier"))
+            modes      = s.get("eligible_modes", ["aggressive"])
+            is_win     = s["status"] == "WIN"
 
-            if is_win:
-                wins.append(pips)
-            else:
-                losses.append(abs(pips))
+            if is_win: wins.append(pips)
+            else:      losses.append(abs(pips))
 
-            # Track 'all' mode
-            mode_stats["all"]["trades"] += 1
+            mode_stats["all"]["trades"]     += 1
             mode_stats["all"]["total_pips"] += pips
-            if is_win:
-                mode_stats["all"]["wins"] += 1
+            if is_win: mode_stats["all"]["wins"] += 1
 
-            # Track by mode
             for mode in modes:
                 if mode in mode_stats:
-                    mode_stats[mode]["trades"] += 1
+                    mode_stats[mode]["trades"]     += 1
                     mode_stats[mode]["total_pips"] += pips
-                    if is_win:
-                        mode_stats[mode]["wins"] += 1
+                    if is_win: mode_stats[mode]["wins"] += 1
 
             self._add_to_analytics(analytics, pair, session, confidence, tier, modes, pips, is_win)
 
-        total = len(resolved)
-        win_rate = (len(wins) / total * 100) if total else 0.0
-        avg_win = sum(wins) / len(wins) if wins else 0.0
-        avg_loss = sum(losses) / len(losses) if losses else 0.0
-        expectancy = (
-            (win_rate / 100) * avg_win -
-            (1 - win_rate / 100) * avg_loss
-        ) if total else 0.0
+            # Sentiment effectiveness tracking
+            self._add_sentiment_analytics(
+                analytics, is_win, pips,
+                s.get("sentiment_applied", False),
+                s.get("sentiment_engine")
+            )
 
-        for mode, md in mode_stats.items():
+        total      = len(resolved)
+        win_rate   = (len(wins) / total * 100) if total else 0.0
+        avg_win    = sum(wins)   / len(wins)   if wins   else 0.0
+        avg_loss   = sum(losses) / len(losses) if losses else 0.0
+        expectancy = ((win_rate/100)*avg_win - (1-win_rate/100)*avg_loss) if total else 0.0
+
+        for md in mode_stats.values():
             if md["trades"] > 0:
                 md["win_rate"] = safe_round(md["wins"] / md["trades"] * 100, 1)
 
         self.history["stats"] = {
-            "total_trades": total,
-            "total_resolved": total,
-            "wins": len(wins),
-            "losses": len(losses),
-            "expired": len(expired),
-            "win_rate": safe_round(win_rate, 1),
-            "total_pips": safe_round(total_pips, 1),
-            "avg_win": safe_round(avg_win, 1),
-            "avg_loss": safe_round(avg_loss, 1),
+            "total_trades":    total,
+            "total_resolved":  total,
+            "wins":            len(wins),
+            "losses":          len(losses),
+            "expired":         len(expired),
+            "win_rate":        safe_round(win_rate, 1),
+            "total_pips":      safe_round(total_pips, 1),
+            "avg_win":         safe_round(avg_win, 1),
+            "avg_loss":        safe_round(avg_loss, 1),
             "expectancy_pips": safe_round(expectancy, 2),
-            "validated": total >= 100,
-            "by_mode": mode_stats
+            "validated":       total >= 100,
+            "by_mode":         mode_stats,
         }
 
         self._calculate_win_rates(analytics)
         self.history["analytics"] = analytics
 
     def export_to_csv(self, path="performance_export.csv") -> str:
-        """Export all signals to CSV with multi-mode fields."""
         pd.DataFrame(self.history["signals"]).to_csv(path, index=False)
         log.info(f"📄 Exported to {path}")
         return path
 
     def get_dashboard_summary(self) -> Dict:
-        """Get summary for dashboard integration with multi-mode support."""
         return {
-            "stats": self.history["stats"],
-            "analytics": self.history["analytics"],
-            "equity": {},
-            "signals_total": len(self.history["signals"]),
-            "updated_at": datetime.now(timezone.utc).isoformat(),
-            "version": TRACKER_VERSION,
-            "multi_mode": True
+            "stats":          self.history["stats"],
+            "analytics":      self.history["analytics"],
+            "equity":         {},
+            "signals_total":  len(self.history["signals"]),
+            "updated_at":     datetime.now(timezone.utc).isoformat(),
+            "version":        TRACKER_VERSION,
+            "multi_mode":     True,
         }
 
     def _log_state(self):
-        """Log current tracker state with multi-mode info."""
         open_sigs = [s for s in self.history["signals"] if s.get("status") == "OPEN"]
-        resolved = [s for s in self.history["signals"] if s.get("status") in ("WIN", "LOSS")]
-        expired = [s for s in self.history["signals"] if s.get("status") == "EXPIRED"]
-
-        tier_counts = {}
+        resolved  = [s for s in self.history["signals"] if s.get("status") in ("WIN","LOSS")]
+        expired   = [s for s in self.history["signals"] if s.get("status") == "EXPIRED"]
+        tier_counts: Dict[str,int] = {}
         for s in self.history["signals"]:
-            tier = s.get("tier", "C")
-            tier_counts[tier] = tier_counts.get(tier, 0) + 1
-
+            t = s.get("tier","C"); tier_counts[t] = tier_counts.get(t,0)+1
         log.info(
-            f"📊 Tracker v{TRACKER_VERSION} Loaded | "
-            f"Total: {len(self.history['signals'])} | "
-            f"Open: {len(open_sigs)} | "
-            f"Resolved: {len(resolved)} | "
-            f"Expired: {len(expired)}"
+            f"📊 Tracker v{TRACKER_VERSION} | "
+            f"Total: {len(self.history['signals'])} | Open: {len(open_sigs)} | "
+            f"Resolved: {len(resolved)} | Expired: {len(expired)}"
         )
-
         if tier_counts:
-            tier_str = " | ".join([f"{t}: {c}" for t, c in sorted(tier_counts.items())])
-            log.info(f"🏆 Tiers: {tier_str}")
+            log.info(f"🏆 Tiers: {' | '.join(f'{t}: {c}' for t,c in sorted(tier_counts.items()))}")
+
+        # Log sentiment effectiveness if data exists
+        sent = self.history.get("analytics", {}).get("by_sentiment", {})
+        if sent:
+            for k, v in sent.items():
+                log.info(f"💭 Sentiment [{k}]: {v.get('trades',0)} trades | WR: {v.get('win_rate',0):.1f}%")

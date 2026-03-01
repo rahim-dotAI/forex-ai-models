@@ -691,14 +691,19 @@ class NewsAggregator:
         self.newsapi_key    = os.getenv("NEWSAPI_KEY","")
         self.marketaux_key  = os.getenv("MARKETAUX_API_KEY","")
         self.hf_api_key     = HF_API_KEY          # GitHub secret: HF_API_KEY
-        self.primary_model  = HF_PRIMARY_MODEL
-        self.fallback_model = HF_FALLBACK_MODEL
+
+        # Read model config from config.json sentiment block if available
+        sent_cfg            = (CONFIG or {}).get("sentiment", {})
+        self.primary_model  = sent_cfg.get("hf_model_primary",  HF_PRIMARY_MODEL)
+        self.fallback_model = sent_cfg.get("hf_model_fallback",  HF_FALLBACK_MODEL)
+        self.cache_ttl      = sent_cfg.get("cache_ttl_minutes",  30) * 60
+        self._min_interval  = sent_cfg.get("rate_limit_seconds", 2.0)
+        self.min_score_thr  = sent_cfg.get("min_score_threshold", 60)
+        self.max_adj_pts    = sent_cfg.get("max_adjustment_pts",  10)
 
         self._article_cache  : Dict[str, Tuple[float, List[str]]] = {}
         self._sentiment_cache: Dict[str, Tuple[float, float]]     = {}
-        self.cache_ttl       = 1800               # 30 min
-        self._last_call      : Dict[str, float]   = {}
-        self._min_interval   = 2.0                # seconds between external calls
+        self._last_call      : Dict[str, float]                   = {}
 
         if not self.hf_api_key:
             log.warning(
@@ -984,7 +989,7 @@ def enhance_with_sentiment(signals: List[Dict], news_agg: NewsAggregator) -> Lis
             net = (cur_sent.get(base,0.0) - cur_sent.get(quote,0.0) if direction=="BUY"
                    else cur_sent.get(quote,0.0) - cur_sent.get(base,0.0))
             orig = sig.get("score",50)
-            adj  = round(max(-10.0, min(10.0, net*5)), 1)
+            adj  = round(max(-float(news_agg.max_adj_pts), min(float(news_agg.max_adj_pts), net*5)), 1)
             new  = round(max(0, min(100, orig+adj)), 0)
             sig.update({
                 "sentiment_score": round(net,3), "sentiment_adjustment": adj,
@@ -1264,14 +1269,14 @@ def write_dashboard_state(signals, downloads, news_calls=0, mkt_calls=0,
     hist = []
     if PERFORMANCE_TRACKER:
         try:
-            wka = datetime.now(timezone.utc) - timedelta(days=7)
+            # Keep full history — no arbitrary cutoff.
+            # signal_history.json is the source of truth; dashboard reflects all of it.
             for s in PERFORMANCE_TRACKER.history.get("signals",[]):
                 if s.get("status") not in ["WIN","LOSS","EXPIRED"]: continue
-                try:
-                    if datetime.fromisoformat(s.get("timestamp","").replace("Z","+00:00"))>=wka:
-                        hist.append(s)
-                except Exception: continue
-            log.info(f"Loaded {len(hist)} historical signals")
+                hist.append(s)
+            # Sort newest first so dashboard renders in correct order
+            hist.sort(key=lambda x: x.get("timestamp",""), reverse=True)
+            log.info(f"Loaded {len(hist)} historical signals (full history)")
         except Exception as e:
             log.warning(f"Could not load historical signals: {e}")
     if not hist:
@@ -1494,9 +1499,9 @@ def main():
     news_calls = mkt_calls = 0
 
     if USE_SENTIMENT and new_signals:
-        high_conf = [s for s in new_signals if s.get("score",0)>=60]
+        agg = NewsAggregator()
+        high_conf = [s for s in new_signals if s.get("score",0) >= agg.min_score_thr]
         if high_conf:
-            agg = NewsAggregator()
             if not agg.hf_api_key:
                 log.warning("Sentiment enabled but HF_API_KEY not set. Add secret HF_API_KEY=hf_...")
             else:

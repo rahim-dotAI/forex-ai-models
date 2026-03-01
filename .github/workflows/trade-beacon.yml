@@ -674,7 +674,7 @@ jobs:
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
-        if: always()
+        if: steps.market_check.outputs.should_run == 'true'
         with:
           name: trade-beacon-v2.1.5-FINBERT-run-${{ github.run_number }}
           path: |

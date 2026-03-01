@@ -1,17 +1,21 @@
 {
-  "status": "ok",
-  "last_run": "2026-02-27T21:53:40.773536+00:00",
-  "signal_count": 1,
-  "issues": [],
+  "status": "warning",
+  "last_run": "2026-03-01T22:01:14.639153+00:00",
+  "signal_count": 0,
+  "issues": [
+    "No signals"
+  ],
   "can_trade": true,
   "api_status": {
     "yfinance": "ok",
     "newsapi": "disabled",
-    "marketaux": "disabled"
+    "marketaux": "disabled",
+    "finbert_hf": "ok"
   },
   "system_info": {
     "mode": "conservative",
     "pairs_monitored": 10,
-    "version": "2.1.3-OPTIMIZED"
+    "version": "2.1.5-FINBERT",
+    "sentiment_engine": "finbert"
   }
 }

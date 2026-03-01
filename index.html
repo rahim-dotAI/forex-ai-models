@@ -946,6 +946,7 @@
         // tapping a DIFFERENT icon opens that one instead.
         icon.addEventListener('click', e => {
           e.stopPropagation();
+          _iconJustClicked = true;
           if (tooltip.classList.contains('visible') && _activeIcon === icon) {
             // Same icon tapped again — close
             tooltip.classList.remove('visible');
@@ -961,8 +962,12 @@
     tooltip.addEventListener('mouseenter', () => clearTimeout(tipTimeout));
     tooltip.addEventListener('mouseleave', hideTip);
 
-    // Close on outside click (but not when clicking an icon — icon handles its own toggle)
+    // Close on outside click.
+    // _iconJustClicked flag blocks the document listener for one tick
+    // so the icon's own handler wins and the tooltip doesn't blink closed immediately.
+    let _iconJustClicked = false;
     document.addEventListener('click', e => {
+      if (_iconJustClicked) { _iconJustClicked = false; return; }
       if (!e.target.closest('.info-icon')) {
         tooltip.classList.remove('visible');
         _activeIcon = null;

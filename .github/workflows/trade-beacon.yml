@@ -1,4 +1,4 @@
-name: Trade Beacon v2.1.5-FINBERT – Forex Signal Generator
+name: Trade Beacon v2.1.6-OPTIMISED – Forex Signal Generator
 
 # CHANGES v2.1.5-FINBERT:
 # - HuggingFace FinBERT sentiment via HF_API_KEY secret (replaces keyword counting)
@@ -58,7 +58,7 @@ env:
   ENTRY_SCRIPT: "trade_beacon.py"
 
 concurrency:
-  group: trade-beacon-v2.1.5-FINBERT-${{ github.ref }}-${{ github.event_name }}
+  group: trade-beacon-v2.1.6-OPTIMISED-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: false
 
 permissions:
@@ -177,7 +177,7 @@ jobs:
           echo "Config version:  $CONFIG_VER"
 
           if [[ "$BEACON_VER" == *"FINBERT"* ]]; then
-            echo "✅ v2.1.5-FINBERT detected"
+            echo "✅ v2.1.6-OPTIMISED detected"
           elif [[ "$TRACKER_VER" != "$BEACON_VER" ]]; then
             echo "⚠️ Version mismatch (non-fatal — auto-migration will handle)"
           else
@@ -193,9 +193,9 @@ jobs:
           CONFIG_VER=$(jq -r '.version // "unknown"' config.json)
           echo "Config version: $CONFIG_VER"
           if [[ "$CONFIG_VER" == *"FINBERT"* ]]; then
-            echo "✅ Config version: v2.1.5-FINBERT"
+            echo "✅ Config version: v2.1.6-OPTIMISED"
           else
-            echo "⚠️ Config version not FINBERT — consider updating to 2.1.5-FINBERT"
+            echo "⚠️ Config version not v2.1.6-OPTIMISED — please update config.json"
           fi
 
           # Required structure checks
@@ -221,7 +221,7 @@ jobs:
             echo "📸 Created config baseline snapshot"
           fi
 
-          echo "✅ Configuration valid (v2.1.5-FINBERT)"
+          echo "✅ Configuration valid (v2.1.6-OPTIMISED)"
 
           MODE=$(jq -r '.mode // "conservative"' config.json)
           echo "ℹ️ Mode: $MODE — Both aggressive and conservative signals generated simultaneously"
@@ -344,7 +344,7 @@ jobs:
         if: steps.market_check.outputs.should_run == 'true'
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "📋 ACTIVE CONFIGURATION — v2.1.5-FINBERT"
+          echo "📋 ACTIVE CONFIGURATION — v2.1.6-OPTIMISED"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo ""
 
@@ -370,7 +370,7 @@ jobs:
           echo "  Max Corr:  $(jq -r '.settings.conservative.max_correlated_signals' config.json)"
           echo ""
 
-          echo "[Tier Thresholds — v2.1.5-FINBERT]"
+          echo "[Tier Thresholds — v2.1.6-OPTIMISED]"
           echo "  A+: >= $(jq -r '.tiers.A_plus_min_score // 80' config.json)"
           echo "  A:  >= $(jq -r '.tiers.A_min_score // 68' config.json)"
           echo "  B:  >= $(jq -r '.tiers.B_min_score // 55' config.json)"
@@ -387,7 +387,7 @@ jobs:
 
           echo "[Pair Limits]"
           echo "  GBPUSD: max $(jq -r '.advanced.pair_limits.GBPUSD // 5' config.json) (BUY-only, 70% WR)"
-          echo "  GBPJPY: max $(jq -r '.advanced.pair_limits.GBPJPY // 2' config.json) (100% WR v2.1.4)"
+          echo "  GBPJPY: max $(jq -r '.advanced.pair_limits.GBPJPY // 1' config.json) (34.1% WR live — reduced)"
           echo "  NZDUSD: max $(jq -r '.advanced.pair_limits.NZDUSD // 1' config.json) (monitoring)"
           echo "  EURGBP: $(jq -r '.advanced.pair_limits.EURGBP // 0' config.json) (BLOCKED — 0% WR)"
           echo "  Default: $(jq -r '.advanced.pair_limits.default // 3' config.json)"
@@ -448,14 +448,14 @@ jobs:
           MARKETAUX_API_KEY: ${{ secrets.MARKETAUX_API_KEY }}
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
 
-      - name: Run Trade Beacon v2.1.5-FINBERT
+      - name: Run Trade Beacon v2.1.6-OPTIMISED
         if: steps.market_check.outputs.should_run == 'true'
         env:
           NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
           MARKETAUX_API_KEY: ${{ secrets.MARKETAUX_API_KEY }}
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
         run: |
-          echo "🚀 Starting Trade Beacon v2.1.5-FINBERT..."
+          echo "🚀 Starting Trade Beacon v2.1.6-OPTIMISED..."
           python $ENTRY_SCRIPT
           EXIT_CODE=$?
 
@@ -516,7 +516,7 @@ jobs:
         if: always()
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "📊 TRADE BEACON v2.1.5-FINBERT PERFORMANCE SUMMARY"
+          echo "📊 TRADE BEACON v2.1.6-OPTIMISED PERFORMANCE SUMMARY"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
           if [ -f signal_state/signal_history.json ]; then
@@ -636,7 +636,7 @@ jobs:
       - name: Commit state changes
         if: steps.market_check.outputs.should_run == 'true'
         run: |
-          git config user.name  "Trade Beacon v2.1.5-FINBERT [bot]"
+          git config user.name  "Trade Beacon v2.1.6-OPTIMISED [bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git add signal_state/*.json config.json config.runtime.base.json signals.csv 2>/dev/null || true
@@ -652,7 +652,7 @@ jobs:
             SENT=$(jq -r     '.sentiment_engine // "disabled"'            signal_state/dashboard_state.json 2>/dev/null || echo "disabled")
             MODE=$(jq -r     '.mode // "conservative"'                   config.json)
 
-            git commit -m "📊 Trade Beacon v2.1.5-FINBERT [$TIMESTAMP]
+            git commit -m "📊 Trade Beacon v2.1.6-OPTIMISED [$TIMESTAMP]
 
             Mode: $MODE | Session: $SESSION | Sentiment: $SENT
             Signals: $TOTAL (Agg: $AGG, Cons: $CONS)
@@ -676,7 +676,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: steps.market_check.outputs.should_run == 'true'
         with:
-          name: trade-beacon-v2.1.5-FINBERT-run-${{ github.run_number }}
+          name: trade-beacon-v2.1.6-OPTIMISED-run-${{ github.run_number }}
           path: |
             signal_state/
             signals.csv

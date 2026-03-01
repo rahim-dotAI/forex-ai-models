@@ -658,6 +658,7 @@
           </table>
         </div>
       </div>
+      <div id="historyPagination"></div>
     </div>
 
     <div id="tabAnalytics" class="tab-content">
@@ -1330,10 +1331,23 @@
       </div>`;
     }
     
+    // Pagination state
+    let _histPage    = 1;
+    const _PAGE_SIZE = 50;
+    let _filteredSigs = [];
+
     function renderHistory() {
+      _histPage = 1;   // reset to page 1 whenever filters change
+      _applyHistoryFilters();
+    }
+
+    function _applyHistoryFilters() {
       const b = document.getElementById('historyBody');
       let sigs = data?.historical_signals||[];
-      if (sigs.length===0) { b.innerHTML='<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">No historical data available</td></tr>'; return; }
+      if (sigs.length===0) {
+        b.innerHTML='<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">No historical data available</td></tr>';
+        _renderPagination(0); return;
+      }
       sigs = sigs.filter(s => s.status&&['WIN','LOSS','EXPIRED'].includes(s.status));
       const sf = document.getElementById('filterStatus')?.value||'all';
       const pf = document.getElementById('filterPair')?.value||'all';
@@ -1344,14 +1358,82 @@
       if (sd) sigs=sigs.filter(s=>s.timestamp>=sd);
       if (ed) sigs=sigs.filter(s=>s.timestamp<=ed+'T23:59:59');
       sigs.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
-      if (sigs.length===0) { b.innerHTML='<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">No signals match the filters</td></tr>'; return; }
-      b.innerHTML=sigs.map(s=>{
-        const rc=s.status==='WIN'?'win':s.status==='LOSS'?'loss':'exp';
-        const pv=s.pips||0;
-        const rt=s.status==='WIN'?`+${pv.toFixed(1)}`:s.status==='LOSS'?`${pv.toFixed(1)}`:'EXPIRED';
+      _filteredSigs = sigs;
+      updatePairFilter(sigs);
+      _renderHistoryPage();
+    }
+
+    function _renderHistoryPage() {
+      const b     = document.getElementById('historyBody');
+      const total = _filteredSigs.length;
+      if (total===0) {
+        b.innerHTML='<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">No signals match the filters</td></tr>';
+        _renderPagination(0); return;
+      }
+      const totalPages = Math.ceil(total / _PAGE_SIZE);
+      _histPage = Math.max(1, Math.min(_histPage, totalPages));
+      const start = (_histPage-1)*_PAGE_SIZE;
+      const page  = _filteredSigs.slice(start, start+_PAGE_SIZE);
+      b.innerHTML = page.map(s=>{
+        const rc = s.status==='WIN'?'win':s.status==='LOSS'?'loss':'exp';
+        const pv = s.pips||0;
+        const rt = s.status==='WIN'?`+${pv.toFixed(1)}`:s.status==='LOSS'?`${pv.toFixed(1)}`:'EXPIRED';
         return `<tr><td>${fmtDate(s.timestamp)}</td><td style="font-weight:900">${s.pair}</td><td>${s.direction}</td><td><span class="history-tier-badge tier-${getTier(s.tier||'C')}">${s.tier||'C'}</span></td><td class="${rc}">${s.status}</td><td class="${rc}">${rt}</td><td>${s.session||'N/A'}</td></tr>`;
       }).join('');
-      updatePairFilter(sigs);
+      _renderPagination(total);
+    }
+
+    function _renderPagination(total) {
+      const el = document.getElementById('historyPagination');
+      if (!el) return;
+      if (total===0) { el.innerHTML=''; return; }
+      const totalPages = Math.ceil(total/_PAGE_SIZE);
+      const start = (_histPage-1)*_PAGE_SIZE+1;
+      const end   = Math.min(_histPage*_PAGE_SIZE, total);
+      const btnStyle = (disabled, active=false) =>
+        `style="padding:6px 12px;border-radius:7px;border:1px solid ${active?'var(--orange)':'rgba(255,255,255,0.1)'};background:${active?'rgba(255,107,53,0.2)':'var(--elevated)'};color:${active?'var(--orange)':'var(--text-dim)'};font-weight:700;font-size:12px;cursor:${disabled?'default':'pointer'};opacity:${disabled?'0.35':'1'};font-family:'Rajdhani',sans-serif;"`;
+
+      // Build page buttons — show max 5 around current page
+      let pages = [];
+      const wing = 2;
+      for (let p=1;p<=totalPages;p++) {
+        if (p===1||p===totalPages||Math.abs(p-_histPage)<=wing) pages.push(p);
+        else if (Math.abs(p-_histPage)===wing+1) pages.push('…');
+      }
+      // Deduplicate consecutive ellipses
+      pages = pages.filter((v,i,a)=>!(v==='…'&&a[i-1]==='…'));
+
+      const pageButtons = pages.map(p =>
+        p==='…'
+          ? `<span style="color:var(--text-muted);padding:0 4px;">…</span>`
+          : `<button ${btnStyle(false, p===_histPage)} onclick="_goHistPage(${p})">${p}</button>`
+      ).join('');
+
+      el.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:16px 0 4px;">
+          <div style="font-size:12px;color:var(--text-muted);">
+            Showing <strong style="color:var(--text-dim)">${start}–${end}</strong> of <strong style="color:var(--text-dim)">${total}</strong> trades
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <button ${btnStyle(_histPage===1)} onclick="_goHistPage(${_histPage-1})">‹ Prev</button>
+            ${pageButtons}
+            <button ${btnStyle(_histPage===totalPages)} onclick="_goHistPage(${_histPage+1})">Next ›</button>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);">
+            Page ${_histPage} of ${totalPages}
+          </div>
+        </div>`;
+    }
+
+    function _goHistPage(p) {
+      const total = _filteredSigs.length;
+      if (total===0) return;
+      const totalPages = Math.ceil(total/_PAGE_SIZE);
+      _histPage = Math.max(1, Math.min(p, totalPages));
+      _renderHistoryPage();
+      // Scroll history table into view smoothly
+      const wrap = document.querySelector('.history-wrap');
+      if (wrap) wrap.scrollIntoView({behavior:'smooth', block:'start'});
     }
     
     function renderAnalytics() {
@@ -1487,8 +1569,10 @@
       const ed=document.getElementById('dateEnd');
       const sd=document.getElementById('dateStart');
       const today=new Date().toISOString().split('T')[0];
-      const week=new Date(Date.now()-7*24*60*60*1000).toISOString().split('T')[0];
-      ed.value=today; sd.value=week;
+      // Default to start of current year so full history is visible immediately.
+      // User can narrow the range with the date pickers if needed.
+      const yearStart=new Date().getUTCFullYear()+'-01-01';
+      ed.value=today; sd.value=yearStart;
       ed.addEventListener('change',renderHistory);
       sd.addEventListener('change',renderHistory);
       document.getElementById('filterStatus').addEventListener('change',renderHistory);
@@ -1707,10 +1791,25 @@
       const pod = document.getElementById('pickOfDay');
       if (!signals || signals.length === 0) { pod.style.display='none'; return; }
 
-      // Pick highest scoring signal from today, fallback to all signals
-      const today = new Date().toISOString().slice(0,10);
-      const todaySigs = signals.filter(s => { try { return new Date(s.timestamp).toISOString().slice(0,10)===today; } catch(e){return false;} });
-      const pool = todaySigs.length > 0 ? todaySigs : signals;
+      // Never show Pick of the Day on weekends or holidays — market is closed,
+      // any signals showing would be stale from the last trading session.
+      const nowUtc   = new Date();
+      const dow      = nowUtc.getUTCDay();   // 0=Sun … 6=Sat
+      const hourUtc  = nowUtc.getUTCHours();
+      const todayStr = nowUtc.getUTCFullYear()+'-'+String(nowUtc.getUTCMonth()+1).padStart(2,'0')+'-'+String(nowUtc.getUTCDate()).padStart(2,'0');
+      const isWeekend = (dow===5&&hourUtc>=22)||dow===6||(dow===0&&hourUtc<22);
+      const isHoliday = !!FOREX_HOLIDAYS[todayStr];
+      if (isWeekend || isHoliday) { pod.style.display='none'; return; }
+
+      // Only use signals from the current trading day (UTC date).
+      // Do NOT fall back to older signals — stale picks are misleading.
+      const today = nowUtc.toISOString().slice(0,10);
+      const todaySigs = signals.filter(s => {
+        try { return new Date(s.timestamp).toISOString().slice(0,10)===today; }
+        catch(e) { return false; }
+      });
+      if (todaySigs.length === 0) { pod.style.display='none'; return; }
+      const pool = todaySigs;
       const best = pool.reduce((a,b) => ((b.score||0) > (a.score||0) ? b : a));
       if (!best) { pod.style.display='none'; return; }
 

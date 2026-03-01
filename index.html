@@ -884,54 +884,72 @@
     const tipBody = document.getElementById('tooltipBody');
     let tipTimeout = null;
 
+    // Track which icon currently has the tooltip open
+    let _activeIcon = null;
+
     function showTip(el, tipKey) {
       const def = TIPS[tipKey];
       if (!def) return;
       clearTimeout(tipTimeout);
       tipTitle.textContent = def.title;
       tipBody.innerHTML = def.body;
+      _activeIcon = el;
 
-      // Position
+      // position:fixed uses viewport coords — NO scrollY/scrollX needed
       const rect = el.getBoundingClientRect();
-      const tw = 300;
-      const th = 200; // estimated
+      const tw   = 300;
 
-      // Prefer below, flip above if near bottom
-      let top = rect.bottom + window.scrollY + 10;
-      let left = rect.left + window.scrollX - (tw / 2) + (rect.width / 2);
-
-      // Clamp horizontal
-      left = Math.max(12, Math.min(left, window.innerWidth - tw - 12));
-
-      // Flip above if needed
-      const spaceBelow = window.innerHeight - rect.bottom;
-      if (spaceBelow < 220) {
-        top = rect.top + window.scrollY - th - 10;
-      }
-
-      tooltip.style.top = top + 'px';
-      tooltip.style.left = left + 'px';
+      tooltip.style.visibility = 'hidden';
       tooltip.style.width = tw + 'px';
       tooltip.classList.add('visible');
+
+      // Measure real height after content is set, then position
+      requestAnimationFrame(() => {
+        const th = tooltip.offsetHeight || 200;
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        let top  = rect.bottom + 10;
+        let left = rect.left - (tw / 2) + (rect.width / 2);
+
+        // Flip above if not enough space below
+        if (rect.bottom + th + 10 > vh) top = rect.top - th - 10;
+
+        // Clamp horizontal within viewport
+        left = Math.max(12, Math.min(left, vw - tw - 12));
+        top  = Math.max(8, top);
+
+        tooltip.style.top  = top  + 'px';
+        tooltip.style.left = left + 'px';
+        tooltip.style.visibility = 'visible';
+      });
     }
 
     function hideTip() {
-      tipTimeout = setTimeout(() => tooltip.classList.remove('visible'), 120);
+      tipTimeout = setTimeout(() => {
+        tooltip.classList.remove('visible');
+        _activeIcon = null;
+      }, 120);
     }
 
-    // Attach to all static info icons on page load
     function attachIconListeners() {
       document.querySelectorAll('.info-icon').forEach(icon => {
         if (icon.dataset.listenerAttached) return;
         icon.dataset.listenerAttached = 'true';
-        // Desktop hover
+
+        // Desktop — hover
         icon.addEventListener('mouseenter', () => showTip(icon, icon.dataset.tip));
         icon.addEventListener('mouseleave', hideTip);
-        // Mobile / click toggle
+
+        // Mobile / touch — single tap toggles.
+        // Check _activeIcon so tapping the SAME icon closes it,
+        // tapping a DIFFERENT icon opens that one instead.
         icon.addEventListener('click', e => {
           e.stopPropagation();
-          if (tooltip.classList.contains('visible')) {
+          if (tooltip.classList.contains('visible') && _activeIcon === icon) {
+            // Same icon tapped again — close
             tooltip.classList.remove('visible');
+            _activeIcon = null;
           } else {
             showTip(icon, icon.dataset.tip);
           }
@@ -943,13 +961,18 @@
     tooltip.addEventListener('mouseenter', () => clearTimeout(tipTimeout));
     tooltip.addEventListener('mouseleave', hideTip);
 
-    // Close on outside click
-    document.addEventListener('click', () => tooltip.classList.remove('visible'));
+    // Close on outside click (but not when clicking an icon — icon handles its own toggle)
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.info-icon')) {
+        tooltip.classList.remove('visible');
+        _activeIcon = null;
+      }
+    });
 
     // Run on load for static icons
     attachIconListeners();
 
-    // Also re-run after dynamic card renders (signal cards inject info icons)
+    // Re-run after every lucide render (signal cards inject new info icons)
     const _origCreate = lucide.createIcons.bind(lucide);
     lucide.createIcons = function(...args) {
       _origCreate(...args);

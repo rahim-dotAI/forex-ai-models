@@ -1,5 +1,5 @@
 """
-Trade Beacon v2.1.5-FINBERT - Forex Signal Generator (INSTITUTIONAL GRADE)
+Trade Beacon v2.1.6-OPTIMISED - Forex Signal Generator (INSTITUTIONAL GRADE)
 MULTI-MODE EDITION: Generates Aggressive + Conservative signals simultaneously
 with tier-based selective enhancement (sentiment/backtest only on top-tier)
 
@@ -1143,7 +1143,7 @@ def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
             "timeframe": INTERVAL, "valid_for_minutes": 15,
             "generated_at": now.isoformat(), "expires_at": expires.isoformat(),
             "session_active": session in ("EUROPEAN","US","OVERLAP"),
-            "signal_generator_version": "2.1.5-FINBERT",
+            "signal_generator_version": "2.1.6-OPTIMISED",
             "atr_stop_multiplier": atr_stop, "atr_target_multiplier": atr_tgt,
         },
     }
@@ -1345,7 +1345,7 @@ def write_dashboard_state(signals, downloads, news_calls=0, mkt_calls=0,
         "system": {
             "last_update": datetime.now(timezone.utc).isoformat(),
             "signal_only_mode": SIGNAL_ONLY_MODE,
-            "version": "2.1.5-FINBERT",
+            "version": "2.1.6-OPTIMISED",
         },
     }
 
@@ -1372,7 +1372,7 @@ def write_health_check(signals, downloads, news, mkt, can_trade, pause, mode):
         },
         "system_info": {
             "mode": mode, "pairs_monitored": len(PAIRS),
-            "version": "2.1.5-FINBERT",
+            "version": "2.1.6-OPTIMISED",
             "sentiment_engine": "finbert" if HF_API_KEY else "disabled",
         },
     }
@@ -1464,7 +1464,7 @@ def main():
     opt_mode = opt_cfg["mode"]
 
     log.info(
-        f"Trade Beacon v2.1.5-FINBERT | "
+        f"Trade Beacon v2.1.6-OPTIMISED | "
         f"Sentiment={'FinBERT ON' if USE_SENTIMENT else 'OFF'} | "
         f"HF_KEY={'set' if HF_API_KEY else 'missing - add HF_API_KEY secret'}"
     )
@@ -1576,7 +1576,7 @@ def main():
     if all_new:
         mb = split_signals_by_mode(all_new)
         print("\n" + "="*100)
-        print("TRADE BEACON v2.1.5-FINBERT — MULTI-MODE SIGNALS")
+        print("TRADE BEACON v2.1.6-OPTIMISED — MULTI-MODE SIGNALS")
         print("="*100)
         for label, key, icon in [("AGGRESSIVE","aggressive","⚡"), ("CONSERVATIVE","conservative","🛡️")]:
             sigs = mb[key]
@@ -1591,7 +1591,7 @@ def main():
         log.info("signals.csv written")
 
     mark_success()
-    log.info("Run completed — v2.1.5-FINBERT")
+    log.info("Run completed — v2.1.6-OPTIMISED")
 
 
 if __name__ == "__main__":

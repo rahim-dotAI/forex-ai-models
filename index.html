@@ -884,93 +884,88 @@
     const tipBody = document.getElementById('tooltipBody');
     let tipTimeout = null;
 
-    // Track which icon currently has the tooltip open
-    let _activeIcon = null;
+    // ── TOOLTIP ENGINE ─────────────────────────────────────────────────
+    // Single active icon tracking. All events use pointer events only
+    // so mouse and touch behave identically. No bubbling issues.
+    let _activeTipIcon = null;
 
-    function showTip(el, tipKey) {
+    function _positionAndShow(el, tipKey) {
       const def = TIPS[tipKey];
       if (!def) return;
-      clearTimeout(tipTimeout);
       tipTitle.textContent = def.title;
-      tipBody.innerHTML = def.body;
-      _activeIcon = el;
+      tipBody.innerHTML    = def.body;
+      _activeTipIcon = el;
 
-      // position:fixed uses viewport coords — NO scrollY/scrollX needed
-      const rect = el.getBoundingClientRect();
-      const tw   = 300;
-
+      // Hide while measuring so user never sees a flash at wrong position
+      tooltip.style.opacity    = '0';
       tooltip.style.visibility = 'hidden';
-      tooltip.style.width = tw + 'px';
       tooltip.classList.add('visible');
 
-      // Measure real height after content is set, then position
-      requestAnimationFrame(() => {
-        const th = tooltip.offsetHeight || 200;
+      // Use setTimeout(0) instead of rAF — fires after paint,
+      // guarantees offsetHeight is non-zero
+      setTimeout(() => {
+        const r  = el.getBoundingClientRect();
+        const tw = 300;
+        const th = tooltip.offsetHeight || 180;
         const vw = window.innerWidth;
         const vh = window.innerHeight;
 
-        let top  = rect.bottom + 10;
-        let left = rect.left - (tw / 2) + (rect.width / 2);
+        // position:fixed — viewport coords only, no scroll offsets
+        let top  = r.bottom + 10;
+        let left = r.left - tw / 2 + r.width / 2;
 
-        // Flip above if not enough space below
-        if (rect.bottom + th + 10 > vh) top = rect.top - th - 10;
+        if (top + th > vh - 8) top = r.top - th - 10;  // flip above
+        left = Math.max(10, Math.min(left, vw - tw - 10));
+        top  = Math.max(6, top);
 
-        // Clamp horizontal within viewport
-        left = Math.max(12, Math.min(left, vw - tw - 12));
-        top  = Math.max(8, top);
-
-        tooltip.style.top  = top  + 'px';
-        tooltip.style.left = left + 'px';
+        tooltip.style.top        = top  + 'px';
+        tooltip.style.left       = left + 'px';
+        tooltip.style.width      = tw   + 'px';
+        tooltip.style.opacity    = '1';
         tooltip.style.visibility = 'visible';
-      });
+      }, 0);
     }
 
-    function hideTip() {
-      tipTimeout = setTimeout(() => {
-        tooltip.classList.remove('visible');
-        _activeIcon = null;
-      }, 120);
+    function _closeTooltip() {
+      tooltip.classList.remove('visible');
+      tooltip.style.opacity = '0';
+      _activeTipIcon = null;
     }
 
     function attachIconListeners() {
       document.querySelectorAll('.info-icon').forEach(icon => {
-        if (icon.dataset.listenerAttached) return;
-        icon.dataset.listenerAttached = 'true';
+        if (icon.dataset.tip_bound) return;
+        icon.dataset.tip_bound = '1';
 
-        // Desktop — hover
-        icon.addEventListener('mouseenter', () => showTip(icon, icon.dataset.tip));
-        icon.addEventListener('mouseleave', hideTip);
+        // Desktop hover
+        icon.addEventListener('mouseenter', () => _positionAndShow(icon, icon.dataset.tip));
+        icon.addEventListener('mouseleave', () => {
+          // Small delay so cursor can move onto tooltip without it closing
+          setTimeout(() => {
+            if (!tooltip.matches(':hover')) _closeTooltip();
+          }, 150);
+        });
 
-        // Mobile / touch — single tap toggles.
-        // Check _activeIcon so tapping the SAME icon closes it,
-        // tapping a DIFFERENT icon opens that one instead.
-        icon.addEventListener('click', e => {
-          e.stopPropagation();
-          _iconJustClicked = true;
-          if (tooltip.classList.contains('visible') && _activeIcon === icon) {
-            // Same icon tapped again — close
-            tooltip.classList.remove('visible');
-            _activeIcon = null;
+        // Touch / click — use pointerup to avoid any bubbling from pointerdown
+        icon.addEventListener('pointerup', e => {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          if (_activeTipIcon === icon && tooltip.classList.contains('visible')) {
+            _closeTooltip();
           } else {
-            showTip(icon, icon.dataset.tip);
+            _positionAndShow(icon, icon.dataset.tip);
           }
         });
       });
     }
 
-    // Keep tooltip open when cursor moves onto it
-    tooltip.addEventListener('mouseenter', () => clearTimeout(tipTimeout));
-    tooltip.addEventListener('mouseleave', hideTip);
+    // Keep tooltip open when hovering over it
+    tooltip.addEventListener('mouseleave', () => _closeTooltip());
 
-    // Close on outside click.
-    // _iconJustClicked flag blocks the document listener for one tick
-    // so the icon's own handler wins and the tooltip doesn't blink closed immediately.
-    let _iconJustClicked = false;
-    document.addEventListener('click', e => {
-      if (_iconJustClicked) { _iconJustClicked = false; return; }
-      if (!e.target.closest('.info-icon')) {
-        tooltip.classList.remove('visible');
-        _activeIcon = null;
+    // Close when clicking anywhere outside an icon or the tooltip
+    document.addEventListener('pointerup', e => {
+      if (!e.target.closest('.info-icon') && !e.target.closest('.tooltip-box')) {
+        _closeTooltip();
       }
     });
 

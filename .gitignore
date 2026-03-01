@@ -57,7 +57,7 @@ MANIFEST
 .env.local
 
 # ======================================
-# LOG FILES (IGNORE CONTENT)
+# LOG FILES
 # ======================================
 logs/
 *.log
@@ -111,16 +111,38 @@ Thumbs.db
 *.7z
 *.rar
 *.csv.gz
+# Note: signals.csv (uncompressed) is intentionally tracked — see ALLOW section
 
 # ======================================
-# GITHUB ACTIONS CACHE (DO NOT COMMIT)
+# GITHUB ACTIONS CACHE
 # ======================================
 .cache/
 
 # ======================================
 # ALLOW THESE FILES (IMPORTANT)
 # ======================================
+
+# Status / heartbeat
 !status/
 !status/heartbeat.txt
 !logs/.gitkeep
 !data/.gitkeep
+
+# Trade Beacon runtime state (committed by GitHub Actions bot each run)
+!signal_state/
+!signal_state/dashboard_state.json
+!signal_state/signal_history.json
+!signal_state/health.json
+!signal_state/last_run.txt
+!signal_state/last_success.txt
+!signal_state/last_optimization.json
+
+# Config baseline snapshot (created once by workflow, never overwritten)
+!config.runtime.base.json
+
+# Signal output CSV
+!signals.csv
+
+# Intentionally do NOT track:
+# signal_state/trading_paused.json  — transient pause file, recreated if needed
+# signal_state/run_status.txt       — transient run flag

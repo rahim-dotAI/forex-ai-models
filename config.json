@@ -1,13 +1,11 @@
 {
-  "version": "2.1.5-FINBERT",
+  "version": "2.1.6-OPTIMISED",
   "mode": "conservative",
-
   "_sentiment_note": "Set use_sentiment to true once HF_API_KEY, NEWSAPI_KEY, MARKETAUX_API_KEY are added as GitHub secrets",
   "use_sentiment": false,
-
   "settings": {
     "aggressive": {
-      "threshold": 50,
+      "threshold": 58,
       "min_adx": 15,
       "rsi_oversold": 30,
       "rsi_overbought": 70,
@@ -27,14 +25,12 @@
       "max_correlated_signals": 1
     }
   },
-
   "tiers": {
     "A_plus_min_score": 80,
     "A_min_score": 68,
     "B_min_score": 55,
     "_note": "v2.1.4: Rescaled for expanded scorer (max ~110pts). A+>=80, A>=68, B>=55, C<55"
   },
-
   "advanced": {
     "enable_session_filtering": true,
     "enable_correlation_filter": true,
@@ -44,42 +40,56 @@
     "atr_stop_multiplier": 2.5,
     "atr_target_multiplier": 7.0,
     "_rr_note": "v2.1.4: atr_tgt raised 5.0->7.0 so RR=2.8, passes min_rr=2.5",
-
     "session_bonuses": {
-      "ASIAN":    { "JPY_pairs": 3, "AUD_NZD_pairs": 3, "other": 0 },
-      "EUROPEAN": { "EUR_GBP_pairs": 3, "EUR_GBP_crosses": 2, "other": 0 },
-      "OVERLAP":  { "all_major_pairs": 0 },
-      "US":       { "USD_majors": 3, "other": 0 },
-      "LATE_US":  { "all_major_pairs": 0 }
+      "ASIAN": {
+        "JPY_pairs": 3,
+        "AUD_NZD_pairs": 3,
+        "other": 0
+      },
+      "EUROPEAN": {
+        "EUR_GBP_pairs": 3,
+        "EUR_GBP_crosses": 2,
+        "other": 0
+      },
+      "OVERLAP": {
+        "all_major_pairs": 0
+      },
+      "US": {
+        "USD_majors": 3,
+        "other": 0
+      },
+      "LATE_US": {
+        "all_major_pairs": 0
+      }
     },
-
     "session_thresholds": {
-      "ASIAN":    60,
+      "ASIAN": 60,
       "EUROPEAN": 50,
-      "US":       50,
-      "LATE_US":  55,
-      "OVERLAP":  999,
-      "_note": "v2.1.4.1: OVERLAP blocked (999) - 0% WR. ASIAN/LATE_US raised to filter weak sessions"
+      "US": 50,
+      "LATE_US": 60,
+      "OVERLAP": 999,
+      "_note": "v2.1.5: OVERLAP blocked(999,0%WR). LATE_US raised 55->60(25%WR,-94pips). ASIAN=60(25%WR). EUROPEAN=50(38.5%WR). US=50(51.9%WR)."
     },
-
     "pair_limits": {
-      "GBPUSD":  5,
-      "GBPJPY":  2,
-      "EURGBP":  0,
-      "NZDUSD":  1,
+      "GBPUSD": 5,
+      "GBPJPY": 1,
+      "EURGBP": 0,
+      "NZDUSD": 1,
       "default": 3,
-      "_note": "GBPUSD(70%WR,max5), GBPJPY(100%WR,max2), EURGBP(0%WR,blocked), NZDUSD(0%WR,max1-monitor)"
+      "_note": "GBPUSD(60%WR,max5,BUY-only), GBPJPY(34.1%WR live 85t,max1-reduced), EURGBP(0%WR,blocked), NZDUSD(0%WR,max1-monitor)"
     },
-
     "directional_filters": {
       "GBPUSD": {
-        "allowed_directions": ["BUY"],
-        "blocked_directions": ["SELL"],
+        "allowed_directions": [
+          "BUY"
+        ],
+        "blocked_directions": [
+          "SELL"
+        ],
         "reason": "GBPUSD SELL 0/3 wins (-49.7 pips), BUY 2/2 wins (+90.9 pips) in v2.1.4"
       },
       "_note": "Block specific directions for pairs with strong directional bias."
     },
-
     "validation": {
       "max_signal_age_seconds": 900,
       "min_sl_pips": {
@@ -93,20 +103,18 @@
       "reject_missing_pips": true
     }
   },
-
   "sentiment": {
     "_note": "These values are now READ by the code in v2.1.5-FINBERT",
     "min_score_threshold": 60,
     "newsapi_enabled": true,
     "marketaux_enabled": true,
-    "hf_model_primary":  "mrm8488/distilroberta-finetuned-financial-news-sentiment-analysis",
+    "hf_model_primary": "mrm8488/distilroberta-finetuned-financial-news-sentiment-analysis",
     "hf_model_fallback": "ProsusAI/finbert",
     "cache_ttl_minutes": 30,
     "rate_limit_seconds": 2,
     "max_adjustment_pts": 10,
     "_setup": "Requires GitHub secrets: HF_API_KEY, NEWSAPI_KEY, MARKETAUX_API_KEY. Then set use_sentiment: true above."
   },
-
   "risk_management": {
     "max_daily_risk_pips": 150,
     "max_open_positions": 3,
@@ -117,7 +125,6 @@
       "pause_minutes_after_hit": 120
     }
   },
-
   "performance_tracking": {
     "enable": true,
     "history_file": "signal_state/signal_history.json",
@@ -133,7 +140,6 @@
       "track_cross_analytics": true
     }
   },
-
   "performance_tuning": {
     "auto_adjust_thresholds": false,
     "min_trades_for_optimization": 50,
@@ -143,5 +149,6 @@
     "optimization_inputs": {
       "min_expectancy": 15
     }
-  }
+  },
+  "_optimisation_note": "v2.1.6 changes (data-driven, 110 resolved trades): 1) Aggressive threshold 50->58 \u2014 Tier C signals (50-54) losing -134 pips. 2) GBPJPY cap 2->1 \u2014 85 trades at 34.1% WR dominating pool, dragging overall WR. 3) LATE_US threshold 55->60 \u2014 25% WR/-94 pips, aligned with ASIAN thin-liquidity level."
 }

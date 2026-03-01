@@ -207,7 +207,7 @@
     }
     .mini-stat:hover { background: rgba(255,107,53,0.15); transform: translateY(-2px); }
     .mini-stat-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
-    .mini-stat-value { font-family: 'Orbitron', monospace; font-size: 20px; font-weight: 900; color: var(--orange); margin-top: 4px; }
+    .mini-stat-value { font-family: 'Orbitron', monospace; font-size: clamp(14px, 4vw, 20px); font-weight: 900; color: var(--orange); margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .status-badge {
       padding: 12px 20px;
       background: rgba(0,242,169,0.1);
@@ -461,10 +461,81 @@
     .empty-title { font-size: 20px; font-weight: 900; color: var(--text-dim); margin-bottom: 8px; }
     .empty-desc { font-size: 14px; color: var(--text-muted); }
     
+    /* ── MOBILE / ANDROID CHROME FIXES ─────────────────────────────── */
+
+    /* Base mobile fixes — apply on all small screens */
     @media (max-width: 768px) {
-      .header-grid { grid-template-columns: 1fr; }
-      .metrics { grid-template-columns: repeat(2, 1fr); }
-      .grid { grid-template-columns: 1fr; }
+
+      /* Container padding */
+      .container { padding: 12px; }
+
+      /* Header — stack vertically */
+      .header { padding: 20px 16px; }
+      .header-grid { grid-template-columns: 1fr; gap: 16px; }
+      .brand-text h1 { font-size: 24px; }
+      .brand-text p  { font-size: 10px; }
+      .brand-icon    { width: 48px; height: 48px; }
+      .brand-icon svg { width: 26px; height: 26px; }
+      .header-stats  { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .mini-stat     { padding: 10px 6px; }
+      .mini-stat-value { font-size: 16px; }
+
+      /* Metrics — 2 column grid, prevent text overflow */
+      .metrics { grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+      .metric  { padding: 16px 12px; }
+      .metric-icon { width: 36px; height: 36px; margin-bottom: 10px; border-radius: 10px; }
+      .metric-icon svg { width: 18px; height: 18px; }
+      .metric-label { font-size: 10px; letter-spacing: 0.5px; }
+      .metric-value {
+        font-size: 22px;
+        /* Prevent clipping on Android Chrome */
+        overflow: visible;
+        white-space: nowrap;
+        /* Fix -webkit-text-fill-color clipping on Android */
+        padding-bottom: 2px;
+      }
+      .metric-sub { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+      /* Mode buttons — full width */
+      .modes { width: 100%; box-sizing: border-box; }
+      .mode-btn { padding: 12px 16px; font-size: 13px; flex: 1; justify-content: center; }
+
+      /* Tabs */
+      .tabs { gap: 4px; }
+      .tab  { padding: 12px 12px; font-size: 12px; gap: 4px; }
+      .tab svg { width: 13px; height: 13px; }
+
+      /* Signal cards — single column */
+      .grid { grid-template-columns: 1fr; gap: 16px; }
+
+      /* History table — horizontal scroll */
+      .history-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .history-scroll-container { min-width: 600px; }
+
+      /* Analytics cards */
+      .analytics { grid-template-columns: 1fr; }
+      .analytics-card { padding: 20px 16px; }
+    }
+
+    /* Narrower phones (≤390px — iPhone SE, small Androids) */
+    @media (max-width: 390px) {
+      .metric-value { font-size: 19px; }
+      .mini-stat-value { font-size: 14px; }
+      .tab { padding: 10px 8px; font-size: 11px; }
+      .mode-btn { padding: 10px 10px; font-size: 12px; }
+    }
+
+    /* Android Chrome specific: -webkit-text-fill-color can clip gradient text.
+       Force repaint by adding a transparent outline. */
+    @supports (-webkit-text-fill-color: transparent) {
+      .metric-value, .brand-text h1 {
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        /* Ensure Android doesn't clip descenders */
+        line-height: 1.2;
+        padding-bottom: 4px;
+      }
     }
 
     @keyframes newsScroll {
@@ -563,7 +634,7 @@
       <div class="metric">
         <div class="metric-icon"><i data-lucide="globe-2"></i></div>
         <div class="metric-label">Session <span class="info-icon" data-tip="session">i</span></div>
-        <div class="metric-value" id="mSession" style="font-size:20px">---</div>
+        <div class="metric-value" id="mSession" style="font-size:clamp(13px,3.5vw,20px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">---</div>
         <div class="metric-sub" id="mTime">---</div>
       </div>
     </div>

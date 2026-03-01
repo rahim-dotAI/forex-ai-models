@@ -874,52 +874,148 @@
       setInterval(updateSess, 60000);
     });
     
-    function checkMarketStatus() {
+    /* ============================================
+       FOREX HOLIDAY CALENDAR  (2025 – 2027)
+       Matches holidays in trade_beacon.yml exactly
+    ============================================ */
+    const FOREX_HOLIDAYS = {
+      // 2025
+      '2025-01-01': 'New Year\'s Day',
+      '2025-04-18': 'Good Friday',
+      '2025-04-21': 'Easter Monday',
+      '2025-05-26': 'Spring Bank Holiday (UK)',
+      '2025-07-04': 'Independence Day (US)',
+      '2025-08-25': 'Summer Bank Holiday (UK)',
+      '2025-11-27': 'Thanksgiving (US)',
+      '2025-12-25': 'Christmas Day',
+      '2025-12-26': 'Boxing Day',
+      // 2026
+      '2026-01-01': 'New Year\'s Day',
+      '2026-01-19': 'Martin Luther King Jr. Day (US)',
+      '2026-02-16': 'Presidents\' Day (US)',
+      '2026-04-03': 'Good Friday',
+      '2026-04-06': 'Easter Monday',
+      '2026-05-04': 'Early May Bank Holiday (UK)',
+      '2026-05-25': 'Spring Bank Holiday (UK)',
+      '2026-07-03': 'Independence Day (US, observed)',
+      '2026-08-31': 'Summer Bank Holiday (UK)',
+      '2026-11-26': 'Thanksgiving (US)',
+      '2026-12-25': 'Christmas Day',
+      '2026-12-28': 'Boxing Day (observed)',
+      // 2027
+      '2027-01-01': 'New Year\'s Day',
+      '2027-01-18': 'Martin Luther King Jr. Day (US)',
+      '2027-02-15': 'Presidents\' Day (US)',
+      '2027-03-26': 'Good Friday',
+      '2027-03-29': 'Easter Monday',
+      '2027-05-03': 'Early May Bank Holiday (UK)',
+      '2027-05-31': 'Spring Bank Holiday (UK)',
+      '2027-07-05': 'Independence Day (US, observed)',
+      '2027-08-30': 'Summer Bank Holiday (UK)',
+      '2027-11-25': 'Thanksgiving (US)',
+      '2027-12-24': 'Christmas Eve (observed)',
+      '2027-12-27': 'Christmas Day (observed)',
+      '2027-12-28': 'Boxing Day (observed)',
+    };
+
+    function getUTCDateStr() {
       const now = new Date();
-      const day = now.getUTCDay();
-      const hour = now.getUTCHours();
+      const y = now.getUTCFullYear();
+      const m = String(now.getUTCMonth() + 1).padStart(2, '0');
+      const d = String(now.getUTCDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function getTodayHoliday() {
+      return FOREX_HOLIDAYS[getUTCDateStr()] || null;
+    }
+
+    function getNextMarketOpen(now) {
+      // Returns next Date when market opens (Sunday 22:00 UTC after a weekend,
+      // or Monday 00:00 UTC — whichever is next business day)
+      const d = new Date(now);
+      d.setUTCHours(0, 0, 0, 0);
+      for (let i = 1; i <= 10; i++) {
+        d.setUTCDate(d.getUTCDate() + 1);
+        const dow = d.getUTCDay(); // 0=Sun … 6=Sat
+        if (dow === 0 || dow === 6) continue;           // skip weekends
+        const ds = `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
+        if (FOREX_HOLIDAYS[ds]) continue;               // skip holidays
+        // Found next trading day — market opens at 00:00 UTC (Asian open)
+        return d;
+      }
+      return d;
+    }
+
+    function checkMarketStatus() {
+      const now      = new Date();
+      const day      = now.getUTCDay();   // 0=Sun … 6=Sat
+      const hour     = now.getUTCHours();
+      const holiday  = getTodayHoliday();
       const isWeekend = (day === 5 && hour >= 22) || day === 6 || (day === 0 && hour < 22);
+      const isClosed  = isWeekend || !!holiday;
+
       const statusBadge = document.querySelector('.status-badge');
-      const statusText = statusBadge.querySelector('span');
-      const statusDot = statusBadge.querySelector('.status-dot');
-      if (isWeekend) {
-        statusText.textContent = 'MARKET CLOSED';
-        statusBadge.style.background = 'rgba(255,71,87,0.1)';
-        statusBadge.style.borderColor = 'rgba(255,71,87,0.3)';
-        statusBadge.style.color = 'var(--red)';
-        statusDot.style.background = 'var(--red)';
-        statusDot.style.boxShadow = '0 0 10px var(--red)';
-        const nextMonday = new Date(now);
-        nextMonday.setUTCDate(now.getUTCDate() + ((1 + 7 - now.getUTCDay()) % 7 || 7));
-        nextMonday.setUTCHours(0, 0, 0, 0);
+      const statusText  = statusBadge ? statusBadge.querySelector('span') : null;
+      const statusDot   = statusBadge ? statusBadge.querySelector('.status-dot') : null;
+
+      if (isClosed && statusText) {
+        const label = holiday ? 'MARKET HOLIDAY' : 'MARKET CLOSED';
+        statusText.textContent = label;
+        statusBadge.style.background   = 'rgba(255,71,87,0.1)';
+        statusBadge.style.borderColor  = 'rgba(255,71,87,0.3)';
+        statusBadge.style.color        = 'var(--red)';
+        statusDot.style.background     = 'var(--red)';
+        statusDot.style.boxShadow      = '0 0 10px var(--red)';
+      }
+
+      if (isClosed && !document.getElementById('weekend-notice')) {
+        const nextOpen  = getNextMarketOpen(now);
         const container = document.querySelector('.container');
-        if (!document.getElementById('weekend-notice')) {
-          const notice = document.createElement('div');
-          notice.id = 'weekend-notice';
-          notice.style.cssText = 'background:linear-gradient(135deg,rgba(255,71,87,0.1),rgba(194,53,66,0.1));border:1px solid rgba(255,71,87,0.3);border-radius:16px;padding:32px 24px;margin-bottom:24px;';
-          notice.innerHTML = `
-            <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:20px;">
-              <i data-lucide="power-off" style="width:24px;height:24px;color:var(--red)"></i>
-              <span style="color:var(--red);font-size:18px;font-weight:900;letter-spacing:1px;">FOREX MARKET CLOSED</span>
+        const notice    = document.createElement('div');
+        notice.id = 'weekend-notice';
+
+        const headerIcon  = holiday ? 'calendar-off' : 'power-off';
+        const headerColor = 'var(--red)';
+        const reasonLine  = holiday
+          ? `<div style="margin-top:8px;font-size:13px;color:var(--yellow);font-weight:700;letter-spacing:0.5px;">
+               🗓️ Today: <span style="color:var(--text)">${holiday}</span>
+             </div>`
+          : '';
+        const subLabel = holiday
+          ? 'Major forex markets are closed for this holiday. Next trading session:'
+          : 'Forex market is closed for the weekend. Reopens:';
+
+        notice.style.cssText = 'background:linear-gradient(135deg,rgba(255,71,87,0.1),rgba(194,53,66,0.08));border:1px solid rgba(255,71,87,0.3);border-radius:16px;padding:32px 24px;margin-bottom:24px;';
+        notice.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:6px;">
+            <i data-lucide="${headerIcon}" style="width:24px;height:24px;color:${headerColor}"></i>
+            <span style="color:${headerColor};font-size:18px;font-weight:900;letter-spacing:1px;">
+              ${holiday ? 'FOREX MARKET HOLIDAY' : 'FOREX MARKET CLOSED'}
+            </span>
+          </div>
+          ${reasonLine}
+          <div style="text-align:center;margin:20px 0 24px;">
+            <div style="font-size:13px;color:var(--text-dim);margin-bottom:10px;">${subLabel}</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
+              ${nextOpen.toUTCString().replace(':00 GMT', ' UTC')}
             </div>
-            <div style="text-align:center;margin-bottom:24px;">
-              <div style="font-size:14px;color:var(--text-dim);margin-bottom:8px;">Market reopens in:</div>
-              <div id="countdown" class="countdown-container"></div>
-            </div>
-            <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
-              <button id="replayBtn" onclick="playWeeklyReplay()" style="padding:12px 24px;background:linear-gradient(135deg,var(--orange),#ff8c61);border:none;border-radius:10px;color:white;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;font-family:'Rajdhani',sans-serif;letter-spacing:0.5px;box-shadow:var(--glow-orange);transition:all 0.3s;">
-                <i data-lucide="play" style="width:16px;height:16px"></i>
-                PLAY WEEKLY REPLAY
-              </button>
-            </div>
-            <div id="replayProgress" style="display:none;width:100%;height:6px;background:var(--elevated);border-radius:3px;overflow:hidden;margin-top:16px;">
-              <div id="replayBar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--orange),var(--blue));transition:width 0.3s;"></div>
-            </div>`;
-          container.insertBefore(notice, container.querySelector('.metrics'));
-          lucide.createIcons();
-          updateCountdown(nextMonday);
-          setInterval(() => updateCountdown(nextMonday), 1000);
-        }
+            <div id="countdown" class="countdown-container"></div>
+          </div>
+          <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
+            <button id="replayBtn" onclick="playWeeklyReplay()" style="padding:12px 24px;background:linear-gradient(135deg,var(--orange),#ff8c61);border:none;border-radius:10px;color:white;font-weight:700;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:8px;font-family:'Rajdhani',sans-serif;letter-spacing:0.5px;box-shadow:var(--glow-orange);transition:all 0.3s;">
+              <i data-lucide="play" style="width:16px;height:16px"></i>
+              PLAY WEEKLY REPLAY
+            </button>
+          </div>
+          <div id="replayProgress" style="display:none;width:100%;height:6px;background:var(--elevated);border-radius:3px;overflow:hidden;margin-top:16px;">
+            <div id="replayBar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--orange),var(--blue));transition:width 0.3s;"></div>
+          </div>`;
+
+        container.insertBefore(notice, container.querySelector('.metrics'));
+        lucide.createIcons();
+        updateCountdown(nextOpen);
+        setInterval(() => updateCountdown(nextOpen), 1000);
       }
     }
     
@@ -1437,5 +1533,108 @@
       lucide.createIcons();
     }
   </script>
+
+  <!-- ═══════════════════════════════════════════════
+       DISCLAIMER FOOTER
+  ════════════════════════════════════════════════ -->
+  <div style="
+    margin-top: 48px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding: 32px 24px 40px;
+    max-width: 1920px;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+    z-index: 1;
+  ">
+    <!-- Warning banner -->
+    <div style="
+      background: linear-gradient(135deg, rgba(251,191,36,0.07), rgba(255,107,53,0.05));
+      border: 1px solid rgba(251,191,36,0.2);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    ">
+      <i data-lucide="triangle-alert" style="width:20px;height:20px;color:#fbbf24;flex-shrink:0;margin-top:2px;"></i>
+      <div style="font-size:13px;color:#fbbf24;font-weight:700;line-height:1.5;letter-spacing:0.3px;">
+        TRADING FOREIGN EXCHANGE CARRIES SIGNIFICANT RISK OF LOSS AND IS NOT SUITABLE FOR ALL INVESTORS.
+        YOU MAY LOSE MORE THAN YOUR INITIAL DEPOSIT.
+      </div>
+    </div>
+
+    <!-- Full disclaimer text -->
+    <div style="font-size:11.5px;color:var(--text-muted);line-height:1.8;max-width:1200px;">
+
+      <p style="margin-bottom:12px;">
+        <strong style="color:var(--text-dim);">NOT FINANCIAL ADVICE.</strong>
+        Trade Beacon is an <strong style="color:var(--text-dim);">automated algorithmic signal system</strong> designed for
+        research, educational, and informational purposes only. Nothing on this dashboard constitutes financial advice,
+        investment advice, trading advice, or any other form of advice. The signals, scores, tier classifications, win-rate
+        estimates, and sentiment adjustments displayed here are the output of a technical algorithm and should not be
+        interpreted as recommendations to buy or sell any financial instrument.
+      </p>
+
+      <p style="margin-bottom:12px;">
+        <strong style="color:var(--text-dim);">PAST PERFORMANCE.</strong>
+        Historical win rates, pip totals, and expectancy figures shown in this dashboard are based on past signal
+        performance and are <strong style="color:var(--text-dim);">not indicative of future results</strong>.
+        Forex markets are inherently unpredictable. No algorithm, however sophisticated, can guarantee profitable
+        outcomes. Performance statistics are only considered statistically meaningful after 100+ resolved trades.
+      </p>
+
+      <p style="margin-bottom:12px;">
+        <strong style="color:var(--text-dim);">RISK WARNING.</strong>
+        Forex and CFD trading involves substantial risk. Leverage can work against you as well as for you.
+        You should only trade with capital you can afford to lose entirely. Before trading, consider your
+        experience level, investment objectives, and risk tolerance. Seek independent financial advice if necessary.
+      </p>
+
+      <p style="margin-bottom:12px;">
+        <strong style="color:var(--text-dim);">DATA ACCURACY.</strong>
+        Market data is sourced via yfinance and may be delayed, incomplete, or inaccurate.
+        Sentiment analysis is powered by HuggingFace FinBERT via the Inference API and reflects NLP model output,
+        not verified market intelligence. Signal entry prices, stop-loss, and take-profit levels are theoretical
+        and may not reflect executable prices due to spreads, slippage, and liquidity conditions.
+      </p>
+
+      <p style="margin-bottom:12px;">
+        <strong style="color:var(--text-dim);">MARKET HOURS &amp; HOLIDAYS.</strong>
+        This dashboard attempts to reflect standard forex market hours (Sunday 22:00 UTC – Friday 22:00 UTC)
+        and major UK/US bank holidays. Holiday schedules may vary by broker and jurisdiction. Always verify
+        market status with your broker before placing orders. Trade Beacon does not guarantee signals will
+        not be generated during thin liquidity periods.
+      </p>
+
+      <p style="margin-bottom:0;">
+        <strong style="color:var(--text-dim);">NO LIABILITY.</strong>
+        The creators and operators of Trade Beacon accept no liability for any losses incurred as a result
+        of acting on information displayed in this dashboard. Use of this system is entirely at your own risk.
+        By viewing this dashboard you acknowledge that you have read, understood, and accepted this disclaimer.
+      </p>
+    </div>
+
+    <!-- Footer bar -->
+    <div style="
+      margin-top: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.04);
+    ">
+      <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.5px;">
+        TRADE BEACON v2.1.5-FINBERT &nbsp;·&nbsp; SIGNAL-ONLY MODE &nbsp;·&nbsp; NOT FOR LIVE TRADING
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);letter-spacing:0.3px;">
+        For informational &amp; research use only &nbsp;·&nbsp; All times UTC
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

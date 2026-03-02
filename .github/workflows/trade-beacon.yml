@@ -169,14 +169,14 @@ jobs:
         run: |
           echo "🔍 Validating version alignment..."
           TRACKER_VER=$(python -c "from performance_tracker import TRACKER_VERSION; print(TRACKER_VERSION)" 2>/dev/null || echo "unknown")
-          BEACON_VER=$(grep -oP 'signal_generator_version\s*=\s*"\K[^"]+' $ENTRY_SCRIPT | head -1 || echo "unknown")
+          BEACON_VER=$(grep -oP '"signal_generator_version":\s*"\K[^"]+' $ENTRY_SCRIPT | head -1 || echo "unknown")
           CONFIG_VER=$(jq -r '.version // "unknown"' config.json)
 
           echo "Tracker version: $TRACKER_VER"
           echo "Beacon version:  $BEACON_VER"
           echo "Config version:  $CONFIG_VER"
 
-          if [[ "$BEACON_VER" == *"FINBERT"* ]]; then
+          if [[ "$BEACON_VER" == *"OPTIMISED"* ]] || [[ "$BEACON_VER" == *"FINBERT"* ]]; then
             echo "✅ v2.1.6-OPTIMISED detected"
           elif [[ "$TRACKER_VER" != "$BEACON_VER" ]]; then
             echo "⚠️ Version mismatch (non-fatal — auto-migration will handle)"
@@ -192,7 +192,7 @@ jobs:
 
           CONFIG_VER=$(jq -r '.version // "unknown"' config.json)
           echo "Config version: $CONFIG_VER"
-          if [[ "$CONFIG_VER" == *"FINBERT"* ]]; then
+          if [[ "$CONFIG_VER" == *"OPTIMISED"* ]] || [[ "$CONFIG_VER" == *"FINBERT"* ]]; then
             echo "✅ Config version: v2.1.6-OPTIMISED"
           else
             echo "⚠️ Config version not v2.1.6-OPTIMISED — please update config.json"

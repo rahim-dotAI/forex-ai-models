@@ -1219,14 +1219,24 @@
         processAndRenderSignals();
         renderHistory();
         renderAnalytics();
-        // Pick of the Day — deduplicated across both modes, best score wins
-        const allSigs = [
+        // Pick of the Day — uses today's historical signals (permanent record)
+        // combined with any currently active signals.
+        // historical_signals contains all resolved/expired trades so we get
+        // today's signals even after the 15-min active window expires.
+        const today = new Date().toISOString().slice(0,10);
+        const activeSigs = [
           ...(data?.signals_by_mode?.aggressive  || []),
           ...(data?.signals_by_mode?.conservative || []),
         ];
+        // historical_signals from today — includes OPEN, WIN, LOSS, EXPIRED
+        const histTodaySigs = (data?.historical_signals || []).filter(s => {
+          try { return new Date(s.timestamp).toISOString().slice(0,10) === today; }
+          catch(e) { return false; }
+        });
+        // Merge active + today's history, deduplicate by signal_id
         const seen = new Set();
-        const deduped = allSigs.filter(s => {
-          const id = s.signal_id||s.id||s.pair+'_'+s.direction;
+        const deduped = [...activeSigs, ...histTodaySigs].filter(s => {
+          const id = s.signal_id||s.id||s.pair+'_'+s.direction+'_'+s.timestamp;
           if (seen.has(id)) return false;
           seen.add(id); return true;
         });

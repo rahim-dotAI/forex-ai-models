@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-03-02T10:46:00.029455+00:00",
-  "active_signals": 0,
+  "timestamp": "2026-03-02T11:01:25.706426+00:00",
+  "active_signals": 1,
   "active_signals_by_mode": {
-    "aggressive": 0,
-    "conservative": 0
+    "aggressive": 1,
+    "conservative": 1
   },
   "session": "EUROPEAN",
   "mode": "conservative",
@@ -17,12 +17,112 @@
   },
   "market_state": {
     "volatility": "CALM",
-    "sentiment_bias": "MIXED",
+    "sentiment_bias": "BULLISH",
     "session": "EUROPEAN"
   },
   "signals_by_mode": {
-    "aggressive": [],
-    "conservative": []
+    "aggressive": [
+      {
+        "signal_id": "USDCHF_BUY_adcb516a2749",
+        "id": "USDCHF_BUY_adcb516a2749",
+        "pair": "USDCHF",
+        "direction": "BUY",
+        "score": 63,
+        "technical_score": 63,
+        "sentiment_score": 0.0,
+        "sentiment_adjustment": 0.0,
+        "score_before_sentiment": 63,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 63.4,
+        "adx": 29.7,
+        "atr": 0.00085,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 0.77286,
+        "sl": 0.77075,
+        "tp": 0.77878,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-03-02T11:01:21.197805+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-03-02T11:01:21.197805+00:00",
+          "expires_at": "2026-03-02T11:16:21.197805+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.6-OPTIMISED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      }
+    ],
+    "conservative": [
+      {
+        "signal_id": "USDCHF_BUY_adcb516a2749",
+        "id": "USDCHF_BUY_adcb516a2749",
+        "pair": "USDCHF",
+        "direction": "BUY",
+        "score": 63,
+        "technical_score": 63,
+        "sentiment_score": 0.0,
+        "sentiment_adjustment": 0.0,
+        "score_before_sentiment": 63,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 63.4,
+        "adx": 29.7,
+        "atr": 0.00085,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 0.77286,
+        "sl": 0.77075,
+        "tp": 0.77878,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-03-02T11:01:21.197805+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-03-02T11:01:21.197805+00:00",
+          "expires_at": "2026-03-02T11:16:21.197805+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.6-OPTIMISED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      }
+    ]
   },
   "historical_signals": [
     {
@@ -3469,8 +3569,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 0,
-    "total_risk_pips": 0,
+    "theoretical_max_pips": 21.1,
+    "total_risk_pips": 21.09999999999945,
     "max_daily_risk": 150
   },
   "analytics": {
@@ -3703,7 +3803,7 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-03-02T10:46:00.029490+00:00",
+    "last_update": "2026-03-02T11:01:25.706475+00:00",
     "signal_only_mode": true,
     "version": "2.1.6-OPTIMISED"
   }

@@ -1272,13 +1272,25 @@ def write_dashboard_state(signals, downloads, news_calls=0, mkt_calls=0,
             # Keep full history — no arbitrary cutoff.
             # signal_history.json is the source of truth; dashboard reflects all of it.
             for s in PERFORMANCE_TRACKER.history.get("signals",[]):
-                if s.get("status") not in ["WIN","LOSS","EXPIRED"]: continue
+                if s.get("status") not in ["WIN","LOSS","EXPIRED","OPEN"]: continue
                 hist.append(s)
             # Sort newest first so dashboard renders in correct order
             hist.sort(key=lambda x: x.get("timestamp",""), reverse=True)
             log.info(f"Loaded {len(hist)} historical signals (full history)")
         except Exception as e:
             log.warning(f"Could not load historical signals: {e}")
+    # Also inject today's currently active signals so Pick of the Day
+    # can find them even after the 15-min active window expires.
+    # These are not yet in signal_history.json so we add them separately.
+    if signals:
+        today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        seen_ids  = {s.get("signal_id","") for s in hist}
+        for s in signals:
+            sid = s.get("signal_id","")
+            ts  = s.get("timestamp","")
+            if sid and sid not in seen_ids and ts.startswith(today_str):
+                hist.insert(0, {**s, "status": "OPEN"})
+                seen_ids.add(sid)
     if not hist:
         df_file = Path("signal_state/dashboard_state.json")
         if df_file.exists():

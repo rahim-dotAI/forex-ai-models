@@ -1542,13 +1542,16 @@
     
     function renderAnalytics() {
       if (!data) return;
-      const an = data.performance_stats||data.analytics||{};
+      // performance_stats has by_mode/tier/session/pair but NOT cross_analytics
+      // cross_analytics lives one level up in data.analytics — read both
+      const an  = data.performance_stats || data.analytics || {};
+      const anx = data.analytics || {};  // always has cross_analytics
       renderTier(an.by_tier||{});
       renderSess(an.by_session||{});
       renderPair(an.by_pair||{});
       renderMode(an.by_mode||{});
-      renderCrossTierSession((an.cross_analytics||{}).tier_by_session||{});
-      renderCrossModeTier((an.cross_analytics||{}).mode_by_tier||{});
+      renderCrossTierSession((anx.cross_analytics||an.cross_analytics||{}).tier_by_session||{});
+      renderCrossModeTier((anx.cross_analytics||an.cross_analytics||{}).mode_by_tier||{});
     }
     
     function renderTier(ts) {

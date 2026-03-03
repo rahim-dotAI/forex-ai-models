@@ -217,19 +217,29 @@ def load_config() -> Dict:
     return config
 
 def validate_api_keys() -> bool:
+    # Check keys exist first — hard requirement
     if not os.getenv("NEWSAPI_KEY") or not os.getenv("MARKETAUX_API_KEY"):
+        log.warning("Sentiment disabled: NEWSAPI_KEY or MARKETAUX_API_KEY not set")
         return False
+    # Live validation is best-effort only — a network hiccup should NOT
+    # disable sentiment for the entire run. Only hard auth failures (401)
+    # disable it; timeouts and 5xx are treated as "assume valid, proceed".
     try:
         r = requests.get(
             "https://newsapi.org/v2/top-headlines",
             params={"country": "us", "pageSize": 1, "apiKey": os.getenv("NEWSAPI_KEY")},
-            timeout=5,
+            timeout=8,
         )
-        if r.status_code in (401, 429):
+        if r.status_code == 401:
+            log.warning("NewsAPI key invalid (401) — sentiment disabled")
             return False
+        if r.status_code == 429:
+            log.warning("NewsAPI rate limited (429) — proceeding anyway, will retry per-signal")
         log.info("NewsAPI validated")
-    except Exception:
-        return False
+    except Exception as e:
+        # Network timeout or DNS failure — keys may still be valid.
+        # Proceed with sentiment enabled; per-signal calls have their own error handling.
+        log.warning(f"NewsAPI validation request failed ({e}) — proceeding with sentiment enabled")
     return True
 
 # Initialise globals
@@ -1106,6 +1116,20 @@ def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
     if direction=="BUY":  sl=curr-atr_stop*atr; tp=curr+atr_tgt*atr
     else:                 sl=curr+atr_stop*atr; tp=curr-atr_tgt*atr
 
+    # ── JPY pair TP cap ───────────────────────────────────────────────────────
+    # GBPJPY and EURJPY have an average daily range of ~150 pips (research-backed).
+    # A 7x ATR target on JPY pairs produces TPs of 1000–1500 pips — unreachable
+    # within a single trade's lifetime. Cap TP at 150 pips for all JPY pairs so
+    # the target is realistic and signals can actually resolve as WIN instead of EXPIRED.
+    # 150 pips on a JPY pair = 150 * 0.01 = 1.50 price units.
+    if "JPY" in pair:
+        max_tp_distance = 150 * 0.01  # 150 pips in JPY price terms
+        if direction == "BUY":
+            tp = min(tp, curr + max_tp_distance)
+        else:
+            tp = max(tp, curr - max_tp_distance)
+        log.info(f"  JPY TP capped at 150 pips: tp={round(tp,3)}")
+
     rr = abs(tp-curr)/abs(curr-sl) if abs(curr-sl)>0 else 0
     min_rr = CONFIG.get("advanced",{}).get("min_risk_reward",
              CONFIG["settings"]["aggressive"].get("min_risk_reward",2.5))
@@ -1239,21 +1263,63 @@ def get_performance_summary():
     except Exception: return {"stats":{},"analytics":{},"equity":{}}
 
 def filter_expired_signals(signals):
+    """Filter out expired signals, recording them to history before discarding.
+    
+    Previously expired signals were silently dropped — they never appeared
+    in history because the resolution loop never got a chance to see them.
+    Now we record EXPIRED outcome to the performance tracker here so every
+    signal that passes through the system has a history entry.
+    """
     now = datetime.now(timezone.utc); active = []
     for sig in signals:
         status = sig.get("status","OPEN")
         if status=="ACTIVE": sig["status"]="OPEN"; status="OPEN"
         if status!="OPEN": continue
         try:
-            exp = sig.get("metadata",{}).get("expires_at")
-            if exp and now<datetime.fromisoformat(exp.replace("Z","+00:00")):
+            exp    = sig.get("metadata",{}).get("expires_at")
+            is_exp = False
+            if exp:
+                is_exp = now >= datetime.fromisoformat(exp.replace("Z","+00:00"))
+            else:
+                st     = datetime.fromisoformat(sig["timestamp"].replace("Z","+00:00"))
+                is_exp = (now-st).total_seconds() >= CONFIG.get("advanced",{}).get(
+                             "validation",{}).get("max_signal_age_seconds",900)
+
+            if not is_exp:
                 active.append(sig)
-            elif not exp:
-                st = datetime.fromisoformat(sig["timestamp"].replace("Z","+00:00"))
-                if (now-st).total_seconds() < CONFIG.get("advanced",{}).get(
-                        "validation",{}).get("max_signal_age_seconds",900):
-                    active.append(sig)
-        except Exception: continue
+            else:
+                # Record to history before discarding so it shows up in History tab
+                if PERFORMANCE_TRACKER:
+                    sid   = sig.get("signal_id","")
+                    # Only record if not already in history
+                    existing_ids = {s.get("signal_id","") 
+                                    for s in PERFORMANCE_TRACKER.history.get("signals",[])}
+                    if sid and sid not in existing_ids:
+                        pair      = sig.get("pair","")
+                        entry     = sig.get("entry_price", sig.get("entry",0.0))
+                        direction = sig.get("direction","BUY")
+                        sl        = sig.get("stop_loss", sig.get("sl",0.0))
+                        tp        = sig.get("take_profit", sig.get("tp",0.0))
+                        pips      = price_to_pips(pair, 0)  # 0 pips — price didn't move enough
+                        PERFORMANCE_TRACKER.record_trade(
+                            signal_id=sid, pair=pair, direction=direction,
+                            entry_price=entry, exit_price=entry, sl=sl, tp=tp,
+                            outcome="EXPIRED", pips=pips,
+                            confidence=sig.get("confidence"),
+                            score=sig.get("score"),
+                            session=sig.get("session"),
+                            entry_time=sig.get("timestamp"),
+                            exit_time=now.isoformat(),
+                            tier=sig.get("tier"),
+                            eligible_modes=sig.get("eligible_modes"),
+                            sentiment_applied=sig.get("sentiment_applied", False),
+                            sentiment_score=sig.get("sentiment_score", 0.0),
+                            sentiment_adjustment=sig.get("sentiment_adjustment", 0.0),
+                            estimated_win_rate=sig.get("estimated_win_rate"))
+                        log.info(f"EXPIRED {pair} {direction} recorded to history")
+        except Exception as e:
+            log.warning(f"filter_expired_signals error: {e}")
+            continue
     if len(active)<len(signals):
         log.info(f"Filtered {len(signals)-len(active)} expired")
     return active

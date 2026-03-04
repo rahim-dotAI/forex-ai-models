@@ -293,6 +293,247 @@ class MarketDataCache:
 _cache = MarketDataCache(ttl=CACHE_TTL)
 
 # ═════════════════════════════════════════════════════════════════════════════
+# ECONOMIC CALENDAR
+# Fetches Forex Factory high-impact events via plain HTTP (free, no Browserless).
+# Cached once per day to signal_state/economic_calendar_cache.json.
+# Every 30-min run reads the cached file — zero extra HTTP calls per run.
+# Blackout window: 30 min before + 15 min after each High-impact event.
+# ═════════════════════════════════════════════════════════════════════════════
+
+_FF_CALENDAR_URL = "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
+_CALENDAR_CACHE  = Path("signal_state/economic_calendar_cache.json")
+_BLACKOUT_BEFORE = 30   # minutes before event — suppress signals
+_BLACKOUT_AFTER  = 15   # minutes after event — suppress signals
+_ET_OFFSET_HOURS = -5   # ET = UTC-5 (winter, conservative year-round)
+
+# Which pairs to block when a currency has a high-impact event
+_CURRENCY_PAIRS: Dict[str, List[str]] = {
+    "USD": ["EURUSD","GBPUSD","USDJPY","USDCAD","USDCHF","AUDUSD","NZDUSD"],
+    "EUR": ["EURUSD","EURGBP","EURJPY"],
+    "GBP": ["GBPUSD","EURGBP","GBPJPY"],
+    "JPY": ["USDJPY","EURJPY","GBPJPY"],
+    "AUD": ["AUDUSD"],
+    "NZD": ["NZDUSD"],
+    "CAD": ["USDCAD"],
+    "CHF": ["USDCHF"],
+}
+
+def _parse_ff_time(date_str: str, time_str: str) -> Optional[datetime]:
+    """Parse Forex Factory date + time string into UTC datetime."""
+    import re as _re
+    if not time_str or time_str.lower() in ("tentative", "all day", ""):
+        return None
+    try:
+        m = _re.match(r"(\d+):(\d+)(am|pm)", time_str.lower())
+        if not m:
+            return None
+        hour, minute, ampm = int(m.group(1)), int(m.group(2)), m.group(3)
+        if ampm == "pm" and hour != 12: hour += 12
+        elif ampm == "am" and hour == 12: hour = 0
+        d = datetime.strptime(date_str, "%Y-%m-%d")
+        return d.replace(hour=hour, minute=minute, tzinfo=timezone.utc) - timedelta(hours=_ET_OFFSET_HOURS)
+    except Exception:
+        return None
+
+def _load_economic_calendar() -> List[Dict]:
+    """
+    Load calendar from daily cache file; fetch from FF only when stale (> 24h).
+    Returns list of {title, currency, utc_time} for High-impact events only.
+    """
+    _CALENDAR_CACHE.parent.mkdir(exist_ok=True)
+    # Try cache first
+    if _CALENDAR_CACHE.exists():
+        try:
+            cache     = json.loads(_CALENDAR_CACHE.read_text())
+            cached_at = datetime.fromisoformat(cache.get("cached_at", "2000-01-01T00:00:00+00:00"))
+            age_h     = (datetime.now(timezone.utc) - cached_at).total_seconds() / 3600
+            if age_h < 24:
+                events = cache.get("events", [])
+                log.info(f"Calendar: {len(events)} high-impact events from cache (age {age_h:.1f}h)")
+                return events
+        except Exception as e:
+            log.warning(f"Calendar cache read failed: {e} — fetching fresh")
+    # Fetch fresh from FF (plain HTTP, no Browserless needed)
+    try:
+        resp = requests.get(
+            _FF_CALENDAR_URL, timeout=10,
+            headers={"User-Agent": "TradeBeacon/2.1.6"}
+        )
+        if resp.status_code != 200:
+            log.warning(f"Calendar: FF returned {resp.status_code} — no news filtering")
+            return []
+        events = []
+        for item in resp.json():
+            if item.get("impact", "").lower() != "high": continue
+            currency = item.get("country", "").upper()
+            if currency not in _CURRENCY_PAIRS: continue
+            utc_time = _parse_ff_time(item.get("date", ""), item.get("time", ""))
+            if utc_time is None:
+                # Tentative/All Day — use 13:30 UTC (~8:30am ET) as safe fallback
+                try:
+                    d = datetime.strptime(item.get("date", ""), "%Y-%m-%d")
+                    utc_time = d.replace(hour=13, minute=30, tzinfo=timezone.utc)
+                except Exception:
+                    continue
+            events.append({
+                "title":    item.get("title", "Unknown"),
+                "currency": currency,
+                "utc_time": utc_time.isoformat(),
+            })
+        _CALENDAR_CACHE.write_text(json.dumps({
+            "cached_at": datetime.now(timezone.utc).isoformat(),
+            "source":    _FF_CALENDAR_URL,
+            "events":    events,
+        }, indent=2))
+        log.info(f"Calendar: fetched {len(events)} high-impact events from FF — cached")
+        return events
+    except Exception as e:
+        log.warning(f"Calendar: fetch failed ({e}) — no news filtering this run")
+        return []
+
+def _is_calendar_blackout(pair: str, events: List[Dict]) -> Tuple[bool, str]:
+    """
+    Check if current time falls inside a blackout window for this pair.
+    Returns (True, "Event Name (CCY) in Xmin") if blocked, (False, "") if clear.
+    """
+    if not events: return False, ""
+    now   = datetime.now(timezone.utc)
+    clean = pair.replace("=X", "").upper()
+    for ev in events:
+        if clean not in _CURRENCY_PAIRS.get(ev.get("currency", ""), []): continue
+        try:
+            et = datetime.fromisoformat(ev["utc_time"])
+        except Exception: continue
+        if et - timedelta(minutes=_BLACKOUT_BEFORE) <= now <= et + timedelta(minutes=_BLACKOUT_AFTER):
+            mins  = int((et - now).total_seconds() / 60)
+            label = (f"{ev['title']} ({ev['currency']}) in {mins}min"
+                     if mins >= 0 else
+                     f"{ev['title']} ({ev['currency']}) {abs(mins)}min ago")
+            return True, label
+    return False, ""
+
+def _get_upcoming_events(hours: int = 4) -> List[Dict]:
+    """Return high-impact events in the next N hours for dashboard display."""
+    if not ECONOMIC_CALENDAR: return []
+    now    = datetime.now(timezone.utc)
+    cutoff = now + timedelta(hours=hours)
+    result = []
+    for ev in ECONOMIC_CALENDAR:
+        try:
+            t = datetime.fromisoformat(ev["utc_time"])
+            if now - timedelta(minutes=15) <= t <= cutoff:
+                mins = int((t - now).total_seconds() / 60)
+                result.append({
+                    "title":    ev["title"],
+                    "currency": ev["currency"],
+                    "utc_time": t.strftime("%H:%M UTC"),
+                    "mins_to":  mins,
+                    "passed":   mins < 0,
+                })
+        except Exception: pass
+    return sorted(result, key=lambda x: x["mins_to"])
+
+# Load calendar once at process startup — all signal checks use this list
+ECONOMIC_CALENDAR: List[Dict] = []
+try:
+    ECONOMIC_CALENDAR = _load_economic_calendar()
+except Exception as e:
+    log.warning(f"Economic calendar init failed: {e}")
+
+# ═════════════════════════════════════════════════════════════════════════════
+# LIVE PRICE VALIDATION (Browserless / X-Rates)
+# Validates signal entry prices against live X-Rates data via Browserless.
+# Only runs on signals that passed ALL filters — typically 1-5 per day.
+# Token budget: ~110 calls/month, well within the 1000 free tier limit.
+# 5-min in-memory cache: each unique pair fetched once per run, not per signal.
+# Falls back silently to yfinance price if Browserless is unavailable.
+# ═════════════════════════════════════════════════════════════════════════════
+
+_BROWSERLESS_URL  = "https://production-sfo.browserless.io/content"
+_XRATES_URL       = "https://www.x-rates.com/calculator/?from={f}&to={t}&amount=1"
+_PRICE_DIVERGENCE = 0.005   # 0.5% — above this we update entry price to live value
+_PRICE_CACHE: Dict[str, Tuple[float, float]] = {}   # pair -> (price, unix_timestamp)
+_PRICE_CACHE_TTL  = 300     # 5 minutes
+
+import re as _re_live
+_XRATES_RE = _re_live.compile(r'ccOutputRslt[^>]*>([\d,.]+)')
+
+def _fetch_xrates_price(pair: str) -> Optional[float]:
+    """
+    Fetch live price from X-Rates via Browserless with 5-min in-memory cache.
+    Returns float or None on any failure — caller always has a safe fallback.
+    """
+    if not BROWSERLESS_TOKEN: return None
+    clean = pair.replace("=X", "").upper()
+    # Check 5-min cache
+    if clean in _PRICE_CACHE:
+        price, ts = _PRICE_CACHE[clean]
+        if time.time() - ts < _PRICE_CACHE_TTL:
+            log.debug(f"LivePrice: {clean} = {price:.5f} (cache)")
+            return price
+    if len(clean) != 6: return None
+    f, t = clean[:3], clean[3:]
+    try:
+        resp = requests.post(
+            f"{_BROWSERLESS_URL}?token={BROWSERLESS_TOKEN}",
+            json={"url": _XRATES_URL.format(f=f, t=t)},
+            timeout=15,
+        )
+        if resp.status_code != 200:
+            log.warning(f"LivePrice: Browserless returned {resp.status_code} for {clean}")
+            return None
+        m = _XRATES_RE.search(resp.text)
+        if not m:
+            log.warning(f"LivePrice: Could not parse X-Rates response for {clean}")
+            return None
+        price = float(m.group(1).replace(",", ""))
+        if price <= 0: return None
+        _PRICE_CACHE[clean] = (price, time.time())
+        log.info(f"LivePrice: {clean} = {price:.5f} (X-Rates via Browserless)")
+        return price
+    except Exception as e:
+        log.warning(f"LivePrice: Browserless error for {clean}: {e}")
+        return None
+
+def _validate_signal_prices(signals: List[Dict]) -> List[Dict]:
+    """
+    Compare each signal's yfinance entry price against X-Rates live price.
+    If divergence > 0.5%: update entry_price, sl, tp by the same delta.
+    If Browserless unavailable: return signals unchanged — no crash.
+    """
+    if not BROWSERLESS_TOKEN or not signals: return signals
+    validated = []
+    for sig in signals:
+        pair     = sig.get("pair", "")
+        yf_price = sig.get("entry_price", 0.0)
+        sl, tp   = sig.get("sl", 0.0), sig.get("tp", 0.0)
+        live     = _fetch_xrates_price(pair)
+        if live is None or yf_price <= 0:
+            validated.append(sig)
+            continue
+        div = abs(live - yf_price) / yf_price
+        if div > _PRICE_DIVERGENCE:
+            delta = live - yf_price
+            log.warning(
+                f"LivePrice: {pair} diverged {div:.2%} — "
+                f"yfinance={yf_price:.5f} X-Rates={live:.5f} — updating entry"
+            )
+            sig = {**sig,
+                   "entry_price": round(live, 5),
+                   "sl":          round(sl + delta, 5),
+                   "tp":          round(tp + delta, 5),
+                   "price_source": "xrates",
+                   "price_divergence": round(div, 5)}
+        else:
+            log.info(
+                f"LivePrice: {pair} confirmed ({div:.3%} divergence) — "
+                f"yfinance={yf_price:.5f} X-Rates={live:.5f}"
+            )
+            sig = {**sig, "price_source": "yfinance_confirmed", "price_divergence": round(div, 5)}
+        validated.append(sig)
+    return validated
+
+# ═════════════════════════════════════════════════════════════════════════════
 # TECHNICAL INDICATORS
 # ═════════════════════════════════════════════════════════════════════════════
 
@@ -577,42 +818,113 @@ def optimize_thresholds_if_needed(config: Dict) -> Dict:
 # ═════════════════════════════════════════════════════════════════════════════
 
 def resolve_active_signals():
+    """
+    Resolve open signals against current market price.
+
+    Key fixes vs original:
+    1. Deduplicate by signal_id before processing — a signal in both aggressive
+       and conservative appears twice in signals_by_mode, causing double-recording.
+    2. Use HIGH/LOW of 1-min candles since signal was generated, not just current
+       close — catches TP/SL hits that happened during the signal's lifetime even
+       if price has since moved back. This is the main reason signals were
+       appearing as EXPIRED when they actually hit TP or SL mid-window.
+    3. Pre-load already-recorded signal IDs so we never double-write to history.
+       filter_expired_signals() also records EXPIRED — without this guard both
+       functions would record the same signal twice.
+    4. Only mark EXPIRED if neither TP nor SL was touched during the signal window.
+    """
     df_file = Path("signal_state/dashboard_state.json")
     if not df_file.exists(): return 0
     try:
         with open(df_file) as f: data = json.load(f)
-        signals = (data.get("signals_by_mode",{}).get("aggressive",[]) +
-                   data.get("signals_by_mode",{}).get("conservative",[]))
+        raw_signals = (data.get("signals_by_mode",{}).get("aggressive",[]) +
+                       data.get("signals_by_mode",{}).get("conservative",[]))
     except Exception: return 0
+
+    # ── Deduplicate by signal_id — same signal can appear in both modes ───────
+    seen_sids: set = set()
+    signals: List[Dict] = []
+    for s in raw_signals:
+        sid = s.get("signal_id","")
+        if sid and sid not in seen_sids:
+            signals.append(s); seen_sids.add(sid)
+        elif not sid:
+            signals.append(s)  # keep signals without ID but don't dedup
+
+    # ── Pre-load IDs already in history to prevent double-recording ───────────
+    already_recorded: set = set()
+    if PERFORMANCE_TRACKER:
+        already_recorded = {s.get("signal_id","")
+                            for s in PERFORMANCE_TRACKER.history.get("signals",[])}
 
     resolved, active = 0, []
     for sig in signals:
         if sig.get("status") != "OPEN":
             active.append(sig); continue
-        pair, sid, direction = sig.get("pair"), sig.get("signal_id"), sig.get("direction")
-        entry, sl, tp        = sig.get("entry_price"), sig.get("sl"), sig.get("tp")
+
+        pair      = sig.get("pair","")
+        sid       = sig.get("signal_id","")
+        direction = sig.get("direction","BUY")
+        entry     = sig.get("entry_price",0)
+        sl        = sig.get("sl",0)
+        tp        = sig.get("tp",0)
+
+        # Skip if already recorded (filter_expired_signals may have got here first)
+        if sid and sid in already_recorded:
+            log.debug(f"Skipping {sid} — already in history")
+            continue
+
         try:
-            df = yf.download(f"{pair.replace('=X','')}=X", interval="1m", period="1d",
+            # Download 1-min candles for today to check high/low since signal entry
+            yf_pair = f"{pair.replace('=X','')}=X"
+            df = yf.download(yf_pair, interval="1m", period="1d",
                              progress=False, auto_adjust=True)
             if df is None or df.empty:
                 active.append(sig); continue
-            curr    = float(df["Close"].iloc[-1])
+
+            now  = datetime.now(timezone.utc)
+            curr = float(df["Close"].iloc[-1])
+
+            # ── Filter candles to signal's lifetime window ─────────────────
+            # If we can't parse the entry time, fall back to all today's candles
+            try:
+                entry_time = datetime.fromisoformat(
+                    sig.get("timestamp","").replace("Z","+00:00"))
+                exp_str = sig.get("metadata",{}).get("expires_at","")
+                exp_time = (datetime.fromisoformat(exp_str.replace("Z","+00:00"))
+                            if exp_str else entry_time + timedelta(minutes=15))
+                # Candles from signal entry to expiry (or now, whichever is earlier)
+                mask = (df.index >= entry_time) & (df.index <= min(exp_time, now))
+                window_df = df[mask] if mask.any() else df
+            except Exception:
+                window_df = df
+                exp_time  = now
+
+            # High and Low during signal window — catches TP/SL hits mid-window
+            period_high = float(window_df["High"].max()) if not window_df.empty else curr
+            period_low  = float(window_df["Low"].min())  if not window_df.empty else curr
+
             outcome = None
             if direction == "BUY":
-                if curr<=sl: outcome,ep = "LOSS",sl
-                elif curr>=tp: outcome,ep = "WIN",tp
+                if period_low  <= sl: outcome, ep = "LOSS", sl   # SL hit
+                elif period_high >= tp: outcome, ep = "WIN",  tp  # TP hit
             else:
-                if curr>=sl: outcome,ep = "LOSS",sl
-                elif curr<=tp: outcome,ep = "WIN",tp
+                if period_high >= sl: outcome, ep = "LOSS", sl
+                elif period_low  <= tp: outcome, ep = "WIN",  tp
+
+            # ── EXPIRED only if signal window has closed AND no TP/SL hit ──
             if not outcome:
-                exp = sig.get("metadata",{}).get("expires_at")
-                if exp and datetime.now(timezone.utc)>datetime.fromisoformat(exp.replace("Z","+00:00")):
-                    outcome,ep = "EXPIRED",curr
+                is_past_expiry = now > exp_time
+                if is_past_expiry:
+                    outcome, ep = "EXPIRED", curr
+
             if outcome:
-                pips = price_to_pips(pair, abs(ep-entry))
-                if outcome=="LOSS": pips=-pips
-                elif outcome=="EXPIRED":
-                    pips = price_to_pips(pair, ep-entry if direction=="BUY" else entry-ep)
+                pips = price_to_pips(pair, abs(ep - entry))
+                if outcome == "LOSS":    pips = -pips
+                elif outcome == "EXPIRED":
+                    # Actual pip movement during window (positive or negative)
+                    pips = price_to_pips(pair, ep - entry if direction=="BUY" else entry - ep)
+
                 if PERFORMANCE_TRACKER:
                     PERFORMANCE_TRACKER.record_trade(
                         signal_id=sid, pair=pair, direction=direction,
@@ -621,23 +933,28 @@ def resolve_active_signals():
                         confidence=sig.get("confidence"), score=sig.get("score"),
                         session=sig.get("session"),
                         entry_time=sig.get("timestamp"),
-                        exit_time=datetime.now(timezone.utc).isoformat(),
+                        exit_time=now.isoformat(),
                         tier=sig.get("tier"), eligible_modes=sig.get("eligible_modes"),
                         sentiment_applied=sig.get("sentiment_applied",False),
                         sentiment_score=sig.get("sentiment_score",0.0),
                         sentiment_adjustment=sig.get("sentiment_adjustment",0.0),
                         estimated_win_rate=sig.get("estimated_win_rate"))
+                    already_recorded.add(sid)
                     resolved += 1
-                    log.info(f"{'OK' if outcome=='WIN' else 'FAIL'} {pair} {direction} {outcome} ({pips:+.1f}p)")
+                    icon = "✅" if outcome=="WIN" else ("❌" if outcome=="LOSS" else "⏱")
+                    log.info(f"{icon} {pair} {direction} {outcome} ({pips:+.1f}p) | "
+                             f"window high={period_high:.5f} low={period_low:.5f} "
+                             f"sl={sl:.5f} tp={tp:.5f}")
             else:
                 active.append(sig)
+
         except Exception as e:
             log.error(f"Error resolving {sid}: {e}"); active.append(sig)
 
     if resolved > 0:
         data["signals_by_mode"] = split_signals_by_mode(active)
         with open(df_file,"w") as f: json.dump(data,f,indent=2)
-        log.info(f"Resolved {resolved}, {len(active)} active")
+        log.info(f"Resolved {resolved}, {len(active)} still active")
     return resolved
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -1107,6 +1424,15 @@ def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
     if diff < min_t:
         log.info(f"  BLOCKED: {diff} < min threshold {min_t}"); return None, ok
 
+    # ── Economic calendar blackout ────────────────────────────────────────────
+    # Suppress signals 30 min before and 15 min after any High-impact event
+    # involving a currency in this pair. Avoids stop-outs from news spikes.
+    if ECONOMIC_CALENDAR:
+        blocked, event_name = _is_calendar_blackout(pair, ECONOMIC_CALENDAR)
+        if blocked:
+            log.info(f"  BLOCKED: news blackout — {event_name}")
+            return None, ok
+
     direction = "BUY" if bull>bear else "SELL"
     conf      = "VERY_STRONG" if diff>=75 else ("STRONG" if diff>=65 else "MODERATE")
     tier      = classify_signal_tier(diff)
@@ -1263,18 +1589,26 @@ def get_performance_summary():
     except Exception: return {"stats":{},"analytics":{},"equity":{}}
 
 def filter_expired_signals(signals):
-    """Filter out expired signals, recording them to history before discarding.
-    
-    Previously expired signals were silently dropped — they never appeared
-    in history because the resolution loop never got a chance to see them.
-    Now we record EXPIRED outcome to the performance tracker here so every
-    signal that passes through the system has a history entry.
     """
-    now = datetime.now(timezone.utc); active = []
+    Remove expired signals from the active pool, recording them to history first.
+
+    Guards against double-recording: resolve_active_signals() may have already
+    written a signal to history. We check the tracker's existing IDs before
+    writing so the same signal_id is never recorded twice.
+    """
+    now    = datetime.now(timezone.utc)
+    active = []
+
+    # Pre-load IDs already in history to avoid double-recording with resolve_active_signals
+    already_recorded: set = set()
+    if PERFORMANCE_TRACKER:
+        already_recorded = {s.get("signal_id","")
+                            for s in PERFORMANCE_TRACKER.history.get("signals",[])}
+
     for sig in signals:
         status = sig.get("status","OPEN")
-        if status=="ACTIVE": sig["status"]="OPEN"; status="OPEN"
-        if status!="OPEN": continue
+        if status == "ACTIVE": sig["status"] = "OPEN"; status = "OPEN"
+        if status != "OPEN": continue
         try:
             exp    = sig.get("metadata",{}).get("expires_at")
             is_exp = False
@@ -1288,44 +1622,43 @@ def filter_expired_signals(signals):
             if not is_exp:
                 active.append(sig)
             else:
-                # Record to history before discarding so it shows up in History tab
-                if PERFORMANCE_TRACKER:
-                    sid   = sig.get("signal_id","")
-                    # Only record if not already in history
-                    existing_ids = {s.get("signal_id","") 
-                                    for s in PERFORMANCE_TRACKER.history.get("signals",[])}
-                    if sid and sid not in existing_ids:
-                        pair      = sig.get("pair","")
-                        entry     = sig.get("entry_price", sig.get("entry",0.0))
-                        direction = sig.get("direction","BUY")
-                        sl        = sig.get("stop_loss", sig.get("sl",0.0))
-                        tp        = sig.get("take_profit", sig.get("tp",0.0))
-                        pips      = price_to_pips(pair, 0)  # 0 pips — price didn't move enough
-                        PERFORMANCE_TRACKER.record_trade(
-                            signal_id=sid, pair=pair, direction=direction,
-                            entry_price=entry, exit_price=entry, sl=sl, tp=tp,
-                            outcome="EXPIRED", pips=pips,
-                            confidence=sig.get("confidence"),
-                            score=sig.get("score"),
-                            session=sig.get("session"),
-                            entry_time=sig.get("timestamp"),
-                            exit_time=now.isoformat(),
-                            tier=sig.get("tier"),
-                            eligible_modes=sig.get("eligible_modes"),
-                            sentiment_applied=sig.get("sentiment_applied", False),
-                            sentiment_score=sig.get("sentiment_score", 0.0),
-                            sentiment_adjustment=sig.get("sentiment_adjustment", 0.0),
-                            estimated_win_rate=sig.get("estimated_win_rate"))
-                        log.info(f"EXPIRED {pair} {direction} recorded to history")
+                sid = sig.get("signal_id","")
+                # Only record if not already handled by resolve_active_signals()
+                if PERFORMANCE_TRACKER and sid and sid not in already_recorded:
+                    pair      = sig.get("pair","")
+                    entry     = sig.get("entry_price", sig.get("entry",0.0))
+                    direction = sig.get("direction","BUY")
+                    sl        = sig.get("stop_loss", sig.get("sl",0.0))
+                    tp        = sig.get("take_profit", sig.get("tp",0.0))
+                    PERFORMANCE_TRACKER.record_trade(
+                        signal_id=sid, pair=pair, direction=direction,
+                        entry_price=entry, exit_price=entry, sl=sl, tp=tp,
+                        outcome="EXPIRED", pips=0,
+                        confidence=sig.get("confidence"),
+                        score=sig.get("score"),
+                        session=sig.get("session"),
+                        entry_time=sig.get("timestamp"),
+                        exit_time=now.isoformat(),
+                        tier=sig.get("tier"),
+                        eligible_modes=sig.get("eligible_modes"),
+                        sentiment_applied=sig.get("sentiment_applied", False),
+                        sentiment_score=sig.get("sentiment_score", 0.0),
+                        sentiment_adjustment=sig.get("sentiment_adjustment", 0.0),
+                        estimated_win_rate=sig.get("estimated_win_rate"))
+                    already_recorded.add(sid)
+                    log.info(f"⏱ EXPIRED {sig.get('pair','')} {sig.get('direction','')} recorded to history")
+                elif sid and sid in already_recorded:
+                    log.debug(f"Skipping EXPIRED record for {sid} — already in history")
         except Exception as e:
             log.warning(f"filter_expired_signals error: {e}")
             continue
-    if len(active)<len(signals):
-        log.info(f"Filtered {len(signals)-len(active)} expired")
+
+    if len(active) < len(signals):
+        log.info(f"Filtered {len(signals)-len(active)} expired signals")
     return active
 
 def write_dashboard_state(signals, downloads, news_calls=0, mkt_calls=0,
-                          config=None, mode=None, settings=None):
+                          config=None, mode=None, settings=None, pair_prices=None):
     cfg  = config or CONFIG; md = mode or MODE
     sigs = filter_expired_signals(signals)
     mb   = split_signals_by_mode(sigs)
@@ -1420,6 +1753,8 @@ def write_dashboard_state(signals, downloads, news_calls=0, mkt_calls=0,
         },
         "analytics": perf.get("analytics",{}),
         "equity_curve": perf.get("equity",{}).get("curve",[]),
+        "pair_prices": pair_prices or {},
+        "upcoming_events": _get_upcoming_events(4),
         "system": {
             "last_update": datetime.now(timezone.utc).isoformat(),
             "signal_only_mode": SIGNAL_ONLY_MODE,
@@ -1553,6 +1888,7 @@ def main():
     new_signals: List[Dict] = []
     downloads = 0
     existing_ids = get_existing_signals_today()
+    pair_prices: Dict[str, float] = {}   # collected for live price ticker on dashboard
     _cache.clear()
 
     max_w = opt_cfg.get("advanced",{}).get("parallel_workers",3)
@@ -1563,11 +1899,19 @@ def main():
             try:
                 sig, ok = future.result()
                 if ok: downloads+=1
+                # Capture price from cache regardless of whether signal was generated
+                clean = pair.replace("=X","")
+                try:
+                    cached_df = _cache.get(clean)
+                    if cached_df is not None and not cached_df.empty:
+                        p = float(cached_df["Close"].iloc[-1])
+                        if p > 0: pair_prices[clean] = round(p, 5)
+                except Exception: pass
                 if sig:
                     if is_duplicate_signal(sig["signal_id"], existing_ids):
-                        log.info(f"{pair.replace('=X','')} - Duplicate skipped"); continue
+                        log.info(f"{clean} - Duplicate skipped"); continue
                     new_signals.append(sig)
-                    log.info(f"{pair.replace('=X','')} - Score: {sig['score']} [{sig['tier']}] "
+                    log.info(f"{clean} - Score: {sig['score']} [{sig['tier']}] "
                              f"({'+'.join(sig['eligible_modes'])}) RR: {sig['risk_reward']:.2f}")
             except Exception as e:
                 log.error(f"{pair.replace('=X','')} failed: {e}")
@@ -1622,6 +1966,17 @@ def main():
     for s in new_signals:
         if s["signal_id"] not in elite_ids: s["estimated_win_rate"] = None
 
+    # ── Live price validation (Browserless / X-Rates) ───────────────────────
+    # Only runs if BROWSERLESS_TOKEN is set. Compares X-Rates live price with
+    # the yfinance price used for entry. If they diverge >0.5%, logs a warning
+    # and updates entry price to the live value for accuracy.
+    # Uses 5-min in-memory cache — one Browserless call per unique pair per run.
+    if BROWSERLESS_TOKEN and new_signals:
+        try:
+            new_signals = _validate_signal_prices(new_signals)
+        except Exception as e:
+            log.warning(f"Live price validation skipped: {e}")
+
     # ── Risk limits per mode ──────────────────────────────────────────────────
     mb = split_signals_by_mode(new_signals)
     agg_f,  aw = check_risk_limits(mb["aggressive"],  opt_cfg, "aggressive")
@@ -1649,7 +2004,7 @@ def main():
                          CONFIG["settings"]["conservative"]["threshold"]))
         log.info(f"Zero-signal diagnostic: session={sess} threshold={st}")
 
-    write_dashboard_state(all_sigs, downloads, news_calls, mkt_calls, opt_cfg, opt_mode, None)
+    write_dashboard_state(all_sigs, downloads, news_calls, mkt_calls, opt_cfg, opt_mode, None, pair_prices)
 
     if all_new:
         mb = split_signals_by_mode(all_new)

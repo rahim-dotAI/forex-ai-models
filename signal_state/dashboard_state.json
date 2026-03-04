@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-03-04T03:15:58.467717+00:00",
-  "active_signals": 0,
+  "timestamp": "2026-03-04T03:31:19.022531+00:00",
+  "active_signals": 1,
   "active_signals_by_mode": {
-    "aggressive": 0,
-    "conservative": 0
+    "aggressive": 1,
+    "conservative": 1
   },
   "session": "ASIAN",
   "mode": "conservative",
@@ -17,14 +17,163 @@
   },
   "market_state": {
     "volatility": "CALM",
-    "sentiment_bias": "MIXED",
+    "sentiment_bias": "BEARISH",
     "session": "ASIAN"
   },
   "signals_by_mode": {
-    "aggressive": [],
-    "conservative": []
+    "aggressive": [
+      {
+        "signal_id": "AUDUSD_SELL_7bd1a28896f4",
+        "id": "AUDUSD_SELL_7bd1a28896f4",
+        "pair": "AUDUSD",
+        "direction": "SELL",
+        "score": 60.0,
+        "technical_score": 60,
+        "sentiment_score": 0.0,
+        "sentiment_adjustment": 0.0,
+        "score_before_sentiment": 60,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 39.8,
+        "adx": 20.1,
+        "atr": 0.00091,
+        "volume_ratio": 0,
+        "session": "ASIAN",
+        "entry_price": 0.70082,
+        "sl": 0.70308,
+        "tp": 0.69448,
+        "risk_reward": 2.8,
+        "spread": 0.00018,
+        "timestamp": "2026-03-04T03:31:07.574705+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": true,
+        "metadata": {
+          "signal_type": "momentum",
+          "market_state": "TRENDING_MODERATE",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-03-04T03:31:07.574705+00:00",
+          "expires_at": "2026-03-04T03:46:07.574705+00:00",
+          "session_active": false,
+          "signal_generator_version": "2.1.6-OPTIMISED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      }
+    ],
+    "conservative": [
+      {
+        "signal_id": "AUDUSD_SELL_7bd1a28896f4",
+        "id": "AUDUSD_SELL_7bd1a28896f4",
+        "pair": "AUDUSD",
+        "direction": "SELL",
+        "score": 60.0,
+        "technical_score": 60,
+        "sentiment_score": 0.0,
+        "sentiment_adjustment": 0.0,
+        "score_before_sentiment": 60,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 39.8,
+        "adx": 20.1,
+        "atr": 0.00091,
+        "volume_ratio": 0,
+        "session": "ASIAN",
+        "entry_price": 0.70082,
+        "sl": 0.70308,
+        "tp": 0.69448,
+        "risk_reward": 2.8,
+        "spread": 0.00018,
+        "timestamp": "2026-03-04T03:31:07.574705+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": true,
+        "metadata": {
+          "signal_type": "momentum",
+          "market_state": "TRENDING_MODERATE",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-03-04T03:31:07.574705+00:00",
+          "expires_at": "2026-03-04T03:46:07.574705+00:00",
+          "session_active": false,
+          "signal_generator_version": "2.1.6-OPTIMISED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      }
+    ]
   },
   "historical_signals": [
+    {
+      "signal_id": "AUDUSD_SELL_7bd1a28896f4",
+      "id": "AUDUSD_SELL_7bd1a28896f4",
+      "pair": "AUDUSD",
+      "direction": "SELL",
+      "score": 60.0,
+      "technical_score": 60,
+      "sentiment_score": 0.0,
+      "sentiment_adjustment": 0.0,
+      "score_before_sentiment": 60,
+      "confidence": "MODERATE",
+      "tier": "B",
+      "rsi": 39.8,
+      "adx": 20.1,
+      "atr": 0.00091,
+      "volume_ratio": 0,
+      "session": "ASIAN",
+      "entry_price": 0.70082,
+      "sl": 0.70308,
+      "tp": 0.69448,
+      "risk_reward": 2.8,
+      "spread": 0.00018,
+      "timestamp": "2026-03-04T03:31:07.574705+00:00",
+      "status": "OPEN",
+      "hold_time": "SWING",
+      "eligible_modes": [
+        "conservative",
+        "aggressive"
+      ],
+      "freshness": {
+        "status": "FRESH",
+        "age_minutes": 0.0,
+        "confidence_decay": 100.0
+      },
+      "sentiment_applied": true,
+      "metadata": {
+        "signal_type": "momentum",
+        "market_state": "TRENDING_MODERATE",
+        "timeframe": "15m",
+        "valid_for_minutes": 15,
+        "generated_at": "2026-03-04T03:31:07.574705+00:00",
+        "expires_at": "2026-03-04T03:46:07.574705+00:00",
+        "session_active": false,
+        "signal_generator_version": "2.1.6-OPTIMISED",
+        "atr_stop_multiplier": 2.5,
+        "atr_target_multiplier": 7.0
+      },
+      "estimated_win_rate": null
+    },
     {
       "id": "NZDUSD_SELL_948b2134891e",
       "signal_id": "NZDUSD_SELL_948b2134891e",
@@ -3389,8 +3538,8 @@
     "sentiment": {
       "enabled": true,
       "engine": "finbert",
-      "newsapi": 0,
-      "marketaux": 0
+      "newsapi": 2,
+      "marketaux": 2
     }
   },
   "stats": {
@@ -3523,8 +3672,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 0,
-    "total_risk_pips": 0,
+    "theoretical_max_pips": 22.6,
+    "total_risk_pips": 22.600000000000396,
     "max_daily_risk": 150
   },
   "analytics": {
@@ -3773,7 +3922,7 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-03-04T03:15:58.467753+00:00",
+    "last_update": "2026-03-04T03:31:19.022581+00:00",
     "signal_only_mode": true,
     "version": "2.1.6-OPTIMISED"
   }

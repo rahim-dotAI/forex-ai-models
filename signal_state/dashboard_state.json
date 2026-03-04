@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-03-04T02:31:11.519439+00:00",
-  "active_signals": 1,
+  "timestamp": "2026-03-04T02:45:58.649387+00:00",
+  "active_signals": 2,
   "active_signals_by_mode": {
-    "aggressive": 1,
-    "conservative": 1
+    "aggressive": 2,
+    "conservative": 2
   },
   "session": "ASIAN",
   "mode": "conservative",
@@ -70,9 +70,107 @@
           "atr_target_multiplier": 7.0
         },
         "estimated_win_rate": null
+      },
+      {
+        "signal_id": "AUDUSD_SELL_d1a38d75d902",
+        "id": "AUDUSD_SELL_d1a38d75d902",
+        "pair": "AUDUSD",
+        "direction": "SELL",
+        "score": 60.0,
+        "technical_score": 60,
+        "sentiment_score": 0.0,
+        "sentiment_adjustment": 0.0,
+        "score_before_sentiment": 60,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 41.9,
+        "adx": 21.6,
+        "atr": 0.00101,
+        "volume_ratio": 0,
+        "session": "ASIAN",
+        "entry_price": 0.70111,
+        "sl": 0.70363,
+        "tp": 0.69408,
+        "risk_reward": 2.8,
+        "spread": 0.00018,
+        "timestamp": "2026-03-04T02:31:00.057967+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": true,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_MODERATE",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-03-04T02:31:00.057967+00:00",
+          "expires_at": "2026-03-04T02:46:00.057967+00:00",
+          "session_active": false,
+          "signal_generator_version": "2.1.6-OPTIMISED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
       }
     ],
     "conservative": [
+      {
+        "signal_id": "AUDUSD_SELL_d1a38d75d902",
+        "id": "AUDUSD_SELL_d1a38d75d902",
+        "pair": "AUDUSD",
+        "direction": "SELL",
+        "score": 60.0,
+        "technical_score": 60,
+        "sentiment_score": 0.0,
+        "sentiment_adjustment": 0.0,
+        "score_before_sentiment": 60,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 41.9,
+        "adx": 21.6,
+        "atr": 0.00101,
+        "volume_ratio": 0,
+        "session": "ASIAN",
+        "entry_price": 0.70111,
+        "sl": 0.70363,
+        "tp": 0.69408,
+        "risk_reward": 2.8,
+        "spread": 0.00018,
+        "timestamp": "2026-03-04T02:31:00.057967+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": true,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_MODERATE",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-03-04T02:31:00.057967+00:00",
+          "expires_at": "2026-03-04T02:46:00.057967+00:00",
+          "session_active": false,
+          "signal_generator_version": "2.1.6-OPTIMISED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null
+      },
       {
         "signal_id": "AUDUSD_SELL_d1a38d75d902",
         "id": "AUDUSD_SELL_d1a38d75d902",
@@ -3538,8 +3636,8 @@
     "sentiment": {
       "enabled": true,
       "engine": "finbert",
-      "newsapi": 2,
-      "marketaux": 2
+      "newsapi": 0,
+      "marketaux": 0
     }
   },
   "stats": {
@@ -3672,8 +3770,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 25.2,
-    "total_risk_pips": 25.199999999999665,
+    "theoretical_max_pips": 50.4,
+    "total_risk_pips": 50.39999999999933,
     "max_daily_risk": 150
   },
   "analytics": {
@@ -3922,7 +4020,7 @@
   },
   "equity_curve": [],
   "system": {
-    "last_update": "2026-03-04T02:31:11.519482+00:00",
+    "last_update": "2026-03-04T02:45:58.649428+00:00",
     "signal_only_mode": true,
     "version": "2.1.6-OPTIMISED"
   }

@@ -94,7 +94,7 @@ MIN_ROWS = 220
 HF_API_KEY        = os.getenv("HF_API_KEY", "")
 HF_PRIMARY_MODEL  = "mrm8488/distilroberta-finetuned-financial-news-sentiment-analysis"
 HF_FALLBACK_MODEL = "ProsusAI/finbert"
-HF_API_BASE       = "https://api-inference.huggingface.co/models"
+HF_API_BASE       = "https://router.huggingface.co/models"
 
 # Label -> numeric score map (covers both model label conventions)
 HF_LABEL_MAP: Dict[str, float] = {
@@ -102,6 +102,11 @@ HF_LABEL_MAP: Dict[str, float] = {
     "negative":-1.0, "Negative":-1.0,
     "neutral":  0.0, "Neutral":  0.0,
 }
+
+# ── Browserless (X-Rates live price validation) ───────────────────────────────
+# Add BROWSERLESS_TOKEN as a GitHub Actions secret (Settings → Secrets).
+# Free tier: 1000 tokens/month. Only used for signals that pass all filters.
+BROWSERLESS_TOKEN = os.getenv("BROWSERLESS_TOKEN", "")
 
 # ── Global state (set after config load) ─────────────────────────────────────
 CONFIG              = None
@@ -1904,7 +1909,10 @@ def main():
                 try:
                     cached_df = _cache.get(clean)
                     if cached_df is not None and not cached_df.empty:
-                        p = float(cached_df["Close"].iloc[-1])
+                        close_val = cached_df["Close"].iloc[-1]
+                        # squeeze Series to scalar to avoid FutureWarning on single-element Series
+                        if hasattr(close_val, 'iloc'): close_val = close_val.iloc[0]
+                        p = float(close_val)
                         if p > 0: pair_prices[clean] = round(p, 5)
                 except Exception: pass
                 if sig:

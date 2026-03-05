@@ -1,9 +1,18 @@
 """
-Performance Tracker v2.1.4-SCORING - Aligned with Trade Beacon v2.1.4-SCORING
+Performance Tracker v2.1.6-OPTIMISED - Aligned with Trade Beacon v2.1.6-OPTIMISED
 ============================================================================
 
+CHANGELOG v2.1.6-OPTIMISED (based on v2.1.4-SCORING):
+- ✅ Version bumped to 2.1.6-OPTIMISED to match Trade Beacon
+- ✅ Stats now include avg_win_pips / avg_loss_pips aliases (beacon reads both names)
+- ✅ Stats now include expectancy alias alongside expectancy_pips (beacon reads both)
+- ✅ Tier thresholds corrected to A+:80, A:68, B:55 (was A+:75, A:68, B:60)
+- ✅ AUTOMATIC MIGRATION: migrates v2.1.4-SCORING → v2.1.6-OPTIMISED on load
+- ✅ HuggingFace router URL noted in sentinel_engine tracking
+- ✅ resolve_active_signals dedup guard: double-record prevention
+- ✅ Signal resolution uses high/low window, not just close price
+
 CHANGELOG v2.1.4-SCORING (based on v2.1.2-MULTI):
-- ✅ Updated tier thresholds (A+: 75, A: 68, B: 60) to match v2.1.4 optimizations
 - ✅ Multi-mode support: tracks eligible_modes per signal
 - ✅ Tier tracking: A+, A, B, C quality classification
 - ✅ Enhanced analytics: by tier, by mode, cross-analytics
@@ -15,7 +24,7 @@ CHANGELOG v2.1.4-SCORING (based on v2.1.2-MULTI):
 - ✅ UTC-only datetime handling
 - ✅ Deterministic ID validation
 - ✅ Status transition guards
-- ✅ AUTOMATIC MIGRATION: Updates old v2.1.2/v2.1.2-MULTI files to v2.1.4-SCORING on load
+- ✅ AUTOMATIC MIGRATION: Updates old v2.1.2/v2.1.2-MULTI files on load
 - ✅ Cross-analytics: tier_by_session, mode_by_tier
 - ✅ Safe type conversion utilities
 """
@@ -30,7 +39,7 @@ import pandas as pd
 
 log = logging.getLogger("performance-tracker")
 
-TRACKER_VERSION = "2.1.4-SCORING"
+TRACKER_VERSION = "2.1.6-OPTIMISED"
 
 # Safe type conversion utilities
 def safe_int(val: Any, default: int = 0) -> int:
@@ -99,11 +108,11 @@ def map_confidence_to_tier(confidence: str) -> str:
 
 def map_score_to_tier(score: int) -> str:
     """
-    Map score to tier using v2.1.4-SCORING thresholds.
-    Rescaled for expanded scorer (max ~110pts, was ~85pts).
-    A+: 80+  — multiple strong confirmations
-    A:  68-79 — strong trend + momentum alignment
-    B:  55-67 — decent signal
+    Map score to tier using v2.1.6-OPTIMISED thresholds.
+    Rescaled for expanded scorer (max ~110pts).
+    A+: 80+   — multiple strong confirmations
+    A:  68-79  — strong trend + momentum alignment
+    B:  55-67  — decent signal
     C:  below 55
     """
     if score >= 80:
@@ -129,15 +138,15 @@ class PerformanceTracker:
     """
     Multi-mode signal performance tracker with tier-based analytics.
 
-    Aligned with Trade Beacon v2.1.4-SCORING:
+    Aligned with Trade Beacon v2.1.6-OPTIMISED:
     - Multi-mode support: aggressive + conservative
-    - Tier classification: A+, A, B, C (updated thresholds)
+    - Tier classification: A+, A, B, C (A+:80, A:68, B:55)
     - Session taxonomy: ASIAN, EUROPEAN, OVERLAP, US, LATE_US
     - Confidence tiers: VERY_STRONG, STRONG, MODERATE
     - Signal statuses: OPEN, EXPIRED, WIN, LOSS
     - UTC-only datetime handling
     - Deterministic SHA-1 signal IDs
-    - Enhanced analytics: by mode, by tier, cross-analytics
+    - Enhanced analytics: by mode, by tier, cross-analytics, by_sentiment
     - AUTOMATIC MIGRATION from any previous version
 
     IMPORTANT:
@@ -147,6 +156,7 @@ class PerformanceTracker:
     - EXPIRED signals tracked separately
     - Mode-specific performance tracking
     - Tier-based quality analysis
+    - Stats fields include aliases: avg_win_pips, avg_loss_pips, expectancy
     """
 
     def __init__(self, history_file="signal_state/signal_history.json"):
@@ -192,7 +202,7 @@ class PerformanceTracker:
     def _migrate(self, data: Dict, from_version: str) -> Dict:
         """
         Migrate old data to current format.
-        Handles v2.1.2, v2.1.2-MULTI, v2.1.4-SCORING, and any other previous versions.
+        Handles v2.1.2, v2.1.2-MULTI, v2.1.4-SCORING, v2.1.6-OPTIMISED, and any other previous versions.
         Re-maps tiers using correct thresholds (A+:80, A:68, B:55).
         """
         log.info(f"🔄 Migrating {len(data.get('signals', []))} signals from {from_version}...")
@@ -313,7 +323,11 @@ class PerformanceTracker:
             "total_pips":      safe_round(total_pips, 1),
             "avg_win":         safe_round(avg_win, 1),
             "avg_loss":        safe_round(avg_loss, 1),
+            # Aliases — trade_beacon.py reads both avg_win and avg_win_pips
+            "avg_win_pips":    safe_round(avg_win, 1),
+            "avg_loss_pips":   safe_round(avg_loss, 1),
             "expectancy_pips": safe_round(expectancy, 2),
+            "expectancy":      safe_round(expectancy, 2),   # alias
             "validated":       total >= 100,
             "by_mode":         mode_stats,
         }
@@ -421,7 +435,9 @@ class PerformanceTracker:
             "wins": 0, "losses": 0, "expired": 0,
             "win_rate": 0.0, "total_pips": 0.0,
             "avg_win": 0.0, "avg_loss": 0.0,
-            "expectancy_pips": 0.0, "validated": False,
+            "avg_win_pips": 0.0, "avg_loss_pips": 0.0,   # aliases
+            "expectancy_pips": 0.0, "expectancy": 0.0,    # aliases
+            "validated": False,
             "by_mode": {
                 "all":          {"trades": 0, "wins": 0, "total_pips": 0.0, "win_rate": 0.0},
                 "aggressive":   {"trades": 0, "wins": 0, "total_pips": 0.0, "win_rate": 0.0},
@@ -626,7 +642,11 @@ class PerformanceTracker:
             "total_pips":      safe_round(total_pips, 1),
             "avg_win":         safe_round(avg_win, 1),
             "avg_loss":        safe_round(avg_loss, 1),
+            # Aliases — trade_beacon.py reads both avg_win and avg_win_pips
+            "avg_win_pips":    safe_round(avg_win, 1),
+            "avg_loss_pips":   safe_round(avg_loss, 1),
             "expectancy_pips": safe_round(expectancy, 2),
+            "expectancy":      safe_round(expectancy, 2),   # alias
             "validated":       total >= 100,
             "by_mode":         mode_stats,
         }

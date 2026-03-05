@@ -552,7 +552,69 @@
     .news-bull { background:var(--green);box-shadow:0 0 5px var(--green); }
     .news-bear { background:var(--red);box-shadow:0 0 5px var(--red); }
     .news-neut { background:var(--text-muted); }
-  </style>
+
+    /* ── Live Price Ticker ───────────────────────────────────────────────── */
+    .price-ticker-bar {
+      width: 100%; overflow: hidden;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px;
+      margin-bottom: 20px;
+      padding: 0 12px;
+      position: relative;
+    }
+    .price-ticker-bar::before,
+    .price-ticker-bar::after {
+      content: ''; position: absolute; top: 0; bottom: 0; width: 40px; z-index: 2; pointer-events: none;
+    }
+    .price-ticker-bar::before { left: 0; background: linear-gradient(to right, rgba(10,10,15,1), transparent); }
+    .price-ticker-bar::after  { right: 0; background: linear-gradient(to left, rgba(10,10,15,1), transparent); }
+    .price-ticker-track {
+      display: flex; gap: 0;
+      animation: tickerScroll 40s linear infinite;
+      width: max-content;
+    }
+    .price-ticker-track:hover { animation-play-state: paused; }
+    @keyframes tickerScroll {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .ticker-pair {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 20px; border-right: 1px solid rgba(255,255,255,0.05);
+      white-space: nowrap; cursor: default;
+    }
+    .ticker-pair:hover { background: rgba(255,255,255,0.04); }
+    .ticker-name {
+      font-family: 'Orbitron', monospace; font-size: 10px; font-weight: 700;
+      color: var(--text-dim); letter-spacing: 0.5px;
+    }
+    .ticker-price {
+      font-family: 'Orbitron', monospace; font-size: 12px; font-weight: 900;
+      color: var(--text);
+    }
+    .ticker-price.up   { color: var(--green); }
+    .ticker-price.down { color: var(--red); }
+    .ticker-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--text-muted); flex-shrink: 0;
+    }
+    .ticker-dot.live { background: var(--green); box-shadow: 0 0 5px var(--green); animation: pulseDot 2s ease-in-out infinite; }
+    .ticker-label {
+      font-size: 9px; font-weight: 700; letter-spacing: 1px;
+      color: var(--text-muted); padding: 2px 6px;
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 4px;
+    }
+    /* Calendar event strip inside ticker bar */
+    .ticker-event {
+      display: flex; align-items: center; gap: 6px;
+      padding: 9px 20px; border-right: 1px solid rgba(255,255,255,0.05);
+      white-space: nowrap;
+    }
+    .ticker-event-dot { width:6px;height:6px;border-radius:50%;background:var(--yellow);box-shadow:0 0 5px var(--yellow);flex-shrink:0; }
+    .ticker-event-text { font-size: 10px; color: var(--yellow); font-weight: 700; letter-spacing: 0.3px; }
+    .ticker-event-time { font-size: 9px; color: var(--text-muted); font-family:'Orbitron',monospace; }
+  
 </head>
 <body>
   <!-- Single floating tooltip element -->
@@ -599,6 +661,18 @@
         <div class="status-badge"><div class="status-dot"></div><span>LIVE MARKET</span></div>
       </div>
     </header>
+
+    <!-- ═══ LIVE PRICE TICKER ════════════════════════════════════════════ -->
+    <div class="price-ticker-bar" id="priceTickerBar">
+      <div class="price-ticker-track" id="priceTickerTrack">
+        <!-- Populated by renderPriceTicker() — duplicated for seamless loop -->
+        <div class="ticker-pair">
+          <div class="ticker-dot"></div>
+          <span class="ticker-name">LOADING</span>
+          <span class="ticker-price">···</span>
+        </div>
+      </div>
+    </div>
 
     <div class="metrics">
       <div class="metric">
@@ -1219,6 +1293,7 @@
         processAndRenderSignals();
         renderHistory();
         renderAnalytics();
+        renderPriceTicker();
         // Pick of the Day — uses today's historical signals (permanent record)
         // combined with any currently active signals.
         // historical_signals contains all resolved/expired trades so we get
@@ -1540,6 +1615,84 @@
       if (wrap) wrap.scrollIntoView({behavior:'smooth', block:'start'});
     }
     
+    // ── Live Price Ticker ────────────────────────────────────────────────────
+    // Pairs displayed in the ticker — same order as config
+    const TICKER_PAIRS = [
+      'EURUSD','GBPUSD','USDJPY','GBPJPY','EURJPY',
+      'AUDUSD','NZDUSD','USDCAD','USDCHF','EURGBP'
+    ];
+    // Decimal places per pair for clean display
+    const TICKER_DECIMALS = {
+      USDJPY:3, EURJPY:3, GBPJPY:3,
+      EURUSD:5, GBPUSD:5, AUDUSD:5, NZDUSD:5, USDCAD:5, USDCHF:5, EURGBP:5
+    };
+    // Track previous prices to show up/down colour
+    const _prevPrices = {};
+
+    function renderPriceTicker() {
+      const track = document.getElementById('priceTickerTrack');
+      if (!track) return;
+
+      const prices   = data?.pair_prices || {};
+      const events   = data?.upcoming_events || [];
+      const hasData  = Object.keys(prices).length > 0;
+      const isLive   = !!data?.pair_prices;   // key exists = prices were collected this run
+
+      // Build one set of items (prices + calendar events)
+      let items = '';
+
+      // Price items
+      TICKER_PAIRS.forEach(pair => {
+        const price = prices[pair];
+        const prev  = _prevPrices[pair];
+        const dec   = TICKER_DECIMALS[pair] || 5;
+
+        let cls = '', arrow = '';
+        if (price && prev && price !== prev) {
+          if (price > prev) { cls = 'up';   arrow = ' ▲'; }
+          else              { cls = 'down'; arrow = ' ▼'; }
+        }
+        if (price) _prevPrices[pair] = price;
+
+        const displayPrice = price ? price.toFixed(dec) : '···';
+        const dotCls = isLive ? 'live' : '';
+
+        items += `
+          <div class="ticker-pair" title="${pair}">
+            <div class="ticker-dot ${dotCls}"></div>
+            <span class="ticker-name">${pair}</span>
+            <span class="ticker-price ${cls}">${displayPrice}${arrow}</span>
+          </div>`;
+      });
+
+      // Calendar event items (upcoming high-impact events)
+      events.forEach(ev => {
+        const label = ev.passed
+          ? `${ev.title} (${ev.currency}) — ${Math.abs(ev.mins_to)}min ago`
+          : `⚡ ${ev.title} (${ev.currency}) in ${ev.mins_to}min`;
+        items += `
+          <div class="ticker-event" title="High-impact event: ${ev.title}">
+            <div class="ticker-event-dot"></div>
+            <span class="ticker-event-text">${label}</span>
+            <span class="ticker-event-time">${ev.utc_time}</span>
+          </div>`;
+      });
+
+      // Label at start
+      const labelHtml = `
+        <div class="ticker-pair" style="padding-right:24px;border-right:1px solid rgba(255,107,53,0.3);">
+          <span class="ticker-label">${isLive ? '● LIVE' : '○ LAST'}</span>
+        </div>`;
+
+      const fullStrip = labelHtml + items;
+      // Duplicate for seamless infinite scroll
+      track.innerHTML = fullStrip + fullStrip;
+
+      // Adjust scroll speed to content length — more pairs = slower
+      const itemCount = TICKER_PAIRS.length + events.length;
+      track.style.animationDuration = Math.max(30, itemCount * 4) + 's';
+    }
+
     function renderAnalytics() {
       if (!data) return;
       // performance_stats has by_mode/tier/session/pair but NOT cross_analytics

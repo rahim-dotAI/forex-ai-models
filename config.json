@@ -150,5 +150,20 @@
       "min_expectancy": 15
     }
   },
-  "_optimisation_note": "v2.1.6 changes (data-driven, 110 resolved trades): 1) Aggressive threshold 50->58 \u2014 Tier C signals (50-54) losing -134 pips. 2) GBPJPY cap 2->1 \u2014 85 trades at 34.1% WR dominating pool, dragging overall WR. 3) LATE_US threshold 55->60 \u2014 25% WR/-94 pips, aligned with ASIAN thin-liquidity level."
+  "_optimisation_note": "v2.1.6 changes (data-driven, 110 resolved trades): 1) Aggressive threshold 50->58 \u2014 Tier C signals (50-54) losing -134 pips. 2) GBPJPY cap 2->1 \u2014 85 trades at 34.1% WR dominating pool, dragging overall WR. 3) LATE_US threshold 55->60 \u2014 25% WR/-94 pips, aligned with ASIAN thin-liquidity level.",
+  "economic_calendar": {
+    "_note": "Forex Factory high-impact event blackout. Plain HTTP \u2014 no Browserless tokens used.",
+    "enabled": true,
+    "blackout_before_minutes": 30,
+    "blackout_after_minutes": 15,
+    "cache_ttl_hours": 24,
+    "source": "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
+  },
+  "live_price_validation": {
+    "_note": "X-Rates live price via Browserless. Requires BROWSERLESS_TOKEN secret. Free tier = 1000 tokens/month.",
+    "enabled": true,
+    "divergence_threshold_pct": 0.5,
+    "cache_ttl_minutes": 5,
+    "source": "https://www.x-rates.com"
+  }
 }

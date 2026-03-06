@@ -329,13 +329,18 @@ jobs:
                 signal_state/signal_history.json 2>/dev/null || echo "  No pair data"
             fi
 
-            # NEW v2.1.5-FINBERT: FinBERT effectiveness preview
+            # FinBERT effectiveness preview
             if jq -e '.analytics.by_sentiment' signal_state/signal_history.json > /dev/null 2>&1; then
               echo ""
               echo "💭 FinBERT Sentiment Effectiveness:"
-              jq -r '.analytics.by_sentiment // {} | to_entries[] |
+              SENT_DATA=$(jq -r '.analytics.by_sentiment // {} | to_entries[] |
                 "  [\(.key)]: \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
-                signal_state/signal_history.json 2>/dev/null || echo "  No sentiment data yet"
+                signal_state/signal_history.json 2>/dev/null)
+              if [ -n "$SENT_DATA" ]; then
+                echo "$SENT_DATA"
+              else
+                echo "  No sentiment data yet (will populate as signals resolve)"
+              fi
             fi
           fi
 
@@ -600,13 +605,18 @@ jobs:
               "\(.key): \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
               signal_state/signal_history.json || echo "No confidence data"
 
-            # NEW v2.1.5-FINBERT: FinBERT sentiment effectiveness
+            # FinBERT sentiment effectiveness
             if jq -e '.analytics.by_sentiment' signal_state/signal_history.json > /dev/null 2>&1; then
               echo ""
               echo "💭 FinBERT Sentiment Effectiveness:"
-              jq -r '.analytics.by_sentiment // {} | to_entries[] |
+              SENT_DATA=$(jq -r '.analytics.by_sentiment // {} | to_entries[] |
                 "[\(.key)]: \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips (engine: \(.value.engine // "none"))"' \
-                signal_state/signal_history.json || echo "No sentiment data yet"
+                signal_state/signal_history.json 2>/dev/null)
+              if [ -n "$SENT_DATA" ]; then
+                echo "$SENT_DATA"
+              else
+                echo "No sentiment data yet (will populate as FinBERT-analysed signals resolve)"
+              fi
             fi
 
             if jq -e '.analytics.cross_analytics.tier_by_session' signal_state/signal_history.json > /dev/null 2>&1; then

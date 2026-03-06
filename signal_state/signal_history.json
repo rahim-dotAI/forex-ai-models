@@ -3757,6 +3757,32 @@
       "estimated_win_rate": null,
       "timestamp": "2026-03-04T20:31:07.065144+00:00",
       "exit_time": "2026-03-04T20:45:54.710823+00:00"
+    },
+    {
+      "id": "USDCAD_SELL_e5e0deec55a6",
+      "signal_id": "USDCAD_SELL_e5e0deec55a6",
+      "pair": "USDCAD",
+      "direction": "SELL",
+      "entry_price": 1.36665,
+      "exit_price": 1.36665,
+      "sl": 1.36913,
+      "tp": 1.35972,
+      "status": "EXPIRED",
+      "pips": 0,
+      "confidence": "MODERATE",
+      "score": 55,
+      "session": "EUROPEAN",
+      "tier": "B",
+      "eligible_modes": [
+        "conservative"
+      ],
+      "sentiment_applied": false,
+      "sentiment_score": 0.0,
+      "sentiment_adjustment": 0.0,
+      "sentiment_engine": null,
+      "estimated_win_rate": null,
+      "timestamp": "2026-03-06T09:31:00.201123+00:00",
+      "exit_time": "2026-03-06T09:46:01.586833+00:00"
     }
   ],
   "stats": {
@@ -3764,7 +3790,7 @@
     "total_resolved": 115,
     "wins": 43,
     "losses": 72,
-    "expired": 28,
+    "expired": 29,
     "win_rate": 37.4,
     "total_pips": 814.5,
     "avg_win": 64.4,
@@ -3920,7 +3946,22 @@
         "win_rate": 50.0
       }
     },
-    "by_sentiment": {},
+    "by_sentiment": {
+      "sentiment_off": {
+        "trades": 112,
+        "wins": 40,
+        "total_pips": 655.6059999999864,
+        "engine": "none",
+        "win_rate": 35.7
+      },
+      "sentiment_on": {
+        "trades": 3,
+        "wins": 3,
+        "total_pips": 158.90000000000072,
+        "engine": "finbert",
+        "win_rate": 100.0
+      }
+    },
     "cross_analytics": {
       "tier_by_session": {
         "B_US": {
@@ -4027,6 +4068,6 @@
   "daily": {},
   "metadata": {
     "created_at": "2026-01-28T16:31:06.713234+00:00",
-    "last_updated": "2026-03-04T20:45:54.712191+00:00"
+    "last_updated": "2026-03-06T09:46:01.588096+00:00"
   }
 }

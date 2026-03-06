@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-03-06T05:59:46.192168+00:00",
-  "active_signals": 0,
+  "timestamp": "2026-03-06T06:01:42.309934+00:00",
+  "active_signals": 1,
   "active_signals_by_mode": {
-    "aggressive": 0,
-    "conservative": 0
+    "aggressive": 1,
+    "conservative": 1
   },
   "session": "ASIAN",
   "mode": "conservative",
@@ -16,15 +16,170 @@
     "pause_reason": null
   },
   "market_state": {
-    "volatility": "CALM",
-    "sentiment_bias": "MIXED",
+    "volatility": "HIGH",
+    "sentiment_bias": "BULLISH",
     "session": "ASIAN"
   },
   "signals_by_mode": {
-    "aggressive": [],
-    "conservative": []
+    "aggressive": [
+      {
+        "signal_id": "USDJPY_BUY_ca4e69756108",
+        "id": "USDJPY_BUY_ca4e69756108",
+        "pair": "USDJPY",
+        "direction": "BUY",
+        "score": 62.0,
+        "technical_score": 62,
+        "sentiment_score": 0.0,
+        "sentiment_adjustment": 0.0,
+        "score_before_sentiment": 62,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 67.9,
+        "adx": 25.3,
+        "atr": 0.09795,
+        "volume_ratio": 0,
+        "session": "ASIAN",
+        "entry_price": 157.828,
+        "sl": 157.58312,
+        "tp": 158.51368,
+        "risk_reward": 2.8,
+        "spread": 0.002,
+        "timestamp": "2026-03-06T06:01:10.352960+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": true,
+        "metadata": {
+          "signal_type": "momentum",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-03-06T06:01:10.352960+00:00",
+          "expires_at": "2026-03-06T06:16:10.352960+00:00",
+          "session_active": false,
+          "signal_generator_version": "2.1.6-OPTIMISED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null,
+        "price_source": "yfinance_confirmed",
+        "price_divergence": 8e-05
+      }
+    ],
+    "conservative": [
+      {
+        "signal_id": "USDJPY_BUY_ca4e69756108",
+        "id": "USDJPY_BUY_ca4e69756108",
+        "pair": "USDJPY",
+        "direction": "BUY",
+        "score": 62.0,
+        "technical_score": 62,
+        "sentiment_score": 0.0,
+        "sentiment_adjustment": 0.0,
+        "score_before_sentiment": 62,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 67.9,
+        "adx": 25.3,
+        "atr": 0.09795,
+        "volume_ratio": 0,
+        "session": "ASIAN",
+        "entry_price": 157.828,
+        "sl": 157.58312,
+        "tp": 158.51368,
+        "risk_reward": 2.8,
+        "spread": 0.002,
+        "timestamp": "2026-03-06T06:01:10.352960+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": true,
+        "metadata": {
+          "signal_type": "momentum",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-03-06T06:01:10.352960+00:00",
+          "expires_at": "2026-03-06T06:16:10.352960+00:00",
+          "session_active": false,
+          "signal_generator_version": "2.1.6-OPTIMISED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null,
+        "price_source": "yfinance_confirmed",
+        "price_divergence": 8e-05
+      }
+    ]
   },
   "historical_signals": [
+    {
+      "signal_id": "USDJPY_BUY_ca4e69756108",
+      "id": "USDJPY_BUY_ca4e69756108",
+      "pair": "USDJPY",
+      "direction": "BUY",
+      "score": 62.0,
+      "technical_score": 62,
+      "sentiment_score": 0.0,
+      "sentiment_adjustment": 0.0,
+      "score_before_sentiment": 62,
+      "confidence": "MODERATE",
+      "tier": "B",
+      "rsi": 67.9,
+      "adx": 25.3,
+      "atr": 0.09795,
+      "volume_ratio": 0,
+      "session": "ASIAN",
+      "entry_price": 157.828,
+      "sl": 157.58312,
+      "tp": 158.51368,
+      "risk_reward": 2.8,
+      "spread": 0.002,
+      "timestamp": "2026-03-06T06:01:10.352960+00:00",
+      "status": "OPEN",
+      "hold_time": "SWING",
+      "eligible_modes": [
+        "conservative",
+        "aggressive"
+      ],
+      "freshness": {
+        "status": "FRESH",
+        "age_minutes": 0.0,
+        "confidence_decay": 100.0
+      },
+      "sentiment_applied": true,
+      "metadata": {
+        "signal_type": "momentum",
+        "market_state": "TRENDING_STRONG",
+        "timeframe": "15m",
+        "valid_for_minutes": 15,
+        "generated_at": "2026-03-06T06:01:10.352960+00:00",
+        "expires_at": "2026-03-06T06:16:10.352960+00:00",
+        "session_active": false,
+        "signal_generator_version": "2.1.6-OPTIMISED",
+        "atr_stop_multiplier": 2.5,
+        "atr_target_multiplier": 7.0
+      },
+      "estimated_win_rate": null,
+      "price_source": "yfinance_confirmed",
+      "price_divergence": 8e-05
+    },
     {
       "id": "USDCAD_BUY_b9525325b68f",
       "signal_id": "USDCAD_BUY_b9525325b68f",
@@ -3790,8 +3945,8 @@
     "sentiment": {
       "enabled": true,
       "engine": "finbert",
-      "newsapi": 0,
-      "marketaux": 0
+      "newsapi": 2,
+      "marketaux": 2
     }
   },
   "stats": {
@@ -3924,8 +4079,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 0,
-    "total_risk_pips": 0,
+    "theoretical_max_pips": 24.5,
+    "total_risk_pips": 24.487999999999488,
     "max_daily_risk": 150
   },
   "analytics": {
@@ -4159,20 +4314,20 @@
   },
   "equity_curve": [],
   "pair_prices": {
-    "GBPUSD": 1.33565,
-    "USDJPY": 1.33565,
-    "EURUSD": 1.1609,
+    "USDJPY": 157.828,
+    "GBPUSD": 1.33581,
+    "EURUSD": 1.16117,
     "AUDUSD": 0.70319,
+    "USDCAD": 1.36617,
     "NZDUSD": 0.59035,
-    "USDCAD": 0.59035,
-    "USDCHF": 0.78104,
-    "EURJPY": 183.198,
-    "GBPJPY": 183.198,
-    "EURGBP": 0.86893
+    "USDCHF": 0.7809,
+    "EURJPY": 183.226,
+    "GBPJPY": 183.226,
+    "EURGBP": 0.86897
   },
   "upcoming_events": [],
   "system": {
-    "last_update": "2026-03-06T05:59:46.192203+00:00",
+    "last_update": "2026-03-06T06:01:42.309980+00:00",
     "signal_only_mode": true,
     "version": "2.1.6-OPTIMISED"
   }

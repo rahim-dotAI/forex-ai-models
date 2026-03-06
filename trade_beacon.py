@@ -576,6 +576,10 @@ def download(pair: str) -> Tuple[pd.DataFrame, bool]:
             if df is None or df.empty or len(df.dropna()) < MIN_ROWS:
                 return pd.DataFrame(), False
             df = df.dropna()
+            # Flatten MultiIndex columns (yfinance >=0.2.18 returns MultiIndex
+            # when downloading a single ticker with auto_adjust=True)
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = df.columns.get_level_values(0)
             _cache.set(cache_key, df)
             return df, True
 
@@ -901,9 +905,17 @@ def resolve_active_signals():
                              progress=False, auto_adjust=True)
             if df is None or df.empty:
                 active.append(sig); continue
+            # Flatten MultiIndex columns
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = df.columns.get_level_values(0)
 
             now  = datetime.now(timezone.utc)
-            curr = float(df["Close"].iloc[-1])
+            # Flatten MultiIndex columns if yfinance returns them (newer versions)
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = df.columns.get_level_values(0)
+            close_val = df["Close"].iloc[-1]
+            if hasattr(close_val, 'iloc'): close_val = close_val.iloc[0]
+            curr = float(close_val)
 
             # ── Filter candles to signal's lifetime window ─────────────────
             # If we can't parse the entry time, fall back to all today's candles
@@ -921,8 +933,17 @@ def resolve_active_signals():
                 exp_time  = now
 
             # High and Low during signal window — catches TP/SL hits mid-window
-            period_high = float(window_df["High"].max()) if not window_df.empty else curr
-            period_low  = float(window_df["Low"].min())  if not window_df.empty else curr
+            # .max()/.min() can return a Series on MultiIndex DataFrames — squeeze to scalar
+            if not window_df.empty:
+                h = window_df["High"].max()
+                l = window_df["Low"].min()
+                if hasattr(h, 'iloc'): h = h.iloc[0]
+                if hasattr(l, 'iloc'): l = l.iloc[0]
+                period_high = float(h)
+                period_low  = float(l)
+            else:
+                period_high = curr
+                period_low  = curr
 
             outcome = None
             if direction == "BUY":

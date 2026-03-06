@@ -553,25 +553,40 @@ def last(series: pd.Series):
 
 @retry_with_backoff(max_retries=3, backoff_factor=10)
 def download(pair: str) -> Tuple[pd.DataFrame, bool]:
+    import time as _time, random as _random
     cache_key = pair.replace("=X", "")
     cached = _cache.get(cache_key)
     if cached is not None:
         return cached, True
-    try:
-        df = yf.download(pair, interval="15m", period=LOOKBACK,
-                         progress=False, auto_adjust=True, threads=False)
-        if df is None or df.empty or len(df) < MIN_ROWS:
-            log.warning(f"{pair} 15m insufficient, trying 1h...")
-            df = yf.download(pair, interval="1h", period="60d",
+
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            if attempt > 0:
+                # Jitter backoff: avoids parallel SQLite lock contention
+                _time.sleep(0.5 * attempt + _random.uniform(0, 0.25))
+                log.info(f"{pair} retry {attempt}/{max_retries-1} after database lock")
+
+            df = yf.download(pair, interval="15m", period=LOOKBACK,
                              progress=False, auto_adjust=True, threads=False)
-        if df is None or df.empty or len(df.dropna()) < MIN_ROWS:
+            if df is None or df.empty or len(df) < MIN_ROWS:
+                log.warning(f"{pair} 15m insufficient, trying 1h...")
+                df = yf.download(pair, interval="1h", period="60d",
+                                 progress=False, auto_adjust=True, threads=False)
+            if df is None or df.empty or len(df.dropna()) < MIN_ROWS:
+                return pd.DataFrame(), False
+            df = df.dropna()
+            _cache.set(cache_key, df)
+            return df, True
+
+        except Exception as e:
+            if "database is locked" in str(e) and attempt < max_retries - 1:
+                log.warning(f"{pair} SQLite lock on attempt {attempt+1}, retrying...")
+                continue
+            log.error(f"{pair} download failed: {e}")
             return pd.DataFrame(), False
-        df = df.dropna()
-        _cache.set(cache_key, df)
-        return df, True
-    except Exception as e:
-        log.error(f"{pair} download failed: {e}")
-        return pd.DataFrame(), False
+
+    return pd.DataFrame(), False
 
 def ema(s, p):         return EMAIndicator(s, window=p).ema_indicator()
 def rsi(s, p=14):      return RSIIndicator(s, window=p).rsi()
@@ -1441,6 +1456,15 @@ def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
     direction = "BUY" if bull>bear else "SELL"
     conf      = "VERY_STRONG" if diff>=75 else ("STRONG" if diff>=65 else "MODERATE")
     tier      = classify_signal_tier(diff)
+
+    # ── Tier C block ─────────────────────────────────────────────────────────
+    # Data: Tier C = 79 trades, 32.9% WR, -134 pips. Net negative.
+    # Tier B = 36 trades, 47.2% WR, +949 pips. All value is here.
+    # Block Tier C outright — only B, A, A+ signals proceed.
+    if tier == "C":
+        log.info(f"  BLOCKED: Tier C (score={diff}) — data-driven block (32.9% WR, -134 pips hist)")
+        return None, ok
+
     spread    = get_spread(pair)
     atr_stop, atr_tgt = 2.5, 7.0
 

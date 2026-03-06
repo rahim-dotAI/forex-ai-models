@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-03-06T21:16:14.722980+00:00",
-  "active_signals": 1,
+  "timestamp": "2026-03-06T21:31:02.580603+00:00",
+  "active_signals": 2,
   "active_signals_by_mode": {
-    "aggressive": 1,
-    "conservative": 1
+    "aggressive": 2,
+    "conservative": 2
   },
   "session": "LATE_US",
   "mode": "conservative",
@@ -72,9 +72,111 @@
         "estimated_win_rate": null,
         "price_source": "yfinance_confirmed",
         "price_divergence": 0.00018
+      },
+      {
+        "signal_id": "USDCAD_SELL_b7b32c946a31",
+        "id": "USDCAD_SELL_b7b32c946a31",
+        "pair": "USDCAD",
+        "direction": "SELL",
+        "score": 63.0,
+        "technical_score": 63,
+        "sentiment_score": 0.0,
+        "sentiment_adjustment": 0.0,
+        "score_before_sentiment": 63,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 31.6,
+        "adx": 44.9,
+        "atr": 0.00143,
+        "volume_ratio": 0,
+        "session": "LATE_US",
+        "entry_price": 1.35725,
+        "sl": 1.36083,
+        "tp": 1.34722,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-03-06T21:16:05.315406+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": true,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-03-06T21:16:05.315406+00:00",
+          "expires_at": "2026-03-06T21:31:05.315406+00:00",
+          "session_active": false,
+          "signal_generator_version": "2.1.6-OPTIMISED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null,
+        "price_source": "yfinance_confirmed",
+        "price_divergence": 0.00018
       }
     ],
     "conservative": [
+      {
+        "signal_id": "USDCAD_SELL_b7b32c946a31",
+        "id": "USDCAD_SELL_b7b32c946a31",
+        "pair": "USDCAD",
+        "direction": "SELL",
+        "score": 63.0,
+        "technical_score": 63,
+        "sentiment_score": 0.0,
+        "sentiment_adjustment": 0.0,
+        "score_before_sentiment": 63,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 31.6,
+        "adx": 44.9,
+        "atr": 0.00143,
+        "volume_ratio": 0,
+        "session": "LATE_US",
+        "entry_price": 1.35725,
+        "sl": 1.36083,
+        "tp": 1.34722,
+        "risk_reward": 2.8,
+        "spread": 0.0002,
+        "timestamp": "2026-03-06T21:16:05.315406+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": true,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 15,
+          "generated_at": "2026-03-06T21:16:05.315406+00:00",
+          "expires_at": "2026-03-06T21:31:05.315406+00:00",
+          "session_active": false,
+          "signal_generator_version": "2.1.6-OPTIMISED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null,
+        "price_source": "yfinance_confirmed",
+        "price_divergence": 0.00018
+      },
       {
         "signal_id": "USDCAD_SELL_b7b32c946a31",
         "id": "USDCAD_SELL_b7b32c946a31",
@@ -4803,8 +4905,8 @@
     "sentiment": {
       "enabled": true,
       "engine": "finbert",
-      "newsapi": 2,
-      "marketaux": 2
+      "newsapi": 0,
+      "marketaux": 0
     }
   },
   "stats": {
@@ -4937,8 +5039,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 35.8,
-    "total_risk_pips": 35.799999999999166,
+    "theoretical_max_pips": 71.6,
+    "total_risk_pips": 71.59999999999833,
     "max_daily_risk": 150
   },
   "analytics": {
@@ -5187,20 +5289,20 @@
   },
   "equity_curve": [],
   "pair_prices": {
-    "GBPUSD": 1.34009,
-    "EURUSD": 1.16198,
-    "USDJPY": 1.16198,
-    "AUDUSD": 0.70294,
-    "NZDUSD": 0.59053,
-    "USDCAD": 1.35725,
-    "EURJPY": 183.328,
-    "USDCHF": 0.77648,
-    "GBPJPY": 211.495,
-    "EURGBP": 0.86674
+    "GBPUSD": 1.33989,
+    "USDJPY": 1.33989,
+    "AUDUSD": 0.70304,
+    "NZDUSD": 0.59056,
+    "EURUSD": 1.16212,
+    "USDCHF": 0.77632,
+    "EURJPY": 183.323,
+    "USDCAD": 1.35728,
+    "EURGBP": 0.86683,
+    "GBPJPY": 0.86683
   },
   "upcoming_events": [],
   "system": {
-    "last_update": "2026-03-06T21:16:14.723027+00:00",
+    "last_update": "2026-03-06T21:31:02.580677+00:00",
     "signal_only_mode": true,
     "version": "2.1.6-OPTIMISED"
   }

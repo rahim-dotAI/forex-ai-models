@@ -391,6 +391,9 @@ def _load_economic_calendar() -> List[Dict]:
         log.info(f"Calendar: {len(raw)} total events in FF feed (all impacts)")
         high_impact_all = [e for e in raw if e.get("impact","").lower() == "high"]
         log.info(f"Calendar: {len(high_impact_all)} high-impact events before currency filter")
+        # DEBUG — log exact country codes FF is using so we can align _CURRENCY_PAIRS
+        ff_countries = sorted(set(e.get("country","").upper() for e in high_impact_all))
+        log.info(f"Calendar: FF high-impact country codes = {ff_countries}")
         events = []
         for item in raw:
             if item.get("impact", "").lower() != "high": continue
@@ -1543,9 +1546,12 @@ def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
     if rr>10: return None, ok
 
     now     = datetime.now(timezone.utc)
-    expires = now + timedelta(
-        minutes=CONFIG.get("advanced",{}).get("validation",{}).get("max_signal_age_seconds",900)/60
-    )
+    # Session-aware expiry — EUROPEAN/US get 4h window (data-driven), others 15min
+    val_cfg      = CONFIG.get("advanced",{}).get("validation",{})
+    session_exp  = val_cfg.get("session_expiry_minutes",{})
+    default_mins = val_cfg.get("max_signal_age_seconds", 900) / 60
+    expiry_mins  = session_exp.get(session, default_mins)
+    expires = now + timedelta(minutes=expiry_mins)
     sid = generate_deterministic_signal_id(
         pair.replace("=X",""), direction, curr, session, now.strftime("%Y%m%d")
     )
@@ -1569,7 +1575,7 @@ def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
         "metadata": {
             "signal_type":  get_signal_type(e12,e26,e200,r,a),
             "market_state": classify_market_state(a,atr,curr),
-            "timeframe": INTERVAL, "valid_for_minutes": 15,
+            "timeframe": INTERVAL, "valid_for_minutes": int(expiry_mins),
             "generated_at": now.isoformat(), "expires_at": expires.isoformat(),
             "session_active": session in ("EUROPEAN","US","OVERLAP"),
             "signal_generator_version": "2.1.6-OPTIMISED",

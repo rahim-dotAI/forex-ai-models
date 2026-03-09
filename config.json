@@ -92,6 +92,14 @@
     },
     "validation": {
       "max_signal_age_seconds": 900,
+      "session_expiry_minutes": {
+        "EUROPEAN": 240,
+        "US":       240,
+        "ASIAN":    15,
+        "LATE_US":  15,
+        "OVERLAP":  15,
+        "_note": "Data-driven: EUROPEAN(37.5%WR,+380p) and US(54.8%WR,+602p) extended to 4h. ASIAN/LATE_US/OVERLAP kept at 15min — thin liquidity, poor WR."
+      },
       "min_sl_pips": {
         "JPY_pairs": 20,
         "other": 12

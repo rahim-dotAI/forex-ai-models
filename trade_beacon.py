@@ -1777,6 +1777,38 @@ def write_dashboard_state(signals, downloads, news_calls=0, mkt_calls=0,
                 log.info(f"Loaded {len(hist)} from existing dashboard")
             except Exception: pass
 
+    # ── Pick of the Day — persist best signal of the day ─────────────────────
+    # Computed from today's active + historical signals, stored in dashboard_state.json
+    # so it survives cleanup, zero-signal runs, and page refreshes.
+    today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today_pool = [s for s in (list(sigs) + hist)
+                  if s.get("timestamp","").startswith(today_str)]
+    # Deduplicate by signal_id
+    seen_pod: set = set()
+    today_pool_deduped = []
+    for s in today_pool:
+        sid = s.get("signal_id","")
+        key = sid if sid else s.get("pair","") + s.get("direction","") + s.get("timestamp","")
+        if key not in seen_pod:
+            today_pool_deduped.append(s); seen_pod.add(key)
+    new_pick = (max(today_pool_deduped, key=lambda x: x.get("score",0))
+                if today_pool_deduped else None)
+    # Load existing pick — keep it if today's signals have nothing better
+    existing_pick = None
+    df_file_pod = Path("signal_state/dashboard_state.json")
+    if df_file_pod.exists():
+        try:
+            existing_data = json.loads(df_file_pod.read_text())
+            ep = existing_data.get("pick_of_the_day")
+            if ep and ep.get("timestamp","").startswith(today_str):
+                existing_pick = ep
+        except Exception: pass
+    if new_pick and existing_pick:
+        pick_of_the_day = (new_pick if (new_pick.get("score",0) >= existing_pick.get("score",0))
+                          else existing_pick)
+    else:
+        pick_of_the_day = new_pick or existing_pick
+
     dashboard = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "active_signals": len(sigs),
@@ -1834,6 +1866,7 @@ def write_dashboard_state(signals, downloads, news_calls=0, mkt_calls=0,
         "equity_curve": perf.get("equity",{}).get("curve",[]),
         "pair_prices": pair_prices or {},
         "upcoming_events": _get_upcoming_events(4),
+        "pick_of_the_day": pick_of_the_day,
         "system": {
             "last_update": datetime.now(timezone.utc).isoformat(),
             "signal_only_mode": SIGNAL_ONLY_MODE,

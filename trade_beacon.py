@@ -799,7 +799,10 @@ def check_equity_protection(config: Dict) -> Tuple[bool, str]:
 # ═════════════════════════════════════════════════════════════════════════════
 
 def generate_deterministic_signal_id(pair, direction, entry, session, date) -> str:
-    raw = f"{pair}|{direction}|{round(entry,5)}|{session}|{date}"
+    # ID is per pair+direction+session+date only — entry price intentionally excluded.
+    # Including price caused a new ID every 15min as prices shifted, creating 400+ phantom
+    # "active" signals over a 4h session window. Same signal now deduplicates correctly.
+    raw = f"{pair}|{direction}|{session}|{date}"
     return f"{pair}_{direction}_{hashlib.sha1(raw.encode()).hexdigest()[:12]}"
 
 def get_existing_signals_today() -> List[str]:
@@ -1941,10 +1944,23 @@ def cleanup_legacy_signals():
         all_sigs = (data["signals_by_mode"].get("aggressive",[]) +
                     data["signals_by_mode"].get("conservative",[])
                     if "signals_by_mode" in data else data.get("signals",[]))
-        now = datetime.now(timezone.utc); cleaned = []
+        now  = datetime.now(timezone.utc)
+        today = now.date()
+        cleaned = []
         for sig in all_sigs:
             if sig.get("status")=="ACTIVE": sig["status"]="OPEN"
             if sig.get("status")!="OPEN": continue
+
+            # Hard date cutoff — signals from a previous day are always purged
+            ts = sig.get("timestamp","")
+            if ts:
+                try:
+                    sig_date = datetime.fromisoformat(ts.replace("Z","+00:00")).date()
+                    if sig_date < today:
+                        continue  # previous day — drop unconditionally
+                except Exception:
+                    pass
+
             exp = sig.get("metadata",{}).get("expires_at")
             if exp:
                 try:
@@ -1952,11 +1968,16 @@ def cleanup_legacy_signals():
                     # Keep if not yet expired, OR expired within last 2h (resolver needs them)
                     if now < exp_time or (now - exp_time).total_seconds() < 7200:
                         cleaned.append(sig)
-                except Exception: pass
-        if len(cleaned)<len(all_sigs):
+                except Exception:
+                    pass
+            else:
+                cleaned.append(sig)  # no expiry metadata — keep (will resolve naturally)
+
+        removed = len(all_sigs) - len(cleaned)
+        if removed > 0:
             data["signals_by_mode"] = split_signals_by_mode(cleaned)
-            df_file.write_text(json.dumps(data,indent=2))
-            log.info(f"Cleaned {len(all_sigs)-len(cleaned)} stale signals")
+            df_file.write_text(json.dumps(data, indent=2))
+            log.info(f"Cleaned {removed} stale signals ({len(cleaned)} remain)")
     except Exception: pass
 
 # ═════════════════════════════════════════════════════════════════════════════

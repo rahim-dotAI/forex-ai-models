@@ -299,6 +299,12 @@ class PerformanceTracker:
                 s.get("eligible_modes", ["aggressive"]),
                 pips, is_win
             )
+            # Sentiment analytics — must match _recalculate() or by_sentiment stays empty after migration
+            self._add_sentiment_analytics(
+                analytics, is_win, pips,
+                s.get("sentiment_applied", False),
+                s.get("sentiment_engine")
+            )
 
         total      = len(resolved)
         win_rate   = (len(wins) / total * 100) if total else 0.0

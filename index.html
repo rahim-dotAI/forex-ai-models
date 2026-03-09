@@ -1315,7 +1315,7 @@
           if (seen.has(id)) return false;
           seen.add(id); return true;
         });
-        buildPickOfDay(deduped);
+        buildPickOfDay(deduped, data?.pick_of_the_day);
       } catch(e) {
         showEmpty('signalsGrid', 'alert-triangle', 'Unable to load', 'Check system');
       }
@@ -2047,9 +2047,16 @@
       ],
     };
 
-    function buildPickOfDay(signals) {
+    function buildPickOfDay(signals, persistedPick) {
       const pod = document.getElementById('pickOfDay');
-      if (!signals || signals.length === 0) { pod.style.display='none'; return; }
+      if (!signals || signals.length === 0) {
+        // No active/historical signals today — fall back to persisted pick
+        if (persistedPick) {
+          signals = [persistedPick];
+        } else {
+          pod.style.display='none'; return;
+        }
+      }
 
       // Never show Pick of the Day on weekends or holidays — market is closed,
       // any signals showing would be stale from the last trading session.
@@ -2068,8 +2075,8 @@
         try { return new Date(s.timestamp).toISOString().slice(0,10)===today; }
         catch(e) { return false; }
       });
-      if (todaySigs.length === 0) { pod.style.display='none'; return; }
-      const pool = todaySigs;
+      // If nothing from today in the pool, use persisted pick (already injected above)
+      const pool = todaySigs.length > 0 ? todaySigs : signals;
       const best = pool.reduce((a,b) => ((b.score||0) > (a.score||0) ? b : a));
       if (!best) { pod.style.display='none'; return; }
 

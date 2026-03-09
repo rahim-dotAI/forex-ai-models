@@ -16,7 +16,7 @@ name: Trade Beacon v2.1.6-OPTIMISED – Forex Signal Generator
 # - Lowered tier thresholds (A+: 80, A: 68, B: 55) for expanded scorer
 # - Balanced Conservative/Aggressive thresholds (55/50)
 # - Session-specific thresholds (OVERLAP blocked 999, ASIAN raised)
-# - Pair limits (max 2 GBPJPY, block EURGBP, allow 5 GBPUSD, max 1 NZDUSD)
+# - Pair limits (max 1 GBPJPY, block EURGBP, allow 5 GBPUSD, max 1 NZDUSD)
 # - ATR multipliers (stop 2.5x, target 7.0x → RR=2.8)
 # - GBPUSD BUY-only directional filter
 
@@ -88,7 +88,10 @@ jobs:
             "2025-07-04" "2025-08-25" "2025-11-27" "2025-12-25" "2025-12-26"
             "2026-01-01" "2026-01-19" "2026-02-16" "2026-04-03" "2026-04-06"
             "2026-05-04" "2026-05-25" "2026-07-03" "2026-08-31"
-            "2026-11-26" "2026-12-25" "2026-12-28"
+            "2026-09-07" "2026-11-26" "2026-12-25" "2026-12-28"
+            "2027-01-01" "2027-01-18" "2027-04-02" "2027-04-05"
+            "2027-05-03" "2027-05-31" "2027-07-05" "2027-08-30"
+            "2027-09-06" "2027-11-25" "2027-12-27" "2027-12-28"
           )
 
           IS_HOLIDAY=false
@@ -151,7 +154,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          sudo apt-get update && sudo apt-get install -y jq bc
+          sudo apt-get update && sudo apt-get install -y jq
 
       - name: Verify system files
         if: steps.market_check.outputs.should_run == 'true'
@@ -263,7 +266,7 @@ jobs:
           fi
 
       - name: Apply runtime overrides
-        if: github.event.inputs.sentiment != ''
+        if: github.event.inputs.sentiment == 'true'
         run: |
           echo "⚙️ Applying runtime configuration..."
           SENTIMENT="${{ github.event.inputs.sentiment }}"
@@ -391,7 +394,7 @@ jobs:
           echo "  EUROPEAN: $(jq -r '.advanced.session_thresholds.EUROPEAN // 50' config.json)"
           echo "  US:       $(jq -r '.advanced.session_thresholds.US // 50' config.json)"
           echo "  ASIAN:    $(jq -r '.advanced.session_thresholds.ASIAN // 60' config.json)"
-          echo "  LATE_US:  $(jq -r '.advanced.session_thresholds.LATE_US // 55' config.json)"
+          echo "  LATE_US:  $(jq -r '.advanced.session_thresholds.LATE_US // 60' config.json)"
           echo "  OVERLAP:  $(jq -r '.advanced.session_thresholds.OVERLAP // 999' config.json) (BLOCKED — 0% WR)"
           echo ""
 

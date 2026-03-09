@@ -1,6 +1,6 @@
 """
 Performance Tracker v2.1.6-OPTIMISED - Aligned with Trade Beacon v2.1.6-OPTIMISED
-=========================================================================
+============================================================================
 
 CHANGELOG v2.1.6-OPTIMISED (based on v2.1.4-SCORING):
 - ✅ Version bumped to 2.1.6-OPTIMISED to match Trade Beacon

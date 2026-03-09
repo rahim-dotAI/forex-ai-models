@@ -432,10 +432,10 @@ jobs:
               echo "  HF_API_KEY:   ❌ Missing secret HF_API_KEY — FinBERT disabled, get token at huggingface.co/settings/tokens"
             fi
             SENT_THRESH=$(jq -r '.sentiment.min_score_threshold // 60' config.json)
-            HF_MODEL=$(jq -r '.sentiment.hf_model_primary // "mrm8488/distilroberta-finetuned-financial-news-sentiment-analysis"' config.json)
+            HF_MODEL=$(jq -r '.sentiment.hf_model_primary // "ProsusAI/finbert"' config.json)
             echo "  Min Score:    $SENT_THRESH (only signals >= $SENT_THRESH receive FinBERT analysis)"
             echo "  Model:        $HF_MODEL"
-            echo "  API:          router.huggingface.co (migrated from api-inference)"
+            echo "  API:          router.huggingface.co/hf-inference (path fix applied)"
             echo "  Cache TTL:    $(jq -r '.sentiment.cache_ttl_minutes // 30' config.json) min"
             echo "  Max Adj Pts:  ±$(jq -r '.sentiment.max_adjustment_pts // 10' config.json) pts"
           else

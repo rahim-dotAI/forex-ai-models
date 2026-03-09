@@ -5,8 +5,8 @@ with tier-based selective enhancement (sentiment/backtest only on top-tier)
 
 CHANGES v2.1.5-FINBERT:
 - Replaced keyword-based sentiment with HuggingFace FinBERT NLP model
-- Model: mrm8488/distilroberta-finetuned-financial-news-sentiment-analysis (lightweight)
-- Fallback: ProsusAI/finbert (more accurate, heavier)
+- Model: ProsusAI/finbert (canonical financial sentiment BERT)
+- Fallback: yiyanghkust/finbert-tone (alternate FinBERT, positive/neutral/negative)
 - Uses HF_API_KEY secret for HuggingFace Inference API (no local GPU needed)
 - NewsAPI + MarketAux still fetch raw articles; FinBERT replaces keyword counting
 - Sentiment now understands context, negation, and financial jargon properly
@@ -92,15 +92,19 @@ MIN_ROWS = 220
 # Set HF_API_KEY as a GitHub Actions secret (Settings -> Secrets -> New secret)
 # Value: your HuggingFace token from https://huggingface.co/settings/tokens
 HF_API_KEY        = os.getenv("HF_API_KEY", "")
-HF_PRIMARY_MODEL  = "mrm8488/distilroberta-finetuned-financial-news-sentiment-analysis"
-HF_FALLBACK_MODEL = "ProsusAI/finbert"
-HF_API_BASE       = "https://router.huggingface.co/models"
+HF_PRIMARY_MODEL  = "ProsusAI/finbert"
+HF_FALLBACK_MODEL = "yiyanghkust/finbert-tone"
+HF_API_BASE       = "https://router.huggingface.co/hf-inference/models"
 
 # Label -> numeric score map (covers both model label conventions)
 HF_LABEL_MAP: Dict[str, float] = {
     "positive": 1.0, "Positive": 1.0,
     "negative":-1.0, "Negative":-1.0,
     "neutral":  0.0, "Neutral":  0.0,
+    # yiyanghkust/finbert-tone label scheme
+    "LABEL_0":  0.0,   # neutral
+    "LABEL_1":  1.0,   # positive
+    "LABEL_2": -1.0,   # negative
 }
 
 # ── Browserless (X-Rates live price validation) ───────────────────────────────
@@ -1049,10 +1053,10 @@ class NewsAggregator:
         4. Map labels -> numeric scores, weight by model confidence
         5. Return weighted average in [-1.0, +1.0]
 
-    Primary model  (lightweight, fast):
-        mrm8488/distilroberta-finetuned-financial-news-sentiment-analysis
-    Fallback model (heavier, higher accuracy):
+    Primary model  (canonical financial sentiment BERT):
         ProsusAI/finbert
+    Fallback model (alternate FinBERT, positive/neutral/negative):
+        yiyanghkust/finbert-tone
     """
 
     def __init__(self):
@@ -1157,7 +1161,7 @@ class NewsAggregator:
         Analyse a list of financial text snippets with FinBERT.
 
         Strategy:
-          - Try primary (distilroberta) -> fallback (finbert) if primary fails
+          - Try primary (ProsusAI/finbert) -> fallback (yiyanghkust/finbert-tone) if primary fails
           - Each result has a {label, score} where score is model confidence
           - Weighted average: numeric_label * confidence / sum(confidence)
           - Returns float in [-1.0, +1.0] or None if both models unavailable

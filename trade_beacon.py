@@ -159,16 +159,16 @@ def _default_config() -> Dict:
         "use_sentiment": False,
         "settings": {
             "aggressive": {
-                "threshold": 50, "min_adx": 18,
+                "threshold": 58, "min_adx": 15,
                 "rsi_oversold": 30, "rsi_overbought": 70,
                 "min_risk_reward": 2.5, "atr_stop_multiplier": 2.5,
-                "atr_target_multiplier": 5.0, "max_correlated_signals": 2,
+                "atr_target_multiplier": 7.0, "max_correlated_signals": 2,
             },
             "conservative": {
-                "threshold": 55, "min_adx": 20,
+                "threshold": 55, "min_adx": 17,
                 "rsi_oversold": 30, "rsi_overbought": 70,
                 "min_risk_reward": 2.5, "atr_stop_multiplier": 2.5,
-                "atr_target_multiplier": 5.0, "max_correlated_signals": 1,
+                "atr_target_multiplier": 7.0, "max_correlated_signals": 1,
             },
         },
         "advanced": {
@@ -176,6 +176,8 @@ def _default_config() -> Dict:
             "enable_correlation_filter": True,
             "cache_ttl_minutes": 5,
             "parallel_workers": 3,
+            "atr_stop_multiplier": 2.5,
+            "atr_target_multiplier": 7.0,
             "session_bonuses": {
                 "ASIAN":    {"JPY_pairs": 3, "AUD_NZD_pairs": 3, "other": 0},
                 "EUROPEAN": {"EUR_GBP_pairs": 3, "EUR_GBP_crosses": 2, "other": 0},
@@ -184,11 +186,14 @@ def _default_config() -> Dict:
                 "LATE_US":  {"all_major_pairs": 0},
             },
             "session_thresholds": {
-                "ASIAN": 65, "EUROPEAN": 50, "US": 50, "LATE_US": 65, "OVERLAP": 999,
+                "ASIAN": 60, "EUROPEAN": 50, "US": 50, "LATE_US": 60, "OVERLAP": 999,
             },
-            "pair_limits": {"GBPUSD": 5, "GBPJPY": 2, "EURGBP": 0, "default": 3},
+            "pair_limits": {"GBPUSD": 5, "GBPJPY": 1, "NZDUSD": 1, "EURGBP": 0, "default": 3},
             "validation": {
                 "max_signal_age_seconds": 900,
+                "session_expiry_minutes": {
+                    "EUROPEAN": 240, "US": 240, "ASIAN": 15, "LATE_US": 15, "OVERLAP": 15,
+                },
                 "min_sl_pips": {"JPY_pairs": 20, "other": 12},
                 "max_spread_ratio": 0.25, "max_sl_distance_pct": 0.02,
                 "max_tp_distance_pct": 0.05, "require_direction": True,
@@ -1546,7 +1551,10 @@ def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
         return None, ok
 
     spread    = get_spread(pair)
-    atr_stop, atr_tgt = 2.5, 7.0
+    atr_stop = CONFIG.get("advanced", {}).get("atr_stop_multiplier",
+               CONFIG["settings"]["aggressive"].get("atr_stop_multiplier", 2.5))
+    atr_tgt  = CONFIG.get("advanced", {}).get("atr_target_multiplier",
+               CONFIG["settings"]["aggressive"].get("atr_target_multiplier", 7.0))
 
     if direction=="BUY":  sl=curr-atr_stop*atr; tp=curr+atr_tgt*atr
     else:                 sl=curr+atr_stop*atr; tp=curr-atr_tgt*atr

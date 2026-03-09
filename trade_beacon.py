@@ -1941,9 +1941,17 @@ def cleanup_legacy_signals():
     if not df_file.exists(): return
     try:
         data = json.loads(df_file.read_text())
-        all_sigs = (data["signals_by_mode"].get("aggressive",[]) +
-                    data["signals_by_mode"].get("conservative",[])
-                    if "signals_by_mode" in data else data.get("signals",[]))
+        raw = (data["signals_by_mode"].get("aggressive",[]) +
+               data["signals_by_mode"].get("conservative",[])
+               if "signals_by_mode" in data else data.get("signals",[]))
+        # Deduplicate before cleanup — same signal lives in both mode arrays
+        seen_ids: set = set()
+        all_sigs = []
+        for s in raw:
+            sid = s.get("signal_id") or s.get("id")
+            if sid and sid in seen_ids: continue
+            if sid: seen_ids.add(sid)
+            all_sigs.append(s)
         now  = datetime.now(timezone.utc)
         today = now.date()
         cleaned = []
@@ -2001,11 +2009,19 @@ def main():
         try:
             data = json.loads(df_file.read_text())
             if "signals_by_mode" in data:
-                existing = (data["signals_by_mode"].get("aggressive",[]) +
-                            data["signals_by_mode"].get("conservative",[]))
+                raw = (data["signals_by_mode"].get("aggressive",[]) +
+                       data["signals_by_mode"].get("conservative",[]))
             else:
-                existing = data.get("signals",[])
-            existing = [s for s in existing if s.get("status","OPEN") in ("OPEN","ACTIVE")]
+                raw = data.get("signals",[])
+            # Deduplicate — same signal appears in both mode arrays, concat produces doubles
+            seen_ids: set = set()
+            existing = []
+            for s in raw:
+                if s.get("status","OPEN") not in ("OPEN","ACTIVE"): continue
+                sid = s.get("signal_id") or s.get("id")
+                if sid and sid in seen_ids: continue
+                if sid: seen_ids.add(sid)
+                existing.append(s)
             log.info(f"{len(existing)} active signals from previous cycles")
         except Exception: pass
 

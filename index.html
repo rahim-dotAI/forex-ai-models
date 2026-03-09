@@ -1132,7 +1132,7 @@
     let signalState = {};
     
     document.addEventListener('DOMContentLoaded', () => {
-      mode = localStorage.getItem('tbMode') || 'aggressive';
+      try { mode = localStorage.getItem('tbMode') || 'aggressive'; } catch(e) { mode = 'aggressive'; }
       updateModeBtns();
       checkMarketStatus();
       load();
@@ -1324,7 +1324,7 @@
     
     function switchMode(m) {
       mode = m;
-      localStorage.setItem('tbMode', m);
+      try { localStorage.setItem('tbMode', m); } catch(e) {}
       updateModeBtns();
       processAndRenderSignals();
       lucide.createIcons();
@@ -1404,7 +1404,6 @@
         }
       });
       const cards = Object.values(signalState)
-        .filter(s => s.direction === signalState[s.pair+'_'+s.direction]?.direction)
         .sort((a,b) => new Date(b.current.timestamp)-new Date(a.current.timestamp));
       if (cards.length === 0) {
         // Check if the other mode has signals — give actionable hint instead of blank empty state

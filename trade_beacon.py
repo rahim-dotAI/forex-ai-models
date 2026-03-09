@@ -1897,7 +1897,9 @@ def cleanup_legacy_signals():
             exp = sig.get("metadata",{}).get("expires_at")
             if exp:
                 try:
-                    if now < datetime.fromisoformat(exp.replace("Z","+00:00")):
+                    exp_time = datetime.fromisoformat(exp.replace("Z","+00:00"))
+                    # Keep if not yet expired, OR expired within last 2h (resolver needs them)
+                    if now < exp_time or (now - exp_time).total_seconds() < 7200:
                         cleaned.append(sig)
                 except Exception: pass
         if len(cleaned)<len(all_sigs):
@@ -1911,11 +1913,14 @@ def cleanup_legacy_signals():
 # ═════════════════════════════════════════════════════════════════════════════
 
 def main():
-    cleanup_legacy_signals()
     if not in_execution_window(): return
 
+    # ── Resolve FIRST — check TP/SL on active signals before any cleanup ──────
     if PERFORMANCE_TRACKER:
         resolve_active_signals(); time.sleep(1)
+
+    # ── Cleanup AFTER resolve — now safe to remove truly stale signals ────────
+    cleanup_legacy_signals()
 
     # Load existing active signals
     existing: List[Dict] = []

@@ -359,7 +359,11 @@ def _load_economic_calendar() -> List[Dict]:
             if age_h < 24:
                 events = cache.get("events", [])
                 log.info(f"Calendar: {len(events)} high-impact events from cache (age {age_h:.1f}h)")
-                return events
+                # If cache has 0 events and is older than 1h, re-fetch — may have been an empty/failed fetch
+                if len(events) == 0 and age_h > 1:
+                    log.info("Calendar: cache has 0 events and is >1h old — re-fetching to verify")
+                else:
+                    return events
         except Exception as e:
             log.warning(f"Calendar cache read failed: {e} — fetching fresh")
     # Fetch fresh from FF (plain HTTP, no Browserless needed)
@@ -368,11 +372,16 @@ def _load_economic_calendar() -> List[Dict]:
             _FF_CALENDAR_URL, timeout=10,
             headers={"User-Agent": "TradeBeacon/2.1.6"}
         )
+        log.info(f"Calendar: FF HTTP {resp.status_code} — {len(resp.content)} bytes received")
         if resp.status_code != 200:
             log.warning(f"Calendar: FF returned {resp.status_code} — no news filtering")
             return []
+        raw = resp.json()
+        log.info(f"Calendar: {len(raw)} total events in FF feed (all impacts)")
+        high_impact_all = [e for e in raw if e.get("impact","").lower() == "high"]
+        log.info(f"Calendar: {len(high_impact_all)} high-impact events before currency filter")
         events = []
-        for item in resp.json():
+        for item in raw:
             if item.get("impact", "").lower() != "high": continue
             currency = item.get("country", "").upper()
             if currency not in _CURRENCY_PAIRS: continue
@@ -395,6 +404,10 @@ def _load_economic_calendar() -> List[Dict]:
             "events":    events,
         }, indent=2))
         log.info(f"Calendar: fetched {len(events)} high-impact events from FF — cached")
+        if len(events) == 0 and len(high_impact_all) > 0:
+            log.warning(f"Calendar: {len(high_impact_all)} high-impact events exist but 0 matched tracked currencies — check _CURRENCY_PAIRS")
+        elif len(events) == 0:
+            log.info("Calendar: genuinely no high-impact events this week in FF feed")
         return events
     except Exception as e:
         log.warning(f"Calendar: fetch failed ({e}) — no news filtering this run")

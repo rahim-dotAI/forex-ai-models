@@ -315,7 +315,7 @@ _BLACKOUT_BEFORE = 30   # minutes before event — suppress signals
 _BLACKOUT_AFTER  = 15   # minutes after event — suppress signals
 _ET_OFFSET_HOURS = -5   # ET = UTC-5 (winter, conservative year-round)
 
-# Which pairs to block when a currency has a high-impact event
+# Forex Factory uses country codes (not currency codes) — e.g. "US" not "USD"
 _CURRENCY_PAIRS: Dict[str, List[str]] = {
     "USD": ["EURUSD","GBPUSD","USDJPY","USDCAD","USDCHF","AUDUSD","NZDUSD"],
     "EUR": ["EURUSD","EURGBP","EURJPY"],
@@ -325,6 +325,17 @@ _CURRENCY_PAIRS: Dict[str, List[str]] = {
     "NZD": ["NZDUSD"],
     "CAD": ["USDCAD"],
     "CHF": ["USDCHF"],
+    # FF country code aliases (feed uses these instead of currency codes)
+    "US":  ["EURUSD","GBPUSD","USDJPY","USDCAD","USDCHF","AUDUSD","NZDUSD"],
+    "EU":  ["EURUSD","EURGBP","EURJPY"],
+    "GB":  ["GBPUSD","EURGBP","GBPJPY"],
+    "UK":  ["GBPUSD","EURGBP","GBPJPY"],
+    "JP":  ["USDJPY","EURJPY","GBPJPY"],
+    "AU":  ["AUDUSD"],
+    "NZ":  ["NZDUSD"],
+    "CA":  ["USDCAD"],
+    "CH":  ["USDCHF"],
+    "CNY": [], "CN": [],  # China — no tracked pairs, ignore
 }
 
 def _parse_ff_time(date_str: str, time_str: str) -> Optional[datetime]:
@@ -385,6 +396,7 @@ def _load_economic_calendar() -> List[Dict]:
             if item.get("impact", "").lower() != "high": continue
             currency = item.get("country", "").upper()
             if currency not in _CURRENCY_PAIRS: continue
+            if not _CURRENCY_PAIRS[currency]: continue  # skip untracked (e.g. CN)
             utc_time = _parse_ff_time(item.get("date", ""), item.get("time", ""))
             if utc_time is None:
                 # Tentative/All Day — use 13:30 UTC (~8:30am ET) as safe fallback

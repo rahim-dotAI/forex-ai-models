@@ -8,6 +8,9 @@ name: Trade Beacon v2.1.6-OPTIMISED – Forex Signal Generator
 # - FinBERT sentiment via HF_API_KEY secret (replaces keyword counting)
 # - Sentiment engine displayed in config summary and performance output
 # - by_sentiment analytics block displayed in performance summary
+# - Session-aware expiry: EUROPEAN/US → 4h (data: 37.5%/54.8% WR), ASIAN/LATE_US → 15min
+# - Post-FinBERT score re-validation: drops signals that fall below threshold after adjustment
+# - Dashboard: ⏳ 4H WINDOW badge on EUROPEAN/US session signals
 
 # PERFORMANCE OPTIMIZATIONS v2.1.3 (carried forward):
 # - Lowered tier thresholds (A+: 80, A: 68, B: 55) for expanded scorer
@@ -390,6 +393,14 @@ jobs:
           echo "  ASIAN:    $(jq -r '.advanced.session_thresholds.ASIAN // 60' config.json)"
           echo "  LATE_US:  $(jq -r '.advanced.session_thresholds.LATE_US // 55' config.json)"
           echo "  OVERLAP:  $(jq -r '.advanced.session_thresholds.OVERLAP // 999' config.json) (BLOCKED — 0% WR)"
+          echo ""
+
+          echo "[Signal Expiry Windows]"
+          echo "  EUROPEAN: $(jq -r '.advanced.validation.session_expiry_minutes.EUROPEAN // 15' config.json) min (4h — active session)"
+          echo "  US:       $(jq -r '.advanced.validation.session_expiry_minutes.US // 15' config.json) min (4h — active session)"
+          echo "  ASIAN:    $(jq -r '.advanced.validation.session_expiry_minutes.ASIAN // 15' config.json) min (thin liquidity)"
+          echo "  LATE_US:  $(jq -r '.advanced.validation.session_expiry_minutes.LATE_US // 15' config.json) min (winding down)"
+          echo "  OVERLAP:  $(jq -r '.advanced.validation.session_expiry_minutes.OVERLAP // 15' config.json) min (blocked)"
           echo ""
 
           echo "[Pair Limits]"

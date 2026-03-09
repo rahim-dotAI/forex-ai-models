@@ -2057,6 +2057,40 @@ def main():
                         else:
                             new_signals[i].update({"sentiment_applied":False,"sentiment_score":0.0})
                     log.info(f"FinBERT complete: {len(enhanced)} signals enhanced")
+
+                    # ── Re-validate scores after sentiment adjustment ──────────
+                    # FinBERT can drop a signal below the minimum threshold.
+                    # Re-check each signal and drop those that no longer qualify.
+                    # Also recalculate eligible_modes — score change may drop agg qualification.
+                    agg_thresh  = CONFIG["settings"]["aggressive"]["threshold"]
+                    cons_thresh = CONFIG["settings"]["conservative"]["threshold"]
+                    agg_adx     = CONFIG["settings"]["aggressive"]["min_adx"]
+                    cons_adx    = CONFIG["settings"]["conservative"]["min_adx"]
+                    min_thresh  = min(agg_thresh, cons_thresh)
+                    pre_count   = len(new_signals)
+                    filtered_signals = []
+                    for s in new_signals:
+                        new_score = s.get("score", 0)
+                        adx_val   = s.get("adx", 0)
+                        if new_score < min_thresh:
+                            log.info(f"Post-sentiment DROP: {s.get('pair')} {s.get('direction')} "
+                                     f"score {s.get('score_before_sentiment',new_score)}->{new_score} "
+                                     f"(below min threshold {min_thresh})")
+                            continue
+                        # Recalculate eligible modes based on new score
+                        new_modes = []
+                        if new_score >= agg_thresh and adx_val >= agg_adx:
+                            new_modes.append("aggressive")
+                        if new_score >= cons_thresh and adx_val >= cons_adx:
+                            new_modes.append("conservative")
+                        if new_modes:
+                            s["eligible_modes"] = new_modes
+                        filtered_signals.append(s)
+                    dropped = pre_count - len(filtered_signals)
+                    new_signals = filtered_signals
+                    if dropped:
+                        log.info(f"Post-sentiment filter: {dropped} signal(s) dropped "
+                                 f"(score fell below min threshold {min_thresh} after FinBERT adjustment)")
                     curs = set()
                     for s in high_conf:
                         p = s.get("pair","")

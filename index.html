@@ -1290,6 +1290,7 @@
         const r = await fetch('signal_state/dashboard_state.json');
         data = await r.json();
         updateMetrics();
+        updateModeBtns();
         processAndRenderSignals();
         renderHistory();
         renderAnalytics();
@@ -1332,6 +1333,19 @@
     function updateModeBtns() {
       document.getElementById('modeAgg').classList.toggle('active', mode === 'aggressive');
       document.getElementById('modeCon').classList.toggle('active', mode === 'conservative');
+      // Show count badges on each mode button so you can see at a glance which has signals
+      if (data) {
+        const aggCount = (data.signals_by_mode?.aggressive || []).length;
+        const conCount = (data.signals_by_mode?.conservative || []).length;
+        const aggBtn = document.getElementById('modeAgg');
+        const conBtn = document.getElementById('modeCon');
+        const badgeStyle = (n, active) => n > 0
+          ? `<span style="margin-left:6px;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:900;
+               background:${active?'rgba(0,0,0,0.25)':'rgba(255,152,0,0.2)'};
+               color:${active?'#fff':'var(--orange)'};">${n}</span>` : '';
+        aggBtn.innerHTML = `<i data-lucide="zap" style="width:16px;height:16px"></i>AGGRESSIVE${badgeStyle(aggCount, mode==='aggressive')}`;
+        conBtn.innerHTML = `<i data-lucide="shield" style="width:16px;height:16px"></i>CONSERVATIVE${badgeStyle(conCount, mode==='conservative')}`;
+      }
       lucide.createIcons();
     }
     
@@ -1392,7 +1406,34 @@
       const cards = Object.values(signalState)
         .filter(s => s.direction === signalState[s.pair+'_'+s.direction]?.direction)
         .sort((a,b) => new Date(b.current.timestamp)-new Date(a.current.timestamp));
-      if (cards.length === 0) { showEmpty('signalsGrid','radio','No signals',`No ${mode} signals`); return; }
+      if (cards.length === 0) {
+        // Check if the other mode has signals — give actionable hint instead of blank empty state
+        const otherMode = mode === 'aggressive' ? 'conservative' : 'aggressive';
+        const otherSigs = data.signals_by_mode?.[otherMode] || [];
+        if (otherSigs.length > 0) {
+          const otherLabel = otherMode === 'conservative' ? 'Conservative 🛡️' : 'Aggressive ⚡';
+          const otherColor = otherMode === 'conservative' ? 'var(--blue)' : 'var(--orange)';
+          document.getElementById('signalsGrid').innerHTML = `
+            <div class="empty">
+              <i data-lucide="radio" class="empty-icon"></i>
+              <div class="empty-title">No ${mode} signals</div>
+              <div class="empty-desc" style="margin-bottom:16px;">
+                ${otherSigs.length} signal${otherSigs.length>1?'s':''} available in ${otherLabel} mode
+                — score${otherSigs.length>1?'s':''} didn't reach the ${mode} threshold
+              </div>
+              <button onclick="switchMode('${otherMode}')" style="
+                padding:10px 24px;border:1px solid ${otherColor};border-radius:8px;
+                background:transparent;color:${otherColor};font-size:12px;font-weight:900;
+                font-family:'Orbitron',monospace;letter-spacing:1px;cursor:pointer;">
+                SWITCH TO ${otherMode.toUpperCase()}
+              </button>
+            </div>`;
+          lucide.createIcons();
+        } else {
+          showEmpty('signalsGrid','radio','No signals',`No ${mode} signals`);
+        }
+        return;
+      }
       g.innerHTML = cards.map(state => createSignalCard(state, justUpdated.includes(`${state.pair}_${state.direction}`))).join('');
       lucide.createIcons();
       attachIconListeners();
@@ -1865,11 +1906,11 @@
     }
     function fmt(ts) {
       if (!ts) return 'N/A';
-      return new Date(ts).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      return new Date(ts).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'UTC'}) + ' UTC';
     }
     function fmtDate(ts) {
       if (!ts) return 'N/A';
-      return new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      return new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'});
     }
     function showEmpty(cid, icon, title, desc) {
       document.getElementById(cid).innerHTML=`<div class="empty"><i data-lucide="${icon}" class="empty-icon"></i><div class="empty-title">${title}</div><div class="empty-desc">${desc}</div></div>`;

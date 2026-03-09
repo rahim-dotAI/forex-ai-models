@@ -1488,6 +1488,7 @@
           <div style="display:flex;align-items:center;gap:8px">
             ${s.estimated_win_rate!=null?`<div style="padding:4px 10px;background:rgba(0,242,169,0.1);border:1px solid rgba(0,242,169,0.3);border-radius:6px;font-size:10px;font-weight:900;color:var(--green);font-family:'Orbitron',monospace;" title="Estimated win rate from micro-backtest">${(s.estimated_win_rate*100).toFixed(0)}% WR <span class="info-icon" data-tip="signal-wr" style="background:transparent;border:none;color:var(--green);margin-left:0;">i</span></div>`:''}
             ${s.sentiment_applied?`<div style="padding:4px 10px;background:rgba(79,172,254,0.1);border:1px solid rgba(79,172,254,0.3);border-radius:6px;font-size:10px;font-weight:900;color:var(--blue);">SENT ${s.sentiment_adjustment>=0?'+':''}${(s.sentiment_adjustment||0).toFixed(1)} <span class="info-icon" data-tip="signal-sentiment" style="background:transparent;border:none;color:var(--blue);margin-left:0;">i</span></div>`:''}
+            ${(s.session==='EUROPEAN'||s.session==='US')?`<div style="padding:4px 10px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:6px;font-size:10px;font-weight:900;color:#fbbf24;letter-spacing:0.5px;" title="Extended 4-hour window — active liquid session">⏳ 4H WINDOW</div>`:''}
             <div class="session">${s.session||'N/A'}</div>
           </div>
         </div>

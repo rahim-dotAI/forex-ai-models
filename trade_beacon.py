@@ -313,7 +313,26 @@ _FF_CALENDAR_URL = "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
 _CALENDAR_CACHE  = Path("signal_state/economic_calendar_cache.json")
 _BLACKOUT_BEFORE = 30   # minutes before event — suppress signals
 _BLACKOUT_AFTER  = 15   # minutes after event — suppress signals
-_ET_OFFSET_HOURS = -5   # ET = UTC-5 (winter, conservative year-round)
+
+def _get_et_utc_offset(dt: datetime = None) -> int:
+    """
+    Return the correct ET→UTC offset for the given datetime.
+    EDT (UTC-4): second Sunday of March through first Sunday of November.
+    EST (UTC-5): the rest of the year.
+    Hardcoding -5 year-round was causing blackout windows to be 1h late
+    during daylight saving (~8 months of the year).
+    """
+    d = (dt or datetime.now(timezone.utc))
+    year = d.year
+    # Second Sunday of March = EDT start
+    mar1 = datetime(year, 3, 1)
+    edt_start = mar1 + timedelta(days=(6 - mar1.weekday()) % 7 + 7)
+    # First Sunday of November = EDT end
+    nov1 = datetime(year, 11, 1)
+    edt_end = nov1 + timedelta(days=(6 - nov1.weekday()) % 7)
+    if edt_start.date() <= d.date() < edt_end.date():
+        return -4  # EDT
+    return -5  # EST
 
 # Forex Factory uses country codes (not currency codes) — e.g. "US" not "USD"
 _CURRENCY_PAIRS: Dict[str, List[str]] = {
@@ -351,7 +370,8 @@ def _parse_ff_time(date_str: str, time_str: str) -> Optional[datetime]:
         if ampm == "pm" and hour != 12: hour += 12
         elif ampm == "am" and hour == 12: hour = 0
         d = datetime.strptime(date_str, "%Y-%m-%d")
-        return d.replace(hour=hour, minute=minute, tzinfo=timezone.utc) - timedelta(hours=_ET_OFFSET_HOURS)
+        et_offset = _get_et_utc_offset(d)
+        return d.replace(hour=hour, minute=minute, tzinfo=timezone.utc) - timedelta(hours=et_offset)
     except Exception:
         return None
 
@@ -605,9 +625,11 @@ def download(pair: str) -> Tuple[pd.DataFrame, bool]:
                 log.warning(f"{pair} 15m insufficient, trying 1h...")
                 df = yf.download(pair, interval="1h", period="60d",
                                  progress=False, auto_adjust=True, threads=False)
-            if df is None or df.empty or len(df.dropna()) < MIN_ROWS:
+            if df is None or df.empty:
                 return pd.DataFrame(), False
             df = df.dropna()
+            if len(df) < MIN_ROWS:
+                return pd.DataFrame(), False
             # Flatten MultiIndex columns (yfinance >=0.2.18 returns MultiIndex
             # when downloading a single ticker with auto_adjust=True)
             if isinstance(df.columns, pd.MultiIndex):
@@ -688,8 +710,6 @@ def calculate_hold_time(rr: float, atr: float) -> str:
     return "SHORT"
 
 def calculate_eligible_modes(score: int, adx: float, config: Dict) -> List[str]:
-    if config.get("mode") == "all":
-        return ["aggressive", "conservative"]
     modes = []
     for m in ["conservative", "aggressive"]:
         s = config["settings"][m]
@@ -940,14 +960,11 @@ def resolve_active_signals():
                              progress=False, auto_adjust=True)
             if df is None or df.empty:
                 active.append(sig); continue
-            # Flatten MultiIndex columns
+            # Flatten MultiIndex columns (yfinance >=0.2.18 returns MultiIndex)
             if isinstance(df.columns, pd.MultiIndex):
                 df.columns = df.columns.get_level_values(0)
 
             now  = datetime.now(timezone.utc)
-            # Flatten MultiIndex columns if yfinance returns them (newer versions)
-            if isinstance(df.columns, pd.MultiIndex):
-                df.columns = df.columns.get_level_values(0)
             close_val = df["Close"].iloc[-1]
             if hasattr(close_val, 'iloc'): close_val = close_val.iloc[0]
             curr = float(close_val)
@@ -960,9 +977,16 @@ def resolve_active_signals():
                 exp_str = sig.get("metadata",{}).get("expires_at","")
                 exp_time = (datetime.fromisoformat(exp_str.replace("Z","+00:00"))
                             if exp_str else entry_time + timedelta(minutes=15))
-                # Candles from signal entry to expiry (or now, whichever is earlier)
-                mask = (df.index >= entry_time) & (df.index <= min(exp_time, now))
-                window_df = df[mask] if mask.any() else df
+                # CRITICAL FIX: yfinance 1m data can return a timezone-naive index.
+                # Comparing naive vs aware raises TypeError — swallowed by except,
+                # which falls back to ALL of today's candles instead of the signal
+                # window only. This caused pre-signal price moves to count as outcomes.
+                idx = df.index
+                if hasattr(idx, 'tzinfo') and idx.tzinfo is None:
+                    idx = idx.tz_localize("UTC")
+                cut = min(exp_time, now)
+                mask = (idx >= entry_time) & (idx <= cut)
+                window_df = df[mask.values] if mask.any() else df
             except Exception:
                 window_df = df
                 exp_time  = now
@@ -1527,20 +1551,6 @@ def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
     if direction=="BUY":  sl=curr-atr_stop*atr; tp=curr+atr_tgt*atr
     else:                 sl=curr+atr_stop*atr; tp=curr-atr_tgt*atr
 
-    # ── JPY pair TP cap ───────────────────────────────────────────────────────
-    # GBPJPY and EURJPY have an average daily range of ~150 pips (research-backed).
-    # A 7x ATR target on JPY pairs produces TPs of 1000–1500 pips — unreachable
-    # within a single trade's lifetime. Cap TP at 150 pips for all JPY pairs so
-    # the target is realistic and signals can actually resolve as WIN instead of EXPIRED.
-    # 150 pips on a JPY pair = 150 * 0.01 = 1.50 price units.
-    if "JPY" in pair:
-        max_tp_distance = 150 * 0.01  # 150 pips in JPY price terms
-        if direction == "BUY":
-            tp = min(tp, curr + max_tp_distance)
-        else:
-            tp = max(tp, curr - max_tp_distance)
-        log.info(f"  JPY TP capped at 150 pips: tp={round(tp,3)}")
-
     rr = abs(tp-curr)/abs(curr-sl) if abs(curr-sl)>0 else 0
     min_rr = CONFIG.get("advanced",{}).get("min_risk_reward",
              CONFIG["settings"]["aggressive"].get("min_risk_reward",2.5))
@@ -1665,11 +1675,18 @@ def check_risk_limits(signals, config, mode):
 
 def calculate_daily_pips(signals):
     today = datetime.now(timezone.utc).date()
-    return round(sum(
-        price_to_pips(s.get("pair",""), abs(s.get("entry_price",0)-s.get("sl",0)))
-        for s in signals
-        if datetime.fromisoformat(s.get("timestamp","")).date()==today
-    ),1)
+    total = 0.0
+    for s in signals:
+        try:
+            ts = s.get("timestamp", "")
+            if not ts:
+                continue
+            if datetime.fromisoformat(ts.replace("Z", "+00:00")).date() != today:
+                continue
+            total += price_to_pips(s.get("pair", ""), abs(s.get("entry_price", 0) - s.get("sl", 0)))
+        except Exception:
+            continue
+    return round(total, 1)
 
 def get_performance_summary():
     if not PERFORMANCE_TRACKER: return {"stats":{},"analytics":{},"equity":{}}
@@ -2078,7 +2095,6 @@ def main():
                              f"({'+'.join(sig['eligible_modes'])}) RR: {sig['risk_reward']:.2f}")
             except Exception as e:
                 log.error(f"{pair.replace('=X','')} failed: {e}")
-            time.sleep(0.5)
 
     # ── FinBERT Sentiment ─────────────────────────────────────────────────────
     news_calls = mkt_calls = 0
@@ -2156,9 +2172,12 @@ def main():
         log.info(f"{s['pair']} [{s['tier']}] score={s.get('score',0)} est_wr={s['estimated_win_rate']:.2f}")
 
     log.info(f"Micro-backtest: {len(elite)} elite signals analysed")
-    pass_ids = {s["signal_id"] for s in elite if s.get("estimated_win_rate",0)>=0.55}
+    # Filter A+/A signals that score below 0.65 estimated win rate.
+    # quick_micro_backtest min for A+ = 0.65, A = 0.60, B = 0.55.
+    # Threshold 0.65 means only A+ signals with no extra bonuses get cut.
+    pass_ids = {s["signal_id"] for s in elite if s.get("estimated_win_rate", 0) >= 0.65}
     new_signals = [s for s in new_signals
-                   if s.get("tier") not in ("A+","A") or s["signal_id"] in pass_ids]
+                   if s.get("tier") not in ("A+", "A") or s["signal_id"] in pass_ids]
     elite_ids = {s["signal_id"] for s in elite}
     for s in new_signals:
         if s["signal_id"] not in elite_ids: s["estimated_win_rate"] = None

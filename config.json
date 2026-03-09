@@ -108,8 +108,8 @@
     "min_score_threshold": 60,
     "newsapi_enabled": true,
     "marketaux_enabled": true,
-    "hf_model_primary": "mrm8488/distilroberta-finetuned-financial-news-sentiment-analysis",
-    "hf_model_fallback": "ProsusAI/finbert",
+    "hf_model_primary": "ProsusAI/finbert",
+    "hf_model_fallback": "yiyanghkust/finbert-tone",
     "cache_ttl_minutes": 30,
     "rate_limit_seconds": 2,
     "max_adjustment_pts": 10,
@@ -128,7 +128,7 @@
   "performance_tracking": {
     "enable": true,
     "history_file": "signal_state/signal_history.json",
-    "tracker_version": "2.1.5-FINBERT",
+    "tracker_version": "2.1.6-OPTIMISED",
     "idempotency": {
       "enabled": true
     },

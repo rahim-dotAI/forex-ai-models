@@ -47,6 +47,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pandas as pd
 import yfinance as yf
+yf.set_tz_cache_location("/tmp/yfinance_tz_cache")
 import requests
 from ta.trend import EMAIndicator, ADXIndicator
 from ta.momentum import RSIIndicator

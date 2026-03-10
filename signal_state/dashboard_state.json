@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-10T10:31:11.976545+00:00",
+  "timestamp": "2026-03-10T10:45:54.939509+00:00",
   "active_signals": 2,
   "active_signals_by_mode": {
     "aggressive": 1,
@@ -76,9 +76,9 @@
     ],
     "conservative": [
       {
-        "signal_id": "EURJPY_BUY_c2eeef2bb053",
-        "id": "EURJPY_BUY_c2eeef2bb053",
-        "pair": "EURJPY",
+        "signal_id": "GBPJPY_BUY_d5a08b4bd93c",
+        "id": "GBPJPY_BUY_d5a08b4bd93c",
+        "pair": "GBPJPY",
         "direction": "BUY",
         "score": 56,
         "technical_score": 56,
@@ -87,17 +87,17 @@
         "score_before_sentiment": 56,
         "confidence": "MODERATE",
         "tier": "B",
-        "rsi": 67.3,
-        "adx": 32.9,
-        "atr": 0.09593,
+        "rsi": 64.1,
+        "adx": 25.9,
+        "atr": 0.12722,
         "volume_ratio": 0,
         "session": "EUROPEAN",
-        "entry_price": 183.661,
-        "sl": 183.42116,
-        "tp": 184.33254,
+        "entry_price": 212.224,
+        "sl": 211.90596,
+        "tp": 213.11451,
         "risk_reward": 2.8,
-        "spread": 0.002,
-        "timestamp": "2026-03-10T10:31:08.926997+00:00",
+        "spread": 0.003,
+        "timestamp": "2026-03-10T10:45:52.525528+00:00",
         "status": "OPEN",
         "hold_time": "SWING",
         "eligible_modes": [
@@ -114,8 +114,8 @@
           "market_state": "TRENDING_STRONG",
           "timeframe": "15m",
           "valid_for_minutes": 240,
-          "generated_at": "2026-03-10T10:31:08.926997+00:00",
-          "expires_at": "2026-03-10T14:31:08.926997+00:00",
+          "generated_at": "2026-03-10T10:45:52.525528+00:00",
+          "expires_at": "2026-03-10T14:45:52.525528+00:00",
           "session_active": true,
           "signal_generator_version": "2.1.6-OPTIMISED",
           "atr_stop_multiplier": 2.5,
@@ -123,7 +123,7 @@
         },
         "estimated_win_rate": null,
         "price_source": "yfinance_confirmed",
-        "price_divergence": 5e-05
+        "price_divergence": 3e-05
       },
       {
         "signal_id": "USDCAD_BUY_5e0c55e2975a",
@@ -231,9 +231,9 @@
       "price_divergence": 0.90948
     },
     {
-      "signal_id": "EURJPY_BUY_c2eeef2bb053",
-      "id": "EURJPY_BUY_c2eeef2bb053",
-      "pair": "EURJPY",
+      "signal_id": "GBPJPY_BUY_d5a08b4bd93c",
+      "id": "GBPJPY_BUY_d5a08b4bd93c",
+      "pair": "GBPJPY",
       "direction": "BUY",
       "score": 56,
       "technical_score": 56,
@@ -242,17 +242,17 @@
       "score_before_sentiment": 56,
       "confidence": "MODERATE",
       "tier": "B",
-      "rsi": 67.3,
-      "adx": 32.9,
-      "atr": 0.09593,
+      "rsi": 64.1,
+      "adx": 25.9,
+      "atr": 0.12722,
       "volume_ratio": 0,
       "session": "EUROPEAN",
-      "entry_price": 183.661,
-      "sl": 183.42116,
-      "tp": 184.33254,
+      "entry_price": 212.224,
+      "sl": 211.90596,
+      "tp": 213.11451,
       "risk_reward": 2.8,
-      "spread": 0.002,
-      "timestamp": "2026-03-10T10:31:08.926997+00:00",
+      "spread": 0.003,
+      "timestamp": "2026-03-10T10:45:52.525528+00:00",
       "status": "OPEN",
       "hold_time": "SWING",
       "eligible_modes": [
@@ -269,8 +269,8 @@
         "market_state": "TRENDING_STRONG",
         "timeframe": "15m",
         "valid_for_minutes": 240,
-        "generated_at": "2026-03-10T10:31:08.926997+00:00",
-        "expires_at": "2026-03-10T14:31:08.926997+00:00",
+        "generated_at": "2026-03-10T10:45:52.525528+00:00",
+        "expires_at": "2026-03-10T14:45:52.525528+00:00",
         "session_active": true,
         "signal_generator_version": "2.1.6-OPTIMISED",
         "atr_stop_multiplier": 2.5,
@@ -278,7 +278,37 @@
       },
       "estimated_win_rate": null,
       "price_source": "yfinance_confirmed",
-      "price_divergence": 5e-05
+      "price_divergence": 3e-05
+    },
+    {
+      "id": "EURJPY_BUY_c2eeef2bb053",
+      "signal_id": "EURJPY_BUY_c2eeef2bb053",
+      "pair": "EURJPY",
+      "direction": "BUY",
+      "entry_price": 183.661,
+      "exit_price": 183.42116,
+      "sl": 183.42116,
+      "tp": 184.33254,
+      "status": "LOSS",
+      "pips": -23.984000000001515,
+      "confidence": "MODERATE",
+      "score": 56,
+      "session": "EUROPEAN",
+      "tier": "B",
+      "eligible_modes": [
+        "conservative"
+      ],
+      "sentiment_applied": false,
+      "sentiment_score": 0.0,
+      "sentiment_adjustment": 0.0,
+      "sentiment_engine": null,
+      "estimated_win_rate": null,
+      "risk_reward": 2.8,
+      "adx": 32.9,
+      "rsi": 67.3,
+      "atr": 0.09593,
+      "timestamp": "2026-03-10T10:31:08.926997+00:00",
+      "exit_time": "2026-03-10T10:45:50.446598+00:00"
     },
     {
       "id": "NZDUSD_BUY_db684f392f3b",
@@ -5790,23 +5820,23 @@
     }
   },
   "stats": {
-    "total_trades": 126,
-    "win_rate": 34.1,
-    "total_pips": 567.8,
+    "total_trades": 127,
+    "win_rate": 33.9,
+    "total_pips": 543.8,
     "wins": 43,
-    "losses": 83,
-    "expectancy": 4.51
+    "losses": 84,
+    "expectancy": 4.28
   },
   "performance_stats": {
-    "total_trades": 126,
+    "total_trades": 127,
     "wins": 43,
-    "losses": 83,
+    "losses": 84,
     "expired": 81,
-    "win_rate": 34.1,
-    "total_pips": 567.8,
+    "win_rate": 33.9,
+    "total_pips": 543.8,
     "avg_win": 64.4,
     "avg_loss": 26.5,
-    "expectancy": 4.51,
+    "expectancy": 4.28,
     "by_mode": {
       "all": {
         "trades": 0,
@@ -5821,18 +5851,18 @@
         "win_rate": 34.4
       },
       "conservative": {
-        "trades": 41,
+        "trades": 42,
         "wins": 15,
-        "total_pips": 705.6440000000064,
-        "win_rate": 36.6
+        "total_pips": 681.6600000000049,
+        "win_rate": 35.7
       }
     },
     "by_tier": {
       "B": {
-        "trades": 47,
+        "trades": 48,
         "wins": 17,
-        "total_pips": 702.7990000000068,
-        "win_rate": 36.2
+        "total_pips": 678.8150000000053,
+        "win_rate": 35.4
       },
       "C": {
         "trades": 79,
@@ -5861,10 +5891,10 @@
         "win_rate": 27.6
       },
       "EUROPEAN": {
-        "trades": 48,
+        "trades": 49,
         "wins": 15,
-        "total_pips": 206.00699999999384,
-        "win_rate": 31.2
+        "total_pips": 182.02299999999232,
+        "win_rate": 30.6
       },
       "OVERLAP": {
         "trades": 4,
@@ -5921,12 +5951,18 @@
         "wins": 0,
         "total_pips": -46.79999999999795,
         "win_rate": 0.0
+      },
+      "EURJPY": {
+        "trades": 1,
+        "wins": 0,
+        "total_pips": -23.984000000001515,
+        "win_rate": 0.0
       }
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 43.4,
-    "total_risk_pips": 43.38400000000205,
+    "theoretical_max_pips": 51.2,
+    "total_risk_pips": 51.204000000000164,
     "max_daily_risk": 150
   },
   "analytics": {
@@ -5978,6 +6014,12 @@
         "wins": 0,
         "total_pips": -46.79999999999795,
         "win_rate": 0.0
+      },
+      "EURJPY": {
+        "trades": 1,
+        "wins": 0,
+        "total_pips": -23.984000000001515,
+        "win_rate": 0.0
       }
     },
     "by_session": {
@@ -6000,10 +6042,10 @@
         "win_rate": 27.6
       },
       "EUROPEAN": {
-        "trades": 48,
+        "trades": 49,
         "wins": 15,
-        "total_pips": 206.00699999999384,
-        "win_rate": 31.2
+        "total_pips": 182.02299999999232,
+        "win_rate": 30.6
       },
       "OVERLAP": {
         "trades": 4,
@@ -6014,10 +6056,10 @@
     },
     "by_confidence": {
       "MODERATE": {
-        "trades": 119,
+        "trades": 120,
         "wins": 39,
-        "total_pips": 230.69899999999072,
-        "win_rate": 32.8
+        "total_pips": 206.7149999999892,
+        "win_rate": 32.5
       },
       "STRONG": {
         "trades": 7,
@@ -6028,10 +6070,10 @@
     },
     "by_tier": {
       "B": {
-        "trades": 47,
+        "trades": 48,
         "wins": 17,
-        "total_pips": 702.7990000000068,
-        "win_rate": 36.2
+        "total_pips": 678.8150000000053,
+        "win_rate": 35.4
       },
       "C": {
         "trades": 79,
@@ -6054,19 +6096,19 @@
         "win_rate": 34.4
       },
       "conservative": {
-        "trades": 41,
+        "trades": 42,
         "wins": 15,
-        "total_pips": 705.6440000000064,
-        "win_rate": 36.6
+        "total_pips": 681.6600000000049,
+        "win_rate": 35.7
       }
     },
     "by_sentiment": {
       "sentiment_off": {
-        "trades": 119,
+        "trades": 120,
         "wins": 40,
-        "total_pips": 504.00599999998695,
+        "total_pips": 480.02199999998544,
         "engine": "none",
-        "win_rate": 33.6
+        "win_rate": 33.3
       },
       "sentiment_on": {
         "trades": 7,
@@ -6113,10 +6155,10 @@
         "B_EUROPEAN": {
           "tier": "B",
           "session": "EUROPEAN",
-          "trades": 21,
+          "trades": 22,
           "wins": 6,
-          "total_pips": 218.48800000000247,
-          "win_rate": 28.6
+          "total_pips": 194.50400000000096,
+          "win_rate": 27.3
         },
         "C_US": {
           "tier": "C",
@@ -6171,10 +6213,10 @@
         "conservative_B": {
           "mode": "conservative",
           "tier": "B",
-          "trades": 41,
+          "trades": 42,
           "wins": 15,
-          "total_pips": 705.6440000000064,
-          "win_rate": 36.6
+          "total_pips": 681.6600000000049,
+          "win_rate": 35.7
         },
         "aggressive_C": {
           "mode": "aggressive",
@@ -6189,16 +6231,16 @@
   },
   "equity_curve": [],
   "pair_prices": {
-    "GBPUSD": 1.34559,
-    "USDJPY": 157.728,
-    "EURUSD": 1.16469,
-    "USDCAD": 1.3579,
-    "NZDUSD": 0.59379,
-    "AUDUSD": 0.7122,
-    "USDCHF": 0.77627,
-    "EURJPY": 183.661,
-    "GBPJPY": 212.231,
-    "EURGBP": 0.86528
+    "USDJPY": 157.778,
+    "EURUSD": 1.16414,
+    "GBPUSD": 1.34486,
+    "AUDUSD": 0.71149,
+    "NZDUSD": 0.71149,
+    "USDCAD": 1.3569,
+    "EURJPY": 183.62199,
+    "USDCHF": 0.77675,
+    "GBPJPY": 212.224,
+    "EURGBP": 0.8652
   },
   "upcoming_events": [],
   "pick_of_the_day": {
@@ -6233,7 +6275,7 @@
     "exit_time": "2026-03-10T08:31:09.984692+00:00"
   },
   "system": {
-    "last_update": "2026-03-10T10:31:11.976587+00:00",
+    "last_update": "2026-03-10T10:45:54.939550+00:00",
     "signal_only_mode": true,
     "version": "2.1.6-OPTIMISED"
   }

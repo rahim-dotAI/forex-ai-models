@@ -363,20 +363,34 @@ _CURRENCY_PAIRS: Dict[str, List[str]] = {
 }
 
 def _parse_ff_time(date_str: str, time_str: str) -> Optional[datetime]:
-    """Parse Forex Factory date + time string into UTC datetime."""
+    """Parse Forex Factory date + time string into UTC datetime.
+    Handles: '8:30am', '8:30 am', '08:30am', '8:30pm'
+    Date formats: '%Y-%m-%d', '%m-%d-%Y', '%m/%d/%Y', '%Y/%m/%d'
+    """
     import re as _re
-    if not time_str or time_str.lower() in ("tentative", "all day", ""):
+    if not time_str or time_str.lower().strip() in ("tentative", "all day", ""):
         return None
     try:
-        m = _re.match(r"(\d+):(\d+)(am|pm)", time_str.lower())
+        # Strip spaces around am/pm — FF sometimes uses "8:30 am" vs "8:30am"
+        t = time_str.lower().replace(" ", "")
+        m = _re.match(r"(\d+):(\d+)(am|pm)", t)
         if not m:
             return None
         hour, minute, ampm = int(m.group(1)), int(m.group(2)), m.group(3)
         if ampm == "pm" and hour != 12: hour += 12
         elif ampm == "am" and hour == 12: hour = 0
-        d = datetime.strptime(date_str, "%Y-%m-%d")
-        et_offset = _get_et_utc_offset(d)
-        return d.replace(hour=hour, minute=minute, tzinfo=timezone.utc) - timedelta(hours=et_offset)
+        # Try multiple date formats
+        parsed_date = None
+        for fmt in ("%Y-%m-%d", "%m-%d-%Y", "%m/%d/%Y", "%Y/%m/%d"):
+            try:
+                parsed_date = datetime.strptime(date_str, fmt)
+                break
+            except ValueError:
+                continue
+        if parsed_date is None:
+            return None
+        et_offset = _get_et_utc_offset(parsed_date)
+        return parsed_date.replace(hour=hour, minute=minute, tzinfo=timezone.utc) - timedelta(hours=et_offset)
     except Exception:
         return None
 
@@ -419,25 +433,52 @@ def _load_economic_calendar() -> List[Dict]:
         # DEBUG — log exact country codes FF is using so we can align _CURRENCY_PAIRS
         ff_countries = sorted(set(e.get("country","").upper() for e in high_impact_all))
         log.info(f"Calendar: FF high-impact country codes = {ff_countries}")
+        # DEBUG — log first event structure so we can see exact field names/formats
+        if high_impact_all:
+            sample = high_impact_all[0]
+            log.info(f"Calendar: Sample event fields = {list(sample.keys())}")
+            log.info(f"Calendar: Sample date='{sample.get('date','')}' time='{sample.get('time','')}' impact='{sample.get('impact','')}' country='{sample.get('country','')}'")
+
         events = []
+        _dropped_currency = 0
+        _dropped_date     = 0
         for item in raw:
             if item.get("impact", "").lower() != "high": continue
             currency = item.get("country", "").upper()
-            if currency not in _CURRENCY_PAIRS: continue
+            if currency not in _CURRENCY_PAIRS:
+                _dropped_currency += 1
+                continue
             if not _CURRENCY_PAIRS[currency]: continue  # skip untracked (e.g. CN)
-            utc_time = _parse_ff_time(item.get("date", ""), item.get("time", ""))
+
+            # Robust date parsing — FF has used multiple formats over time
+            date_str = item.get("date", "")
+            utc_time = _parse_ff_time(date_str, item.get("time", ""))
             if utc_time is None:
-                # Tentative/All Day — use 13:30 UTC (~8:30am ET) as safe fallback
-                try:
-                    d = datetime.strptime(item.get("date", ""), "%Y-%m-%d")
-                    utc_time = d.replace(hour=13, minute=30, tzinfo=timezone.utc)
-                except Exception:
+                # Try multiple date formats for the fallback
+                parsed_date = None
+                for fmt in ("%Y-%m-%d", "%m-%d-%Y", "%m/%d/%Y", "%Y/%m/%d"):
+                    try:
+                        parsed_date = datetime.strptime(date_str, fmt)
+                        break
+                    except ValueError:
+                        continue
+                if parsed_date is None:
+                    log.debug(f"Calendar: skipping '{item.get('title','')}' ({currency}) — unparseable date '{date_str}'")
+                    _dropped_date += 1
                     continue
+                utc_time = parsed_date.replace(hour=13, minute=30, tzinfo=timezone.utc)
+
             events.append({
                 "title":    item.get("title", "Unknown"),
                 "currency": currency,
                 "utc_time": utc_time.isoformat(),
             })
+
+        if _dropped_currency > 0:
+            log.info(f"Calendar: {_dropped_currency} events dropped — currency not in tracked pairs")
+        if _dropped_date > 0:
+            log.warning(f"Calendar: {_dropped_date} events dropped — could not parse date field (format may have changed)")
+
         _CALENDAR_CACHE.write_text(json.dumps({
             "cached_at": datetime.now(timezone.utc).isoformat(),
             "source":    _FF_CALENDAR_URL,
@@ -445,7 +486,8 @@ def _load_economic_calendar() -> List[Dict]:
         }, indent=2))
         log.info(f"Calendar: fetched {len(events)} high-impact events from FF — cached")
         if len(events) == 0 and len(high_impact_all) > 0:
-            log.warning(f"Calendar: {len(high_impact_all)} high-impact events exist but 0 matched tracked currencies — check _CURRENCY_PAIRS")
+            log.warning(f"Calendar: 0 events loaded from {len(high_impact_all)} high-impact "
+                        f"({_dropped_currency} currency-miss, {_dropped_date} date-parse-fail)")
         elif len(events) == 0:
             log.info("Calendar: genuinely no high-impact events this week in FF feed")
         return events

@@ -1043,7 +1043,11 @@ def resolve_active_signals():
                         sentiment_applied=sig.get("sentiment_applied",False),
                         sentiment_score=sig.get("sentiment_score",0.0),
                         sentiment_adjustment=sig.get("sentiment_adjustment",0.0),
-                        estimated_win_rate=sig.get("estimated_win_rate"))
+                        estimated_win_rate=sig.get("estimated_win_rate"),
+                        risk_reward=sig.get("risk_reward"),
+                        adx=sig.get("adx"),
+                        rsi=sig.get("rsi"),
+                        atr=sig.get("atr"))
                     already_recorded.add(sid)
                     resolved += 1
                     icon = "✅" if outcome=="WIN" else ("❌" if outcome=="LOSS" else "⏱")
@@ -1757,7 +1761,11 @@ def filter_expired_signals(signals):
                         sentiment_applied=sig.get("sentiment_applied", False),
                         sentiment_score=sig.get("sentiment_score", 0.0),
                         sentiment_adjustment=sig.get("sentiment_adjustment", 0.0),
-                        estimated_win_rate=sig.get("estimated_win_rate"))
+                        estimated_win_rate=sig.get("estimated_win_rate"),
+                        risk_reward=sig.get("risk_reward"),
+                        adx=sig.get("adx"),
+                        rsi=sig.get("rsi"),
+                        atr=sig.get("atr"))
                     already_recorded.add(sid)
                     log.info(f"⏱ EXPIRED {sig.get('pair','')} {sig.get('direction','')} recorded to history")
                 elif sid and sid in already_recorded:

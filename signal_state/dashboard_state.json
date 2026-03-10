@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-03-10T10:15:52.137017+00:00",
-  "active_signals": 1,
+  "timestamp": "2026-03-10T10:31:11.976545+00:00",
+  "active_signals": 2,
   "active_signals_by_mode": {
     "aggressive": 1,
-    "conservative": 1
+    "conservative": 2
   },
   "session": "EUROPEAN",
   "mode": "conservative",
@@ -16,7 +16,7 @@
     "pause_reason": null
   },
   "market_state": {
-    "volatility": "CALM",
+    "volatility": "HIGH",
     "sentiment_bias": "BULLISH",
     "session": "EUROPEAN"
   },
@@ -75,6 +75,56 @@
       }
     ],
     "conservative": [
+      {
+        "signal_id": "EURJPY_BUY_c2eeef2bb053",
+        "id": "EURJPY_BUY_c2eeef2bb053",
+        "pair": "EURJPY",
+        "direction": "BUY",
+        "score": 56,
+        "technical_score": 56,
+        "sentiment_score": 0.0,
+        "sentiment_adjustment": 0.0,
+        "score_before_sentiment": 56,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 67.3,
+        "adx": 32.9,
+        "atr": 0.09593,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 183.661,
+        "sl": 183.42116,
+        "tp": 184.33254,
+        "risk_reward": 2.8,
+        "spread": 0.002,
+        "timestamp": "2026-03-10T10:31:08.926997+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 240,
+          "generated_at": "2026-03-10T10:31:08.926997+00:00",
+          "expires_at": "2026-03-10T14:31:08.926997+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.6-OPTIMISED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null,
+        "price_source": "yfinance_confirmed",
+        "price_divergence": 5e-05
+      },
       {
         "signal_id": "USDCAD_BUY_5e0c55e2975a",
         "id": "USDCAD_BUY_5e0c55e2975a",
@@ -179,6 +229,56 @@
       "estimated_win_rate": null,
       "price_source": "xrates",
       "price_divergence": 0.90948
+    },
+    {
+      "signal_id": "EURJPY_BUY_c2eeef2bb053",
+      "id": "EURJPY_BUY_c2eeef2bb053",
+      "pair": "EURJPY",
+      "direction": "BUY",
+      "score": 56,
+      "technical_score": 56,
+      "sentiment_score": 0.0,
+      "sentiment_adjustment": 0.0,
+      "score_before_sentiment": 56,
+      "confidence": "MODERATE",
+      "tier": "B",
+      "rsi": 67.3,
+      "adx": 32.9,
+      "atr": 0.09593,
+      "volume_ratio": 0,
+      "session": "EUROPEAN",
+      "entry_price": 183.661,
+      "sl": 183.42116,
+      "tp": 184.33254,
+      "risk_reward": 2.8,
+      "spread": 0.002,
+      "timestamp": "2026-03-10T10:31:08.926997+00:00",
+      "status": "OPEN",
+      "hold_time": "SWING",
+      "eligible_modes": [
+        "conservative"
+      ],
+      "freshness": {
+        "status": "FRESH",
+        "age_minutes": 0.0,
+        "confidence_decay": 100.0
+      },
+      "sentiment_applied": false,
+      "metadata": {
+        "signal_type": "trend-continuation",
+        "market_state": "TRENDING_STRONG",
+        "timeframe": "15m",
+        "valid_for_minutes": 240,
+        "generated_at": "2026-03-10T10:31:08.926997+00:00",
+        "expires_at": "2026-03-10T14:31:08.926997+00:00",
+        "session_active": true,
+        "signal_generator_version": "2.1.6-OPTIMISED",
+        "atr_stop_multiplier": 2.5,
+        "atr_target_multiplier": 7.0
+      },
+      "estimated_win_rate": null,
+      "price_source": "yfinance_confirmed",
+      "price_divergence": 5e-05
     },
     {
       "id": "NZDUSD_BUY_db684f392f3b",
@@ -5825,8 +5925,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 19.4,
-    "total_risk_pips": 19.400000000000528,
+    "theoretical_max_pips": 43.4,
+    "total_risk_pips": 43.38400000000205,
     "max_daily_risk": 150
   },
   "analytics": {
@@ -6089,16 +6189,16 @@
   },
   "equity_curve": [],
   "pair_prices": {
-    "EURUSD": 1.16509,
-    "GBPUSD": 1.16509,
-    "USDJPY": 1.16509,
-    "AUDUSD": 0.71179,
-    "USDCAD": 1.35803,
-    "NZDUSD": 0.59375,
-    "USDCHF": 0.77604,
-    "EURJPY": 183.72099,
-    "GBPJPY": 183.72099,
-    "EURGBP": 0.86589
+    "GBPUSD": 1.34559,
+    "USDJPY": 157.728,
+    "EURUSD": 1.16469,
+    "USDCAD": 1.3579,
+    "NZDUSD": 0.59379,
+    "AUDUSD": 0.7122,
+    "USDCHF": 0.77627,
+    "EURJPY": 183.661,
+    "GBPJPY": 212.231,
+    "EURGBP": 0.86528
   },
   "upcoming_events": [],
   "pick_of_the_day": {
@@ -6133,7 +6233,7 @@
     "exit_time": "2026-03-10T08:31:09.984692+00:00"
   },
   "system": {
-    "last_update": "2026-03-10T10:15:52.137059+00:00",
+    "last_update": "2026-03-10T10:31:11.976587+00:00",
     "signal_only_mode": true,
     "version": "2.1.6-OPTIMISED"
   }

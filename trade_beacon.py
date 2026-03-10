@@ -47,7 +47,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pandas as pd
 import yfinance as yf
-yf.set_tz_cache_location("/tmp/yfinance_tz_cache")
+import tempfile as _tempfile
+yf.set_tz_cache_location(_tempfile.mkdtemp(prefix="yf_tz_"))
 import requests
 from ta.trend import EMAIndicator, ADXIndicator
 from ta.momentum import RSIIndicator
@@ -365,14 +366,43 @@ _CURRENCY_PAIRS: Dict[str, List[str]] = {
 
 def _parse_ff_time(date_str: str, time_str: str) -> Optional[datetime]:
     """Parse Forex Factory date + time string into UTC datetime.
-    Handles: '8:30am', '8:30 am', '08:30am', '8:30pm'
-    Date formats: '%Y-%m-%d', '%m-%d-%Y', '%m/%d/%Y', '%Y/%m/%d'
+
+    FF has used two formats historically:
+      OLD: date='2026-03-10'          time='8:30am'   (separate fields)
+      NEW: date='2026-03-11T08:30:00-04:00'  time=''  (ISO datetime in date field)
+
+    Both are handled here. Returns UTC-aware datetime or None.
     """
     import re as _re
+
+    # ── NEW FORMAT: full ISO datetime already in date field ──────────────────
+    # e.g. '2026-03-11T08:30:00-04:00' or '2026-03-11T08:30:00Z'
+    if date_str and 'T' in date_str:
+        try:
+            # Replace timezone offset with Python-parseable format
+            # Handle both -04:00 / +00:00 style and trailing Z
+            clean = date_str.replace('Z', '+00:00')
+            # Python 3.7+ fromisoformat doesn't handle colon in offset on 3.10-
+            # Normalise: '2026-03-11T08:30:00-04:00' → strip colon in tz part
+            tz_match = _re.search(r'([+-])(\d{2}):(\d{2})$', clean)
+            if tz_match:
+                sign, hh, mm = tz_match.group(1), tz_match.group(2), tz_match.group(3)
+                offset_min = (int(hh) * 60 + int(mm)) * (1 if sign == '+' else -1)
+                # Parse as naive then apply offset
+                naive_str = clean[:19]  # '2026-03-11T08:30:00'
+                dt_naive = datetime.strptime(naive_str, "%Y-%m-%dT%H:%M:%S")
+                dt_utc = dt_naive.replace(tzinfo=timezone.utc) - timedelta(minutes=offset_min)
+            else:
+                dt_utc = datetime.fromisoformat(clean).astimezone(timezone.utc)
+            return dt_utc
+        except Exception:
+            return None
+
+    # ── OLD FORMAT: separate date string + time string ───────────────────────
+    # e.g. date='2026-03-10'  time='8:30am' or '8:30 am'
     if not time_str or time_str.lower().strip() in ("tentative", "all day", ""):
         return None
     try:
-        # Strip spaces around am/pm — FF sometimes uses "8:30 am" vs "8:30am"
         t = time_str.lower().replace(" ", "")
         m = _re.match(r"(\d+):(\d+)(am|pm)", t)
         if not m:
@@ -380,7 +410,6 @@ def _parse_ff_time(date_str: str, time_str: str) -> Optional[datetime]:
         hour, minute, ampm = int(m.group(1)), int(m.group(2)), m.group(3)
         if ampm == "pm" and hour != 12: hour += 12
         elif ampm == "am" and hour == 12: hour = 0
-        # Try multiple date formats
         parsed_date = None
         for fmt in ("%Y-%m-%d", "%m-%d-%Y", "%m/%d/%Y", "%Y/%m/%d"):
             try:

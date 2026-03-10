@@ -512,6 +512,10 @@ class PerformanceTracker:
                      sentiment_adjustment: float = 0.0,
                      sentiment_engine: str = None,
                      estimated_win_rate: float = None,
+                     risk_reward: float = None,
+                     adx: float = None,
+                     rsi: float = None,
+                     atr: float = None,
                      **kwargs):
         """
         Record trade outcome when it hits SL/TP or expires.
@@ -537,6 +541,11 @@ class PerformanceTracker:
                 signal["sentiment_score"]      = sentiment_score
                 signal["sentiment_adjustment"] = sentiment_adjustment
                 signal["sentiment_engine"]     = sentiment_engine or "finbert"
+            # Always update technical fields if provided — they may be missing on old records
+            if risk_reward is not None: signal["risk_reward"] = risk_reward
+            if adx         is not None: signal["adx"]         = adx
+            if rsi         is not None: signal["rsi"]         = rsi
+            if atr         is not None: signal["atr"]         = atr
             log.info(f"✅ Updated {signal_id}: {outcome} ({pips:+.1f} pips)")
         else:
             if tier is None and score is not None:
@@ -562,6 +571,10 @@ class PerformanceTracker:
                 "sentiment_adjustment": sentiment_adjustment,
                 "sentiment_engine":     sentiment_engine or ("finbert" if sentiment_applied else None),
                 "estimated_win_rate":   estimated_win_rate,
+                "risk_reward":          risk_reward,
+                "adx":                  adx,
+                "rsi":                  rsi,
+                "atr":                  atr,
                 "timestamp":            entry_time or datetime.now(timezone.utc).isoformat(),
                 "exit_time":            exit_time  or datetime.now(timezone.utc).isoformat(),
             }

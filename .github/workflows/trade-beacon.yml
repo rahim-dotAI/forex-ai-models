@@ -139,11 +139,11 @@ jobs:
 
       - name: Checkout repository
         if: steps.market_check.outputs.should_run == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.2.2
 
       - name: Setup Python environment
         if: steps.market_check.outputs.should_run == 'true'
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5.4.0
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
@@ -720,6 +720,10 @@ jobs:
       - name: Push changes
         if: steps.market_check.outputs.should_run == 'true'
         run: |
+          git pull --rebase origin main || {
+            echo "⚠️ Rebase failed — force-pushing bot state"
+            git rebase --abort 2>/dev/null || true
+          }
           git push origin HEAD:main || {
             echo "⚠️ Push failed, will retry on next run"
             exit 0
@@ -727,7 +731,7 @@ jobs:
           echo "✅ Changes pushed"
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         if: steps.market_check.outputs.should_run == 'true'
         with:
           name: trade-beacon-v2.1.6-OPTIMISED-run-${{ github.run_number }}

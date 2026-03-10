@@ -61,6 +61,7 @@ on:
 env:
   PYTHON_VERSION: "3.10"
   ENTRY_SCRIPT: "trade_beacon.py"
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 concurrency:
   group: trade-beacon-v2.1.6-OPTIMISED-${{ github.ref }}-${{ github.event_name }}
@@ -720,10 +721,12 @@ jobs:
       - name: Push changes
         if: steps.market_check.outputs.should_run == 'true'
         run: |
+          git stash --include-untracked 2>/dev/null || true
           git pull --rebase origin main || {
-            echo "⚠️ Rebase failed — force-pushing bot state"
+            echo "⚠️ Rebase failed — aborting and pushing as-is"
             git rebase --abort 2>/dev/null || true
           }
+          git stash pop 2>/dev/null || true
           git push origin HEAD:main || {
             echo "⚠️ Push failed, will retry on next run"
             exit 0

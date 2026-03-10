@@ -791,6 +791,7 @@
             <thead>
               <tr>
                 <th>DATE</th>
+                <th>TIME (UTC)</th>
                 <th>PAIR</th>
                 <th>DIR</th>
                 <th>TIER <span class="info-icon" data-tip="tier-badge" style="vertical-align:middle;">i</span></th>
@@ -1565,7 +1566,7 @@
       const b = document.getElementById('historyBody');
       let sigs = data?.historical_signals||[];
       if (sigs.length===0) {
-        b.innerHTML='<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">No historical data available</td></tr>';
+        b.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted)">No historical data available</td></tr>';
         _renderPagination(0); return;
       }
       sigs = sigs.filter(s => s.status&&['WIN','LOSS','EXPIRED'].includes(s.status));
@@ -1587,7 +1588,7 @@
       const b     = document.getElementById('historyBody');
       const total = _filteredSigs.length;
       if (total===0) {
-        b.innerHTML='<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">No signals match the filters</td></tr>';
+        b.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted)">No signals match the filters</td></tr>';
         _renderPagination(0); return;
       }
       const totalPages = Math.ceil(total / _PAGE_SIZE);
@@ -1598,7 +1599,16 @@
         const rc = s.status==='WIN'?'win':s.status==='LOSS'?'loss':'exp';
         const pv = s.pips||0;
         const rt = s.status==='WIN'?`+${pv.toFixed(1)}`:s.status==='LOSS'?`${pv.toFixed(1)}`:'EXPIRED';
-        return `<tr><td>${fmtDate(s.timestamp)}</td><td style="font-weight:900">${s.pair}</td><td>${s.direction}</td><td><span class="history-tier-badge tier-${getTier(s.tier||'C')}">${s.tier||'C'}</span></td><td class="${rc}">${s.status}</td><td class="${rc}">${rt}</td><td>${s.session||'N/A'}</td></tr>`;
+        return `<tr>
+          <td>${fmtDate(s.timestamp)}</td>
+          <td style="color:var(--text-dim);font-size:11px;font-family:'Rajdhani',sans-serif;letter-spacing:0.5px;">${fmtTime(s.timestamp)}</td>
+          <td style="font-weight:900">${s.pair}</td>
+          <td>${s.direction}</td>
+          <td><span class="history-tier-badge tier-${getTier(s.tier||'C')}">${s.tier||'C'}</span></td>
+          <td class="${rc}">${s.status}</td>
+          <td class="${rc}">${rt}</td>
+          <td>${s.session||'N/A'}</td>
+        </tr>`;
       }).join('');
       _renderPagination(total);
     }
@@ -1911,6 +1921,10 @@
       if (!ts) return 'N/A';
       return new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'});
     }
+    function fmtTime(ts) {
+      if (!ts) return '—';
+      return new Date(ts).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'UTC'});
+    }
     function showEmpty(cid, icon, title, desc) {
       document.getElementById(cid).innerHTML=`<div class="empty"><i data-lucide="${icon}" class="empty-icon"></i><div class="empty-title">${title}</div><div class="empty-desc">${desc}</div></div>`;
       lucide.createIcons();
@@ -2126,7 +2140,13 @@
       const isBuy     = direction==='BUY';
       const tier      = best.tier||'B';
       const score     = best.score||0;
-      const rr        = best.risk_reward;
+      // Prefer stored risk_reward; fall back to computing from entry/sl/tp for pre-fix historical records
+      let rr = best.risk_reward || null;
+      if (!rr && best.entry_price && best.sl && best.tp) {
+        const slDist = Math.abs(best.entry_price - best.sl);
+        const tpDist = Math.abs(best.tp - best.entry_price);
+        if (slDist > 0) rr = tpDist / slDist;
+      }
       const sentAdj   = best.sentiment_adjustment||0;
       const sentOn    = best.sentiment_applied||false;
 

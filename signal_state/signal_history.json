@@ -5711,41 +5711,72 @@
       "atr": 0.00059,
       "timestamp": "2026-03-11T02:45:55.645510+00:00",
       "exit_time": "2026-03-11T03:01:16.482234+00:00"
+    },
+    {
+      "id": "NZDUSD_BUY_b3d8f5340389",
+      "signal_id": "NZDUSD_BUY_b3d8f5340389",
+      "pair": "NZDUSD",
+      "direction": "BUY",
+      "entry_price": 0.5943,
+      "exit_price": 0.59289,
+      "sl": 0.59289,
+      "tp": 0.59824,
+      "status": "LOSS",
+      "pips": -14.100000000000223,
+      "confidence": "MODERATE",
+      "score": 71.0,
+      "session": "ASIAN",
+      "tier": "B",
+      "eligible_modes": [
+        "aggressive",
+        "conservative"
+      ],
+      "sentiment_applied": true,
+      "sentiment_score": 2.0,
+      "sentiment_adjustment": 10.0,
+      "sentiment_engine": "finbert",
+      "estimated_win_rate": null,
+      "risk_reward": 2.8,
+      "adx": 43.6,
+      "rsi": 65.3,
+      "atr": 0.00056,
+      "timestamp": "2026-03-11T06:01:13.258945+00:00",
+      "exit_time": "2026-03-11T06:15:53.691449+00:00"
     }
   ],
   "stats": {
-    "total_trades": 133,
-    "total_resolved": 133,
+    "total_trades": 134,
+    "total_resolved": 134,
     "wins": 43,
-    "losses": 90,
+    "losses": 91,
     "expired": 81,
-    "win_rate": 32.3,
-    "total_pips": 410.0,
+    "win_rate": 32.1,
+    "total_pips": 395.9,
     "avg_win": 64.4,
-    "avg_loss": 26.2,
+    "avg_loss": 26.1,
     "avg_win_pips": 64.4,
-    "avg_loss_pips": 26.2,
-    "expectancy_pips": 3.08,
-    "expectancy": 3.08,
+    "avg_loss_pips": 26.1,
+    "expectancy_pips": 2.95,
+    "expectancy": 2.95,
     "validated": true,
     "by_mode": {
       "all": {
-        "trades": 133,
+        "trades": 134,
         "wins": 43,
-        "total_pips": 410.0469999999903,
-        "win_rate": 32.3
+        "total_pips": 395.94699999999006,
+        "win_rate": 32.1
       },
       "aggressive": {
-        "trades": 129,
+        "trades": 130,
         "wins": 43,
-        "total_pips": 522.605999999989,
-        "win_rate": 33.3
+        "total_pips": 508.5059999999887,
+        "win_rate": 33.1
       },
       "conservative": {
-        "trades": 48,
+        "trades": 49,
         "wins": 15,
-        "total_pips": 547.8850000000069,
-        "win_rate": 31.2
+        "total_pips": 533.7850000000067,
+        "win_rate": 30.6
       }
     }
   },
@@ -5782,10 +5813,10 @@
         "win_rate": 25.0
       },
       "NZDUSD": {
-        "trades": 7,
+        "trades": 8,
         "wins": 2,
-        "total_pips": 40.90000000000258,
-        "win_rate": 28.6
+        "total_pips": 26.800000000002356,
+        "win_rate": 25.0
       },
       "AUDUSD": {
         "trades": 5,
@@ -5826,10 +5857,10 @@
         "win_rate": 23.1
       },
       "ASIAN": {
-        "trades": 31,
+        "trades": 32,
         "wins": 8,
-        "total_pips": -43.84000000000022,
-        "win_rate": 25.8
+        "total_pips": -57.94000000000044,
+        "win_rate": 25.0
       },
       "EUROPEAN": {
         "trades": 51,
@@ -5846,10 +5877,10 @@
     },
     "by_confidence": {
       "MODERATE": {
-        "trades": 125,
+        "trades": 126,
         "wins": 39,
-        "total_pips": 87.73999999999054,
-        "win_rate": 31.2
+        "total_pips": 73.63999999999032,
+        "win_rate": 31.0
       },
       "STRONG": {
         "trades": 8,
@@ -5860,10 +5891,10 @@
     },
     "by_tier": {
       "B": {
-        "trades": 54,
+        "trades": 55,
         "wins": 17,
-        "total_pips": 545.0400000000074,
-        "win_rate": 31.5
+        "total_pips": 530.9400000000071,
+        "win_rate": 30.9
       },
       "C": {
         "trades": 79,
@@ -5880,16 +5911,16 @@
         "win_rate": 0.0
       },
       "aggressive": {
-        "trades": 129,
+        "trades": 130,
         "wins": 43,
-        "total_pips": 522.605999999989,
-        "win_rate": 33.3
+        "total_pips": 508.5059999999887,
+        "win_rate": 33.1
       },
       "conservative": {
-        "trades": 48,
+        "trades": 49,
         "wins": 15,
-        "total_pips": 547.8850000000069,
-        "win_rate": 31.2
+        "total_pips": 533.7850000000067,
+        "win_rate": 30.6
       }
     },
     "by_sentiment": {
@@ -5901,11 +5932,11 @@
         "win_rate": 32.5
       },
       "sentiment_on": {
-        "trades": 10,
+        "trades": 11,
         "wins": 3,
-        "total_pips": 1.9290000000051464,
+        "total_pips": -12.170999999995077,
         "engine": "finbert",
-        "win_rate": 30.0
+        "win_rate": 27.3
       }
     },
     "cross_analytics": {
@@ -5977,10 +6008,10 @@
         "B_ASIAN": {
           "tier": "B",
           "session": "ASIAN",
-          "trades": 13,
+          "trades": 14,
           "wins": 4,
-          "total_pips": 135.01600000000388,
-          "win_rate": 30.8
+          "total_pips": 120.91600000000366,
+          "win_rate": 28.6
         },
         "B_LATE_US": {
           "tier": "B",
@@ -5995,18 +6026,18 @@
         "aggressive_B": {
           "mode": "aggressive",
           "tier": "B",
-          "trades": 50,
+          "trades": 51,
           "wins": 17,
-          "total_pips": 657.599000000006,
-          "win_rate": 34.0
+          "total_pips": 643.4990000000057,
+          "win_rate": 33.3
         },
         "conservative_B": {
           "mode": "conservative",
           "tier": "B",
-          "trades": 48,
+          "trades": 49,
           "wins": 15,
-          "total_pips": 547.8850000000069,
-          "win_rate": 31.2
+          "total_pips": 533.7850000000067,
+          "win_rate": 30.6
         },
         "aggressive_C": {
           "mode": "aggressive",
@@ -6022,6 +6053,6 @@
   "daily": {},
   "metadata": {
     "created_at": "2026-01-28T16:31:06.713234+00:00",
-    "last_updated": "2026-03-11T03:01:16.484126+00:00"
+    "last_updated": "2026-03-11T06:15:53.693315+00:00"
   }
 }

@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-03-11T10:01:12.875665+00:00",
-  "active_signals": 0,
+  "timestamp": "2026-03-11T10:15:59.903604+00:00",
+  "active_signals": 1,
   "active_signals_by_mode": {
     "aggressive": 0,
-    "conservative": 0
+    "conservative": 1
   },
   "session": "EUROPEAN",
   "mode": "conservative",
@@ -17,14 +17,115 @@
   },
   "market_state": {
     "volatility": "CALM",
-    "sentiment_bias": "MIXED",
+    "sentiment_bias": "BEARISH",
     "session": "EUROPEAN"
   },
   "signals_by_mode": {
     "aggressive": [],
-    "conservative": []
+    "conservative": [
+      {
+        "signal_id": "EURUSD_SELL_43d2a3903659",
+        "id": "EURUSD_SELL_43d2a3903659",
+        "pair": "EURUSD",
+        "direction": "SELL",
+        "score": 57,
+        "technical_score": 57,
+        "sentiment_score": 0.0,
+        "sentiment_adjustment": 0.0,
+        "score_before_sentiment": 57,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 38.1,
+        "adx": 27.9,
+        "atr": 0.00077,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 1.1605,
+        "sl": 1.16243,
+        "tp": 1.15508,
+        "risk_reward": 2.8,
+        "spread": 0.00015,
+        "timestamp": "2026-03-11T10:15:54.838225+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 240,
+          "generated_at": "2026-03-11T10:15:54.838225+00:00",
+          "expires_at": "2026-03-11T14:15:54.838225+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.1.6-OPTIMISED",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null,
+        "price_source": "yfinance_confirmed",
+        "price_divergence": 0.00043
+      }
+    ]
   },
   "historical_signals": [
+    {
+      "signal_id": "EURUSD_SELL_43d2a3903659",
+      "id": "EURUSD_SELL_43d2a3903659",
+      "pair": "EURUSD",
+      "direction": "SELL",
+      "score": 57,
+      "technical_score": 57,
+      "sentiment_score": 0.0,
+      "sentiment_adjustment": 0.0,
+      "score_before_sentiment": 57,
+      "confidence": "MODERATE",
+      "tier": "B",
+      "rsi": 38.1,
+      "adx": 27.9,
+      "atr": 0.00077,
+      "volume_ratio": 0,
+      "session": "EUROPEAN",
+      "entry_price": 1.1605,
+      "sl": 1.16243,
+      "tp": 1.15508,
+      "risk_reward": 2.8,
+      "spread": 0.00015,
+      "timestamp": "2026-03-11T10:15:54.838225+00:00",
+      "status": "OPEN",
+      "hold_time": "SWING",
+      "eligible_modes": [
+        "conservative"
+      ],
+      "freshness": {
+        "status": "FRESH",
+        "age_minutes": 0.0,
+        "confidence_decay": 100.0
+      },
+      "sentiment_applied": false,
+      "metadata": {
+        "signal_type": "trend-continuation",
+        "market_state": "TRENDING_STRONG",
+        "timeframe": "15m",
+        "valid_for_minutes": 240,
+        "generated_at": "2026-03-11T10:15:54.838225+00:00",
+        "expires_at": "2026-03-11T14:15:54.838225+00:00",
+        "session_active": true,
+        "signal_generator_version": "2.1.6-OPTIMISED",
+        "atr_stop_multiplier": 2.5,
+        "atr_target_multiplier": 7.0
+      },
+      "estimated_win_rate": null,
+      "price_source": "yfinance_confirmed",
+      "price_divergence": 0.00043
+    },
     {
       "id": "NZDUSD_BUY_b3d8f5340389",
       "signal_id": "NZDUSD_BUY_b3d8f5340389",
@@ -5927,8 +6028,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 0.0,
-    "total_risk_pips": 0,
+    "theoretical_max_pips": 19.3,
+    "total_risk_pips": 19.299999999999873,
     "max_daily_risk": 150
   },
   "analytics": {
@@ -6203,37 +6304,37 @@
   },
   "equity_curve": [],
   "pair_prices": {
-    "EURUSD": 1.15955,
-    "GBPUSD": 1.15955,
-    "USDJPY": 1.15955,
-    "AUDUSD": 0.71495,
-    "NZDUSD": 0.71495,
-    "USDCAD": 1.35729,
-    "USDCHF": 0.77854,
-    "EURJPY": 183.713,
-    "GBPJPY": 212.595,
-    "EURGBP": 0.86413
+    "EURUSD": 1.1605,
+    "GBPUSD": 1.1605,
+    "USDJPY": 1.1605,
+    "NZDUSD": 0.59273,
+    "USDCAD": 1.35708,
+    "AUDUSD": 0.71608,
+    "USDCHF": 0.77785,
+    "GBPJPY": 212.674,
+    "EURJPY": 183.798,
+    "EURGBP": 0.86419
   },
   "upcoming_events": [
     {
       "title": "Core CPI m/m",
       "currency": "USD",
       "utc_time": "12:30 UTC",
-      "mins_to": 148,
+      "mins_to": 134,
       "passed": false
     },
     {
       "title": "CPI m/m",
       "currency": "USD",
       "utc_time": "12:30 UTC",
-      "mins_to": 148,
+      "mins_to": 134,
       "passed": false
     },
     {
       "title": "CPI y/y",
       "currency": "USD",
       "utc_time": "12:30 UTC",
-      "mins_to": 148,
+      "mins_to": 134,
       "passed": false
     }
   ],
@@ -6269,7 +6370,7 @@
     "exit_time": "2026-03-11T03:01:16.482234+00:00"
   },
   "system": {
-    "last_update": "2026-03-11T10:01:12.875735+00:00",
+    "last_update": "2026-03-11T10:15:59.903679+00:00",
     "signal_only_mode": true,
     "version": "2.1.6-OPTIMISED"
   }

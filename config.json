@@ -1,8 +1,8 @@
 {
   "version": "2.1.6-OPTIMISED",
   "mode": "conservative",
-  "_sentiment_note": "FinBERT sentiment ENABLED v2.1.6-OPTIMISED \u2014 HF_API_KEY, NEWSAPI_KEY, MARKETAUX_API_KEY confirmed in GitHub secrets",
-  "use_sentiment": true,
+  "_sentiment_note": "Disabled Mar 12 2026 \u2014 11 trades 27.3% WR net negative vs 32.3% without",
+  "use_sentiment": false,
   "settings": {
     "aggressive": {
       "threshold": 58,
@@ -63,12 +63,12 @@
       }
     },
     "session_thresholds": {
-      "ASIAN": 60,
+      "ASIAN": 999,
       "EUROPEAN": 50,
       "US": 50,
       "LATE_US": 60,
       "OVERLAP": 999,
-      "_note": "v2.1.5: OVERLAP blocked(999,0%WR). LATE_US raised 55->60(25%WR,-94pips). ASIAN=60(25%WR). EUROPEAN=50(38.5%WR). US=50(51.9%WR)."
+      "_note": "v2.1.6: OVERLAP blocked(999,0%WR). ASIAN blocked(999,25.8%WR,31trades below breakeven). LATE_US=60(23.1%WR). EUROPEAN=50(29.4%WR). US=50(50%WR)."
     },
     "pair_limits": {
       "GBPUSD": 5,
@@ -76,7 +76,9 @@
       "EURGBP": 0,
       "NZDUSD": 1,
       "default": 3,
-      "_note": "GBPUSD(60%WR,max5,BUY-only), GBPJPY(34.1%WR live 85t,max1-reduced), EURGBP(0%WR,blocked), NZDUSD(0%WR,max1-monitor)"
+      "_note": "GBPUSD(56%WR,max5), GBPJPY(33.7%WR,max1), EURGBP(0%WR,blocked), EURUSD(0%WR,4t,blocked), AUDUSD(0%WR,5t,blocked), NZDUSD(25%WR,max1-monitor)",
+      "EURUSD": 0,
+      "AUDUSD": 0
     },
     "directional_filters": {
       "GBPUSD": {
@@ -94,11 +96,11 @@
       "max_signal_age_seconds": 900,
       "session_expiry_minutes": {
         "EUROPEAN": 240,
-        "US":       240,
-        "ASIAN":    15,
-        "LATE_US":  15,
-        "OVERLAP":  15,
-        "_note": "Data-driven: EUROPEAN(37.5%WR,+380p) and US(54.8%WR,+602p) extended to 4h. ASIAN/LATE_US/OVERLAP kept at 15min — thin liquidity, poor WR."
+        "US": 240,
+        "ASIAN": 15,
+        "LATE_US": 15,
+        "OVERLAP": 15,
+        "_note": "Data-driven: EUROPEAN(37.5%WR,+380p) and US(54.8%WR,+602p) extended to 4h. ASIAN/LATE_US/OVERLAP kept at 15min \u2014 thin liquidity, poor WR."
       },
       "min_sl_pips": {
         "JPY_pairs": 20,

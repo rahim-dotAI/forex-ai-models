@@ -394,7 +394,7 @@ jobs:
           echo "[Session Thresholds]"
           echo "  EUROPEAN: $(jq -r '.advanced.session_thresholds.EUROPEAN // 50' config.json)"
           echo "  US:       $(jq -r '.advanced.session_thresholds.US // 50' config.json)"
-          echo "  ASIAN:    $(jq -r '.advanced.session_thresholds.ASIAN // 60' config.json)"
+          echo "  ASIAN:    $(jq -r '.advanced.session_thresholds.ASIAN // 999' config.json) (BLOCKED — 25.8% WR below breakeven)"
           echo "  LATE_US:  $(jq -r '.advanced.session_thresholds.LATE_US // 60' config.json)"
           echo "  OVERLAP:  $(jq -r '.advanced.session_thresholds.OVERLAP // 999' config.json) (BLOCKED — 0% WR)"
           echo ""
@@ -408,11 +408,27 @@ jobs:
           echo ""
 
           echo "[Pair Limits]"
-          echo "  GBPUSD: max $(jq -r '.advanced.pair_limits.GBPUSD // 5' config.json) (BUY-only, 70% WR)"
-          echo "  GBPJPY: max $(jq -r '.advanced.pair_limits.GBPJPY // 1' config.json) (34.1% WR live — reduced)"
-          echo "  NZDUSD: max $(jq -r '.advanced.pair_limits.NZDUSD // 1' config.json) (monitoring)"
+          echo "  GBPUSD: max $(jq -r '.advanced.pair_limits.GBPUSD // 5' config.json) (BUY-only, 56% WR — unrestricted)"
+          echo "  GBPJPY: max $(jq -r '.advanced.pair_limits.GBPJPY // 1' config.json) (33.7% WR live — reduced)"
+          echo "  NZDUSD: max $(jq -r '.advanced.pair_limits.NZDUSD // 1' config.json) (US session only, min score 65)"
           echo "  EURGBP: $(jq -r '.advanced.pair_limits.EURGBP // 0' config.json) (BLOCKED — 0% WR)"
+          echo "  EURUSD: max $(jq -r '.advanced.pair_limits.EURUSD // 2' config.json) (US session only, min score 65)"
+          echo "  AUDUSD: max $(jq -r '.advanced.pair_limits.AUDUSD // 2' config.json) (US session only, min score 65)"
           echo "  Default: $(jq -r '.advanced.pair_limits.default // 3' config.json)"
+          echo ""
+
+          echo "[USD Pair Rules — v2.1.7]"
+          USD_RULES_ENABLED=$(jq -r '.advanced.usd_pair_rules.enabled // false' config.json)
+          if [ "$USD_RULES_ENABLED" = "true" ]; then
+            echo "  Status:    ✅ ACTIVE"
+            echo "  Pairs:     $(jq -r '.advanced.usd_pair_rules.restricted_pairs | join(", ")' config.json)"
+            echo "  Sessions:  $(jq -r '.advanced.usd_pair_rules.allowed_sessions | join(", ")' config.json) only (47.2% WR in US session)"
+            echo "  Min Score: $(jq -r '.advanced.usd_pair_rules.min_score // 65' config.json) (vs 55/58 default — macro pairs need higher conviction)"
+            echo "  Blackout:  -$(jq -r '.advanced.usd_pair_rules.blackout_before_minutes // 45' config.json)min / +$(jq -r '.advanced.usd_pair_rules.blackout_after_minutes // 30' config.json)min (wider than default -30/+15)"
+            echo "  Research:  BIS 2025, ClearEdge, OANDA session analysis"
+          else
+            echo "  Status:    ❌ DISABLED"
+          fi
           echo ""
 
           echo "[System]"
@@ -463,7 +479,8 @@ jobs:
           echo "[Economic Calendar]"
           echo "  Source:       Forex Factory weekly feed (plain HTTP — free)"
           echo "  Refresh:      Once per day, cached to signal_state/economic_calendar_cache.json"
-          echo "  Blackout:     -30min / +15min around High-impact events"
+          echo "  Blackout:     Default: -30min / +15min around High-impact events"
+          echo "  USD Blackout: -45min / +30min for USD-restricted pairs (NFP/CPI linger longer)"
           echo ""
 
           echo "[Live Price Validation]"

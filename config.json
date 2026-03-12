@@ -76,9 +76,9 @@
       "EURGBP": 0,
       "NZDUSD": 1,
       "default": 3,
-      "_note": "GBPUSD(56%WR,max5), GBPJPY(33.7%WR,max1), EURGBP(0%WR,blocked), EURUSD(0%WR,4t,blocked), AUDUSD(0%WR,5t,blocked), NZDUSD(25%WR,max1-monitor)",
-      "EURUSD": 0,
-      "AUDUSD": 0
+      "_note": "GBPUSD(56%WR,max5,BUY-only), GBPJPY(33.7%WR,max1), EURGBP(0%WR,blocked), EURUSD(US-session-only,min65,max2), AUDUSD(US-session-only,min65,max2), USDCAD(US-session-only,min65), USDCHF(US-session-only,min65), USDJPY(US-session-only,min65), NZDUSD(25%WR,max1,US-session-only,min65)",
+      "EURUSD": 2,
+      "AUDUSD": 2
     },
     "directional_filters": {
       "GBPUSD": {
@@ -111,6 +111,24 @@
       "max_tp_distance_pct": 0.05,
       "require_direction": true,
       "reject_missing_pips": true
+    },
+    "usd_pair_rules": {
+      "enabled": true,
+      "restricted_pairs": [
+        "EURUSD",
+        "AUDUSD",
+        "USDCAD",
+        "USDCHF",
+        "USDJPY",
+        "NZDUSD"
+      ],
+      "allowed_sessions": [
+        "US"
+      ],
+      "min_score": 65,
+      "blackout_before_minutes": 45,
+      "blackout_after_minutes": 30,
+      "_note": "USD pairs US-session-only (47.2% WR). Min score 65 vs default 55/58 \u2014 USD is macro-driven, higher conviction required. Wider news blackout -45/+30min \u2014 NFP/CPI disruption persists longer than EUR/GBP events. Research: BIS 2025 (USD in 89% trades), ClearEdge (60-90s post-NFP random), OANDA session analysis. GBPUSD excluded \u2014 GBP is primary driver, 56% WR unrestricted."
     }
   },
   "sentiment": {
@@ -162,7 +180,7 @@
   },
   "_optimisation_note": "v2.1.6 changes (data-driven, 110 resolved trades): 1) Aggressive threshold 50->58 \u2014 Tier C signals (50-54) losing -134 pips. 2) GBPJPY cap 2->1 \u2014 85 trades at 34.1% WR dominating pool, dragging overall WR. 3) LATE_US threshold 55->60 \u2014 25% WR/-94 pips, aligned with ASIAN thin-liquidity level.",
   "economic_calendar": {
-    "_note": "Forex Factory high-impact event blackout. Plain HTTP \u2014 no Browserless tokens used.",
+    "_note": "Forex Factory high-impact event blackout. Plain HTTP \u2014 no Browserless tokens used. Default: -30min/+15min. USD restricted pairs: -45min/+30min.",
     "enabled": true,
     "blackout_before_minutes": 30,
     "blackout_after_minutes": 15,

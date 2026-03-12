@@ -90,6 +90,10 @@ INTERVAL = "15m"
 LOOKBACK = "14d"
 MIN_ROWS = 220
 
+# USD pairs subject to session restriction + elevated score threshold + wider blackout
+# GBPUSD excluded — GBP is primary driver, 56% WR, performs well in EUROPEAN session
+_USD_RESTRICTED_PAIRS = frozenset(["EURUSD","AUDUSD","USDCAD","USDCHF","USDJPY","NZDUSD"])
+
 # ── HuggingFace FinBERT config ─────────────────────────────────────────────────
 # Set HF_API_KEY as a GitHub Actions secret (Settings -> Secrets -> New secret)
 # Value: your HuggingFace token from https://huggingface.co/settings/tokens
@@ -188,7 +192,7 @@ def _default_config() -> Dict:
                 "LATE_US":  {"all_major_pairs": 0},
             },
             "session_thresholds": {
-                "ASIAN": 60, "EUROPEAN": 50, "US": 50, "LATE_US": 60, "OVERLAP": 999,
+                "ASIAN": 999, "EUROPEAN": 50, "US": 50, "LATE_US": 60, "OVERLAP": 999,
             },
             "pair_limits": {"GBPUSD": 5, "GBPJPY": 1, "NZDUSD": 1, "EURGBP": 0, "default": 3},
             "validation": {
@@ -529,16 +533,30 @@ def _is_calendar_blackout(pair: str, events: List[Dict]) -> Tuple[bool, str]:
     """
     Check if current time falls inside a blackout window for this pair.
     Returns (True, "Event Name (CCY) in Xmin") if blocked, (False, "") if clear.
+
+    USD restricted pairs use a wider window (-45min/+30min) because NFP/CPI
+    disruption persists longer than EUR/GBP events (research: ClearEdge 60-90s
+    post-NFP random, BIS 2025 USD macro dominance).
     """
     if not events: return False, ""
     now   = datetime.now(timezone.utc)
     clean = pair.replace("=X", "").upper()
+
+    # Determine blackout window — wider for USD restricted pairs
+    usd_rules = CONFIG.get("advanced", {}).get("usd_pair_rules", {})
+    if usd_rules.get("enabled", False) and clean in _USD_RESTRICTED_PAIRS:
+        bb = usd_rules.get("blackout_before_minutes", _BLACKOUT_BEFORE)
+        ba = usd_rules.get("blackout_after_minutes",  _BLACKOUT_AFTER)
+    else:
+        bb = _BLACKOUT_BEFORE
+        ba = _BLACKOUT_AFTER
+
     for ev in events:
         if clean not in _CURRENCY_PAIRS.get(ev.get("currency", ""), []): continue
         try:
             et = datetime.fromisoformat(ev["utc_time"])
         except Exception: continue
-        if et - timedelta(minutes=_BLACKOUT_BEFORE) <= now <= et + timedelta(minutes=_BLACKOUT_AFTER):
+        if et - timedelta(minutes=bb) <= now <= et + timedelta(minutes=ba):
             mins  = int((et - now).total_seconds() / 60)
             label = (f"{ev['title']} ({ev['currency']}) in {mins}min"
                      if mins >= 0 else
@@ -1604,6 +1622,30 @@ def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
         log.info(f"  BLOCKED: {diff} < session threshold {sess_thresh} ({session})"); return None, ok
     if diff < min_t:
         log.info(f"  BLOCKED: {diff} < min threshold {min_t}"); return None, ok
+
+    # ── USD pair session restriction ──────────────────────────────────────────
+    # USD pairs are macro-driven (Fed, NFP, CPI). Technical signals (RSI/ADX)
+    # fail in EUROPEAN session where EUR institutional flow overrides USD thesis.
+    # Research: BIS 2025 (USD in 89% trades), OANDA session analysis,
+    # ClearEdge automation research (60-90s post-NFP entirely random).
+    # GBPUSD excluded — GBP is primary driver, 56% WR, unrestricted.
+    pair_clean = pair.replace("=X", "").upper()
+    usd_rules  = CONFIG.get("advanced", {}).get("usd_pair_rules", {})
+    if usd_rules.get("enabled", False) and pair_clean in _USD_RESTRICTED_PAIRS:
+        allowed_sessions = usd_rules.get("allowed_sessions", ["US"])
+        if session not in allowed_sessions:
+            log.info(
+                f"  BLOCKED: {pair_clean} restricted to {allowed_sessions} "
+                f"— current session={session} (USD macro-driven, technical signals unreliable outside NY)"
+            )
+            return None, ok
+        usd_min_score = usd_rules.get("min_score", 65)
+        if diff < usd_min_score:
+            log.info(
+                f"  BLOCKED: {pair_clean} USD pair score {diff} < USD min {usd_min_score} "
+                f"(higher conviction required for macro-sensitive pair)"
+            )
+            return None, ok
 
     # ── Economic calendar blackout ────────────────────────────────────────────
     # Suppress signals 30 min before and 15 min after any High-impact event

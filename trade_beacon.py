@@ -1,5 +1,5 @@
 """
-Trade Beacon v2.1.6-OPTIMISED - Forex Signal Generator (INSTITUTIONAL GRADE)
+Trade Beacon v2.1.7-USD-GATE - Forex Signal Generator (INSTITUTIONAL GRADE)
 MULTI-MODE EDITION: Generates Aggressive + Conservative signals simultaneously
 with tier-based selective enhancement (sentiment/backtest only on top-tier)
 
@@ -92,7 +92,8 @@ MIN_ROWS = 220
 
 # USD pairs subject to session restriction + elevated score threshold + wider blackout
 # GBPUSD excluded — GBP is primary driver, 56% WR, performs well in EUROPEAN session
-_USD_RESTRICTED_PAIRS = frozenset(["EURUSD","AUDUSD","USDCAD","USDCHF","USDJPY","NZDUSD"])
+# EURJPY added — JPY risk-sentiment cross, 0% WR EUROPEAN (2 trades, -61 pips)
+_USD_RESTRICTED_PAIRS = frozenset(["EURUSD","AUDUSD","USDCAD","USDCHF","USDJPY","NZDUSD","EURJPY"])
 
 # ── HuggingFace FinBERT config ─────────────────────────────────────────────────
 # Set HF_API_KEY as a GitHub Actions secret (Settings -> Secrets -> New secret)
@@ -165,13 +166,13 @@ def _default_config() -> Dict:
         "use_sentiment": False,
         "settings": {
             "aggressive": {
-                "threshold": 58, "min_adx": 15,
+                "threshold": 62, "min_adx": 15,
                 "rsi_oversold": 30, "rsi_overbought": 70,
                 "min_risk_reward": 2.5, "atr_stop_multiplier": 2.5,
                 "atr_target_multiplier": 7.0, "max_correlated_signals": 2,
             },
             "conservative": {
-                "threshold": 55, "min_adx": 17,
+                "threshold": 62, "min_adx": 17,
                 "rsi_oversold": 30, "rsi_overbought": 70,
                 "min_risk_reward": 2.5, "atr_stop_multiplier": 2.5,
                 "atr_target_multiplier": 7.0, "max_correlated_signals": 1,
@@ -729,6 +730,34 @@ def download(pair: str) -> Tuple[pd.DataFrame, bool]:
             # when downloading a single ticker with auto_adjust=True)
             if isinstance(df.columns, pd.MultiIndex):
                 df.columns = df.columns.get_level_values(0)
+
+            # ── Staleness guard ───────────────────────────────────────────────
+            # yfinance sometimes serves cached/stale OHLC history (e.g. GBPUSD
+            # 1.14639 vs real 1.32600 — 15.67% off). If the last candle is more
+            # than 60 minutes old, the ATR, EMAs, and price are all wrong.
+            # Reject the data entirely rather than generate a corrupted signal.
+            try:
+                # Use pd.Timestamp explicitly — df.index[-1] is always a pd.Timestamp
+                # but converting ensures consistent behaviour across pandas versions.
+                last_ts = pd.Timestamp(df.index[-1])
+                if last_ts.tzinfo is None:
+                    last_ts = last_ts.tz_localize("UTC")
+                else:
+                    last_ts = last_ts.tz_convert("UTC")
+                # Convert to Python datetime before subtraction to avoid
+                # pd.Timestamp - datetime type mismatch across pandas versions
+                last_ts_dt = last_ts.to_pydatetime()
+                age_min = (datetime.now(timezone.utc) - last_ts_dt).total_seconds() / 60
+                if age_min > 60:
+                    log.warning(
+                        f"{pair} data is stale — last candle {age_min:.0f}min ago "
+                        f"(last_ts={last_ts_dt}). Skipping to avoid corrupted ATR/SL/TP."
+                    )
+                    return pd.DataFrame(), False
+                log.debug(f"{pair} data freshness OK — last candle {age_min:.1f}min ago")
+            except Exception as e:
+                log.warning(f"{pair} staleness check failed: {e} — proceeding cautiously")
+
             _cache.set(cache_key, df)
             return df, True
 
@@ -816,7 +845,7 @@ def classify_signal_tier(score: int) -> str:
     tiers = CONFIG.get("tiers", {})
     if score >= tiers.get("A_plus_min_score", 80): return "A+"
     if score >= tiers.get("A_min_score", 68):      return "A"
-    if score >= tiers.get("B_min_score", 55):      return "B"
+    if score >= tiers.get("B_min_score", 62):      return "B"
     return "C"
 
 def calculate_signal_freshness(ts: datetime) -> Dict:
@@ -1076,9 +1105,13 @@ def resolve_active_signals():
                 # Comparing naive vs aware raises TypeError — swallowed by except,
                 # which falls back to ALL of today's candles instead of the signal
                 # window only. This caused pre-signal price moves to count as outcomes.
+                # Use pd.DatetimeIndex.tz_localize for the whole index at once —
+                # safer than per-element conversion.
                 idx = df.index
-                if hasattr(idx, 'tzinfo') and idx.tzinfo is None:
+                if not hasattr(idx, 'tz') or idx.tz is None:
                     idx = idx.tz_localize("UTC")
+                elif str(idx.tz) != "UTC":
+                    idx = idx.tz_convert("UTC")
                 cut = min(exp_time, now)
                 mask = (idx >= entry_time) & (idx <= cut)
                 window_df = df[mask.values] if mask.any() else df
@@ -1531,6 +1564,98 @@ def enhance_with_sentiment(signals: List[Dict], news_agg: NewsAggregator) -> Lis
         return signals
 
 # ═════════════════════════════════════════════════════════════════════════════
+# USD SENTIMENT GATE
+# FinBERT as a BINARY DIRECTIONAL GATE for USD-restricted pairs only.
+# Unlike the old score adjuster (±10 pts which hurt GBP pairs), this:
+#   - Only runs on USD-restricted pairs (EURUSD, AUDUSD, USDCAD, etc.)
+#   - Does NOT modify scores — purely a pass/block decision
+#   - Blocks signals where FinBERT macro sentiment CLEARLY disagrees (< -0.15)
+#   - Neutral / unavailable / mild disagreement → signal passes through
+# Research: BIS 2025 (USD in 89% trades), ClearEdge automation research,
+#           OANDA session analysis — USD is macro-driven, needs macro filter.
+# GBPJPY and GBPUSD deliberately excluded — technically driven in London/NY.
+# ═════════════════════════════════════════════════════════════════════════════
+
+def _gate_usd_with_sentiment(signals: List[Dict], news_agg: NewsAggregator) -> List[Dict]:
+    """
+    Apply FinBERT as a binary directional gate for USD-restricted pairs.
+
+    Gate logic:
+      - BUY  signal: net_sentiment = base_sentiment - quote_sentiment
+                     If net < threshold → macro disagrees → BLOCK
+      - SELL signal: net_sentiment = quote_sentiment - base_sentiment
+                     If net < threshold → macro disagrees → BLOCK
+
+    Threshold -0.15 means FinBERT must clearly disagree to block.
+    Neutral (−0.15 to +0.15) and agreement both pass.
+    If FinBERT is unavailable for a currency → defaults to 0.0 (neutral) → passes.
+    """
+    if not signals:
+        return signals
+
+    gate_threshold = CONFIG.get("advanced", {}).get(
+        "usd_pair_rules", {}).get("sentiment_gate_threshold", -0.15)
+
+    # Fetch sentiment for all unique currencies present in USD signals
+    currencies: set = set()
+    for sig in signals:
+        p = sig.get("pair", "")
+        if len(p) >= 6:
+            currencies.add(p[:3])
+            currencies.add(p[3:6])
+
+    cur_sent: Dict[str, float] = {}
+    for cur in currencies:
+        try:
+            cur_sent[cur] = news_agg.get_currency_sentiment(cur)
+        except Exception as e:
+            log.warning(f"Sentiment unavailable for {cur}: {e} — defaulting to 0.0 (neutral)")
+            cur_sent[cur] = 0.0
+
+    passed = []
+    for sig in signals:
+        p         = sig.get("pair", "")
+        direction = sig.get("direction", "BUY")
+
+        if len(p) < 6:
+            sig.update({"sentiment_applied": True, "sentiment_score": 0.0,
+                        "sentiment_adjustment": 0.0})
+            passed.append(sig)
+            continue
+
+        base, quote = p[:3], p[3:6]
+        net = (cur_sent.get(base, 0.0) - cur_sent.get(quote, 0.0) if direction == "BUY"
+               else cur_sent.get(quote, 0.0) - cur_sent.get(base, 0.0))
+
+        sig.update({
+            "sentiment_applied":       True,
+            "sentiment_score":         round(net, 3),
+            "sentiment_adjustment":    0.0,   # gate never modifies score
+            "score_before_sentiment":  sig.get("score", 0),
+        })
+
+        if net < gate_threshold:
+            log.info(
+                f"  USD GATE BLOCKED: {p} {direction} "
+                f"net_sentiment={net:+.3f} < gate_threshold={gate_threshold} "
+                f"(FinBERT macro sentiment disagrees — blocking to avoid counter-flow trade)"
+            )
+            continue  # signal dropped
+
+        label = ("agrees" if net > 0.1 else "neutral" if abs(net) <= 0.1 else "weak-disagree-allowed")
+        log.info(f"  USD GATE PASSED: {p} {direction} net_sentiment={net:+.3f} ({label})")
+        passed.append(sig)
+
+    dropped = len(signals) - len(passed)
+    if dropped:
+        log.info(f"USD sentiment gate: {dropped} signal(s) blocked (macro disagrees with direction)")
+    else:
+        log.info(f"USD sentiment gate: all {len(passed)} signal(s) passed")
+
+    return passed
+
+
+# ═════════════════════════════════════════════════════════════════════════════
 # SIGNAL GENERATION
 # ═════════════════════════════════════════════════════════════════════════════
 
@@ -1662,10 +1787,11 @@ def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
 
     # ── Tier C block ─────────────────────────────────────────────────────────
     # Data: Tier C = 79 trades, 32.9% WR, -134 pips. Net negative.
-    # Tier B = 36 trades, 47.2% WR, +949 pips. All value is here.
-    # Block Tier C outright — only B, A, A+ signals proceed.
+    # Tier B = 61 trades, 27.9% WR, +349 pips (pre v2.1.7).
+    # v2.1.7: B_min_score raised 55->62, eliminating the weakest B signals.
+    # Block Tier C outright — only B (>=62), A (>=68), A+ (>=80) proceed.
     if tier == "C":
-        log.info(f"  BLOCKED: Tier C (score={diff}) — data-driven block (32.9% WR, -134 pips hist)")
+        log.info(f"  BLOCKED: Tier C (score={diff} < B_min={CONFIG.get('tiers',{}).get('B_min_score',62)}) — net negative historically")
         return None, ok
 
     spread    = get_spread(pair)
@@ -1717,7 +1843,7 @@ def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
             "timeframe": INTERVAL, "valid_for_minutes": int(expiry_mins),
             "generated_at": now.isoformat(), "expires_at": expires.isoformat(),
             "session_active": session in ("EUROPEAN","US","OVERLAP"),
-            "signal_generator_version": "2.1.6-OPTIMISED",
+            "signal_generator_version": "2.1.7-USD-GATE",
             "atr_stop_multiplier": atr_stop, "atr_target_multiplier": atr_tgt,
         },
     }
@@ -2026,7 +2152,7 @@ def write_dashboard_state(signals, downloads, news_calls=0, mkt_calls=0,
         "system": {
             "last_update": datetime.now(timezone.utc).isoformat(),
             "signal_only_mode": SIGNAL_ONLY_MODE,
-            "version": "2.1.6-OPTIMISED",
+            "version": "2.1.7-USD-GATE",
         },
     }
 
@@ -2053,7 +2179,7 @@ def write_health_check(signals, downloads, news, mkt, can_trade, pause, mode):
         },
         "system_info": {
             "mode": mode, "pairs_monitored": len(PAIRS),
-            "version": "2.1.6-OPTIMISED",
+            "version": "2.1.7-USD-GATE",
             "sentiment_engine": "finbert" if HF_API_KEY else "disabled",
         },
     }
@@ -2184,7 +2310,7 @@ def main():
     opt_mode = opt_cfg["mode"]
 
     log.info(
-        f"Trade Beacon v2.1.6-OPTIMISED | "
+        f"Trade Beacon v2.1.7-USD-GATE | "
         f"Sentiment={'FinBERT ON' if USE_SENTIMENT else 'OFF'} | "
         f"HF_KEY={'set' if HF_API_KEY else 'missing - add HF_API_KEY secret'}"
     )
@@ -2226,74 +2352,67 @@ def main():
             except Exception as e:
                 log.error(f"{pair.replace('=X','')} failed: {e}")
 
-    # ── FinBERT Sentiment ─────────────────────────────────────────────────────
+    # ── FinBERT Sentiment — SELECTIVE: USD pairs binary gate, GBP pure technical
+    # v2.1.7 architecture: old ±10pt adjuster on ALL pairs → hurt GBP signals.
+    # New: FinBERT only gates USD-restricted pairs (EURUSD, AUDUSD, USDCAD etc.)
+    # GBP pairs (GBPJPY, GBPUSD) → pure technical scoring, zero sentiment noise.
+    # USD gate: blocks when macro clearly disagrees (net_sentiment < -0.15).
     news_calls = mkt_calls = 0
 
     if USE_SENTIMENT and new_signals:
-        agg = NewsAggregator()
-        high_conf = [s for s in new_signals if s.get("score",0) >= agg.min_score_thr]
-        if high_conf:
-            if not agg.hf_api_key:
-                log.warning("Sentiment enabled but HF_API_KEY not set. Add secret HF_API_KEY=hf_...")
-            else:
-                log.info(f"FinBERT sentiment: {len(high_conf)}/{len(new_signals)} signals (score>=60)")
-                try:
-                    enhanced     = enhance_with_sentiment(high_conf, agg)
-                    enhanced_map = {s["signal_id"]:s for s in enhanced}
-                    for i, sig in enumerate(new_signals):
-                        if sig["signal_id"] in enhanced_map:
-                            new_signals[i] = enhanced_map[sig["signal_id"]]
-                        else:
-                            new_signals[i].update({"sentiment_applied":False,"sentiment_score":0.0})
-                    log.info(f"FinBERT complete: {len(enhanced)} signals enhanced")
+        usd_rules = CONFIG.get("advanced", {}).get("usd_pair_rules", {})
+        use_gate  = usd_rules.get("sentiment_gate", True)
 
-                    # ── Re-validate scores after sentiment adjustment ──────────
-                    # FinBERT can drop a signal below the minimum threshold.
-                    # Re-check each signal and drop those that no longer qualify.
-                    # Also recalculate eligible_modes — score change may drop agg qualification.
-                    agg_thresh  = CONFIG["settings"]["aggressive"]["threshold"]
-                    cons_thresh = CONFIG["settings"]["conservative"]["threshold"]
-                    agg_adx     = CONFIG["settings"]["aggressive"]["min_adx"]
-                    cons_adx    = CONFIG["settings"]["conservative"]["min_adx"]
-                    min_thresh  = min(agg_thresh, cons_thresh)
-                    pre_count   = len(new_signals)
-                    filtered_signals = []
+        usd_sigs = [s for s in new_signals if s.get("pair","") in _USD_RESTRICTED_PAIRS]
+        gbp_sigs = [s for s in new_signals if s.get("pair","") not in _USD_RESTRICTED_PAIRS]
+
+        # GBP/other pairs — pure technical, no sentiment applied
+        for s in gbp_sigs:
+            s.update({"sentiment_applied": False, "sentiment_score": 0.0,
+                      "sentiment_adjustment": 0.0})
+
+        if usd_sigs and use_gate:
+            agg = NewsAggregator()
+            if not agg.hf_api_key:
+                log.warning(
+                    "HF_API_KEY not set — USD sentiment gate disabled, signals pass through. "
+                    "Add secret HF_API_KEY at huggingface.co/settings/tokens"
+                )
+                for s in usd_sigs:
+                    s.update({"sentiment_applied": False, "sentiment_score": 0.0,
+                              "sentiment_adjustment": 0.0})
+            else:
+                log.info(
+                    f"FinBERT USD gate: {len(usd_sigs)} USD signal(s) "
+                    f"(GBP excluded — pure technical)"
+                )
+                try:
+                    usd_sigs = _gate_usd_with_sentiment(usd_sigs, agg)
+                    # Count unique currencies that actually had API calls made
+                    # (fetched before gate decision, so count pre-gate currencies)
+                    all_curs: set = set()
                     for s in new_signals:
-                        new_score = s.get("score", 0)
-                        adx_val   = s.get("adx", 0)
-                        if new_score < min_thresh:
-                            log.info(f"Post-sentiment DROP: {s.get('pair')} {s.get('direction')} "
-                                     f"score {s.get('score_before_sentiment',new_score)}->{new_score} "
-                                     f"(below min threshold {min_thresh})")
-                            continue
-                        # Recalculate eligible modes based on new score
-                        new_modes = []
-                        if new_score >= agg_thresh and adx_val >= agg_adx:
-                            new_modes.append("aggressive")
-                        if new_score >= cons_thresh and adx_val >= cons_adx:
-                            new_modes.append("conservative")
-                        if new_modes:
-                            s["eligible_modes"] = new_modes
-                        filtered_signals.append(s)
-                    dropped = pre_count - len(filtered_signals)
-                    new_signals = filtered_signals
-                    if dropped:
-                        log.info(f"Post-sentiment filter: {dropped} signal(s) dropped "
-                                 f"(score fell below min threshold {min_thresh} after FinBERT adjustment)")
-                    curs = set()
-                    for s in high_conf:
-                        p = s.get("pair","")
-                        if len(p)>=6: curs.add(p[:3]); curs.add(p[3:6])
-                    news_calls = mkt_calls = len(curs)
+                        if s.get("pair","") in _USD_RESTRICTED_PAIRS:
+                            p = s.get("pair","")
+                            if len(p) >= 6:
+                                all_curs.add(p[:3])
+                                all_curs.add(p[3:6])
+                    news_calls = mkt_calls = len(all_curs)
                 except Exception as e:
-                    log.error(f"FinBERT pipeline failed: {e}")
-                    for s in new_signals:
-                        s.update({"sentiment_applied":False,"sentiment_score":0.0})
+                    log.error(f"USD sentiment gate failed: {e} — signals pass through")
+                    for s in usd_sigs:
+                        s.update({"sentiment_applied": False, "sentiment_score": 0.0,
+                                  "sentiment_adjustment": 0.0})
         else:
-            log.info("No signals meet FinBERT threshold (score>=60)")
-            for s in new_signals: s.update({"sentiment_applied":False,"sentiment_score":0.0})
+            for s in usd_sigs:
+                s.update({"sentiment_applied": False, "sentiment_score": 0.0,
+                          "sentiment_adjustment": 0.0})
+
+        new_signals = usd_sigs + gbp_sigs
     else:
-        for s in new_signals: s.update({"sentiment_applied":False,"sentiment_score":0.0})
+        for s in new_signals:
+            s.update({"sentiment_applied": False, "sentiment_score": 0.0,
+                      "sentiment_adjustment": 0.0})
 
     # ── Micro-backtest (elite signals only) ───────────────────────────────────
     elite = select_high_potential(new_signals)
@@ -2370,7 +2489,7 @@ def main():
         log.info("signals.csv written")
 
     mark_success()
-    log.info("Run completed — v2.1.6-OPTIMISED")
+    log.info("Run completed — v2.1.7-USD-GATE")
 
 
 if __name__ == "__main__":

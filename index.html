@@ -635,7 +635,7 @@
           <div class="brand-icon"><i data-lucide="activity"></i></div>
           <div class="brand-text">
             <h1>TRADE BEACON</h1>
-            <p>MARKET INTELLIGENCE v2.1.6-OPTIMISED</p>
+            <p>MARKET INTELLIGENCE v2.1.7-USD-GATE</p>
           </div>
         </div>
         <div class="header-stats">
@@ -892,7 +892,7 @@
       <p><strong style="color:var(--text-dim);">NO LIABILITY.</strong> The creators of Trade Beacon accept no liability for losses incurred from acting on this dashboard. Use entirely at your own risk. By viewing this dashboard you accept this disclaimer.</p>
     </div>
     <div style="margin-top:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.04);">
-      <div style="font-size:10px;color:var(--text-muted);letter-spacing:0.5px;">TRADE BEACON v2.1.6-OPTIMISED &nbsp;·&nbsp; SIGNAL-ONLY MODE &nbsp;·&nbsp; NO AUTO-EXECUTION</div>
+      <div style="font-size:10px;color:var(--text-muted);letter-spacing:0.5px;">TRADE BEACON v2.1.7-USD-GATE &nbsp;·&nbsp; SIGNAL-ONLY MODE &nbsp;·&nbsp; NO AUTO-EXECUTION</div>
       <div style="font-size:10px;color:var(--text-muted);">Signals for manual execution &nbsp;·&nbsp; All times UTC</div>
     </div>
   </div>
@@ -957,21 +957,25 @@
       },
       'perf-tier': {
         title: 'Performance by Tier',
-        body: `Win rate and total pips broken down by <strong>signal quality tier</strong> (A+, A, B, C). This tells you whether the system's tier classification is meaningful — you want to see A+ clearly outperforming C. A well-calibrated system should show <strong>higher WR for higher tiers</strong>.<br><br>The <strong>score thresholds</strong> used (≥80, ≥68, ≥55) are calibrated for the v2.1.6 expanded scoring scale (max ~110 pts).`
+        body: `Win rate and total pips broken down by <strong>signal quality tier</strong> (A+, A, B, C). This tells you whether the system's tier classification is meaningful — you want to see A+ clearly outperforming C. A well-calibrated system should show <strong>higher WR for higher tiers</strong>.<br><br>The <strong>score thresholds</strong> used (≥80, ≥68, ≥62) are calibrated for v2.1.7. B raised from 55→62: data showed MODERATE signals (55-64) at only 30% WR barely above breakeven. Score ≥62 = only higher-conviction signals generate.`
       },
       'perf-session': {
         title: 'Performance by Session',
         body: `Win rate per <strong>trading session</strong>. Shows which times of day the system performs best:<br><br>
-          <div class="tip-row"><span class="tip-key" style="color:var(--green)">✅ TARGET</span><span>EUROPEAN & US — best historical performance, normal thresholds</span></div>
-          <div class="tip-row"><span class="tip-key" style="color:var(--yellow)">⚠️ HIGH</span><span>ASIAN & LATE_US — higher score threshold applied to compensate for lower WR</span></div>
-          <div class="tip-row"><span class="tip-key" style="color:var(--red)">🚫 BLOCKED</span><span>OVERLAP — blocked entirely due to 0% historical win rate</span></div>`
+          <div class="tip-row"><span class="tip-key" style="color:var(--green)">✅ US</span><span>Best session — 47.2% WR, +495 pips. USD pairs restricted here only.</span></div>
+          <div class="tip-row"><span class="tip-key" style="color:var(--green)">✅ EUROPEAN</span><span>Active session — GBP/EUR pairs only. USD crosses blocked here (macro flow mismatch).</span></div>
+          <div class="tip-row"><span class="tip-key" style="color:var(--yellow)">⚠️ LATE_US</span><span>Higher threshold (60) — 23.1% WR, winding down liquidity.</span></div>
+          <div class="tip-row"><span class="tip-key" style="color:var(--red)">🚫 ASIAN</span><span>Blocked — 25% WR across 32 trades, below breakeven. Thin liquidity.</span></div>
+          <div class="tip-row"><span class="tip-key" style="color:var(--red)">🚫 OVERLAP</span><span>Blocked — 0% WR historically.</span></div>`
       },
       'perf-pairs': {
         title: 'Top Performing Pairs',
         body: `Total pips and win rate per <strong>currency pair</strong>, sorted by profitability. Shows which pairs the system trades best. Current pair rules:<br><br>
-          <div class="tip-row"><span class="tip-key" style="color:var(--green)">GBPUSD</span><span>Max 5 signals/day, BUY only (SELL direction blocked — 0/3 historical)</span></div>
-          <div class="tip-row"><span class="tip-key" style="color:var(--yellow)">GBPJPY</span><span>Max 1 signal/day — reduced from 2, 34.1% WR on 85 live trades</span></div>
-          <div class="tip-row"><span class="tip-key" style="color:var(--yellow)">NZDUSD</span><span>Max 1 signal/day — under monitoring, 0/2 so far</span></div>
+          <div class="tip-row"><span class="tip-key" style="color:var(--green)">GBPUSD</span><span>Max 5/day, BUY only, 56% WR — unrestricted (GBP-driven pair)</span></div>
+          <div class="tip-row"><span class="tip-key" style="color:var(--green)">GBPJPY</span><span>Max 1/day — 33.7% WR on 86 live trades</span></div>
+          <div class="tip-row"><span class="tip-key" style="color:var(--yellow)">EURUSD</span><span>Max 2/day — US session only, min score 65, wider news blackout</span></div>
+          <div class="tip-row"><span class="tip-key" style="color:var(--yellow)">AUDUSD</span><span>Max 2/day — US session only, min score 65, wider news blackout</span></div>
+          <div class="tip-row"><span class="tip-key" style="color:var(--yellow)">USDCAD/USDCHF/USDJPY/NZDUSD</span><span>US session only, min score 65 — USD macro rules apply</span></div>
           <div class="tip-row"><span class="tip-key" style="color:var(--red)">EURGBP</span><span>Blocked — 0% WR historically</span></div>`
       },
       'perf-mode': {

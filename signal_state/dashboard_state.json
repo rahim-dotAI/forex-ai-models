@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-03-13T21:45:58.884462+00:00",
+  "timestamp": "2026-03-15T22:01:17.556473+00:00",
   "active_signals": 0,
   "active_signals_by_mode": {
     "aggressive": 0,
@@ -7,8 +7,8 @@
   },
   "session": "LATE_US",
   "mode": "conservative",
-  "sentiment_enabled": false,
-  "sentiment_engine": "disabled",
+  "sentiment_enabled": true,
+  "sentiment_engine": "finbert",
   "multi_mode": true,
   "equity_protection": {
     "enabled": false,
@@ -39,7 +39,7 @@
       "confidence": "MODERATE",
       "score": 60,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -70,7 +70,7 @@
       "confidence": "MODERATE",
       "score": 60,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -132,7 +132,7 @@
       "confidence": "MODERATE",
       "score": 55,
       "session": "US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative"
       ],
@@ -162,7 +162,7 @@
       "confidence": "MODERATE",
       "score": 56,
       "session": "US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative"
       ],
@@ -192,7 +192,7 @@
       "confidence": "MODERATE",
       "score": 57,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative"
       ],
@@ -222,7 +222,7 @@
       "confidence": "MODERATE",
       "score": 71.0,
       "session": "ASIAN",
-      "tier": "B",
+      "tier": "A",
       "eligible_modes": [
         "aggressive",
         "conservative"
@@ -253,7 +253,7 @@
       "confidence": "STRONG",
       "score": 76.0,
       "session": "ASIAN",
-      "tier": "B",
+      "tier": "A",
       "eligible_modes": [
         "aggressive",
         "conservative"
@@ -284,7 +284,7 @@
       "confidence": "MODERATE",
       "score": 57.0,
       "session": "ASIAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative"
       ],
@@ -314,7 +314,7 @@
       "confidence": "MODERATE",
       "score": 58,
       "session": "US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -345,7 +345,7 @@
       "confidence": "MODERATE",
       "score": 73.0,
       "session": "US",
-      "tier": "B",
+      "tier": "A",
       "eligible_modes": [
         "aggressive",
         "conservative"
@@ -376,7 +376,7 @@
       "confidence": "MODERATE",
       "score": 56,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative"
       ],
@@ -406,7 +406,7 @@
       "confidence": "MODERATE",
       "score": 56,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative"
       ],
@@ -436,7 +436,7 @@
       "confidence": "MODERATE",
       "score": 58,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -467,7 +467,7 @@
       "confidence": "MODERATE",
       "score": 68.0,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "A",
       "eligible_modes": [
         "aggressive",
         "conservative"
@@ -498,7 +498,7 @@
       "confidence": "MODERATE",
       "score": 59,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -529,7 +529,7 @@
       "confidence": "MODERATE",
       "score": 58,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "aggressive",
         "conservative"
@@ -560,7 +560,7 @@
       "confidence": "STRONG",
       "score": 76.0,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "A",
       "eligible_modes": [
         "aggressive",
         "conservative"
@@ -591,7 +591,7 @@
       "confidence": "STRONG",
       "score": 76.0,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "A",
       "eligible_modes": [
         "aggressive",
         "conservative"
@@ -622,7 +622,7 @@
       "confidence": "MODERATE",
       "score": 73.0,
       "session": "ASIAN",
-      "tier": "B",
+      "tier": "A",
       "eligible_modes": [
         "aggressive",
         "conservative"
@@ -649,7 +649,7 @@
       "confidence": "STRONG",
       "score": 71.0,
       "session": "ASIAN",
-      "tier": "B",
+      "tier": "A",
       "eligible_modes": [
         "aggressive",
         "conservative"
@@ -676,7 +676,7 @@
       "confidence": "MODERATE",
       "score": 73.0,
       "session": "ASIAN",
-      "tier": "B",
+      "tier": "A",
       "eligible_modes": [
         "aggressive",
         "conservative"
@@ -730,7 +730,7 @@
       "confidence": "MODERATE",
       "score": 71.0,
       "session": "ASIAN",
-      "tier": "B",
+      "tier": "A",
       "eligible_modes": [
         "aggressive",
         "conservative"
@@ -811,7 +811,7 @@
       "confidence": "MODERATE",
       "score": 58.0,
       "session": "LATE_US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "aggressive",
         "conservative"
@@ -838,7 +838,7 @@
       "confidence": "MODERATE",
       "score": 58.0,
       "session": "LATE_US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "aggressive",
         "conservative"
@@ -892,7 +892,7 @@
       "confidence": "MODERATE",
       "score": 58.0,
       "session": "LATE_US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "aggressive",
         "conservative"
@@ -946,7 +946,7 @@
       "confidence": "MODERATE",
       "score": 58.0,
       "session": "LATE_US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "aggressive",
         "conservative"
@@ -973,7 +973,7 @@
       "confidence": "MODERATE",
       "score": 59,
       "session": "US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "aggressive",
         "conservative"
@@ -1000,7 +1000,7 @@
       "confidence": "MODERATE",
       "score": 58,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -1027,7 +1027,7 @@
       "confidence": "MODERATE",
       "score": 59,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -1054,7 +1054,7 @@
       "confidence": "MODERATE",
       "score": 56,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative"
       ],
@@ -1080,7 +1080,7 @@
       "confidence": "MODERATE",
       "score": 59,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -1107,7 +1107,7 @@
       "confidence": "MODERATE",
       "score": 56.0,
       "session": "ASIAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative"
       ],
@@ -1133,7 +1133,7 @@
       "confidence": "MODERATE",
       "score": 53.0,
       "session": "ASIAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -1160,7 +1160,7 @@
       "confidence": "MODERATE",
       "score": 51.0,
       "session": "ASIAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -1187,7 +1187,7 @@
       "confidence": "MODERATE",
       "score": 51.0,
       "session": "ASIAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -1241,7 +1241,7 @@
       "confidence": "STRONG",
       "score": 56.0,
       "session": "ASIAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -1295,7 +1295,7 @@
       "confidence": "STRONG",
       "score": 56.0,
       "session": "ASIAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -1403,7 +1403,7 @@
       "confidence": "MODERATE",
       "score": 57,
       "session": "US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative"
       ],
@@ -1429,7 +1429,7 @@
       "confidence": "MODERATE",
       "score": 58,
       "session": "US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -1483,7 +1483,7 @@
       "confidence": "MODERATE",
       "score": 61.0,
       "session": "US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -1510,7 +1510,7 @@
       "confidence": "MODERATE",
       "score": 58,
       "session": "US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -1564,7 +1564,7 @@
       "confidence": "MODERATE",
       "score": 56,
       "session": "US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative"
       ],
@@ -1644,7 +1644,7 @@
       "confidence": "MODERATE",
       "score": 61.0,
       "session": "US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -1698,7 +1698,7 @@
       "confidence": "MODERATE",
       "score": 61.0,
       "session": "US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -1752,7 +1752,7 @@
       "confidence": "MODERATE",
       "score": 61.0,
       "session": "US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -1806,7 +1806,7 @@
       "confidence": "MODERATE",
       "score": 61.0,
       "session": "US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -1968,7 +1968,7 @@
       "confidence": "MODERATE",
       "score": 56,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative"
       ],
@@ -2048,7 +2048,7 @@
       "confidence": "MODERATE",
       "score": 58,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -2075,7 +2075,7 @@
       "confidence": "MODERATE",
       "score": 57,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative"
       ],
@@ -2101,7 +2101,7 @@
       "confidence": "MODERATE",
       "score": 58,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -2155,7 +2155,7 @@
       "confidence": "MODERATE",
       "score": 57,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative"
       ],
@@ -2181,7 +2181,7 @@
       "confidence": "MODERATE",
       "score": 55,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative"
       ],
@@ -2207,7 +2207,7 @@
       "confidence": "MODERATE",
       "score": 61.0,
       "session": "US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -2261,7 +2261,7 @@
       "confidence": "MODERATE",
       "score": 58,
       "session": "US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -2288,7 +2288,7 @@
       "confidence": "MODERATE",
       "score": 58,
       "session": "US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -2315,7 +2315,7 @@
       "confidence": "MODERATE",
       "score": 58,
       "session": "US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -2369,7 +2369,7 @@
       "confidence": "MODERATE",
       "score": 58,
       "session": "US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -2423,7 +2423,7 @@
       "confidence": "MODERATE",
       "score": 58,
       "session": "US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -2477,7 +2477,7 @@
       "confidence": "MODERATE",
       "score": 60.0,
       "session": "ASIAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -2504,7 +2504,7 @@
       "confidence": "MODERATE",
       "score": 58,
       "session": "US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -2531,7 +2531,7 @@
       "confidence": "MODERATE",
       "score": 59,
       "session": "US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -2584,7 +2584,7 @@
       "confidence": "MODERATE",
       "score": 61,
       "session": "ASIAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -2611,7 +2611,7 @@
       "confidence": "MODERATE",
       "score": 58,
       "session": "US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -2638,7 +2638,7 @@
       "confidence": "MODERATE",
       "score": 57,
       "session": "US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -2691,7 +2691,7 @@
       "confidence": "MODERATE",
       "score": 60,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -2745,7 +2745,7 @@
       "confidence": "MODERATE",
       "score": 61,
       "session": "ASIAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -2799,7 +2799,7 @@
       "confidence": "MODERATE",
       "score": 60,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -2826,7 +2826,7 @@
       "confidence": "MODERATE",
       "score": 60,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -2933,7 +2933,7 @@
       "confidence": "MODERATE",
       "score": 61,
       "session": "ASIAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -2960,7 +2960,7 @@
       "confidence": "MODERATE",
       "score": 55,
       "session": "US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -3145,7 +3145,7 @@
       "confidence": "MODERATE",
       "score": 57,
       "session": "US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -3276,7 +3276,7 @@
       "confidence": "MODERATE",
       "score": 61,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -3329,7 +3329,7 @@
       "confidence": "MODERATE",
       "score": 56,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -3356,7 +3356,7 @@
       "confidence": "MODERATE",
       "score": 61,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -3383,7 +3383,7 @@
       "confidence": "MODERATE",
       "score": 56,
       "session": "EUROPEAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -3410,7 +3410,7 @@
       "confidence": "MODERATE",
       "score": 61,
       "session": "ASIAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -3437,7 +3437,7 @@
       "confidence": "MODERATE",
       "score": 61,
       "session": "ASIAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -3464,7 +3464,7 @@
       "confidence": "MODERATE",
       "score": 61,
       "session": "ASIAN",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "conservative",
         "aggressive"
@@ -4091,7 +4091,7 @@
       "confidence": "MODERATE",
       "score": 61.0,
       "session": "OVERLAP",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "aggressive"
       ],
@@ -5339,7 +5339,7 @@
       "confidence": "MODERATE",
       "score": 58.0,
       "session": "US",
-      "tier": "B",
+      "tier": "C",
       "eligible_modes": [
         "aggressive"
       ],
@@ -5953,10 +5953,10 @@
   ],
   "api_usage": {
     "yfinance": {
-      "successful_downloads": 10
+      "successful_downloads": 0
     },
     "sentiment": {
-      "enabled": false,
+      "enabled": true,
       "engine": "finbert",
       "newsapi": 0,
       "marketaux": 0
@@ -6002,16 +6002,22 @@
     },
     "by_tier": {
       "B": {
-        "trades": 61,
-        "wins": 17,
-        "total_pips": 348.8010000000102,
-        "win_rate": 27.9
+        "trades": 15,
+        "wins": 7,
+        "total_pips": 414.648000000002,
+        "win_rate": 46.7
       },
       "C": {
-        "trades": 79,
-        "wins": 26,
-        "total_pips": -134.9930000000167,
-        "win_rate": 32.9
+        "trades": 119,
+        "wins": 36,
+        "total_pips": -93.84000000001181,
+        "win_rate": 30.3
+      },
+      "A": {
+        "trades": 6,
+        "wins": 0,
+        "total_pips": -106.99999999999709,
+        "win_rate": 0.0
       }
     },
     "by_session": {
@@ -6225,16 +6231,22 @@
     },
     "by_tier": {
       "B": {
-        "trades": 61,
-        "wins": 17,
-        "total_pips": 348.8010000000102,
-        "win_rate": 27.9
+        "trades": 15,
+        "wins": 7,
+        "total_pips": 414.648000000002,
+        "win_rate": 46.7
       },
       "C": {
-        "trades": 79,
-        "wins": 26,
-        "total_pips": -134.9930000000167,
-        "win_rate": 32.9
+        "trades": 119,
+        "wins": 36,
+        "total_pips": -93.84000000001181,
+        "win_rate": 30.3
+      },
+      "A": {
+        "trades": 6,
+        "wins": 0,
+        "total_pips": -106.99999999999709,
+        "win_rate": 0.0
       }
     },
     "by_mode": {
@@ -6278,10 +6290,10 @@
         "B_US": {
           "tier": "B",
           "session": "US",
-          "trades": 17,
-          "wins": 7,
-          "total_pips": 244.82400000000666,
-          "win_rate": 41.2
+          "trades": 3,
+          "wins": 2,
+          "total_pips": 116.00000000000276,
+          "win_rate": 66.7
         },
         "C_LATE_US": {
           "tier": "C",
@@ -6294,58 +6306,58 @@
         "C_ASIAN": {
           "tier": "C",
           "session": "ASIAN",
-          "trades": 18,
-          "wins": 4,
-          "total_pips": -178.85600000000412,
-          "win_rate": 22.2
+          "trades": 25,
+          "wins": 6,
+          "total_pips": -142.91100000000128,
+          "win_rate": 24.0
         },
         "C_EUROPEAN": {
           "tier": "C",
           "session": "EUROPEAN",
-          "trades": 27,
-          "wins": 9,
-          "total_pips": -12.481000000008606,
-          "win_rate": 33.3
+          "trades": 46,
+          "wins": 12,
+          "total_pips": -142.5970000000085,
+          "win_rate": 26.1
         },
         "B_EUROPEAN": {
           "tier": "B",
           "session": "EUROPEAN",
-          "trades": 27,
-          "wins": 6,
-          "total_pips": 44.46100000000118,
-          "win_rate": 22.2
+          "trades": 5,
+          "wins": 3,
+          "total_pips": 233.3769999999987,
+          "win_rate": 60.0
         },
         "C_US": {
           "tier": "C",
           "session": "US",
-          "trades": 20,
-          "wins": 10,
-          "total_pips": 215.98800000000173,
-          "win_rate": 50.0
+          "trades": 33,
+          "wins": 15,
+          "total_pips": 364.1120000000055,
+          "win_rate": 45.5
         },
         "C_OVERLAP": {
           "tier": "C",
           "session": "OVERLAP",
-          "trades": 2,
+          "trades": 3,
           "wins": 0,
-          "total_pips": -64.7729999999994,
-          "win_rate": 0.0
-        },
-        "B_OVERLAP": {
-          "tier": "B",
-          "session": "OVERLAP",
-          "trades": 2,
-          "wins": 0,
-          "total_pips": -25.10000000000123,
+          "total_pips": -77.57300000000109,
           "win_rate": 0.0
         },
         "B_ASIAN": {
           "tier": "B",
           "session": "ASIAN",
-          "trades": 14,
-          "wins": 4,
-          "total_pips": 120.91600000000366,
-          "win_rate": 28.6
+          "trades": 5,
+          "wins": 2,
+          "total_pips": 113.87100000000032,
+          "win_rate": 40.0
+        },
+        "B_OVERLAP": {
+          "tier": "B",
+          "session": "OVERLAP",
+          "trades": 1,
+          "wins": 0,
+          "total_pips": -12.299999999999534,
+          "win_rate": 0.0
         },
         "B_LATE_US": {
           "tier": "B",
@@ -6354,84 +6366,91 @@
           "wins": 0,
           "total_pips": -36.30000000000022,
           "win_rate": 0.0
+        },
+        "A_EUROPEAN": {
+          "tier": "A",
+          "session": "EUROPEAN",
+          "trades": 3,
+          "wins": 0,
+          "total_pips": -58.79999999999774,
+          "win_rate": 0.0
+        },
+        "A_US": {
+          "tier": "A",
+          "session": "US",
+          "trades": 1,
+          "wins": 0,
+          "total_pips": -19.299999999999873,
+          "win_rate": 0.0
+        },
+        "A_ASIAN": {
+          "tier": "A",
+          "session": "ASIAN",
+          "trades": 2,
+          "wins": 0,
+          "total_pips": -28.89999999999948,
+          "win_rate": 0.0
         }
       },
       "mode_by_tier": {
         "aggressive_B": {
           "mode": "aggressive",
           "tier": "B",
-          "trades": 54,
-          "wins": 17,
-          "total_pips": 529.9600000000074,
-          "win_rate": 31.5
+          "trades": 15,
+          "wins": 7,
+          "total_pips": 414.648000000002,
+          "win_rate": 46.7
         },
         "conservative_B": {
           "mode": "conservative",
           "tier": "B",
-          "trades": 55,
-          "wins": 15,
-          "total_pips": 351.64600000000985,
-          "win_rate": 27.3
+          "trades": 11,
+          "wins": 6,
+          "total_pips": 451.0929999999996,
+          "win_rate": 54.5
         },
         "aggressive_C": {
           "mode": "aggressive",
           "tier": "C",
-          "trades": 79,
-          "wins": 26,
-          "total_pips": -134.9930000000167,
-          "win_rate": 32.9
+          "trades": 112,
+          "wins": 36,
+          "total_pips": 87.31899999998555,
+          "win_rate": 32.1
+        },
+        "conservative_C": {
+          "mode": "conservative",
+          "tier": "C",
+          "trades": 38,
+          "wins": 9,
+          "total_pips": 7.553000000006904,
+          "win_rate": 23.7
+        },
+        "aggressive_A": {
+          "mode": "aggressive",
+          "tier": "A",
+          "trades": 6,
+          "wins": 0,
+          "total_pips": -106.99999999999709,
+          "win_rate": 0.0
+        },
+        "conservative_A": {
+          "mode": "conservative",
+          "tier": "A",
+          "trades": 6,
+          "wins": 0,
+          "total_pips": -106.99999999999709,
+          "win_rate": 0.0
         }
       }
     }
   },
   "equity_curve": [],
-  "pair_prices": {
-    "EURUSD": 1.14233,
-    "USDJPY": 159.72,
-    "GBPUSD": 1.32235,
-    "AUDUSD": 0.69832,
-    "USDCAD": 1.3718,
-    "NZDUSD": 0.5776,
-    "USDCHF": 0.79115,
-    "EURJPY": 182.34,
-    "GBPJPY": 182.34,
-    "EURGBP": 0.8632
-  },
+  "pair_prices": {},
   "upcoming_events": [],
-  "pick_of_the_day": {
-    "id": "GBPJPY_SELL_d095a4adcee8",
-    "signal_id": "GBPJPY_SELL_d095a4adcee8",
-    "pair": "GBPJPY",
-    "direction": "SELL",
-    "entry_price": 211.588,
-    "exit_price": 212.01439,
-    "sl": 212.01439,
-    "tp": 210.39408,
-    "status": "LOSS",
-    "pips": -42.63899999999978,
-    "confidence": "MODERATE",
-    "score": 60,
-    "session": "EUROPEAN",
-    "tier": "B",
-    "eligible_modes": [
-      "conservative",
-      "aggressive"
-    ],
-    "sentiment_applied": false,
-    "sentiment_score": 0.0,
-    "sentiment_adjustment": 0.0,
-    "sentiment_engine": null,
-    "estimated_win_rate": null,
-    "risk_reward": 2.8,
-    "adx": 42.2,
-    "rsi": 32.8,
-    "atr": 0.17056,
-    "timestamp": "2026-03-13T09:31:08.736800+00:00",
-    "exit_time": "2026-03-13T09:46:04.427168+00:00"
-  },
+  "pick_of_the_day": null,
   "system": {
-    "last_update": "2026-03-13T21:45:58.884511+00:00",
+    "last_update": "2026-03-15T22:01:17.556547+00:00",
     "signal_only_mode": true,
-    "version": "2.1.6-OPTIMISED"
+    "version": "2.1.7-USD-GATE"
   }
 }

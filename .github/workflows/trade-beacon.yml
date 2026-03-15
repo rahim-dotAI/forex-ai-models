@@ -1,6 +1,6 @@
-name: Trade Beacon v2.1.6-OPTIMISED – Forex Signal Generator
+name: Trade Beacon v2.1.7-USD-GATE – Forex Signal Generator
 
-# CHANGES v2.1.6-OPTIMISED:
+# CHANGES v2.1.7-USD-GATE:
 # - HuggingFace API migrated: api-inference.huggingface.co → router.huggingface.co
 # - BROWSERLESS_TOKEN secret added for X-Rates live price validation
 # - Economic calendar: Forex Factory feed cached daily, blackout ±30/15min
@@ -13,7 +13,7 @@ name: Trade Beacon v2.1.6-OPTIMISED – Forex Signal Generator
 # - Dashboard: ⏳ 4H WINDOW badge on EUROPEAN/US session signals
 
 # PERFORMANCE OPTIMIZATIONS v2.1.3 (carried forward):
-# - Lowered tier thresholds (A+: 80, A: 68, B: 55) for expanded scorer
+# - Tier thresholds v2.1.7: A+: 80, A: 68, B: 62 (raised from 55 — 30% WR below eliminated)
 # - Balanced Conservative/Aggressive thresholds (55/50)
 # - Session-specific thresholds (OVERLAP blocked 999, ASIAN raised)
 # - Pair limits (max 1 GBPJPY, block EURGBP, allow 5 GBPUSD, max 1 NZDUSD)
@@ -64,7 +64,7 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 concurrency:
-  group: trade-beacon-v2.1.6-OPTIMISED-${{ github.ref }}-${{ github.event_name }}
+  group: trade-beacon-v2.1.7-USD-GATE-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: false
 
 permissions:
@@ -73,6 +73,8 @@ permissions:
 jobs:
   forex-trading:
     runs-on: ubuntu-22.04
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
     steps:
       - name: Check if market is open
@@ -185,8 +187,8 @@ jobs:
           echo "Beacon version:  $BEACON_VER"
           echo "Config version:  $CONFIG_VER"
 
-          if [[ "$BEACON_VER" == *"OPTIMISED"* ]] || [[ "$BEACON_VER" == *"FINBERT"* ]]; then
-            echo "✅ v2.1.6-OPTIMISED detected"
+          if [[ "$BEACON_VER" == *"USD-GATE"* ]] || [[ "$BEACON_VER" == *"OPTIMISED"* ]] || [[ "$BEACON_VER" == *"FINBERT"* ]]; then
+            echo "✅ v2.1.7-USD-GATE detected"
           elif [[ "$TRACKER_VER" != "$BEACON_VER" ]]; then
             echo "⚠️ Version mismatch (non-fatal — auto-migration will handle)"
           else
@@ -202,15 +204,15 @@ jobs:
           CONFIG_VER=$(jq -r '.version // "unknown"' config.json)
           echo "Config version: $CONFIG_VER"
           if [[ "$CONFIG_VER" == *"OPTIMISED"* ]] || [[ "$CONFIG_VER" == *"FINBERT"* ]]; then
-            echo "✅ Config version: v2.1.6-OPTIMISED"
+            echo "✅ Config version: v2.1.7-USD-GATE"
           else
-            echo "⚠️ Config version not v2.1.6-OPTIMISED — please update config.json"
+            echo "⚠️ Config version not v2.1.7-USD-GATE — please update config.json"
           fi
 
           # Required structure checks
           jq -e '.settings.aggressive'  config.json > /dev/null || { echo "❌ Missing aggressive settings"; exit 1; }
           jq -e '.settings.conservative' config.json > /dev/null || { echo "❌ Missing conservative settings"; exit 1; }
-          jq -e '.tiers'                config.json > /dev/null || echo "⚠️ Tier thresholds not found - using defaults (A+:80, A:68, B:55)"
+          jq -e '.tiers'                config.json > /dev/null || echo "⚠️ Tier thresholds not found - using defaults (A+:80, A:68, B:62)"
           jq -e '.advanced.session_thresholds' config.json > /dev/null || echo "⚠️ Session thresholds not found"
           jq -e '.advanced.pair_limits'        config.json > /dev/null || echo "⚠️ Pair limits not found"
           jq -e '.sentiment'                   config.json > /dev/null || echo "⚠️ Sentiment block not found"
@@ -230,7 +232,7 @@ jobs:
             echo "📸 Created config baseline snapshot"
           fi
 
-          echo "✅ Configuration valid (v2.1.6-OPTIMISED)"
+          echo "✅ Configuration valid (v2.1.7-USD-GATE)"
 
           MODE=$(jq -r '.mode // "conservative"' config.json)
           echo "ℹ️ Mode: $MODE — Both aggressive and conservative signals generated simultaneously"
@@ -358,7 +360,7 @@ jobs:
         if: steps.market_check.outputs.should_run == 'true'
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "📋 ACTIVE CONFIGURATION — v2.1.6-OPTIMISED"
+          echo "📋 ACTIVE CONFIGURATION — v2.1.7-USD-GATE"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo ""
 
@@ -384,7 +386,7 @@ jobs:
           echo "  Max Corr:  $(jq -r '.settings.conservative.max_correlated_signals' config.json)"
           echo ""
 
-          echo "[Tier Thresholds — v2.1.6-OPTIMISED]"
+          echo "[Tier Thresholds — v2.1.7-USD-GATE]"
           echo "  A+: >= $(jq -r '.tiers.A_plus_min_score // 80' config.json)"
           echo "  A:  >= $(jq -r '.tiers.A_min_score // 68' config.json)"
           echo "  B:  >= $(jq -r '.tiers.B_min_score // 55' config.json)"
@@ -431,6 +433,13 @@ jobs:
           fi
           echo ""
 
+          echo "[Data Quality]"
+          echo "  Staleness Guard: ✅ Active — rejects pairs where yfinance last candle > 60min old"
+          echo "  Divergence Fix:  ✅ Active — updates entry/SL/TP when yfinance vs X-Rates > 0.5%"
+          echo "  Rationale: yfinance served GBPUSD=1.14639 (real=1.32600, 15.67% off) on Mar 13"
+          echo "             Stale OHLC corrupts ATR, EMAs, SL/TP geometry before live price check"
+          echo ""
+
           echo "[System]"
           echo "  Mode:                  $MODE"
           echo "  Sentiment:             $(jq -r '.use_sentiment' config.json)"
@@ -440,35 +449,32 @@ jobs:
           echo "  Correlation Filter:    $(jq -r '.advanced.enable_correlation_filter' config.json)"
           echo ""
 
-          # Sentiment block — v2.1.5-FINBERT adds HF_API_KEY status
+          # Sentiment block — v2.1.7-USD-GATE: selective USD binary gate
           SENTIMENT=$(jq -r '.use_sentiment' config.json)
           if [ "$SENTIMENT" = "true" ]; then
-            echo "[Sentiment Analysis — FinBERT ENABLED]"
-            # NewsAPI key
+            echo "[Sentiment Analysis — v2.1.7 USD GATE ENABLED]"
+            echo "  Architecture: FinBERT gates USD pairs only (binary block/pass)"
+            echo "                GBP pairs (GBPJPY, GBPUSD) = pure technical, zero sentiment noise"
+            echo "  Gate Logic:   BUY blocked if net_sentiment < $(jq -r '.advanced.usd_pair_rules.sentiment_gate_threshold // -0.15' config.json)"
+            echo "                SELL blocked if net_sentiment < $(jq -r '.advanced.usd_pair_rules.sentiment_gate_threshold // -0.15' config.json)"
+            echo "                Neutral / unavailable = signal passes through"
             if [ -n "$NEWSAPI_KEY" ]; then
               echo "  NewsAPI:      ✅ Configured"
             else
               echo "  NewsAPI:      ❌ Missing secret NEWSAPI_KEY"
             fi
-            # MarketAux key
             if [ -n "$MARKETAUX_API_KEY" ]; then
               echo "  MarketAux:    ✅ Configured"
             else
               echo "  MarketAux:    ❌ Missing secret MARKETAUX_API_KEY"
             fi
-            # HuggingFace key — NEW v2.1.5-FINBERT
             if [ -n "$HF_API_KEY" ]; then
               echo "  HF_API_KEY:   ✅ Configured (FinBERT active)"
             else
-              echo "  HF_API_KEY:   ❌ Missing secret HF_API_KEY — FinBERT disabled, get token at huggingface.co/settings/tokens"
+              echo "  HF_API_KEY:   ❌ Missing — add secret HF_API_KEY at huggingface.co/settings/tokens"
             fi
-            SENT_THRESH=$(jq -r '.sentiment.min_score_threshold // 60' config.json)
-            HF_MODEL=$(jq -r '.sentiment.hf_model_primary // "ProsusAI/finbert"' config.json)
-            echo "  Min Score:    $SENT_THRESH (only signals >= $SENT_THRESH receive FinBERT analysis)"
-            echo "  Model:        $HF_MODEL"
-            echo "  API:          router.huggingface.co/hf-inference (path fix applied)"
+            echo "  Model:        $(jq -r '.sentiment.hf_model_primary // "ProsusAI/finbert"' config.json)"
             echo "  Cache TTL:    $(jq -r '.sentiment.cache_ttl_minutes // 30' config.json) min"
-            echo "  Max Adj Pts:  ±$(jq -r '.sentiment.max_adjustment_pts // 10' config.json) pts"
           else
             echo "[Sentiment Analysis — DISABLED]"
             echo "  To enable: set use_sentiment=true in config.json"
@@ -505,7 +511,7 @@ jobs:
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
           BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}
 
-      - name: Run Trade Beacon v2.1.6-OPTIMISED
+      - name: Run Trade Beacon v2.1.7-USD-GATE
         if: steps.market_check.outputs.should_run == 'true'
         env:
           NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
@@ -513,7 +519,7 @@ jobs:
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
           BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}
         run: |
-          echo "🚀 Starting Trade Beacon v2.1.6-OPTIMISED..."
+          echo "🚀 Starting Trade Beacon v2.1.7-USD-GATE..."
           python $ENTRY_SCRIPT
           EXIT_CODE=$?
 
@@ -583,7 +589,7 @@ jobs:
         if: always()
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "📊 TRADE BEACON v2.1.6-OPTIMISED PERFORMANCE SUMMARY"
+          echo "📊 TRADE BEACON v2.1.7-USD-GATE PERFORMANCE SUMMARY"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
           if [ -f signal_state/signal_history.json ]; then
@@ -708,7 +714,7 @@ jobs:
       - name: Commit state changes
         if: steps.market_check.outputs.should_run == 'true'
         run: |
-          git config user.name  "Trade Beacon v2.1.6-OPTIMISED [bot]"
+          git config user.name  "Trade Beacon v2.1.7-USD-GATE [bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git add signal_state/*.json signal_state/last_run.txt signal_state/last_success.txt config.json config.runtime.base.json signals.csv 2>/dev/null || true
@@ -724,7 +730,7 @@ jobs:
             SENT=$(jq -r     '.sentiment_engine // "disabled"'            signal_state/dashboard_state.json 2>/dev/null || echo "disabled")
             MODE=$(jq -r     '.mode // "conservative"'                   config.json)
 
-            git commit -m "📊 Trade Beacon v2.1.6-OPTIMISED [$TIMESTAMP]
+            git commit -m "📊 Trade Beacon v2.1.7-USD-GATE [$TIMESTAMP]
 
             Mode: $MODE | Session: $SESSION | Sentiment: $SENT
             Signals: $TOTAL (Agg: $AGG, Cons: $CONS)
@@ -754,7 +760,7 @@ jobs:
         uses: actions/upload-artifact@v4.6.2
         if: steps.market_check.outputs.should_run == 'true'
         with:
-          name: trade-beacon-v2.1.6-OPTIMISED-run-${{ github.run_number }}
+          name: trade-beacon-v2.1.7-USD-GATE-run-${{ github.run_number }}
           path: |
             signal_state/
             signals.csv

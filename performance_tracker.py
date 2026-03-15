@@ -1,13 +1,13 @@
 """
-Performance Tracker v2.1.6-OPTIMISED - Aligned with Trade Beacon v2.1.6-OPTIMISED
+Performance Tracker v2.1.7-USD-GATE - Aligned with Trade Beacon v2.1.7-USD-GATE
 ============================================================================
 
-CHANGELOG v2.1.6-OPTIMISED (based on v2.1.4-SCORING):
-- ✅ Version bumped to 2.1.6-OPTIMISED to match Trade Beacon
+CHANGELOG v2.1.7-USD-GATE (based on v2.1.4-SCORING):
+- ✅ Version bumped to 2.1.7-USD-GATE to match Trade Beacon
 - ✅ Stats now include avg_win_pips / avg_loss_pips aliases (beacon reads both names)
 - ✅ Stats now include expectancy alias alongside expectancy_pips (beacon reads both)
-- ✅ Tier thresholds corrected to A+:80, A:68, B:55 (was A+:75, A:68, B:60)
-- ✅ AUTOMATIC MIGRATION: migrates v2.1.4-SCORING → v2.1.6-OPTIMISED on load
+- ✅ Tier thresholds corrected to A+:80, A:68, B:62 (was A+:75, A:68, B:60)
+- ✅ AUTOMATIC MIGRATION: migrates v2.1.4-SCORING → v2.1.7-USD-GATE on load
 - ✅ HuggingFace router URL noted in sentinel_engine tracking
 - ✅ resolve_active_signals dedup guard: double-record prevention
 - ✅ Signal resolution uses high/low window, not just close price
@@ -39,7 +39,7 @@ import pandas as pd
 
 log = logging.getLogger("performance-tracker")
 
-TRACKER_VERSION = "2.1.6-OPTIMISED"
+TRACKER_VERSION = "2.1.7-USD-GATE"
 
 # Safe type conversion utilities
 def safe_int(val: Any, default: int = 0) -> int:
@@ -108,28 +108,26 @@ def map_confidence_to_tier(confidence: str) -> str:
 
 def map_score_to_tier(score: int) -> str:
     """
-    Map score to tier using v2.1.6-OPTIMISED thresholds.
+    Map score to tier using v2.1.7-USD-GATE thresholds.
     Rescaled for expanded scorer (max ~110pts).
     A+: 80+   — multiple strong confirmations
     A:  68-79  — strong trend + momentum alignment
-    B:  55-67  — decent signal
+    B:  62-67  — decent signal
     C:  below 55
     """
     if score >= 80:
         return "A+"
     elif score >= 68:
         return "A"
-    elif score >= 55:
+    elif score >= 62:
         return "B"
     else:
         return "C"
 
 def map_score_to_modes(score: int) -> List[str]:
-    """Map score to eligible modes for migration using v2.1.4 thresholds."""
-    if score >= 55:
+    """Map score to eligible modes for migration using v2.1.7 thresholds."""
+    if score >= 62:
         return ['aggressive', 'conservative']
-    elif score >= 50:
-        return ['aggressive']
     else:
         return []
 
@@ -138,9 +136,9 @@ class PerformanceTracker:
     """
     Multi-mode signal performance tracker with tier-based analytics.
 
-    Aligned with Trade Beacon v2.1.6-OPTIMISED:
+    Aligned with Trade Beacon v2.1.7-USD-GATE:
     - Multi-mode support: aggressive + conservative
-    - Tier classification: A+, A, B, C (A+:80, A:68, B:55)
+    - Tier classification: A+, A, B, C (A+:80, A:68, B:62)
     - Session taxonomy: ASIAN, EUROPEAN, OVERLAP, US, LATE_US
     - Confidence tiers: VERY_STRONG, STRONG, MODERATE
     - Signal statuses: OPEN, EXPIRED, WIN, LOSS
@@ -202,8 +200,8 @@ class PerformanceTracker:
     def _migrate(self, data: Dict, from_version: str) -> Dict:
         """
         Migrate old data to current format.
-        Handles v2.1.2, v2.1.2-MULTI, v2.1.4-SCORING, v2.1.6-OPTIMISED, and any other previous versions.
-        Re-maps tiers using correct thresholds (A+:80, A:68, B:55).
+        Handles v2.1.2, v2.1.2-MULTI, v2.1.4-SCORING, v2.1.7-USD-GATE, and any other previous versions.
+        Re-maps tiers using correct thresholds (A+:80, A:68, B:62).
         """
         log.info(f"🔄 Migrating {len(data.get('signals', []))} signals from {from_version}...")
 
@@ -225,7 +223,7 @@ class PerformanceTracker:
                 if old_conf != signal["confidence"]:
                     needs_migration = True
 
-            # Re-map tier using correct thresholds (A+:80, A:68, B:55)
+            # Re-map tier using correct thresholds (A+:80, A:68, B:62)
             if "score" in signal:
                 score = safe_int(signal["score"])
                 new_tier = map_score_to_tier(score)

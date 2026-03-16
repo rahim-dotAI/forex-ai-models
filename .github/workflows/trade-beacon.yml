@@ -203,7 +203,7 @@ jobs:
 
           CONFIG_VER=$(jq -r '.version // "unknown"' config.json)
           echo "Config version: $CONFIG_VER"
-          if [[ "$CONFIG_VER" == *"OPTIMISED"* ]] || [[ "$CONFIG_VER" == *"FINBERT"* ]]; then
+          if [[ "$CONFIG_VER" == *"USD-GATE"* ]] || [[ "$CONFIG_VER" == *"OPTIMISED"* ]] || [[ "$CONFIG_VER" == *"FINBERT"* ]]; then
             echo "✅ Config version: v2.1.7-USD-GATE"
           else
             echo "⚠️ Config version not v2.1.7-USD-GATE — please update config.json"
@@ -324,7 +324,7 @@ jobs:
 
             if jq -e '.analytics.by_tier' signal_state/signal_history.json > /dev/null 2>&1; then
               echo ""
-              echo "🏆 Tier Breakdown (A+≥80, A≥68, B≥55):"
+              echo "🏆 Tier Breakdown (A+≥80, A≥68, B≥62):"
               jq -r '.analytics.by_tier // {} | to_entries | sort_by(.key) | .[] |
                 "  Tier \(.key): \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
                 signal_state/signal_history.json 2>/dev/null || echo "  No tier data yet"
@@ -619,7 +619,7 @@ jobs:
 
             if jq -e '.analytics.by_tier' signal_state/signal_history.json > /dev/null 2>&1; then
               echo ""
-              echo "🏆 Performance by Tier (A+≥80, A≥68, B≥55):"
+              echo "🏆 Performance by Tier (A+≥80, A≥68, B≥62):"
               jq -r '.analytics.by_tier // {} | to_entries | sort_by(.key) | .[] |
                 "Tier \(.key): \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
                 signal_state/signal_history.json || echo "No tier data"

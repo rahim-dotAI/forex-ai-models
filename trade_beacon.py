@@ -708,67 +708,84 @@ def download(pair: str) -> Tuple[pd.DataFrame, bool]:
         return cached, True
 
     max_retries = 3
+    df = None
+
+    # ── Attempt 15m with retries ──────────────────────────────────────────────
+    # yfinance SQLite tz-cache lock returns an empty DataFrame (not an exception)
+    # so we must retry the 15m download on empty result, not just on exceptions.
     for attempt in range(max_retries):
         try:
             if attempt > 0:
-                # Jitter backoff: avoids parallel SQLite lock contention
-                _time.sleep(0.5 * attempt + _random.uniform(0, 0.25))
-                log.info(f"{pair} retry {attempt}/{max_retries-1} after database lock")
+                wait = 0.5 * attempt + _random.uniform(0, 0.3)
+                log.info(f"{pair} 15m retry {attempt}/{max_retries-1} (SQLite lock backoff {wait:.1f}s)")
+                _time.sleep(wait)
 
             df = yf.download(pair, interval="15m", period=LOOKBACK,
                              progress=False, auto_adjust=True, threads=False)
-            if df is None or df.empty or len(df) < MIN_ROWS:
-                log.warning(f"{pair} 15m insufficient, trying 1h...")
-                df = yf.download(pair, interval="1h", period="60d",
-                                 progress=False, auto_adjust=True, threads=False)
-            if df is None or df.empty:
-                return pd.DataFrame(), False
-            df = df.dropna()
-            if len(df) < MIN_ROWS:
-                return pd.DataFrame(), False
-            # Flatten MultiIndex columns (yfinance >=0.2.18 returns MultiIndex
-            # when downloading a single ticker with auto_adjust=True)
-            if isinstance(df.columns, pd.MultiIndex):
-                df.columns = df.columns.get_level_values(0)
 
-            # ── Staleness guard ───────────────────────────────────────────────
-            # yfinance sometimes serves cached/stale OHLC history (e.g. GBPUSD
-            # 1.14639 vs real 1.32600 — 15.67% off). If the last candle is more
-            # than 60 minutes old, the ATR, EMAs, and price are all wrong.
-            # Reject the data entirely rather than generate a corrupted signal.
-            try:
-                # Use pd.Timestamp explicitly — df.index[-1] is always a pd.Timestamp
-                # but converting ensures consistent behaviour across pandas versions.
-                last_ts = pd.Timestamp(df.index[-1])
-                if last_ts.tzinfo is None:
-                    last_ts = last_ts.tz_localize("UTC")
+            if df is not None and not df.empty:
+                if isinstance(df.columns, pd.MultiIndex):
+                    df.columns = df.columns.get_level_values(0)
+                df = df.dropna()
+                if len(df) >= MIN_ROWS:
+                    break  # good 15m data — exit retry loop
                 else:
-                    last_ts = last_ts.tz_convert("UTC")
-                # Convert to Python datetime before subtraction to avoid
-                # pd.Timestamp - datetime type mismatch across pandas versions
-                last_ts_dt = last_ts.to_pydatetime()
-                age_min = (datetime.now(timezone.utc) - last_ts_dt).total_seconds() / 60
-                if age_min > 60:
-                    log.warning(
-                        f"{pair} data is stale — last candle {age_min:.0f}min ago "
-                        f"(last_ts={last_ts_dt}). Skipping to avoid corrupted ATR/SL/TP."
-                    )
-                    return pd.DataFrame(), False
-                log.debug(f"{pair} data freshness OK — last candle {age_min:.1f}min ago")
-            except Exception as e:
-                log.warning(f"{pair} staleness check failed: {e} — proceeding cautiously")
-
-            _cache.set(cache_key, df)
-            return df, True
+                    log.warning(f"{pair} 15m only {len(df)} rows (need {MIN_ROWS}) on attempt {attempt+1}")
+                    df = None  # force retry
+            else:
+                log.warning(f"{pair} 15m empty on attempt {attempt+1} — possible SQLite lock")
+                df = None  # force retry
 
         except Exception as e:
             if "database is locked" in str(e) and attempt < max_retries - 1:
-                log.warning(f"{pair} SQLite lock on attempt {attempt+1}, retrying...")
+                log.warning(f"{pair} SQLite lock exception on attempt {attempt+1}, retrying...")
+                df = None
                 continue
             log.error(f"{pair} download failed: {e}")
             return pd.DataFrame(), False
 
-    return pd.DataFrame(), False
+    # ── Fallback to 1h only if all 15m attempts failed ───────────────────────
+    if df is None or df.empty:
+        log.warning(f"{pair} 15m failed after {max_retries} attempts — trying 1h fallback")
+        try:
+            df = yf.download(pair, interval="1h", period="60d",
+                             progress=False, auto_adjust=True, threads=False)
+            if df is None or df.empty:
+                return pd.DataFrame(), False
+            if isinstance(df.columns, pd.MultiIndex):
+                df.columns = df.columns.get_level_values(0)
+            df = df.dropna()
+            if len(df) < MIN_ROWS:
+                return pd.DataFrame(), False
+        except Exception as e:
+            log.error(f"{pair} 1h fallback failed: {e}")
+            return pd.DataFrame(), False
+
+    # ── Staleness guard ───────────────────────────────────────────────────────
+    # yfinance sometimes serves cached/stale OHLC history (e.g. GBPUSD
+    # 1.14639 vs real 1.32600 — 15.67% off). If the last candle is more
+    # than 60 minutes old, the ATR, EMAs, and price are all wrong.
+    # Reject the data entirely rather than generate a corrupted signal.
+    try:
+        last_ts = pd.Timestamp(df.index[-1])
+        if last_ts.tzinfo is None:
+            last_ts = last_ts.tz_localize("UTC")
+        else:
+            last_ts = last_ts.tz_convert("UTC")
+        last_ts_dt = last_ts.to_pydatetime()
+        age_min = (datetime.now(timezone.utc) - last_ts_dt).total_seconds() / 60
+        if age_min > 60:
+            log.warning(
+                f"{pair} data is stale — last candle {age_min:.0f}min ago "
+                f"(last_ts={last_ts_dt}). Skipping to avoid corrupted ATR/SL/TP."
+            )
+            return pd.DataFrame(), False
+        log.debug(f"{pair} data freshness OK — last candle {age_min:.1f}min ago")
+    except Exception as e:
+        log.warning(f"{pair} staleness check failed: {e} — proceeding cautiously")
+
+    _cache.set(cache_key, df)
+    return df, True
 
 def ema(s, p):         return EMAIndicator(s, window=p).ema_indicator()
 def rsi(s, p=14):      return RSIIndicator(s, window=p).rsi()

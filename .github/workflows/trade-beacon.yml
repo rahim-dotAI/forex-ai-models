@@ -142,11 +142,11 @@ jobs:
 
       - name: Checkout repository
         if: steps.market_check.outputs.should_run == 'true'
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v5
 
       - name: Setup Python environment
         if: steps.market_check.outputs.should_run == 'true'
-        uses: actions/setup-python@v5.4.0
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
@@ -757,7 +757,7 @@ jobs:
           echo "✅ Changes pushed"
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4.6.2
+        uses: actions/upload-artifact@v6
         if: steps.market_check.outputs.should_run == 'true'
         with:
           name: trade-beacon-v2.1.7-USD-GATE-run-${{ github.run_number }}

@@ -111,13 +111,13 @@ def map_score_to_tier(score: int) -> str:
     Map score to tier using v2.1.7-USD-GATE thresholds.
     Rescaled for expanded scorer (max ~110pts).
     A+: 80+   — multiple strong confirmations
-    A:  68-79  — strong trend + momentum alignment
+    A:  72-79  — strong trend + momentum alignment (raised from 68, 0%WR on 6 trades)
     B:  62-67  — decent signal
     C:  below 55
     """
     if score >= 80:
         return "A+"
-    elif score >= 68:
+    elif score >= 72:
         return "A"
     elif score >= 62:
         return "B"

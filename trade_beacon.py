@@ -861,7 +861,7 @@ def calculate_eligible_modes(score: int, adx: float, config: Dict) -> List[str]:
 def classify_signal_tier(score: int) -> str:
     tiers = CONFIG.get("tiers", {})
     if score >= tiers.get("A_plus_min_score", 80): return "A+"
-    if score >= tiers.get("A_min_score", 68):      return "A"
+    if score >= tiers.get("A_min_score", 72):      return "A"
     if score >= tiers.get("B_min_score", 62):      return "B"
     return "C"
 

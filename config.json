@@ -27,9 +27,9 @@
   },
   "tiers": {
     "A_plus_min_score": 80,
-    "A_min_score": 68,
+    "A_min_score": 72,
     "B_min_score": 62,
-    "_note": "v2.1.7: B raised 55->62. Data: score>=65 = 44-57% WR (STRONG). score 55-64 = 30% WR barely above breakeven. Raising B threshold removes weakest signals at source rather than letting them through to be caught downstream. A+>=80, A>=68, B>=62, C<62 (C now effectively blocked by Tier C gate)."
+    "_note": "v2.1.7b: A threshold raised 68->72. Tier A was 0% WR across 6 trades \u2014 high-scoring signals = late entries. Score 68-71 now classifies as B (still tradeable). Score 72-79 = A, score 80+ = A+. B_min_score stays at 62."
   },
   "advanced": {
     "enable_session_filtering": true,
@@ -131,7 +131,8 @@
       "blackout_after_minutes": 30,
       "_note": "USD pairs US-session-only (47.2% WR). EURJPY added: JPY risk-sentiment cross, 0% WR EUROPEAN. Min score 65 vs default 55/58 \u2014 macro pairs need higher conviction. Wider news blackout -45/+30min \u2014 NFP/CPI disruption persists longer. Sentiment gate: FinBERT blocks USD signals when macro clearly disagrees (net_sentiment < -0.15). GBP pairs excluded \u2014 pure technical. Research: BIS 2025, ClearEdge, OANDA session analysis.",
       "sentiment_gate": true,
-      "sentiment_gate_threshold": -0.15
+      "sentiment_gate_threshold": 0.0,
+      "_gate_note": "v2.1.7b: Raised from -0.15 to 0.0 \u2014 neutral no longer passes. EURUSD 6/6 losses showed -0.15 too lenient in USD bear trend. Now requires net_sentiment > 0.0 (mildly positive macro) to pass."
     }
   },
   "sentiment": {

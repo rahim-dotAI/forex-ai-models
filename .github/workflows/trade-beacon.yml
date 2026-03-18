@@ -744,12 +744,21 @@ jobs:
       - name: Push changes
         if: steps.market_check.outputs.should_run == 'true'
         run: |
-          git stash --include-untracked 2>/dev/null || true
-          git pull --rebase origin main || {
-            echo "⚠️ Rebase failed — aborting and pushing as-is"
-            git rebase --abort 2>/dev/null || true
+          # State files (dashboard_state.json, health.json, last_run.txt) are always
+          # "latest run wins" — no meaningful merge exists between two concurrent runs.
+          # Using merge -X ours: fetch remote, keep our version for any conflict.
+          # This eliminates the rebase conflict that fires when two 15-min jobs overlap.
+          git fetch origin main
+          git merge -X ours origin/main --no-edit 2>/dev/null || {
+            echo "⚠️ Merge failed — pushing with force-with-lease as fallback"
+            git merge --abort 2>/dev/null || true
+            git push --force-with-lease origin HEAD:main || {
+              echo "⚠️ Force push also failed, will retry on next run"
+              exit 0
+            }
+            echo "✅ Changes pushed (force)"
+            exit 0
           }
-          git stash pop 2>/dev/null || true
           git push origin HEAD:main || {
             echo "⚠️ Push failed, will retry on next run"
             exit 0

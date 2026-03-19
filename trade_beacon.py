@@ -1,7 +1,7 @@
 """
 Trade Beacon v2.2.0-MULTI-PAIR - Forex Signal Generator (INSTITUTIONAL GRADE)
 MULTI-MODE EDITION: Generates Aggressive + Conservative signals simultaneously
-with t-based selective enhancement (sentiment/backtest only on top-tier)
+with tier-based selective enhancement (sentiment/backtest only on top-tier)
 
 CHANGES v2.2.0-MULTI-PAIR:
 - NEW PAIRS: GBPAUD and GBPCAD added (GBP crosses — model calibrated to GBP behavior)

@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-03-19T22:15:56.362338+00:00",
-  "active_signals": 1,
+  "timestamp": "2026-03-19T22:27:31.471311+00:00",
+  "active_signals": 0,
   "active_signals_by_mode": {
-    "aggressive": 1,
-    "conservative": 1
+    "aggressive": 0,
+    "conservative": 0
   },
   "session": "LATE_US",
   "mode": "conservative",
@@ -17,174 +17,44 @@
   },
   "market_state": {
     "volatility": "CALM",
-    "sentiment_bias": "BULLISH",
+    "sentiment_bias": "MIXED",
     "session": "LATE_US"
   },
   "signals_by_mode": {
-    "aggressive": [
-      {
-        "signal_id": "GBPUSD_BUY_6aa51a936207",
-        "id": "GBPUSD_BUY_6aa51a936207",
-        "pair": "GBPUSD",
-        "direction": "BUY",
-        "score": 63,
-        "technical_score": 63,
-        "sentiment_score": 0.0,
-        "sentiment_adjustment": 0.0,
-        "score_before_sentiment": 63,
-        "confidence": "MODERATE",
-        "tier": "B",
-        "rsi": 64.2,
-        "adx": 37.6,
-        "atr": 0.00072,
-        "volume_ratio": 0,
-        "session": "LATE_US",
-        "entry_price": 1.343,
-        "sl": 1.3412,
-        "tp": 1.34805,
-        "risk_reward": 2.8,
-        "spread": 0.0002,
-        "timestamp": "2026-03-19T22:15:54.014786+00:00",
-        "status": "OPEN",
-        "hold_time": "SWING",
-        "eligible_modes": [
-          "conservative",
-          "aggressive"
-        ],
-        "freshness": {
-          "status": "FRESH",
-          "age_minutes": 0.0,
-          "confidence_decay": 100.0
-        },
-        "sentiment_applied": false,
-        "htf_confirmed": true,
-        "htf_trend_1h": "BULL",
-        "metadata": {
-          "signal_type": "trend-continuation",
-          "market_state": "TRENDING_STRONG",
-          "timeframe": "15m",
-          "valid_for_minutes": 15,
-          "generated_at": "2026-03-19T22:15:54.014786+00:00",
-          "expires_at": "2026-03-19T22:30:54.014786+00:00",
-          "session_active": false,
-          "signal_generator_version": "2.2.0-MULTI-PAIR",
-          "atr_stop_multiplier": 2.5,
-          "atr_target_multiplier": 7.0
-        },
-        "estimated_win_rate": null,
-        "price_source": "xrates",
-        "price_divergence": 0.89374
-      }
-    ],
-    "conservative": [
-      {
-        "signal_id": "GBPUSD_BUY_6aa51a936207",
-        "id": "GBPUSD_BUY_6aa51a936207",
-        "pair": "GBPUSD",
-        "direction": "BUY",
-        "score": 63,
-        "technical_score": 63,
-        "sentiment_score": 0.0,
-        "sentiment_adjustment": 0.0,
-        "score_before_sentiment": 63,
-        "confidence": "MODERATE",
-        "tier": "B",
-        "rsi": 64.2,
-        "adx": 37.6,
-        "atr": 0.00072,
-        "volume_ratio": 0,
-        "session": "LATE_US",
-        "entry_price": 1.343,
-        "sl": 1.3412,
-        "tp": 1.34805,
-        "risk_reward": 2.8,
-        "spread": 0.0002,
-        "timestamp": "2026-03-19T22:15:54.014786+00:00",
-        "status": "OPEN",
-        "hold_time": "SWING",
-        "eligible_modes": [
-          "conservative",
-          "aggressive"
-        ],
-        "freshness": {
-          "status": "FRESH",
-          "age_minutes": 0.0,
-          "confidence_decay": 100.0
-        },
-        "sentiment_applied": false,
-        "htf_confirmed": true,
-        "htf_trend_1h": "BULL",
-        "metadata": {
-          "signal_type": "trend-continuation",
-          "market_state": "TRENDING_STRONG",
-          "timeframe": "15m",
-          "valid_for_minutes": 15,
-          "generated_at": "2026-03-19T22:15:54.014786+00:00",
-          "expires_at": "2026-03-19T22:30:54.014786+00:00",
-          "session_active": false,
-          "signal_generator_version": "2.2.0-MULTI-PAIR",
-          "atr_stop_multiplier": 2.5,
-          "atr_target_multiplier": 7.0
-        },
-        "estimated_win_rate": null,
-        "price_source": "xrates",
-        "price_divergence": 0.89374
-      }
-    ]
+    "aggressive": [],
+    "conservative": []
   },
   "historical_signals": [
     {
-      "signal_id": "GBPUSD_BUY_6aa51a936207",
       "id": "GBPUSD_BUY_6aa51a936207",
+      "signal_id": "GBPUSD_BUY_6aa51a936207",
       "pair": "GBPUSD",
       "direction": "BUY",
-      "score": 63,
-      "technical_score": 63,
-      "sentiment_score": 0.0,
-      "sentiment_adjustment": 0.0,
-      "score_before_sentiment": 63,
-      "confidence": "MODERATE",
-      "tier": "B",
-      "rsi": 64.2,
-      "adx": 37.6,
-      "atr": 0.00072,
-      "volume_ratio": 0,
-      "session": "LATE_US",
       "entry_price": 1.343,
+      "exit_price": 1.3412,
       "sl": 1.3412,
       "tp": 1.34805,
-      "risk_reward": 2.8,
-      "spread": 0.0002,
-      "timestamp": "2026-03-19T22:15:54.014786+00:00",
-      "status": "OPEN",
-      "hold_time": "SWING",
+      "status": "LOSS",
+      "pips": -18.000000000000238,
+      "confidence": "MODERATE",
+      "score": 63,
+      "session": "LATE_US",
+      "tier": "B",
       "eligible_modes": [
         "conservative",
         "aggressive"
       ],
-      "freshness": {
-        "status": "FRESH",
-        "age_minutes": 0.0,
-        "confidence_decay": 100.0
-      },
       "sentiment_applied": false,
-      "htf_confirmed": true,
-      "htf_trend_1h": "BULL",
-      "metadata": {
-        "signal_type": "trend-continuation",
-        "market_state": "TRENDING_STRONG",
-        "timeframe": "15m",
-        "valid_for_minutes": 15,
-        "generated_at": "2026-03-19T22:15:54.014786+00:00",
-        "expires_at": "2026-03-19T22:30:54.014786+00:00",
-        "session_active": false,
-        "signal_generator_version": "2.2.0-MULTI-PAIR",
-        "atr_stop_multiplier": 2.5,
-        "atr_target_multiplier": 7.0
-      },
+      "sentiment_score": 0.0,
+      "sentiment_adjustment": 0.0,
+      "sentiment_engine": null,
       "estimated_win_rate": null,
-      "price_source": "xrates",
-      "price_divergence": 0.89374
+      "risk_reward": 2.8,
+      "adx": 37.6,
+      "rsi": 64.2,
+      "atr": 0.00072,
+      "timestamp": "2026-03-19T22:15:54.014786+00:00",
+      "exit_time": "2026-03-19T22:27:29.589700+00:00"
     },
     {
       "id": "EURUSD_BUY_830f11048666",
@@ -6248,23 +6118,23 @@
     }
   },
   "stats": {
-    "total_trades": 144,
-    "win_rate": 29.9,
-    "total_pips": 92.8,
+    "total_trades": 145,
+    "win_rate": 29.7,
+    "total_pips": 74.8,
     "wins": 43,
-    "losses": 101,
-    "expectancy": 0.64
+    "losses": 102,
+    "expectancy": 0.52
   },
   "performance_stats": {
-    "total_trades": 144,
+    "total_trades": 145,
     "wins": 43,
-    "losses": 101,
+    "losses": 102,
     "expired": 81,
-    "win_rate": 29.9,
-    "total_pips": 92.8,
+    "win_rate": 29.7,
+    "total_pips": 74.8,
     "avg_win": 64.4,
-    "avg_loss": 26.5,
-    "expectancy": 0.64,
+    "avg_loss": 26.4,
+    "expectancy": 0.52,
     "by_mode": {
       "all": {
         "trades": 0,
@@ -6273,24 +6143,24 @@
         "win_rate": 0.0
       },
       "aggressive": {
-        "trades": 137,
+        "trades": 138,
         "wins": 43,
-        "total_pips": 273.9669999999927,
-        "win_rate": 31.4
+        "total_pips": 255.96699999999248,
+        "win_rate": 31.2
       },
       "conservative": {
-        "trades": 59,
+        "trades": 60,
         "wins": 15,
-        "total_pips": 230.6460000000121,
-        "win_rate": 25.4
+        "total_pips": 212.64600000001187,
+        "win_rate": 25.0
       }
     },
     "by_tier": {
       "B": {
-        "trades": 21,
+        "trades": 22,
         "wins": 7,
-        "total_pips": 260.54800000000495,
-        "win_rate": 33.3
+        "total_pips": 242.54800000000472,
+        "win_rate": 31.8
       },
       "C": {
         "trades": 119,
@@ -6313,10 +6183,10 @@
         "win_rate": 41.5
       },
       "LATE_US": {
-        "trades": 13,
+        "trades": 14,
         "wins": 3,
-        "total_pips": -131.17100000000644,
-        "win_rate": 23.1
+        "total_pips": -149.17100000000667,
+        "win_rate": 21.4
       },
       "ASIAN": {
         "trades": 32,
@@ -6339,10 +6209,10 @@
     },
     "by_pair": {
       "GBPUSD": {
-        "trades": 18,
+        "trades": 19,
         "wins": 9,
-        "total_pips": 215.29999999999708,
-        "win_rate": 50.0
+        "total_pips": 197.29999999999686,
+        "win_rate": 47.4
       },
       "GBPJPY": {
         "trades": 87,
@@ -6401,17 +6271,17 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 18.0,
-    "total_risk_pips": 18.000000000000238,
+    "theoretical_max_pips": 0.0,
+    "total_risk_pips": 0,
     "max_daily_risk": 150
   },
   "analytics": {
     "by_pair": {
       "GBPUSD": {
-        "trades": 18,
+        "trades": 19,
         "wins": 9,
-        "total_pips": 215.29999999999708,
-        "win_rate": 50.0
+        "total_pips": 197.29999999999686,
+        "win_rate": 47.4
       },
       "GBPJPY": {
         "trades": 87,
@@ -6476,10 +6346,10 @@
         "win_rate": 41.5
       },
       "LATE_US": {
-        "trades": 13,
+        "trades": 14,
         "wins": 3,
-        "total_pips": -131.17100000000644,
-        "win_rate": 23.1
+        "total_pips": -149.17100000000667,
+        "win_rate": 21.4
       },
       "ASIAN": {
         "trades": 32,
@@ -6502,10 +6372,10 @@
     },
     "by_confidence": {
       "MODERATE": {
-        "trades": 131,
+        "trades": 132,
         "wins": 39,
-        "total_pips": -74.4990000000081,
-        "win_rate": 29.8
+        "total_pips": -92.49900000000834,
+        "win_rate": 29.5
       },
       "STRONG": {
         "trades": 13,
@@ -6516,10 +6386,10 @@
     },
     "by_tier": {
       "B": {
-        "trades": 21,
+        "trades": 22,
         "wins": 7,
-        "total_pips": 260.54800000000495,
-        "win_rate": 33.3
+        "total_pips": 242.54800000000472,
+        "win_rate": 31.8
       },
       "C": {
         "trades": 119,
@@ -6542,25 +6412,25 @@
         "win_rate": 0.0
       },
       "aggressive": {
-        "trades": 137,
+        "trades": 138,
         "wins": 43,
-        "total_pips": 273.9669999999927,
-        "win_rate": 31.4
+        "total_pips": 255.96699999999248,
+        "win_rate": 31.2
       },
       "conservative": {
-        "trades": 59,
+        "trades": 60,
         "wins": 15,
-        "total_pips": 230.6460000000121,
-        "win_rate": 25.4
+        "total_pips": 212.64600000001187,
+        "win_rate": 25.0
       }
     },
     "by_sentiment": {
       "sentiment_off": {
-        "trades": 131,
+        "trades": 132,
         "wins": 40,
-        "total_pips": 161.87899999999016,
+        "total_pips": 143.87899999998993,
         "engine": "none",
-        "win_rate": 30.5
+        "win_rate": 30.3
       },
       "sentiment_on": {
         "trades": 13,
@@ -6647,9 +6517,9 @@
         "B_LATE_US": {
           "tier": "B",
           "session": "LATE_US",
-          "trades": 1,
+          "trades": 2,
           "wins": 0,
-          "total_pips": -36.30000000000022,
+          "total_pips": -54.30000000000045,
           "win_rate": 0.0
         },
         "A_EUROPEAN": {
@@ -6681,18 +6551,18 @@
         "aggressive_B": {
           "mode": "aggressive",
           "tier": "B",
-          "trades": 21,
+          "trades": 22,
           "wins": 7,
-          "total_pips": 260.54800000000495,
-          "win_rate": 33.3
+          "total_pips": 242.54800000000472,
+          "win_rate": 31.8
         },
         "conservative_B": {
           "mode": "conservative",
           "tier": "B",
-          "trades": 17,
+          "trades": 18,
           "wins": 6,
-          "total_pips": 296.99300000000255,
-          "win_rate": 35.3
+          "total_pips": 278.9930000000023,
+          "win_rate": 33.3
         },
         "aggressive_C": {
           "mode": "aggressive",
@@ -6731,16 +6601,16 @@
   },
   "equity_curve": [],
   "pair_prices": {
-    "NZDUSD": 0.58782,
-    "USDJPY": 157.724,
-    "AUDUSD": 0.70918,
-    "USDCHF": 0.78789,
-    "GBPUSD": 0.70918,
-    "USDCAD": 1.37382,
-    "EURJPY": 182.77901,
-    "GBPJPY": 182.77901,
-    "GBPCAD": 182.77901,
-    "GBPAUD": 182.77901
+    "GBPUSD": 1.34322,
+    "NZDUSD": 0.58751,
+    "USDJPY": 157.752,
+    "AUDUSD": 0.70897,
+    "USDCAD": 1.37355,
+    "USDCHF": 0.78794,
+    "GBPJPY": 211.89999,
+    "GBPAUD": 1.89457,
+    "EURJPY": 182.744,
+    "GBPCAD": 182.744
   },
   "upcoming_events": [],
   "pick_of_the_day": {
@@ -6775,7 +6645,7 @@
     "exit_time": "2026-03-19T16:31:04.072239+00:00"
   },
   "system": {
-    "last_update": "2026-03-19T22:15:56.362419+00:00",
+    "last_update": "2026-03-19T22:27:31.471403+00:00",
     "signal_only_mode": true,
     "version": "2.2.0-MULTI-PAIR"
   }

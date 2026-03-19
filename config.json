@@ -1,45 +1,53 @@
 {
-  "version": "2.1.7-USD-GATE",
+  "version": "2.2.0-MULTI-PAIR",
   "mode": "conservative",
-  "_sentiment_note": "v2.1.7: Re-enabled as USD-only binary gate. OLD: \u00b110pt adjuster on all pairs hurt GBP signals (27.3% WR). NEW: Gates USD-restricted pairs only \u2014 blocks when macro clearly disagrees. GBP pairs remain pure technical (no sentiment noise).",
+
+  "_v2.2.0_changes": "1) Threshold 62->55/57 — 1h MTF filter is new quality gate. 2) EURUSD/EURGBP permanently blocked. 3) GBPAUD+GBPCAD added — GBP crosses, BIS top-25, BoE-driven. 4) B_min_score 62->55. 5) max_open_positions 3->5. 6) Session bonuses for new GBP crosses.",
+
   "use_sentiment": true,
+  "_sentiment_note": "FinBERT gates USD-restricted pairs only (binary pass/block). GBP pairs and GBP crosses (GBPAUD/GBPCAD) are pure technical — zero sentiment noise.",
+
   "settings": {
     "aggressive": {
-      "threshold": 62,
+      "threshold": 55,
       "min_adx": 15,
       "rsi_oversold": 30,
       "rsi_overbought": 70,
       "min_risk_reward": 2.5,
       "atr_stop_multiplier": 2.5,
       "atr_target_multiplier": 7.0,
-      "max_correlated_signals": 2
+      "max_correlated_signals": 2,
+      "_note": "v2.2.0: 62->55. 1h MTF filter is now the quality gate. Score 55-61 only passes with 1h EMA agreement."
     },
     "conservative": {
-      "threshold": 62,
+      "threshold": 57,
       "min_adx": 17,
       "rsi_oversold": 30,
       "rsi_overbought": 70,
       "min_risk_reward": 2.5,
       "atr_stop_multiplier": 2.5,
       "atr_target_multiplier": 7.0,
-      "max_correlated_signals": 1
+      "max_correlated_signals": 1,
+      "_note": "v2.2.0: 62->57. Slightly higher than aggressive to keep conservative mode stricter."
     }
   },
+
   "tiers": {
     "A_plus_min_score": 80,
     "A_min_score": 72,
-    "B_min_score": 62,
-    "_note": "v2.1.7b: A threshold raised 68->72. Tier A was 0% WR across 6 trades \u2014 high-scoring signals = late entries. Score 68-71 now classifies as B (still tradeable). Score 72-79 = A, score 80+ = A+. B_min_score stays at 62."
+    "B_min_score": 55,
+    "_note": "v2.2.0: B_min_score 62->55 to match new thresholds. Tier C (below 55) permanently blocked. A/A+ unchanged."
   },
+
   "advanced": {
     "enable_session_filtering": true,
     "enable_correlation_filter": true,
     "cache_ttl_minutes": 5,
-    "parallel_workers": 3,
+    "parallel_workers": 4,
     "min_risk_reward": 2.5,
     "atr_stop_multiplier": 2.5,
     "atr_target_multiplier": 7.0,
-    "_rr_note": "v2.1.4: atr_tgt raised 5.0->7.0 so RR=2.8, passes min_rr=2.5",
+
     "session_bonuses": {
       "ASIAN": {
         "JPY_pairs": 3,
@@ -48,7 +56,8 @@
       },
       "EUROPEAN": {
         "EUR_GBP_pairs": 3,
-        "EUR_GBP_crosses": 2,
+        "EUR_GBP_crosses": 3,
+        "GBP_crosses": 3,
         "other": 0
       },
       "OVERLAP": {
@@ -56,42 +65,45 @@
       },
       "US": {
         "USD_majors": 3,
+        "GBP_crosses": 3,
         "other": 0
       },
       "LATE_US": {
         "all_major_pairs": 0
       }
     },
+
     "session_thresholds": {
       "ASIAN": 999,
-      "EUROPEAN": 50,
-      "US": 50,
+      "EUROPEAN": 48,
+      "US": 48,
       "LATE_US": 60,
       "OVERLAP": 999,
-      "_note": "v2.1.6: OVERLAP blocked(999,0%WR). ASIAN blocked(999,25.8%WR,31trades below breakeven). LATE_US=60(23.1%WR). EUROPEAN=50(29.4%WR). US=50(50%WR)."
+      "_note": "v2.2.0: 50->48 to match new threshold of 55. ASIAN/OVERLAP still blocked. LATE_US at 60 — thin volume."
     },
+
     "pair_limits": {
       "GBPUSD": 5,
       "GBPJPY": 1,
+      "GBPAUD": 3,
+      "GBPCAD": 3,
       "EURGBP": 0,
+      "EURUSD": 0,
       "NZDUSD": 1,
+      "AUDUSD": 2,
       "default": 3,
-      "_note": "GBPUSD(56%WR,max5,BUY-only,unrestricted), GBPJPY(33.7%WR,max1), EURGBP(0%WR,blocked), EURUSD(US-only,min65,max2), AUDUSD(US-only,min65,max2), USDCAD/USDCHF/USDJPY/NZDUSD(US-only,min65), EURJPY(US-only,min65 \u2014 0%WR EUROPEAN,2t,-61pips)",
-      "EURUSD": 2,
-      "AUDUSD": 2
+      "_note": "EURUSD=0 (7t, 0% WR, -177p, blocked). EURGBP=0 (0% WR). GBPAUD/GBPCAD=3 (new). GBPUSD=5 BUY-only. GBPJPY=1 (cap risk)."
     },
+
     "directional_filters": {
       "GBPUSD": {
-        "allowed_directions": [
-          "BUY"
-        ],
-        "blocked_directions": [
-          "SELL"
-        ],
-        "reason": "GBPUSD SELL 0/3 wins (-49.7 pips), BUY 2/2 wins (+90.9 pips) in v2.1.4"
+        "allowed_directions": ["BUY"],
+        "blocked_directions": ["SELL"],
+        "reason": "GBPUSD SELL: 0/3 wins (-49.7p). BUY: 50%+ WR live. BoE hawkishness = structural GBP bid 2025-26."
       },
-      "_note": "Block specific directions for pairs with strong directional bias."
+      "_note": "Block specific directions for pairs with confirmed directional bias."
     },
+
     "validation": {
       "max_signal_age_seconds": 900,
       "session_expiry_minutes": {
@@ -100,7 +112,7 @@
         "ASIAN": 15,
         "LATE_US": 15,
         "OVERLAP": 15,
-        "_note": "Data-driven: EUROPEAN(37.5%WR,+380p) and US(54.8%WR,+602p) extended to 4h. ASIAN/LATE_US/OVERLAP kept at 15min \u2014 thin liquidity, poor WR."
+        "_note": "EUROPEAN/US 4h — data-validated. GBPAUD/GBPCAD inherit these as GBP crosses."
       },
       "min_sl_pips": {
         "JPY_pairs": 20,
@@ -112,31 +124,24 @@
       "require_direction": true,
       "reject_missing_pips": true
     },
+
     "usd_pair_rules": {
       "enabled": true,
       "restricted_pairs": [
-        "EURUSD",
-        "AUDUSD",
-        "USDCAD",
-        "USDCHF",
-        "USDJPY",
-        "NZDUSD",
-        "EURJPY"
+        "AUDUSD", "USDCAD", "USDCHF", "USDJPY", "NZDUSD", "EURJPY"
       ],
-      "allowed_sessions": [
-        "US"
-      ],
+      "_note": "v2.2.0: EURUSD removed (now in _PERMANENTLY_BLOCKED_PAIRS and pair_limits=0). GBPAUD/GBPCAD are NOT USD pairs — unrestricted. Remaining USD pairs US-session-only with FinBERT gate.",
+      "allowed_sessions": ["US"],
       "min_score": 65,
       "blackout_before_minutes": 45,
       "blackout_after_minutes": 30,
-      "_note": "USD pairs US-session-only (47.2% WR). EURJPY added: JPY risk-sentiment cross, 0% WR EUROPEAN. Min score 65 vs default 55/58 \u2014 macro pairs need higher conviction. Wider news blackout -45/+30min \u2014 NFP/CPI disruption persists longer. Sentiment gate: FinBERT blocks USD signals when macro clearly disagrees (net_sentiment < -0.15). GBP pairs excluded \u2014 pure technical. Research: BIS 2025, ClearEdge, OANDA session analysis.",
       "sentiment_gate": true,
       "sentiment_gate_threshold": 0.0,
-      "_gate_note": "v2.1.7b: Raised from -0.15 to 0.0 \u2014 neutral no longer passes. EURUSD 6/6 losses showed -0.15 too lenient in USD bear trend. Now requires net_sentiment > 0.0 (mildly positive macro) to pass."
+      "_gate_note": "Net sentiment > 0.0 required. Neutral blocked since v2.1.7b."
     }
   },
+
   "sentiment": {
-    "_note": "These values are now READ by the code in v2.1.5-FINBERT",
     "min_score_threshold": 60,
     "newsapi_enabled": true,
     "marketaux_enabled": true,
@@ -145,11 +150,13 @@
     "cache_ttl_minutes": 30,
     "rate_limit_seconds": 2,
     "max_adjustment_pts": 10,
-    "_setup": "Requires GitHub secrets: HF_API_KEY, NEWSAPI_KEY, MARKETAUX_API_KEY. Then set use_sentiment: true above."
+    "_setup": "Requires GitHub secrets: HF_API_KEY, NEWSAPI_KEY, MARKETAUX_API_KEY."
   },
+
   "risk_management": {
     "max_daily_risk_pips": 150,
-    "max_open_positions": 3,
+    "max_open_positions": 5,
+    "_note": "v2.2.0: 3->5 — 12 pairs monitored, need capacity for concurrent signals.",
     "stop_trading_on_drawdown_pips": 100,
     "equity_protection": {
       "enable": false,
@@ -157,10 +164,11 @@
       "pause_minutes_after_hit": 120
     }
   },
+
   "performance_tracking": {
     "enable": true,
     "history_file": "signal_state/signal_history.json",
-    "tracker_version": "2.1.6-OPTIMISED",
+    "tracker_version": "2.2.0-MULTI-PAIR",
     "idempotency": {
       "enabled": true
     },
@@ -169,9 +177,11 @@
       "track_by_tier": true,
       "track_by_session": true,
       "track_by_mode": true,
-      "track_cross_analytics": true
+      "track_cross_analytics": true,
+      "track_htf_confirmation": true
     }
   },
+
   "performance_tuning": {
     "auto_adjust_thresholds": false,
     "min_trades_for_optimization": 50,
@@ -182,20 +192,28 @@
       "min_expectancy": 5
     }
   },
-  "_optimisation_note": "v2.1.7 (Mar 14 2026): 1) FinBERT re-enabled as USD-only binary macro gate (not GBP adjuster). 2) Score threshold raised 55/58->62 \u2014 MODERATE (30% WR) eliminated at source. 3) EURJPY added to USD restricted list. 4) Staleness guard \u2014 yfinance stale OHLC rejected. 5) USD pairs US-session-only with -45/+30min blackout.",
+
   "economic_calendar": {
-    "_note": "Forex Factory high-impact event blackout. Plain HTTP \u2014 no Browserless tokens used. Default: -30min/+15min. USD restricted pairs: -45min/+30min.",
+    "_note": "Forex Factory blackout. GBPAUD: also covers RBA events (AUD). GBPCAD: also covers BoC events (CAD). Standard calendar logic handles this automatically.",
     "enabled": true,
     "blackout_before_minutes": 30,
     "blackout_after_minutes": 15,
     "cache_ttl_hours": 24,
     "source": "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
   },
+
   "live_price_validation": {
-    "_note": "X-Rates live price via Browserless. Requires BROWSERLESS_TOKEN secret. Free tier = 1000 tokens/month.",
+    "_note": "X-Rates via Browserless. GBPAUD/GBPCAD validated same as other pairs.",
     "enabled": true,
     "divergence_threshold_pct": 0.5,
     "cache_ttl_minutes": 5,
     "source": "https://www.x-rates.com"
+  },
+
+  "_research_notes": {
+    "GBPAUD": "BIS 2025: AUD ranks 5th globally by FX volume. GBPAUD avg daily range 80-120 pips. BoE vs RBA divergence creates sustained directional momentum. No USD dependency — immune to Fed macro events. EUROPEAN session strongest.",
+    "GBPCAD": "BIS 2025: CAD ranks 6th globally. GBPCAD = BoE rates vs oil/BoC — two clear fundamental drivers. US session optimal — NY crude oil peaks. 80-100 pip daily range.",
+    "EURUSD_block": "7t, 0% WR, -177p. FinBERT gate applied, still 0% WR. USD-session restriction applied, still 0% WR. ECB-Fed policy gap compressing — reduced trend clarity. Permanently blocked.",
+    "1h_filter": "Murphy (2002) MTF analysis: confirmation across timeframes raises directional accuracy ~15-20%. EMA12>EMA26>EMA50 on 1h = trend confirmed across 3 MAs. EMA50 chosen over EMA200 on 1h for intraday responsiveness."
   }
 }

@@ -1,24 +1,24 @@
-name: Trade Beacon v2.1.7-USD-GATE – Forex Signal Generator
+name: Trade Beacon v2.2.0-MULTI-PAIR – Forex Signal Generator
 
-# CHANGES v2.1.7-USD-GATE:
-# - HuggingFace API migrated: api-inference.huggingface.co → router.huggingface.co
-# - BROWSERLESS_TOKEN secret added for X-Rates live price validation
-# - Economic calendar: Forex Factory feed cached daily, blackout ±30/15min
-# - Signal resolution fixed: checks high/low window, deduplicates, guards double-record
-# - FinBERT sentiment via HF_API_KEY secret (replaces keyword counting)
-# - Sentiment engine displayed in config summary and performance output
-# - by_sentiment analytics block displayed in performance summary
-# - Session-aware expiry: EUROPEAN/US → 4h (data: 37.5%/54.8% WR), ASIAN/LATE_US → 15min
-# - Post-FinBERT score re-validation: drops signals that fall below threshold after adjustment
-# - Dashboard: ⏳ 4H WINDOW badge on EUROPEAN/US session signals
+# CHANGES v2.2.0-MULTI-PAIR:
+# - NEW PAIRS: GBPAUD + GBPCAD — GBP crosses, BIS 2025 top-25, BoE-driven momentum
+#   GBPAUD: BoE vs RBA divergence — sustained trends, no USD dependency
+#   GBPCAD: BoE vs oil/BoC — commodity-linked, peaks in US session
+# - EURUSD permanently blocked — 7t, 0% WR, -177p, FinBERT gate failed to help
+# - 1-HOUR TREND FILTER: MTF confirmation (Elder Triple Screen)
+#   Score 55-61: requires 1h EMA12>EMA26>EMA50 to agree with 15m direction
+#   Score 62+: 1h disagreement blocks; inconclusive passes on 15m strength
+# - Threshold lowered 62->55/57 — 1h filter is the quality gate (not raw score)
+# - B_min_score 62->55, max_open_positions 3->5
+# - 12 pairs monitored (was 10)
 
-# PERFORMANCE OPTIMIZATIONS v2.1.3 (carried forward):
-# - Tier thresholds v2.1.7: A+: 80, A: 68, B: 62 (raised from 55 — 30% WR below eliminated)
-# - Balanced Conservative/Aggressive thresholds (55/50)
-# - Session-specific thresholds (OVERLAP blocked 999, ASIAN raised)
-# - Pair limits (max 1 GBPJPY, block EURGBP, allow 5 GBPUSD, max 1 NZDUSD)
-# - ATR multipliers (stop 2.5x, target 7.0x → RR=2.8)
-# - GBPUSD BUY-only directional filter
+# CARRIED FORWARD from v2.1.7-USD-GATE:
+# - USD pairs US-session-only with FinBERT binary gate
+# - ASIAN/OVERLAP sessions blocked (999 threshold)
+# - EUROPEAN/US 4h signal expiry windows
+# - Staleness guard: yfinance data rejected if last candle >60min old
+# - git merge -X ours: eliminates concurrent run push conflicts
+# - GBPUSD BUY-only directional filter (50%+ WR live)
 
 on:
   schedule:
@@ -64,7 +64,7 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 concurrency:
-  group: trade-beacon-v2.1.7-USD-GATE-${{ github.ref }}-${{ github.event_name }}
+  group: trade-beacon-v2.2.0-MULTI-PAIR-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: false
 
 permissions:
@@ -187,8 +187,8 @@ jobs:
           echo "Beacon version:  $BEACON_VER"
           echo "Config version:  $CONFIG_VER"
 
-          if [[ "$BEACON_VER" == *"USD-GATE"* ]] || [[ "$BEACON_VER" == *"OPTIMISED"* ]] || [[ "$BEACON_VER" == *"FINBERT"* ]]; then
-            echo "✅ v2.1.7-USD-GATE detected"
+          if [[ "$BEACON_VER" == *"MULTI-PAIR"* ]] || [[ "$BEACON_VER" == *"USD-GATE"* ]] || [[ "$BEACON_VER" == *"OPTIMISED"* ]]; then
+            echo "✅ v2.2.0-MULTI-PAIR detected"
           elif [[ "$TRACKER_VER" != "$BEACON_VER" ]]; then
             echo "⚠️ Version mismatch (non-fatal — auto-migration will handle)"
           else
@@ -203,10 +203,10 @@ jobs:
 
           CONFIG_VER=$(jq -r '.version // "unknown"' config.json)
           echo "Config version: $CONFIG_VER"
-          if [[ "$CONFIG_VER" == *"USD-GATE"* ]] || [[ "$CONFIG_VER" == *"OPTIMISED"* ]] || [[ "$CONFIG_VER" == *"FINBERT"* ]]; then
-            echo "✅ Config version: v2.1.7-USD-GATE"
+          if [[ "$CONFIG_VER" == *"MULTI-PAIR"* ]] || [[ "$CONFIG_VER" == *"USD-GATE"* ]] || [[ "$CONFIG_VER" == *"OPTIMISED"* ]]; then
+            echo "✅ Config version: v2.2.0-MULTI-PAIR"
           else
-            echo "⚠️ Config version not v2.1.7-USD-GATE — please update config.json"
+            echo "⚠️ Config version not v2.2.0-MULTI-PAIR — please update config.json"
           fi
 
           # Required structure checks
@@ -232,7 +232,7 @@ jobs:
             echo "📸 Created config baseline snapshot"
           fi
 
-          echo "✅ Configuration valid (v2.1.7-USD-GATE)"
+          echo "✅ Configuration valid (v2.2.0-MULTI-PAIR)"
 
           MODE=$(jq -r '.mode // "conservative"' config.json)
           echo "ℹ️ Mode: $MODE — Both aggressive and conservative signals generated simultaneously"
@@ -360,7 +360,7 @@ jobs:
         if: steps.market_check.outputs.should_run == 'true'
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "📋 ACTIVE CONFIGURATION — v2.1.7-USD-GATE"
+          echo "📋 ACTIVE CONFIGURATION — v2.2.0-MULTI-PAIR"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo ""
 
@@ -386,7 +386,7 @@ jobs:
           echo "  Max Corr:  $(jq -r '.settings.conservative.max_correlated_signals' config.json)"
           echo ""
 
-          echo "[Tier Thresholds — v2.1.7-USD-GATE]"
+          echo "[Tier Thresholds — v2.2.0-MULTI-PAIR]"
           echo "  A+: >= $(jq -r '.tiers.A_plus_min_score // 80' config.json)"
           echo "  A:  >= $(jq -r '.tiers.A_min_score // 72' config.json)"
           echo "  B:  >= $(jq -r '.tiers.B_min_score // 55' config.json)"
@@ -410,16 +410,18 @@ jobs:
           echo ""
 
           echo "[Pair Limits]"
-          echo "  GBPUSD: max $(jq -r '.advanced.pair_limits.GBPUSD // 5' config.json) (BUY-only, 56% WR — unrestricted)"
-          echo "  GBPJPY: max $(jq -r '.advanced.pair_limits.GBPJPY // 1' config.json) (33.7% WR live — reduced)"
+          echo "  GBPUSD: max $(jq -r '.advanced.pair_limits.GBPUSD // 5' config.json) (BUY-only, 50%+ WR — unrestricted)"
+          echo "  GBPJPY: max $(jq -r '.advanced.pair_limits.GBPJPY // 1' config.json) (33.3% WR live — capped)"
+          echo "  GBPAUD: max $(jq -r '.advanced.pair_limits.GBPAUD // 3' config.json) (NEW v2.2.0 — BoE vs RBA, GBP cross)"
+          echo "  GBPCAD: max $(jq -r '.advanced.pair_limits.GBPCAD // 3' config.json) (NEW v2.2.0 — BoE vs oil/BoC)"
           echo "  NZDUSD: max $(jq -r '.advanced.pair_limits.NZDUSD // 1' config.json) (US session only, min score 65)"
-          echo "  EURGBP: $(jq -r '.advanced.pair_limits.EURGBP // 0' config.json) (BLOCKED — 0% WR)"
-          echo "  EURUSD: max $(jq -r '.advanced.pair_limits.EURUSD // 2' config.json) (US session only, min score 65)"
           echo "  AUDUSD: max $(jq -r '.advanced.pair_limits.AUDUSD // 2' config.json) (US session only, min score 65)"
+          echo "  EURGBP: $(jq -r '.advanced.pair_limits.EURGBP // 0' config.json) (PERMANENTLY BLOCKED — 0% WR)"
+          echo "  EURUSD: $(jq -r '.advanced.pair_limits.EURUSD // 0' config.json) (PERMANENTLY BLOCKED — 7t 0% WR -177p)"
           echo "  Default: $(jq -r '.advanced.pair_limits.default // 3' config.json)"
           echo ""
 
-          echo "[USD Pair Rules — v2.1.7]"
+          echo "[USD Pair Rules — v2.2.0]"
           USD_RULES_ENABLED=$(jq -r '.advanced.usd_pair_rules.enabled // false' config.json)
           if [ "$USD_RULES_ENABLED" = "true" ]; then
             echo "  Status:    ✅ ACTIVE"
@@ -449,7 +451,7 @@ jobs:
           echo "  Correlation Filter:    $(jq -r '.advanced.enable_correlation_filter' config.json)"
           echo ""
 
-          # Sentiment block — v2.1.7-USD-GATE: selective USD binary gate
+          # Sentiment block — v2.2.0-MULTI-PAIR: selective USD binary gate
           SENTIMENT=$(jq -r '.use_sentiment' config.json)
           if [ "$SENTIMENT" = "true" ]; then
             echo "[Sentiment Analysis — v2.1.7 USD GATE ENABLED]"
@@ -511,7 +513,7 @@ jobs:
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
           BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}
 
-      - name: Run Trade Beacon v2.1.7-USD-GATE
+      - name: Run Trade Beacon v2.2.0-MULTI-PAIR
         if: steps.market_check.outputs.should_run == 'true'
         env:
           NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
@@ -519,7 +521,7 @@ jobs:
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
           BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}
         run: |
-          echo "🚀 Starting Trade Beacon v2.1.7-USD-GATE..."
+          echo "🚀 Starting Trade Beacon v2.2.0-MULTI-PAIR..."
           python $ENTRY_SCRIPT
           EXIT_CODE=$?
 
@@ -589,7 +591,7 @@ jobs:
         if: always()
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "📊 TRADE BEACON v2.1.7-USD-GATE PERFORMANCE SUMMARY"
+          echo "📊 TRADE BEACON v2.2.0-MULTI-PAIR PERFORMANCE SUMMARY"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
           if [ -f signal_state/signal_history.json ]; then
@@ -714,7 +716,7 @@ jobs:
       - name: Commit state changes
         if: steps.market_check.outputs.should_run == 'true'
         run: |
-          git config user.name  "Trade Beacon v2.1.7-USD-GATE [bot]"
+          git config user.name  "Trade Beacon v2.2.0-MULTI-PAIR [bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git add signal_state/*.json signal_state/last_run.txt signal_state/last_success.txt config.json config.runtime.base.json signals.csv 2>/dev/null || true
@@ -730,7 +732,7 @@ jobs:
             SENT=$(jq -r     '.sentiment_engine // "disabled"'            signal_state/dashboard_state.json 2>/dev/null || echo "disabled")
             MODE=$(jq -r     '.mode // "conservative"'                   config.json)
 
-            git commit -m "📊 Trade Beacon v2.1.7-USD-GATE [$TIMESTAMP]
+            git commit -m "📊 Trade Beacon v2.2.0-MULTI-PAIR [$TIMESTAMP]
 
             Mode: $MODE | Session: $SESSION | Sentiment: $SENT
             Signals: $TOTAL (Agg: $AGG, Cons: $CONS)
@@ -769,7 +771,7 @@ jobs:
         uses: actions/upload-artifact@v6
         if: steps.market_check.outputs.should_run == 'true'
         with:
-          name: trade-beacon-v2.1.7-USD-GATE-run-${{ github.run_number }}
+          name: trade-beacon-v2.2.0-MULTI-PAIR-run-${{ github.run_number }}
           path: |
             signal_state/
             signals.csv

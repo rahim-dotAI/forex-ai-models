@@ -1,32 +1,16 @@
 """
-Performance Tracker v2.1.7-USD-GATE - Aligned with Trade Beacon v2.1.7-USD-GATE
+Performance Tracker v2.2.0-MULTI-PAIR - Aligned with Trade Beacon v2.2.0-MULTI-PAIR
 ============================================================================
 
-CHANGELOG v2.1.7-USD-GATE (based on v2.1.4-SCORING):
-- ✅ Version bumped to 2.1.7-USD-GATE to match Trade Beacon
-- ✅ Stats now include avg_win_pips / avg_loss_pips aliases (beacon reads both names)
-- ✅ Stats now include expectancy alias alongside expectancy_pips (beacon reads both)
-- ✅ Tier thresholds corrected to A+:80, A:68, B:62 (was A+:75, A:68, B:60)
-- ✅ AUTOMATIC MIGRATION: migrates v2.1.4-SCORING → v2.1.7-USD-GATE on load
-- ✅ HuggingFace router URL noted in sentinel_engine tracking
-- ✅ resolve_active_signals dedup guard: double-record prevention
-- ✅ Signal resolution uses high/low window, not just close price
-
-CHANGELOG v2.1.4-SCORING (based on v2.1.2-MULTI):
-- ✅ Multi-mode support: tracks eligible_modes per signal
-- ✅ Tier tracking: A+, A, B, C quality classification
-- ✅ Enhanced analytics: by tier, by mode, cross-analytics
-- ✅ Backtest metadata: estimated_win_rate, sentiment_applied
-- ✅ Mode-specific performance metrics
-- ✅ Session normalization (LONDON→EUROPEAN, NEW_YORK→US)
-- ✅ Confidence tier normalization (HIGH→VERY_STRONG, MEDIUM→MODERATE)
-- ✅ EXPIRED signals tracking
-- ✅ UTC-only datetime handling
-- ✅ Deterministic ID validation
-- ✅ Status transition guards
-- ✅ AUTOMATIC MIGRATION: Updates old v2.1.2/v2.1.2-MULTI files on load
-- ✅ Cross-analytics: tier_by_session, mode_by_tier
-- ✅ Safe type conversion utilities
+CHANGELOG v2.2.0-MULTI-PAIR (based on v2.1.4-SCORING):
+- Version bumped to 2.2.0-MULTI-PAIR to match Trade Beacon
+- Stats now include avg_win_pips / avg_loss_pips aliases (beacon reads both names)
+- Stats now include expectancy alias alongside expectancy_pips (beacon reads both)
+- Tier thresholds corrected to A+:80, A:72, B:62
+- AUTOMATIC MIGRATION: migrates v2.1.4-SCORING to v2.2.0-MULTI-PAIR on load
+- HuggingFace router URL noted in sentinel_engine tracking
+- resolve_active_signals dedup guard: double-record prevention
+- Signal resolution uses high/low window, not just close price
 """
 
 import json
@@ -39,9 +23,8 @@ import pandas as pd
 
 log = logging.getLogger("performance-tracker")
 
-TRACKER_VERSION = "2.1.7-USD-GATE"
+TRACKER_VERSION = "2.2.0-MULTI-PAIR"
 
-# Safe type conversion utilities
 def safe_int(val: Any, default: int = 0) -> int:
     try:
         return int(val)
@@ -57,9 +40,7 @@ def safe_float(val: Any, default: float = 0.0) -> float:
 def safe_round(val: Any, decimals: int = 2) -> float:
     return round(safe_float(val), decimals)
 
-# Normalization functions
 def normalize_session(session: Optional[str]) -> str:
-    """Normalize legacy session names to v2.1.4 taxonomy."""
     if not session:
         return "UNKNOWN"
     s = session.upper()
@@ -72,7 +53,6 @@ def normalize_session(session: Optional[str]) -> str:
     return "UNKNOWN"
 
 def normalize_confidence(conf: Optional[str]) -> str:
-    """Normalize legacy confidence levels to v2.1.4 tiers."""
     if not conf:
         return "UNKNOWN"
     c = conf.upper()
@@ -87,7 +67,6 @@ def normalize_confidence(conf: Optional[str]) -> str:
     return "UNKNOWN"
 
 def normalize_tier(tier: Optional[str]) -> str:
-    """Normalize tier classification."""
     if not tier:
         return "C"
     t = tier.upper()
@@ -96,7 +75,6 @@ def normalize_tier(tier: Optional[str]) -> str:
     return "C"
 
 def map_confidence_to_tier(confidence: str) -> str:
-    """Map confidence level to tier for migration."""
     mapping = {
         'VERY_STRONG': 'A+',
         'STRONG': 'A',
@@ -108,12 +86,8 @@ def map_confidence_to_tier(confidence: str) -> str:
 
 def map_score_to_tier(score: int) -> str:
     """
-    Map score to tier using v2.1.7-USD-GATE thresholds.
-    Rescaled for expanded scorer (max ~110pts).
-    A+: 80+   — multiple strong confirmations
-    A:  72-79  — strong trend + momentum alignment (raised from 68, 0%WR on 6 trades)
-    B:  62-67  — decent signal
-    C:  below 55
+    Map score to tier using v2.2.0-MULTI-PAIR thresholds.
+    A+: 80+  A: 72-79  B: 62-71  C: below 62
     """
     if score >= 80:
         return "A+"
@@ -125,7 +99,6 @@ def map_score_to_tier(score: int) -> str:
         return "C"
 
 def map_score_to_modes(score: int) -> List[str]:
-    """Map score to eligible modes for migration using v2.1.7 thresholds."""
     if score >= 62:
         return ['aggressive', 'conservative']
     else:
@@ -133,30 +106,6 @@ def map_score_to_modes(score: int) -> List[str]:
 
 
 class PerformanceTracker:
-    """
-    Multi-mode signal performance tracker with tier-based analytics.
-
-    Aligned with Trade Beacon v2.1.7-USD-GATE:
-    - Multi-mode support: aggressive + conservative
-    - Tier classification: A+, A, B, C (A+:80, A:68, B:62)
-    - Session taxonomy: ASIAN, EUROPEAN, OVERLAP, US, LATE_US
-    - Confidence tiers: VERY_STRONG, STRONG, MODERATE
-    - Signal statuses: OPEN, EXPIRED, WIN, LOSS
-    - UTC-only datetime handling
-    - Deterministic SHA-1 signal IDs
-    - Enhanced analytics: by mode, by tier, cross-analytics, by_sentiment
-    - AUTOMATIC MIGRATION from any previous version
-
-    IMPORTANT:
-    - No equity assumptions
-    - No fake drawdowns
-    - Stats computed from RESOLVED signals (WIN/LOSS)
-    - EXPIRED signals tracked separately
-    - Mode-specific performance tracking
-    - Tier-based quality analysis
-    - Stats fields include aliases: avg_win_pips, avg_loss_pips, expectancy
-    """
-
     def __init__(self, history_file="signal_state/signal_history.json"):
         self.history_file = Path(history_file)
         self.history_file.parent.mkdir(exist_ok=True)
@@ -164,27 +113,22 @@ class PerformanceTracker:
         self._log_state()
 
     def _load(self) -> Dict:
-        """Load history with automatic migration support."""
         if not self.history_file.exists():
             return self._empty()
-
         try:
             with open(self.history_file) as f:
                 data = json.load(f)
         except Exception as e:
-            log.warning(f"⚠️ Could not load history: {e}, starting fresh")
+            log.warning(f"Could not load history: {e}, starting fresh")
             return self._empty()
-
-        # Version migration
         old_version = data.get("version", "unknown")
         if old_version != TRACKER_VERSION:
-            log.info(f"📦 Migrating from {old_version} to {TRACKER_VERSION}")
+            log.info(f"Migrating from {old_version} to {TRACKER_VERSION}")
             data = self._migrate(data, old_version)
             self.history_file.parent.mkdir(exist_ok=True)
             with open(self.history_file, "w") as f:
                 json.dump(data, f, indent=2)
-            log.info(f"✅ Migration saved to {self.history_file}")
-
+            log.info(f"Migration saved to {self.history_file}")
         data.setdefault("version", TRACKER_VERSION)
         data.setdefault("signals", [])
         data.setdefault("stats", self._empty_stats())
@@ -194,36 +138,23 @@ class PerformanceTracker:
             "created_at": datetime.now(timezone.utc).isoformat(),
             "last_updated": datetime.now(timezone.utc).isoformat()
         })
-
         return data
 
     def _migrate(self, data: Dict, from_version: str) -> Dict:
-        """
-        Migrate old data to current format.
-        Handles v2.1.2, v2.1.2-MULTI, v2.1.4-SCORING, v2.1.7-USD-GATE, and any other previous versions.
-        Re-maps tiers using correct thresholds (A+:80, A:68, B:62).
-        """
-        log.info(f"🔄 Migrating {len(data.get('signals', []))} signals from {from_version}...")
-
+        log.info(f"Migrating {len(data.get('signals', []))} signals from {from_version}...")
         migrated_count = 0
         for signal in data.get("signals", []):
             needs_migration = False
-
-            # Normalize session
             if "session" in signal:
                 old_session = signal["session"]
                 signal["session"] = normalize_session(signal["session"])
                 if old_session != signal["session"]:
                     needs_migration = True
-
-            # Normalize confidence
             if "confidence" in signal:
                 old_conf = signal["confidence"]
                 signal["confidence"] = normalize_confidence(signal["confidence"])
                 if old_conf != signal["confidence"]:
                     needs_migration = True
-
-            # Re-map tier using correct thresholds (A+:80, A:68, B:62)
             if "score" in signal:
                 score = safe_int(signal["score"])
                 new_tier = map_score_to_tier(score)
@@ -234,36 +165,23 @@ class PerformanceTracker:
                 conf = normalize_confidence(signal.get("confidence", "MODERATE"))
                 signal["tier"] = map_confidence_to_tier(conf)
                 needs_migration = True
-
-            # Add eligible_modes if missing
             if "eligible_modes" not in signal or not signal["eligible_modes"]:
                 score = safe_int(signal.get("score", 0))
                 signal["eligible_modes"] = map_score_to_modes(score)
                 needs_migration = True
-
-            # Ensure signal_id exists
             if "signal_id" not in signal and "id" in signal:
                 signal["signal_id"] = signal["id"]
                 needs_migration = True
-
-            # Sentiment fields — v2.1.5-FINBERT: sentiment_score is now
-            # directional net score (base_currency - quote_currency sentiment)
-            # rather than raw article score. Default 0.0 is correct for both.
             signal.setdefault("sentiment_applied", False)
             signal.setdefault("sentiment_score", 0.0)
             signal.setdefault("sentiment_adjustment", 0.0)
             signal.setdefault("estimated_win_rate", None)
-
-            # v2.1.5-FINBERT: track which sentiment engine was used
             signal.setdefault("sentiment_engine", None)
-
             if needs_migration:
                 migrated_count += 1
 
-        # Recalculate analytics
         resolved = [s for s in data.get("signals", []) if s.get("status") in ("WIN", "LOSS")]
         expired  = [s for s in data.get("signals", []) if s.get("status") == "EXPIRED"]
-
         wins: List[float] = []
         losses: List[float] = []
         total_pips = 0.0
@@ -273,7 +191,6 @@ class PerformanceTracker:
             "aggressive":   {"trades": 0, "wins": 0, "total_pips": 0.0},
             "conservative": {"trades": 0, "wins": 0, "total_pips": 0.0},
         }
-
         for s in resolved:
             pips       = safe_float(s.get("pips"))
             total_pips += pips
@@ -297,7 +214,6 @@ class PerformanceTracker:
                 s.get("eligible_modes", ["aggressive"]),
                 pips, is_win
             )
-            # Sentiment analytics — must match _recalculate() or by_sentiment stays empty after migration
             self._add_sentiment_analytics(
                 analytics, is_win, pips,
                 s.get("sentiment_applied", False),
@@ -327,23 +243,20 @@ class PerformanceTracker:
             "total_pips":      safe_round(total_pips, 1),
             "avg_win":         safe_round(avg_win, 1),
             "avg_loss":        safe_round(avg_loss, 1),
-            # Aliases — trade_beacon.py reads both avg_win and avg_win_pips
             "avg_win_pips":    safe_round(avg_win, 1),
             "avg_loss_pips":   safe_round(avg_loss, 1),
             "expectancy_pips": safe_round(expectancy, 2),
-            "expectancy":      safe_round(expectancy, 2),   # alias
+            "expectancy":      safe_round(expectancy, 2),
             "validated":       total >= 100,
             "by_mode":         mode_stats,
         }
         data["version"] = TRACKER_VERSION
-        log.info(f"✅ Migration complete: {migrated_count} signals updated")
+        log.info(f"Migration complete: {migrated_count} signals updated")
         return data
 
     def _add_to_analytics(self, analytics: Dict, pair: str, session: str,
                            confidence: str, tier: str, modes: List[str],
                            pips: float, is_win: bool):
-        """Add a resolved trade to all analytics buckets."""
-
         def _update(group: Dict, key: str):
             group.setdefault(key, {"trades": 0, "wins": 0, "total_pips": 0.0})
             group[key]["trades"]     += 1
@@ -357,7 +270,6 @@ class PerformanceTracker:
         for mode in modes:
             _update(analytics["by_mode"], mode)
 
-        # Cross: tier × session
         tk = f"{tier}_{session}"
         analytics["cross_analytics"]["tier_by_session"].setdefault(tk, {
             "tier": tier, "session": session, "trades": 0, "wins": 0, "total_pips": 0.0
@@ -366,7 +278,6 @@ class PerformanceTracker:
         analytics["cross_analytics"]["tier_by_session"][tk]["total_pips"] += pips
         if is_win: analytics["cross_analytics"]["tier_by_session"][tk]["wins"] += 1
 
-        # Cross: mode × tier
         for mode in modes:
             mk = f"{mode}_{tier}"
             analytics["cross_analytics"]["mode_by_tier"].setdefault(mk, {
@@ -376,19 +287,9 @@ class PerformanceTracker:
             analytics["cross_analytics"]["mode_by_tier"][mk]["total_pips"] += pips
             if is_win: analytics["cross_analytics"]["mode_by_tier"][mk]["wins"] += 1
 
-        # New in v2.1.5-FINBERT: sentiment effectiveness tracking
-        # Splits by whether sentiment was applied so you can compare
-        # sentiment-enhanced vs pure-technical signal performance
-        # (populated via record_trade, not recalculate — see _add_sentiment_analytics)
-
     def _add_sentiment_analytics(self, analytics: Dict, is_win: bool,
                                   pips: float, sentiment_applied: bool,
                                   sentiment_engine: Optional[str]):
-        """
-        Track sentiment effectiveness separately.
-        Bucket: sentiment_applied=True vs False so you can compare
-        FinBERT-enhanced signals against pure technical ones over time.
-        """
         key = f"sentiment_{'on' if sentiment_applied else 'off'}"
         analytics["by_sentiment"].setdefault(key, {
             "trades": 0, "wins": 0, "total_pips": 0.0,
@@ -399,7 +300,6 @@ class PerformanceTracker:
         if is_win: analytics["by_sentiment"][key]["wins"] += 1
 
     def _calculate_win_rates(self, analytics: Dict):
-        """Calculate win rates for all analytics buckets."""
         for group in [analytics["by_pair"], analytics["by_session"],
                       analytics["by_confidence"], analytics["by_tier"],
                       analytics["by_mode"]]:
@@ -412,7 +312,6 @@ class PerformanceTracker:
                 if data["trades"] > 0:
                     data["win_rate"] = safe_round(data["wins"] / data["trades"] * 100, 1)
 
-        # Sentiment analytics
         for data in analytics.get("by_sentiment", {}).values():
             if data["trades"] > 0:
                 data["win_rate"] = safe_round(data["wins"] / data["trades"] * 100, 1)
@@ -439,8 +338,8 @@ class PerformanceTracker:
             "wins": 0, "losses": 0, "expired": 0,
             "win_rate": 0.0, "total_pips": 0.0,
             "avg_win": 0.0, "avg_loss": 0.0,
-            "avg_win_pips": 0.0, "avg_loss_pips": 0.0,   # aliases
-            "expectancy_pips": 0.0, "expectancy": 0.0,    # aliases
+            "avg_win_pips": 0.0, "avg_loss_pips": 0.0,
+            "expectancy_pips": 0.0, "expectancy": 0.0,
             "validated": False,
             "by_mode": {
                 "all":          {"trades": 0, "wins": 0, "total_pips": 0.0, "win_rate": 0.0},
@@ -457,7 +356,7 @@ class PerformanceTracker:
             "by_mode": {
                 "all": {"trades": 0, "wins": 0, "total_pips": 0.0, "win_rate": 0.0}
             },
-            "by_sentiment": {},   # NEW v2.1.5-FINBERT: sentiment on vs off performance
+            "by_sentiment": {},
             "cross_analytics": {
                 "tier_by_session": {},
                 "mode_by_tier":    {},
@@ -465,17 +364,13 @@ class PerformanceTracker:
         }
 
     def register_signal(self, signal: Dict):
-        """
-        Register a signal safely (idempotent).
-        Status must be: OPEN, EXPIRED, WIN, LOSS
-        """
         signal_id = signal.get("id") or signal.get("signal_id")
         if not signal_id:
             raise ValueError("Signal must have deterministic id or signal_id")
         if len(signal_id) < 20:
-            log.warning(f"⚠️ Non-deterministic signal ID: {signal_id}")
+            log.warning(f"Non-deterministic signal ID: {signal_id}")
         if self._find_signal(signal_id):
-            log.debug(f"⏭️ Signal {signal_id} already registered"); return
+            log.debug(f"Signal {signal_id} already registered"); return
 
         if "session"    in signal: signal["session"]    = normalize_session(signal["session"])
         if "confidence" in signal: signal["confidence"] = normalize_confidence(signal["confidence"])
@@ -486,7 +381,7 @@ class PerformanceTracker:
         signal.setdefault("sentiment_applied",     False)
         signal.setdefault("sentiment_score",       0.0)
         signal.setdefault("sentiment_adjustment",  0.0)
-        signal.setdefault("sentiment_engine",      None)   # "finbert" or None
+        signal.setdefault("sentiment_engine",      None)
         signal.setdefault("estimated_win_rate",    None)
 
         self.history["signals"].append(signal)
@@ -497,7 +392,7 @@ class PerformanceTracker:
 
         self._recalculate()
         self._save()
-        log.debug(f"✅ Signal {signal_id} registered")
+        log.debug(f"Signal {signal_id} registered")
 
     def record_trade(self, signal_id: str, pair: str, direction: str,
                      entry_price: float, exit_price: float, sl: float, tp: float,
@@ -515,36 +410,26 @@ class PerformanceTracker:
                      rsi: float = None,
                      atr: float = None,
                      **kwargs):
-        """
-        Record trade outcome when it hits SL/TP or expires.
-
-        v2.1.5-FINBERT additions:
-            sentiment_engine: 'finbert' | None — which engine provided sentiment
-            sentiment_score:  directional net score (base_currency - quote_currency)
-                              range -1.0 to +1.0. Different from v2.1.4 (was raw article avg)
-        """
         signal = self._find_signal(signal_id)
 
         if signal and signal.get("status") in ("WIN", "LOSS", "EXPIRED"):
-            log.warning(f"⚠️ {signal_id} already resolved: {signal['status']}"); return
+            log.warning(f"{signal_id} already resolved: {signal['status']}"); return
 
         if signal:
             signal["status"]     = outcome
             signal["exit_price"] = exit_price
             signal["exit_time"]  = exit_time or datetime.now(timezone.utc).isoformat()
             signal["pips"]       = pips
-            # Update sentiment fields if they've changed (e.g. applied after initial registration)
             if sentiment_applied:
                 signal["sentiment_applied"]    = sentiment_applied
                 signal["sentiment_score"]      = sentiment_score
                 signal["sentiment_adjustment"] = sentiment_adjustment
                 signal["sentiment_engine"]     = sentiment_engine or "finbert"
-            # Always update technical fields if provided — they may be missing on old records
             if risk_reward is not None: signal["risk_reward"] = risk_reward
             if adx         is not None: signal["adx"]         = adx
             if rsi         is not None: signal["rsi"]         = rsi
             if atr         is not None: signal["atr"]         = atr
-            log.info(f"✅ Updated {signal_id}: {outcome} ({pips:+.1f} pips)")
+            log.info(f"Updated {signal_id}: {outcome} ({pips:+.1f} pips)")
         else:
             if tier is None and score is not None:
                 tier = map_score_to_tier(safe_int(score))
@@ -577,7 +462,7 @@ class PerformanceTracker:
                 "exit_time":            exit_time  or datetime.now(timezone.utc).isoformat(),
             }
             self.history["signals"].append(signal)
-            log.info(f"✅ Recorded {signal_id}: {outcome} ({pips:+.1f} pips) [{signal['tier']}]")
+            log.info(f"Recorded {signal_id}: {outcome} ({pips:+.1f} pips) [{signal['tier']}]")
 
         self._recalculate()
         self._save()
@@ -589,11 +474,6 @@ class PerformanceTracker:
         return None
 
     def _recalculate(self):
-        """
-        Recalculate all statistics from resolved signals.
-        WIN/LOSS → stats + analytics
-        EXPIRED  → counted separately, not in win rate
-        """
         resolved = [s for s in self.history["signals"] if s.get("status") in ("WIN","LOSS")]
         expired  = [s for s in self.history["signals"] if s.get("status") == "EXPIRED"]
 
@@ -631,8 +511,6 @@ class PerformanceTracker:
                     if is_win: mode_stats[mode]["wins"] += 1
 
             self._add_to_analytics(analytics, pair, session, confidence, tier, modes, pips, is_win)
-
-            # Sentiment effectiveness tracking
             self._add_sentiment_analytics(
                 analytics, is_win, pips,
                 s.get("sentiment_applied", False),
@@ -659,11 +537,10 @@ class PerformanceTracker:
             "total_pips":      safe_round(total_pips, 1),
             "avg_win":         safe_round(avg_win, 1),
             "avg_loss":        safe_round(avg_loss, 1),
-            # Aliases — trade_beacon.py reads both avg_win and avg_win_pips
             "avg_win_pips":    safe_round(avg_win, 1),
             "avg_loss_pips":   safe_round(avg_loss, 1),
             "expectancy_pips": safe_round(expectancy, 2),
-            "expectancy":      safe_round(expectancy, 2),   # alias
+            "expectancy":      safe_round(expectancy, 2),
             "validated":       total >= 100,
             "by_mode":         mode_stats,
         }
@@ -673,7 +550,7 @@ class PerformanceTracker:
 
     def export_to_csv(self, path="performance_export.csv") -> str:
         pd.DataFrame(self.history["signals"]).to_csv(path, index=False)
-        log.info(f"📄 Exported to {path}")
+        log.info(f"Exported to {path}")
         return path
 
     def get_dashboard_summary(self) -> Dict:
@@ -695,15 +572,14 @@ class PerformanceTracker:
         for s in self.history["signals"]:
             t = s.get("tier","C"); tier_counts[t] = tier_counts.get(t,0)+1
         log.info(
-            f"📊 Tracker v{TRACKER_VERSION} | "
+            f"Tracker v{TRACKER_VERSION} | "
             f"Total: {len(self.history['signals'])} | Open: {len(open_sigs)} | "
             f"Resolved: {len(resolved)} | Expired: {len(expired)}"
         )
         if tier_counts:
-            log.info(f"🏆 Tiers: {' | '.join(f'{t}: {c}' for t,c in sorted(tier_counts.items()))}")
+            log.info(f"Tiers: {' | '.join(f'{t}: {c}' for t,c in sorted(tier_counts.items()))}")
 
-        # Log sentiment effectiveness if data exists
         sent = self.history.get("analytics", {}).get("by_sentiment", {})
         if sent:
             for k, v in sent.items():
-                log.info(f"💭 Sentiment [{k}]: {v.get('trades',0)} trades | WR: {v.get('win_rate',0):.1f}%")
+                log.info(f"Sentiment [{k}]: {v.get('trades',0)} trades | WR: {v.get('win_rate',0):.1f}%")

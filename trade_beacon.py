@@ -1,9 +1,9 @@
 """
-Trade Beacon v2.2.0-MULTI-PAIR - Forex Signal Generator (INSTITUTIONAL GRADE)
+Trade Beacon v2.2.1-FIX - Forex Signal Generator (INSTITUTIONAL GRADE)
 MULTI-MODE EDITION: Generates Aggressive + Conservative signals simultaneously
 with tier-based selective enhancement (sentiment/backtest only on top-tier)
 
-CHANGES v2.2.0-MULTI-PAIR:
+CHANGES v2.2.1-FIX:
 - NEW PAIRS: GBPAUD and GBPCAD added (GBP crosses — model calibrated to GBP behavior)
   Research: BIS 2025 top-25 traded pairs, 80-120 pip daily range, BoE-driven trends
   GBPAUD: BoE vs RBA divergence — sustained directional momentum, not USD-sensitive
@@ -209,7 +209,7 @@ def _default_config() -> Dict:
                 "blackout_before_minutes": 45,
                 "blackout_after_minutes": 30,
                 "sentiment_gate": True,
-                "sentiment_gate_threshold": 0.0,
+                "sentiment_gate_threshold": 0.1,  # v2.2.1: raised from 0.0 — neutral not enough, need weak positive
             },
         },
         "risk_management": {
@@ -308,6 +308,9 @@ class MarketDataCache:
 
 _cache    = MarketDataCache(ttl=CACHE_TTL)
 _cache_1h = MarketDataCache(ttl=3600)  # 1h trend cache — 60min TTL (1h candles don't change fast)
+_yf_lock  = threading.Lock()           # Serialises yfinance calls — prevents SQLite cache bleed
+                                       # between parallel threads (GBPAUD/GBPCAD/EURJPY identical
+                                       # scores bug). Each pair's data is isolated.
 
 # ═════════════════════════════════════════════════════════════════════════════
 # ECONOMIC CALENDAR
@@ -594,7 +597,8 @@ def download(pair: str) -> Tuple[pd.DataFrame, bool]:
                 wait = 0.5 * attempt + _random.uniform(0, 0.3)
                 log.info(f"{pair} 15m retry {attempt}/{max_retries-1} (SQLite lock backoff {wait:.1f}s)")
                 _time.sleep(wait)
-            df = yf.download(pair, interval="15m", period=LOOKBACK, progress=False, auto_adjust=True, threads=False)
+            with _yf_lock:
+                df = yf.download(pair, interval="15m", period=LOOKBACK, progress=False, auto_adjust=True, threads=False)
             if df is not None and not df.empty:
                 if isinstance(df.columns, pd.MultiIndex):
                     df.columns = df.columns.get_level_values(0)
@@ -616,7 +620,8 @@ def download(pair: str) -> Tuple[pd.DataFrame, bool]:
     if df is None or df.empty:
         log.warning(f"{pair} 15m failed after {max_retries} attempts — trying 1h fallback")
         try:
-            df = yf.download(pair, interval="1h", period="60d", progress=False, auto_adjust=True, threads=False)
+            with _yf_lock:
+                df = yf.download(pair, interval="1h", period="60d", progress=False, auto_adjust=True, threads=False)
             if df is None or df.empty: return pd.DataFrame(), False
             if isinstance(df.columns, pd.MultiIndex):
                 df.columns = df.columns.get_level_values(0)
@@ -653,7 +658,7 @@ def get_spread(pair):  return SPREADS.get(pair.replace("=X", ""), 0.0002)
 
 def get_1h_trend(pair: str) -> Optional[str]:
     """
-    1-Hour Trend Filter — v2.2.0-MULTI-PAIR
+    1-Hour Trend Filter — v2.2.1-FIX
     Returns 'BULL', 'BEAR', or None (inconclusive/data unavailable).
     Cached per-pair for 60 minutes via _cache_1h.
 
@@ -677,8 +682,9 @@ def get_1h_trend(pair: str) -> Optional[str]:
             pass
 
     try:
-        df1h = yf.download(pair, interval="1h", period="30d", progress=False,
-                           auto_adjust=True, threads=False)
+        with _yf_lock:
+            df1h = yf.download(pair, interval="1h", period="30d", progress=False,
+                               auto_adjust=True, threads=False)
         if df1h is None or df1h.empty:
             return None
         if isinstance(df1h.columns, pd.MultiIndex):
@@ -1425,7 +1431,7 @@ def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
     conf      = "VERY_STRONG" if diff>=75 else ("STRONG" if diff>=65 else "MODERATE")
     tier      = classify_signal_tier(diff)
 
-    # ── 1-Hour Trend Filter — v2.2.0-MULTI-PAIR ──────────────────────────────
+    # ── 1-Hour Trend Filter — v2.2.1-FIX ──────────────────────────────
     # Elder Triple Screen principle: 15m signal must align with 1h EMA structure.
     # Sub-threshold (55-61): REQUIRE 1h agreement — this is what unlocks the lower threshold
     # Above threshold (62+): 1h DISAGREEMENT blocks — raises quality across the board
@@ -1450,7 +1456,12 @@ def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
         log.info(f"  1h inconclusive — passing on 15m conviction (score={diff} >= {old_hard_threshold})")
 
     if tier == "C":
-        log.info(f"  BLOCKED: Tier C (score={diff} < B_min={CONFIG.get('tiers',{}).get('B_min_score',62)}) — net negative historically")
+        log.info(f"  BLOCKED: Tier C (score={diff} < B_min={CONFIG.get('tiers',{}).get('B_min_score',55)}) — net negative historically")
+        return None, ok
+
+    if tier == "A":
+        log.info(f"  BLOCKED: Tier A (score={diff}, 72-79) — 0% WR across all 6 trades, -107 pips. "
+                 f"High scores = already-extended moves, entries too late. Keeping B and A+ only.")
         return None, ok
 
     spread   = get_spread(pair)
@@ -1497,7 +1508,7 @@ def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
             "timeframe": INTERVAL, "valid_for_minutes": int(expiry_mins),
             "generated_at": now.isoformat(), "expires_at": expires.isoformat(),
             "session_active": session in ("EUROPEAN","US","OVERLAP"),
-            "signal_generator_version": "2.2.0-MULTI-PAIR",
+            "signal_generator_version": "2.2.1-FIX",
             "atr_stop_multiplier": atr_stop, "atr_target_multiplier": atr_tgt,
         },
     }
@@ -1731,7 +1742,7 @@ def write_dashboard_state(signals, downloads, news_calls=0, mkt_calls=0,
         "pair_prices": pair_prices or {},
         "upcoming_events": _get_upcoming_events(4),
         "pick_of_the_day": pick_of_the_day,
-        "system": {"last_update": datetime.now(timezone.utc).isoformat(), "signal_only_mode": SIGNAL_ONLY_MODE, "version": "2.2.0-MULTI-PAIR"},
+        "system": {"last_update": datetime.now(timezone.utc).isoformat(), "signal_only_mode": SIGNAL_ONLY_MODE, "version": "2.2.1-FIX"},
     }
 
     out = Path("signal_state"); out.mkdir(exist_ok=True)
@@ -1749,7 +1760,7 @@ def write_health_check(signals, downloads, news, mkt, can_trade, pause, mode):
         "status": status, "last_run": datetime.now(timezone.utc).isoformat(),
         "signal_count": len(signals), "issues": issues, "can_trade": can_trade,
         "api_status": {"yfinance": "ok" if downloads>0 else "degraded", "newsapi": "ok" if news>0 else "disabled", "marketaux": "ok" if mkt>0 else "disabled", "finbert_hf": "ok" if HF_API_KEY else "disabled"},
-        "system_info": {"mode": mode, "pairs_monitored": len(PAIRS), "version": "2.2.0-MULTI-PAIR", "sentiment_engine": "finbert" if HF_API_KEY else "disabled"},
+        "system_info": {"mode": mode, "pairs_monitored": len(PAIRS), "version": "2.2.1-FIX", "sentiment_engine": "finbert" if HF_API_KEY else "disabled"},
     }
     with open(Path("signal_state/health.json"),"w") as f: json.dump(health,f,indent=2)
     log.info(f"Health: {status.upper()}")
@@ -1861,7 +1872,7 @@ def main():
                 if CONFIG.get("performance_tuning",{}).get("auto_adjust_thresholds",False) else CONFIG)
     opt_mode = opt_cfg["mode"]
 
-    log.info(f"Trade Beacon v2.2.0-MULTI-PAIR | Sentiment={'FinBERT ON' if USE_SENTIMENT else 'OFF'} | HF_KEY={'set' if HF_API_KEY else 'missing'}")
+    log.info(f"Trade Beacon v2.2.1-FIX | Sentiment={'FinBERT ON' if USE_SENTIMENT else 'OFF'} | HF_KEY={'set' if HF_API_KEY else 'missing'}")
     log.info(f"Monitoring {len(PAIRS)} pairs")
     log.info(f"Aggressive:   Score>={opt_cfg['settings']['aggressive']['threshold']} ADX>={opt_cfg['settings']['aggressive']['min_adx']}")
     log.info(f"Conservative: Score>={opt_cfg['settings']['conservative']['threshold']} ADX>={opt_cfg['settings']['conservative']['min_adx']}")
@@ -1982,7 +1993,7 @@ def main():
     if all_new:
         mb = split_signals_by_mode(all_new)
         print("\n" + "="*100)
-        print("TRADE BEACON v2.2.0-MULTI-PAIR — MULTI-MODE SIGNALS")
+        print("TRADE BEACON v2.2.1-FIX — MULTI-MODE SIGNALS")
         print("="*100)
         for label, key, icon in [("AGGRESSIVE","aggressive","⚡"), ("CONSERVATIVE","conservative","🛡️")]:
             sigs = mb[key]
@@ -1996,7 +2007,7 @@ def main():
         log.info("signals.csv written")
 
     mark_success()
-    log.info("Run completed — v2.2.0-MULTI-PAIR")
+    log.info("Run completed — v2.2.1-FIX")
 
 
 if __name__ == "__main__":

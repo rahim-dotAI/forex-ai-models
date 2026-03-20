@@ -262,7 +262,7 @@
           <div class="brand-icon"><i data-lucide="activity"></i></div>
           <div class="brand-text">
             <h1>TRADE BEACON</h1>
-            <p>MARKET INTELLIGENCE v2.2.0-MULTI-PAIR</p>
+            <p>MARKET INTELLIGENCE v2.2.1-FIX</p>
           </div>
         </div>
         <div class="header-stats">
@@ -421,7 +421,7 @@
       <p><strong style="color:var(--text-dim);">NO LIABILITY.</strong> The creators of Trade Beacon accept no liability for losses incurred from acting on this dashboard. Use entirely at your own risk.</p>
     </div>
     <div style="margin-top:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.04);">
-      <div style="font-size:10px;color:var(--text-muted);letter-spacing:0.5px;">TRADE BEACON v2.2.0-MULTI-PAIR &nbsp;·&nbsp; SIGNAL-ONLY MODE &nbsp;·&nbsp; NO AUTO-EXECUTION</div>
+      <div style="font-size:10px;color:var(--text-muted);letter-spacing:0.5px;">TRADE BEACON v2.2.1-FIX &nbsp;·&nbsp; SIGNAL-ONLY MODE &nbsp;·&nbsp; NO AUTO-EXECUTION</div>
       <div style="font-size:10px;color:var(--text-muted);">Signals for manual execution &nbsp;·&nbsp; All times UTC</div>
     </div>
   </div>
@@ -438,7 +438,7 @@
       'today': { title: 'Signals Today', body: 'Number of <strong>unique pairs</strong> that received a new signal today (UTC). Resets each calendar day.' },
       'session': { title: 'Current Session', body: 'Active forex session based on UTC time:<br><div class="tip-row"><span class="tip-key">ASIAN</span><span>00:00–07:00 UTC — BLOCKED (25.8% WR)</span></div><div class="tip-row"><span class="tip-key">EUROPEAN</span><span>07:00–12:00 UTC — Active</span></div><div class="tip-row"><span class="tip-key">OVERLAP</span><span>12:00–16:00 UTC — BLOCKED</span></div><div class="tip-row"><span class="tip-key">US</span><span>16:00–21:00 UTC — Best session</span></div><div class="tip-row"><span class="tip-key">LATE_US</span><span>21:00–00:00 UTC — High threshold</span></div>' },
       'modes': { title: 'Signal Modes', body: '<div class="tip-row"><span class="tip-key">AGGR</span><span><strong>Aggressive</strong> — Score ≥55 + 1h trend confirms. ADX ≥15. More signals.</span></div><div class="tip-row"><span class="tip-key">CONS</span><span><strong>Conservative</strong> — Score ≥57 + 1h trend confirms. ADX ≥17. Stricter ADX and correlation limits.</span></div><div class="tip-row"><span class="tip-key">MTF</span><span>Both modes require 1-hour EMA alignment with 15m direction. Scores 55-61 blocked without 1h confirmation.</span></div>' },
-      'tier-badge': { title: 'Signal Tier', body: '<div class="tip-row"><span class="tip-key" style="color:#fbbf24">A+</span><span>Score ≥80 — Elite signal</span></div><div class="tip-row"><span class="tip-key" style="color:var(--green)">A</span><span>Score ≥72 — Strong signal</span></div><div class="tip-row"><span class="tip-key" style="color:var(--blue)">B</span><span>Score ≥55 — Good signal (v2.2.0)</span></div><div class="tip-row"><span class="tip-key" style="color:#6b7280">C</span><span>Score &lt;55 — BLOCKED (net negative historically)</span></div>' },
+      'tier-badge': { title: 'Signal Tier', body: '<div class="tip-row"><span class="tip-key" style="color:#fbbf24">A+</span><span>Score ≥80 — Elite signal</span></div><div class="tip-row"><span class="tip-key" style="color:var(--red)">A</span><span>Score 72-79 — BLOCKED (0% WR, -107 pips, 6 trades — late entries on extended moves)</span></div><div class="tip-row"><span class="tip-key" style="color:var(--blue)">B</span><span>Score 55-71 — Active (best edge, +293 pips)</span></div><div class="tip-row"><span class="tip-key" style="color:#6b7280">C</span><span>Score &lt;55 — BLOCKED (net negative historically)</span></div>' },
       'session-col': { title: 'Trading Session', body: 'Which forex session was active when the signal was generated. Session determines expiry window — EUROPEAN/US signals last 4 hours, others 15 minutes.' },
       'perf-tier': { title: 'Performance by Tier', body: 'Win rate and pips by signal quality tier. v2.2.0: B threshold lowered 62→55 — 1-hour MTF filter now replaces raw score as quality gate.' },
       'perf-session': { title: 'Performance by Session', body: 'Win rate per session. US = best at 47%+ WR. ASIAN and OVERLAP are blocked based on live data.' },

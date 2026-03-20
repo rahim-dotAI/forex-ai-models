@@ -1,13 +1,13 @@
 """
-Performance Tracker v2.2.0-MULTI-PAIR - Aligned with Trade Beacon v2.2.0-MULTI-PAIR
+Performance Tracker v2.2.1-FIX - Aligned with Trade Beacon v2.2.1-FIX
 ============================================================================
 
-CHANGELOG v2.2.0-MULTI-PAIR (based on v2.1.4-SCORING):
-- Version bumped to 2.2.0-MULTI-PAIR to match Trade Beacon
+CHANGELOG v2.2.1-FIX (based on v2.1.4-SCORING):
+- Version bumped to 2.2.1-FIX to match Trade Beacon
 - Stats now include avg_win_pips / avg_loss_pips aliases (beacon reads both names)
 - Stats now include expectancy alias alongside expectancy_pips (beacon reads both)
 - Tier thresholds corrected to A+:80, A:72, B:62
-- AUTOMATIC MIGRATION: migrates v2.1.4-SCORING to v2.2.0-MULTI-PAIR on load
+- AUTOMATIC MIGRATION: migrates v2.1.4-SCORING to v2.2.1-FIX on load
 - HuggingFace router URL noted in sentinel_engine tracking
 - resolve_active_signals dedup guard: double-record prevention
 - Signal resolution uses high/low window, not just close price
@@ -23,7 +23,7 @@ import pandas as pd
 
 log = logging.getLogger("performance-tracker")
 
-TRACKER_VERSION = "2.2.0-MULTI-PAIR"
+TRACKER_VERSION = "2.2.1-FIX"
 
 def safe_int(val: Any, default: int = 0) -> int:
     try:
@@ -86,7 +86,7 @@ def map_confidence_to_tier(confidence: str) -> str:
 
 def map_score_to_tier(score: int) -> str:
     """
-    Map score to tier using v2.2.0-MULTI-PAIR thresholds.
+    Map score to tier using v2.2.1-FIX thresholds.
     A+: 80+  A: 72-79  B: 62-71  C: below 62
     """
     if score >= 80:

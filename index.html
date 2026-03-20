@@ -600,7 +600,7 @@
         updateMetrics(); updateModeBtns(); processAndRenderSignals();
         renderHistory(); renderAnalytics(); renderPriceTicker();
         const today=new Date().toISOString().slice(0,10);
-        const activeSigs=[...(data?.signals_by_mode?.aggressive||[]),(... data?.signals_by_mode?.conservative||[])];
+        const activeSigs=[...(data?.signals_by_mode?.aggressive||[]),...(data?.signals_by_mode?.conservative||[])];
         const histTodaySigs=(data?.historical_signals||[]).filter(s=>{try{return new Date(s.timestamp).toISOString().slice(0,10)===today;}catch(e){return false;}});
         const seen=new Set();
         const deduped=[...activeSigs,...histTodaySigs].filter(s=>{const id=s.signal_id||s.id||s.pair+'_'+s.direction+'_'+s.timestamp;if(seen.has(id))return false;seen.add(id);return true;});

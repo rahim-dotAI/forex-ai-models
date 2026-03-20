@@ -1,5 +1,5 @@
 {
-  "version": "2.2.0-MULTI-PAIR",
+  "version": "2.2.1-FIX",
   "mode": "conservative",
 
   "_v2.2.0_changes": "1) Threshold 62->55/57 — 1h MTF filter is new quality gate. 2) EURUSD/EURGBP permanently blocked. 3) GBPAUD+GBPCAD added — GBP crosses, BIS top-25, BoE-driven. 4) B_min_score 62->55. 5) max_open_positions 3->5. 6) Session bonuses for new GBP crosses.",
@@ -136,8 +136,8 @@
       "blackout_before_minutes": 45,
       "blackout_after_minutes": 30,
       "sentiment_gate": true,
-      "sentiment_gate_threshold": 0.0,
-      "_gate_note": "Net sentiment > 0.0 required. Neutral blocked since v2.1.7b."
+      "sentiment_gate_threshold": 0.1,
+      "_gate_note": "Net sentiment > 0.1 required. v2.2.1: raised from 0.0 — neutral was passing bad trades."
     }
   },
 

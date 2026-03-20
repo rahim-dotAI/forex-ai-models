@@ -187,7 +187,7 @@ jobs:
           echo "Beacon version:  $BEACON_VER"
           echo "Config version:  $CONFIG_VER"
 
-          if [[ "$BEACON_VER" == *"MULTI-PAIR"* ]] || [[ "$BEACON_VER" == *"USD-GATE"* ]] || [[ "$BEACON_VER" == *"OPTIMISED"* ]]; then
+          if [[ "$BEACON_VER" == *"MULTI-PAIR"* ]] || [[ "$BEACON_VER" == *"USD-GATE"* ]] || [[ "$BEACON_VER" == *"OPTIMISED"* ]] || [[ "$BEACON_VER" == *"FIX"* ]]; then
             echo "✅ v2.2.1-FIX detected"
           elif [[ "$TRACKER_VER" != "$BEACON_VER" ]]; then
             echo "⚠️ Version mismatch (non-fatal — auto-migration will handle)"
@@ -203,7 +203,7 @@ jobs:
 
           CONFIG_VER=$(jq -r '.version // "unknown"' config.json)
           echo "Config version: $CONFIG_VER"
-          if [[ "$CONFIG_VER" == *"MULTI-PAIR"* ]] || [[ "$CONFIG_VER" == *"USD-GATE"* ]] || [[ "$CONFIG_VER" == *"OPTIMISED"* ]]; then
+          if [[ "$CONFIG_VER" == *"MULTI-PAIR"* ]] || [[ "$CONFIG_VER" == *"USD-GATE"* ]] || [[ "$CONFIG_VER" == *"OPTIMISED"* ]] || [[ "$CONFIG_VER" == *"FIX"* ]]; then
             echo "✅ Config version: v2.2.1-FIX"
           else
             echo "⚠️ Config version not v2.2.1-FIX — please update config.json"

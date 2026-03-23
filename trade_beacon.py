@@ -1936,25 +1936,6 @@ def main():
     downloads = 0
     existing_ids    = get_existing_signals_today()
     existing_counts = get_existing_pair_counts_today()
-
-    # ── Daily loss circuit breaker ────────────────────────────────────────────
-    # If 3+ losses already today, stop generating new signals for the rest of
-    # the day. Prevents cascading stops on whipsaw/choppy days (Mar 23: 6 losses,
-    # -318 pips in one day).
-    MAX_DAILY_LOSSES = 3
-    if PERFORMANCE_TRACKER:
-        today = datetime.now(timezone.utc).date()
-        today_losses = sum(
-            1 for s in PERFORMANCE_TRACKER.history.get("signals", [])
-            if s.get("status") == "LOSS"
-            and _safe_date(s.get("timestamp","")) == today
-        )
-        if today_losses >= MAX_DAILY_LOSSES:
-            log.warning(f"🛑 DAILY LOSS CIRCUIT BREAKER: {today_losses} losses today "
-                        f"(limit={MAX_DAILY_LOSSES}). No new signals for rest of day.")
-            write_dashboard_state(filter_expired_signals(existing), 0, 0, 0,
-                                  opt_cfg, opt_mode, None, {})
-            return
     pair_prices: Dict[str, float] = {}
     _cache.clear()
 

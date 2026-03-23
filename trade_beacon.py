@@ -1,9 +1,9 @@
 """
-Trade Beacon v2.2.1-FIX - Forex Signal Generator (INSTITUTIONAL GRADE)
+Trade Beacon v2.2.2-SAFE - Forex Signal Generator (INSTITUTIONAL GRADE)
 MULTI-MODE EDITION: Generates Aggressive + Conservative signals simultaneously
 with tier-based selective enhancement (sentiment/backtest only on top-tier)
 
-CHANGES v2.2.1-FIX:
+CHANGES v2.2.2-SAFE:
 - NEW PAIRS: GBPAUD and GBPCAD added (GBP crosses — model calibrated to GBP behavior)
   Research: BIS 2025 top-25 traded pairs, 80-120 pip daily range, BoE-driven trends
   GBPAUD: BoE vs RBA divergence — sustained directional momentum, not USD-sensitive
@@ -658,7 +658,7 @@ def get_spread(pair):  return SPREADS.get(pair.replace("=X", ""), 0.0002)
 
 def get_1h_trend(pair: str) -> Optional[str]:
     """
-    1-Hour Trend Filter — v2.2.1-FIX
+    1-Hour Trend Filter — v2.2.2-SAFE
     Returns 'BULL', 'BEAR', or None (inconclusive/data unavailable).
     Cached per-pair for 60 minutes via _cache_1h.
 
@@ -896,6 +896,59 @@ def get_existing_signals_today() -> List[str]:
     log.info(f"Found {len(ids)} existing signals today")
     return list(ids)
 
+def get_existing_pair_counts_today() -> Dict[str, int]:
+    """
+    Returns {pair: count} for all signals already fired today across ALL
+    previous runs. Pre-seeds filter_pair_limits so the daily per-pair cap
+    is enforced globally — not just within a single run's batch.
+
+    Prevents same pair firing in opposite directions on same day:
+    e.g. GBPJPY SELL at 10:46 then GBPJPY BUY at 12:45 — both full stops.
+    e.g. GBPCAD SELL at 08:01 then GBPCAD BUY at 16:45 — both full stops.
+    Bug root cause: signal_ids include direction so they weren't seen as
+    duplicates, and pair limits only counted within the current run batch.
+    """
+    today = datetime.now(timezone.utc).date()
+    counts: Dict[str, int] = {}
+    sources: List[Dict] = []
+
+    df_file = Path("signal_state/dashboard_state.json")
+    if df_file.exists():
+        try:
+            with open(df_file) as f: data = json.load(f)
+            sources += (data.get("signals_by_mode",{}).get("aggressive",[]) +
+                        data.get("signals_by_mode",{}).get("conservative",[]))
+        except Exception: pass
+
+    if PERFORMANCE_TRACKER:
+        try:
+            sources += PERFORMANCE_TRACKER.history.get("signals", [])
+        except Exception: pass
+
+    seen_ids: set = set()
+    for s in sources:
+        try:
+            if datetime.fromisoformat(s.get("timestamp","").replace("Z","+00:00")).date() != today:
+                continue
+            sid = s.get("signal_id","")
+            if sid in seen_ids: continue
+            if sid: seen_ids.add(sid)
+            pair = s.get("pair","")
+            if pair:
+                counts[pair] = counts.get(pair, 0) + 1
+        except Exception: pass
+
+    if counts:
+        log.info(f"Today's existing pair counts (cross-run cap): {counts}")
+    return counts
+
+def _safe_date(ts: str):
+    """Parse a timestamp string and return its UTC date, or None on failure."""
+    try:
+        return datetime.fromisoformat(ts.replace("Z","+00:00")).date()
+    except Exception:
+        return None
+
 def is_duplicate_signal(sid: str, existing: List[str]) -> bool:
     return sid in existing
 
@@ -1068,10 +1121,12 @@ def resolve_active_signals():
 # PAIR LIMIT FILTER
 # ═════════════════════════════════════════════════════════════════════════════
 
-def filter_pair_limits(signals: List[Dict], config: Dict) -> List[Dict]:
+def filter_pair_limits(signals: List[Dict], config: Dict,
+                       existing_counts: Optional[Dict[str, int]] = None) -> List[Dict]:
     limits   = config.get("advanced",{}).get("pair_limits",{"GBPUSD":5,"GBPJPY":2,"EURGBP":0,"default":3})
     dir_filt = config.get("advanced",{}).get("directional_filters",{})
-    counts: Dict[str,int] = {}
+    # Pre-seed counts with signals already fired today in previous runs
+    counts: Dict[str,int] = dict(existing_counts) if existing_counts else {}
     out = []
     for sig in sorted(signals, key=lambda x: x["score"], reverse=True):
         pair, direction = sig["pair"], sig["direction"]
@@ -1090,7 +1145,7 @@ def filter_pair_limits(signals: List[Dict], config: Dict) -> List[Dict]:
         if counts.get(pair,0) < lim:
             out.append(sig); counts[pair] = counts.get(pair,0)+1
         else:
-            log.info(f"Skipped {pair} (max {lim} reached)")
+            log.info(f"Skipped {pair} (daily cap {lim} reached — {counts.get(pair,0)} already fired today)")
     if len(out) < len(signals):
         log.info(f"Pair filter: {len(signals)} -> {len(out)}")
     return out
@@ -1431,7 +1486,7 @@ def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
     conf      = "VERY_STRONG" if diff>=75 else ("STRONG" if diff>=65 else "MODERATE")
     tier      = classify_signal_tier(diff)
 
-    # ── 1-Hour Trend Filter — v2.2.1-FIX ──────────────────────────────
+    # ── 1-Hour Trend Filter — v2.2.2-SAFE ──────────────────────────────
     # Elder Triple Screen principle: 15m signal must align with 1h EMA structure.
     # Sub-threshold (55-61): REQUIRE 1h agreement — this is what unlocks the lower threshold
     # Above threshold (62+): 1h DISAGREEMENT blocks — raises quality across the board
@@ -1508,7 +1563,7 @@ def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
             "timeframe": INTERVAL, "valid_for_minutes": int(expiry_mins),
             "generated_at": now.isoformat(), "expires_at": expires.isoformat(),
             "session_active": session in ("EUROPEAN","US","OVERLAP"),
-            "signal_generator_version": "2.2.1-FIX",
+            "signal_generator_version": "2.2.2-SAFE",
             "atr_stop_multiplier": atr_stop, "atr_target_multiplier": atr_tgt,
         },
     }
@@ -1568,7 +1623,7 @@ def filter_correlated_signals_enhanced(signals, max_corr=1, enabled=True):
         log.info(f"Correlation filter: {len(signals)} -> {len(filtered)}")
     return filtered
 
-def check_risk_limits(signals, config, mode):
+def check_risk_limits(signals, config, mode, existing_counts: Optional[Dict[str,int]] = None):
     risk = config.get("risk_management",{}); ms = config["settings"][mode]; warns = []
     mp = risk.get("max_open_positions",3)
     if len(signals)>mp:
@@ -1579,7 +1634,7 @@ def check_risk_limits(signals, config, mode):
         rp = price_to_pips(sig.get("pair",""), abs(sig.get("entry_price",0)-sig.get("sl",0)))
         if tr+rp<=md: filtered.append(sig); tr+=rp
         else: warns.append(f"Skipped {sig['pair']} - {mode} risk limit")
-    filtered = filter_pair_limits(filtered, config)
+    filtered = filter_pair_limits(filtered, config, existing_counts=existing_counts)
     if config.get("advanced",{}).get("enable_correlation_filter",True):
         filtered = filter_correlated_signals_enhanced(
             filtered, ms.get("max_correlated_signals",1), enabled=True)
@@ -1742,7 +1797,7 @@ def write_dashboard_state(signals, downloads, news_calls=0, mkt_calls=0,
         "pair_prices": pair_prices or {},
         "upcoming_events": _get_upcoming_events(4),
         "pick_of_the_day": pick_of_the_day,
-        "system": {"last_update": datetime.now(timezone.utc).isoformat(), "signal_only_mode": SIGNAL_ONLY_MODE, "version": "2.2.1-FIX"},
+        "system": {"last_update": datetime.now(timezone.utc).isoformat(), "signal_only_mode": SIGNAL_ONLY_MODE, "version": "2.2.2-SAFE"},
     }
 
     out = Path("signal_state"); out.mkdir(exist_ok=True)
@@ -1760,7 +1815,7 @@ def write_health_check(signals, downloads, news, mkt, can_trade, pause, mode):
         "status": status, "last_run": datetime.now(timezone.utc).isoformat(),
         "signal_count": len(signals), "issues": issues, "can_trade": can_trade,
         "api_status": {"yfinance": "ok" if downloads>0 else "degraded", "newsapi": "ok" if news>0 else "disabled", "marketaux": "ok" if mkt>0 else "disabled", "finbert_hf": "ok" if HF_API_KEY else "disabled"},
-        "system_info": {"mode": mode, "pairs_monitored": len(PAIRS), "version": "2.2.1-FIX", "sentiment_engine": "finbert" if HF_API_KEY else "disabled"},
+        "system_info": {"mode": mode, "pairs_monitored": len(PAIRS), "version": "2.2.2-SAFE", "sentiment_engine": "finbert" if HF_API_KEY else "disabled"},
     }
     with open(Path("signal_state/health.json"),"w") as f: json.dump(health,f,indent=2)
     log.info(f"Health: {status.upper()}")
@@ -1872,14 +1927,34 @@ def main():
                 if CONFIG.get("performance_tuning",{}).get("auto_adjust_thresholds",False) else CONFIG)
     opt_mode = opt_cfg["mode"]
 
-    log.info(f"Trade Beacon v2.2.1-FIX | Sentiment={'FinBERT ON' if USE_SENTIMENT else 'OFF'} | HF_KEY={'set' if HF_API_KEY else 'missing'}")
+    log.info(f"Trade Beacon v2.2.2-SAFE | Sentiment={'FinBERT ON' if USE_SENTIMENT else 'OFF'} | HF_KEY={'set' if HF_API_KEY else 'missing'}")
     log.info(f"Monitoring {len(PAIRS)} pairs")
     log.info(f"Aggressive:   Score>={opt_cfg['settings']['aggressive']['threshold']} ADX>={opt_cfg['settings']['aggressive']['min_adx']}")
     log.info(f"Conservative: Score>={opt_cfg['settings']['conservative']['threshold']} ADX>={opt_cfg['settings']['conservative']['min_adx']}")
 
     new_signals: List[Dict] = []
     downloads = 0
-    existing_ids = get_existing_signals_today()
+    existing_ids    = get_existing_signals_today()
+    existing_counts = get_existing_pair_counts_today()
+
+    # ── Daily loss circuit breaker ────────────────────────────────────────────
+    # If 3+ losses already today, stop generating new signals for the rest of
+    # the day. Prevents cascading stops on whipsaw/choppy days (Mar 23: 6 losses,
+    # -318 pips in one day).
+    MAX_DAILY_LOSSES = 3
+    if PERFORMANCE_TRACKER:
+        today = datetime.now(timezone.utc).date()
+        today_losses = sum(
+            1 for s in PERFORMANCE_TRACKER.history.get("signals", [])
+            if s.get("status") == "LOSS"
+            and _safe_date(s.get("timestamp","")) == today
+        )
+        if today_losses >= MAX_DAILY_LOSSES:
+            log.warning(f"🛑 DAILY LOSS CIRCUIT BREAKER: {today_losses} losses today "
+                        f"(limit={MAX_DAILY_LOSSES}). No new signals for rest of day.")
+            write_dashboard_state(filter_expired_signals(existing), 0, 0, 0,
+                                  opt_cfg, opt_mode, None, {})
+            return
     pair_prices: Dict[str, float] = {}
     _cache.clear()
 
@@ -1965,8 +2040,8 @@ def main():
             log.warning(f"Live price validation skipped: {e}")
 
     mb = split_signals_by_mode(new_signals)
-    agg_f,  aw = check_risk_limits(mb["aggressive"],  opt_cfg, "aggressive")
-    cons_f, cw = check_risk_limits(mb["conservative"], opt_cfg, "conservative")
+    agg_f,  aw = check_risk_limits(mb["aggressive"],  opt_cfg, "aggressive",  existing_counts=existing_counts)
+    cons_f, cw = check_risk_limits(mb["conservative"], opt_cfg, "conservative", existing_counts=existing_counts)
     for w in aw+cw: log.warning(w)
 
     all_new: List[Dict] = []
@@ -1993,7 +2068,7 @@ def main():
     if all_new:
         mb = split_signals_by_mode(all_new)
         print("\n" + "="*100)
-        print("TRADE BEACON v2.2.1-FIX — MULTI-MODE SIGNALS")
+        print("TRADE BEACON v2.2.2-SAFE — MULTI-MODE SIGNALS")
         print("="*100)
         for label, key, icon in [("AGGRESSIVE","aggressive","⚡"), ("CONSERVATIVE","conservative","🛡️")]:
             sigs = mb[key]
@@ -2007,7 +2082,7 @@ def main():
         log.info("signals.csv written")
 
     mark_success()
-    log.info("Run completed — v2.2.1-FIX")
+    log.info("Run completed — v2.2.2-SAFE")
 
 
 if __name__ == "__main__":

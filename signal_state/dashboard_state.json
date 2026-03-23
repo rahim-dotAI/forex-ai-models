@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-03-23T12:31:12.349884+00:00",
-  "active_signals": 0,
+  "timestamp": "2026-03-23T12:45:56.423460+00:00",
+  "active_signals": 1,
   "active_signals_by_mode": {
-    "aggressive": 0,
-    "conservative": 0
+    "aggressive": 1,
+    "conservative": 1
   },
   "session": "EUROPEAN",
   "mode": "conservative",
@@ -16,15 +16,176 @@
     "pause_reason": null
   },
   "market_state": {
-    "volatility": "CALM",
-    "sentiment_bias": "MIXED",
+    "volatility": "HIGH",
+    "sentiment_bias": "BULLISH",
     "session": "EUROPEAN"
   },
   "signals_by_mode": {
-    "aggressive": [],
-    "conservative": []
+    "aggressive": [
+      {
+        "signal_id": "GBPJPY_BUY_18bd4783c98d",
+        "id": "GBPJPY_BUY_18bd4783c98d",
+        "pair": "GBPJPY",
+        "direction": "BUY",
+        "score": 62,
+        "technical_score": 62,
+        "sentiment_score": 0.0,
+        "sentiment_adjustment": 0.0,
+        "score_before_sentiment": 62,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 69.5,
+        "adx": 31.0,
+        "atr": 0.32247,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 212.799,
+        "sl": 211.99283,
+        "tp": 215.05627,
+        "risk_reward": 2.8,
+        "spread": 0.003,
+        "timestamp": "2026-03-23T12:45:52.474924+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "htf_confirmed": false,
+        "htf_trend_1h": "INCONCLUSIVE",
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 240,
+          "generated_at": "2026-03-23T12:45:52.474924+00:00",
+          "expires_at": "2026-03-23T16:45:52.474924+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.2.1-FIX",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null,
+        "price_source": "yfinance_confirmed",
+        "price_divergence": 0.00023
+      }
+    ],
+    "conservative": [
+      {
+        "signal_id": "GBPJPY_BUY_18bd4783c98d",
+        "id": "GBPJPY_BUY_18bd4783c98d",
+        "pair": "GBPJPY",
+        "direction": "BUY",
+        "score": 62,
+        "technical_score": 62,
+        "sentiment_score": 0.0,
+        "sentiment_adjustment": 0.0,
+        "score_before_sentiment": 62,
+        "confidence": "MODERATE",
+        "tier": "B",
+        "rsi": 69.5,
+        "adx": 31.0,
+        "atr": 0.32247,
+        "volume_ratio": 0,
+        "session": "EUROPEAN",
+        "entry_price": 212.799,
+        "sl": 211.99283,
+        "tp": 215.05627,
+        "risk_reward": 2.8,
+        "spread": 0.003,
+        "timestamp": "2026-03-23T12:45:52.474924+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "htf_confirmed": false,
+        "htf_trend_1h": "INCONCLUSIVE",
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 240,
+          "generated_at": "2026-03-23T12:45:52.474924+00:00",
+          "expires_at": "2026-03-23T16:45:52.474924+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.2.1-FIX",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null,
+        "price_source": "yfinance_confirmed",
+        "price_divergence": 0.00023
+      }
+    ]
   },
   "historical_signals": [
+    {
+      "signal_id": "GBPJPY_BUY_18bd4783c98d",
+      "id": "GBPJPY_BUY_18bd4783c98d",
+      "pair": "GBPJPY",
+      "direction": "BUY",
+      "score": 62,
+      "technical_score": 62,
+      "sentiment_score": 0.0,
+      "sentiment_adjustment": 0.0,
+      "score_before_sentiment": 62,
+      "confidence": "MODERATE",
+      "tier": "B",
+      "rsi": 69.5,
+      "adx": 31.0,
+      "atr": 0.32247,
+      "volume_ratio": 0,
+      "session": "EUROPEAN",
+      "entry_price": 212.799,
+      "sl": 211.99283,
+      "tp": 215.05627,
+      "risk_reward": 2.8,
+      "spread": 0.003,
+      "timestamp": "2026-03-23T12:45:52.474924+00:00",
+      "status": "OPEN",
+      "hold_time": "SWING",
+      "eligible_modes": [
+        "conservative",
+        "aggressive"
+      ],
+      "freshness": {
+        "status": "FRESH",
+        "age_minutes": 0.0,
+        "confidence_decay": 100.0
+      },
+      "sentiment_applied": false,
+      "htf_confirmed": false,
+      "htf_trend_1h": "INCONCLUSIVE",
+      "metadata": {
+        "signal_type": "trend-continuation",
+        "market_state": "TRENDING_STRONG",
+        "timeframe": "15m",
+        "valid_for_minutes": 240,
+        "generated_at": "2026-03-23T12:45:52.474924+00:00",
+        "expires_at": "2026-03-23T16:45:52.474924+00:00",
+        "session_active": true,
+        "signal_generator_version": "2.2.1-FIX",
+        "atr_stop_multiplier": 2.5,
+        "atr_target_multiplier": 7.0
+      },
+      "estimated_win_rate": null,
+      "price_source": "yfinance_confirmed",
+      "price_divergence": 0.00023
+    },
     {
       "id": "GBPJPY_SELL_5a44bf41a249",
       "signal_id": "GBPJPY_SELL_5a44bf41a249",
@@ -6498,8 +6659,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 0.0,
-    "total_risk_pips": 0,
+    "theoretical_max_pips": 80.6,
+    "total_risk_pips": 80.61700000000087,
     "max_daily_risk": 150
   },
   "analytics": {
@@ -6840,51 +7001,73 @@
   },
   "equity_curve": [],
   "pair_prices": {
-    "USDJPY": 158.797,
-    "GBPUSD": 1.33769,
-    "AUDUSD": 0.70033,
-    "NZDUSD": 0.58292,
-    "USDCAD": 1.37384,
-    "USDCHF": 0.78919,
-    "EURJPY": 183.677,
-    "GBPJPY": 212.403,
-    "GBPAUD": 1.91126,
-    "GBPCAD": 1.83697
+    "USDJPY": 158.66,
+    "GBPUSD": 1.34154,
+    "AUDUSD": 0.70198,
+    "NZDUSD": 0.58435,
+    "USDCAD": 1.37204,
+    "USDCHF": 0.7872,
+    "EURJPY": 183.967,
+    "GBPAUD": 1.90991,
+    "GBPCAD": 1.8392,
+    "GBPJPY": 212.799
   },
   "upcoming_events": [],
   "pick_of_the_day": {
-    "id": "GBPJPY_SELL_5a44bf41a249",
-    "signal_id": "GBPJPY_SELL_5a44bf41a249",
+    "signal_id": "GBPJPY_BUY_18bd4783c98d",
+    "id": "GBPJPY_BUY_18bd4783c98d",
     "pair": "GBPJPY",
-    "direction": "SELL",
-    "entry_price": 211.588,
-    "exit_price": 212.03694,
-    "sl": 212.03694,
-    "tp": 210.33095,
-    "status": "LOSS",
-    "pips": -44.89399999999932,
-    "confidence": "MODERATE",
+    "direction": "BUY",
     "score": 62,
-    "session": "EUROPEAN",
+    "technical_score": 62,
+    "sentiment_score": 0.0,
+    "sentiment_adjustment": 0.0,
+    "score_before_sentiment": 62,
+    "confidence": "MODERATE",
     "tier": "B",
+    "rsi": 69.5,
+    "adx": 31.0,
+    "atr": 0.32247,
+    "volume_ratio": 0,
+    "session": "EUROPEAN",
+    "entry_price": 212.799,
+    "sl": 211.99283,
+    "tp": 215.05627,
+    "risk_reward": 2.8,
+    "spread": 0.003,
+    "timestamp": "2026-03-23T12:45:52.474924+00:00",
+    "status": "OPEN",
+    "hold_time": "SWING",
     "eligible_modes": [
       "conservative",
       "aggressive"
     ],
+    "freshness": {
+      "status": "FRESH",
+      "age_minutes": 0.0,
+      "confidence_decay": 100.0
+    },
     "sentiment_applied": false,
-    "sentiment_score": 0.0,
-    "sentiment_adjustment": 0.0,
-    "sentiment_engine": null,
+    "htf_confirmed": false,
+    "htf_trend_1h": "INCONCLUSIVE",
+    "metadata": {
+      "signal_type": "trend-continuation",
+      "market_state": "TRENDING_STRONG",
+      "timeframe": "15m",
+      "valid_for_minutes": 240,
+      "generated_at": "2026-03-23T12:45:52.474924+00:00",
+      "expires_at": "2026-03-23T16:45:52.474924+00:00",
+      "session_active": true,
+      "signal_generator_version": "2.2.1-FIX",
+      "atr_stop_multiplier": 2.5,
+      "atr_target_multiplier": 7.0
+    },
     "estimated_win_rate": null,
-    "risk_reward": 2.8,
-    "adx": 25.3,
-    "rsi": 32.0,
-    "atr": 0.17958,
-    "timestamp": "2026-03-23T10:46:02.868732+00:00",
-    "exit_time": "2026-03-23T11:01:18.265366+00:00"
+    "price_source": "yfinance_confirmed",
+    "price_divergence": 0.00023
   },
   "system": {
-    "last_update": "2026-03-23T12:31:12.349935+00:00",
+    "last_update": "2026-03-23T12:45:56.423527+00:00",
     "signal_only_mode": true,
     "version": "2.2.1-FIX"
   }

@@ -1,8 +1,8 @@
 {
-  "timestamp": "2026-03-24T08:31:08.874110+00:00",
-  "active_signals": 1,
+  "timestamp": "2026-03-24T08:45:53.127267+00:00",
+  "active_signals": 0,
   "active_signals_by_mode": {
-    "aggressive": 1,
+    "aggressive": 0,
     "conservative": 0
   },
   "session": "EUROPEAN",
@@ -16,119 +16,44 @@
     "pause_reason": null
   },
   "market_state": {
-    "volatility": "HIGH",
-    "sentiment_bias": "BULLISH",
+    "volatility": "CALM",
+    "sentiment_bias": "MIXED",
     "session": "EUROPEAN"
   },
   "signals_by_mode": {
-    "aggressive": [
-      {
-        "signal_id": "GBPAUD_BUY_09dffc204268",
-        "id": "GBPAUD_BUY_09dffc204268",
-        "pair": "GBPAUD",
-        "direction": "BUY",
-        "score": 56,
-        "technical_score": 56,
-        "sentiment_score": 0.0,
-        "sentiment_adjustment": 0.0,
-        "score_before_sentiment": 56,
-        "confidence": "MODERATE",
-        "tier": "B",
-        "rsi": 59.7,
-        "adx": 23.1,
-        "atr": 0.00211,
-        "volume_ratio": 0,
-        "session": "EUROPEAN",
-        "entry_price": 1.92334,
-        "sl": 1.91807,
-        "tp": 1.93811,
-        "risk_reward": 2.8,
-        "spread": 0.0004,
-        "timestamp": "2026-03-24T08:31:06.524667+00:00",
-        "status": "OPEN",
-        "hold_time": "SWING",
-        "eligible_modes": [
-          "aggressive"
-        ],
-        "freshness": {
-          "status": "FRESH",
-          "age_minutes": 0.0,
-          "confidence_decay": 100.0
-        },
-        "sentiment_applied": false,
-        "htf_confirmed": true,
-        "htf_trend_1h": "BULL",
-        "metadata": {
-          "signal_type": "trend-continuation",
-          "market_state": "TRENDING_MODERATE",
-          "timeframe": "15m",
-          "valid_for_minutes": 240,
-          "generated_at": "2026-03-24T08:31:06.524667+00:00",
-          "expires_at": "2026-03-24T12:31:06.524667+00:00",
-          "session_active": true,
-          "signal_generator_version": "2.2.2-SAFE",
-          "atr_stop_multiplier": 2.5,
-          "atr_target_multiplier": 7.0
-        },
-        "estimated_win_rate": null,
-        "price_source": "yfinance_confirmed",
-        "price_divergence": 0.00018
-      }
-    ],
+    "aggressive": [],
     "conservative": []
   },
   "historical_signals": [
     {
-      "signal_id": "GBPAUD_BUY_09dffc204268",
       "id": "GBPAUD_BUY_09dffc204268",
+      "signal_id": "GBPAUD_BUY_09dffc204268",
       "pair": "GBPAUD",
       "direction": "BUY",
-      "score": 56,
-      "technical_score": 56,
-      "sentiment_score": 0.0,
-      "sentiment_adjustment": 0.0,
-      "score_before_sentiment": 56,
-      "confidence": "MODERATE",
-      "tier": "B",
-      "rsi": 59.7,
-      "adx": 23.1,
-      "atr": 0.00211,
-      "volume_ratio": 0,
-      "session": "EUROPEAN",
       "entry_price": 1.92334,
+      "exit_price": 1.91807,
       "sl": 1.91807,
       "tp": 1.93811,
-      "risk_reward": 2.8,
-      "spread": 0.0004,
-      "timestamp": "2026-03-24T08:31:06.524667+00:00",
-      "status": "OPEN",
-      "hold_time": "SWING",
+      "status": "LOSS",
+      "pips": -52.700000000001076,
+      "confidence": "MODERATE",
+      "score": 56,
+      "session": "EUROPEAN",
+      "tier": "B",
       "eligible_modes": [
         "aggressive"
       ],
-      "freshness": {
-        "status": "FRESH",
-        "age_minutes": 0.0,
-        "confidence_decay": 100.0
-      },
       "sentiment_applied": false,
-      "htf_confirmed": true,
-      "htf_trend_1h": "BULL",
-      "metadata": {
-        "signal_type": "trend-continuation",
-        "market_state": "TRENDING_MODERATE",
-        "timeframe": "15m",
-        "valid_for_minutes": 240,
-        "generated_at": "2026-03-24T08:31:06.524667+00:00",
-        "expires_at": "2026-03-24T12:31:06.524667+00:00",
-        "session_active": true,
-        "signal_generator_version": "2.2.2-SAFE",
-        "atr_stop_multiplier": 2.5,
-        "atr_target_multiplier": 7.0
-      },
+      "sentiment_score": 0.0,
+      "sentiment_adjustment": 0.0,
+      "sentiment_engine": null,
       "estimated_win_rate": null,
-      "price_source": "yfinance_confirmed",
-      "price_divergence": 0.00018
+      "risk_reward": 2.8,
+      "adx": 23.1,
+      "rsi": 59.7,
+      "atr": 0.00211,
+      "timestamp": "2026-03-24T08:31:06.524667+00:00",
+      "exit_time": "2026-03-24T08:45:48.424506+00:00"
     },
     {
       "id": "GBPUSD_BUY_85a97788ddb7",
@@ -6561,23 +6486,23 @@
     }
   },
   "stats": {
-    "total_trades": 156,
-    "win_rate": 27.6,
-    "total_pips": -396.4,
+    "total_trades": 157,
+    "win_rate": 27.4,
+    "total_pips": -449.1,
     "wins": 43,
-    "losses": 113,
-    "expectancy": -2.54
+    "losses": 114,
+    "expectancy": -2.86
   },
   "performance_stats": {
-    "total_trades": 156,
+    "total_trades": 157,
     "wins": 43,
-    "losses": 113,
+    "losses": 114,
     "expired": 81,
-    "win_rate": 27.6,
-    "total_pips": -396.4,
+    "win_rate": 27.4,
+    "total_pips": -449.1,
     "avg_win": 64.4,
-    "avg_loss": 28.0,
-    "expectancy": -2.54,
+    "avg_loss": 28.2,
+    "expectancy": -2.86,
     "by_mode": {
       "all": {
         "trades": 0,
@@ -6586,10 +6511,10 @@
         "win_rate": 0.0
       },
       "aggressive": {
-        "trades": 149,
+        "trades": 150,
         "wins": 43,
-        "total_pips": -215.22800000000962,
-        "win_rate": 28.9
+        "total_pips": -267.9280000000107,
+        "win_rate": 28.7
       },
       "conservative": {
         "trades": 68,
@@ -6600,10 +6525,10 @@
     },
     "by_tier": {
       "B": {
-        "trades": 26,
+        "trades": 27,
         "wins": 7,
-        "total_pips": 44.137000000004356,
-        "win_rate": 26.9
+        "total_pips": -8.56299999999672,
+        "win_rate": 25.9
       },
       "C": {
         "trades": 126,
@@ -6638,10 +6563,10 @@
         "win_rate": 25.0
       },
       "EUROPEAN": {
-        "trades": 61,
+        "trades": 62,
         "wins": 15,
-        "total_pips": -227.71500000000955,
-        "win_rate": 24.6
+        "total_pips": -280.41500000001065,
+        "win_rate": 24.2
       },
       "OVERLAP": {
         "trades": 4,
@@ -6718,16 +6643,16 @@
         "win_rate": 0.0
       },
       "GBPAUD": {
-        "trades": 2,
+        "trades": 3,
         "wins": 0,
-        "total_pips": -81.99999999999984,
+        "total_pips": -134.70000000000093,
         "win_rate": 0.0
       }
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 52.7,
-    "total_risk_pips": 52.700000000001076,
+    "theoretical_max_pips": 0.0,
+    "total_risk_pips": 0,
     "max_daily_risk": 150
   },
   "analytics": {
@@ -6799,9 +6724,9 @@
         "win_rate": 0.0
       },
       "GBPAUD": {
-        "trades": 2,
+        "trades": 3,
         "wins": 0,
-        "total_pips": -81.99999999999984,
+        "total_pips": -134.70000000000093,
         "win_rate": 0.0
       }
     },
@@ -6825,10 +6750,10 @@
         "win_rate": 25.0
       },
       "EUROPEAN": {
-        "trades": 61,
+        "trades": 62,
         "wins": 15,
-        "total_pips": -227.71500000000955,
-        "win_rate": 24.6
+        "total_pips": -280.41500000001065,
+        "win_rate": 24.2
       },
       "OVERLAP": {
         "trades": 4,
@@ -6839,10 +6764,10 @@
     },
     "by_confidence": {
       "MODERATE": {
-        "trades": 142,
+        "trades": 143,
         "wins": 39,
-        "total_pips": -514.5940000000107,
-        "win_rate": 27.5
+        "total_pips": -567.2940000000118,
+        "win_rate": 27.3
       },
       "STRONG": {
         "trades": 14,
@@ -6853,10 +6778,10 @@
     },
     "by_tier": {
       "B": {
-        "trades": 26,
+        "trades": 27,
         "wins": 7,
-        "total_pips": 44.137000000004356,
-        "win_rate": 26.9
+        "total_pips": -8.56299999999672,
+        "win_rate": 25.9
       },
       "C": {
         "trades": 126,
@@ -6879,10 +6804,10 @@
         "win_rate": 0.0
       },
       "aggressive": {
-        "trades": 149,
+        "trades": 150,
         "wins": 43,
-        "total_pips": -215.22800000000962,
-        "win_rate": 28.9
+        "total_pips": -267.9280000000107,
+        "win_rate": 28.7
       },
       "conservative": {
         "trades": 68,
@@ -6893,11 +6818,11 @@
     },
     "by_sentiment": {
       "sentiment_off": {
-        "trades": 143,
+        "trades": 144,
         "wins": 40,
-        "total_pips": -327.31600000001214,
+        "total_pips": -380.0160000000132,
         "engine": "none",
-        "win_rate": 28.0
+        "win_rate": 27.8
       },
       "sentiment_on": {
         "trades": 13,
@@ -6944,10 +6869,10 @@
         "B_EUROPEAN": {
           "tier": "B",
           "session": "EUROPEAN",
-          "trades": 9,
+          "trades": 10,
           "wins": 3,
-          "total_pips": 65.06599999999901,
-          "win_rate": 33.3
+          "total_pips": 12.365999999997932,
+          "win_rate": 30.0
         },
         "C_US": {
           "tier": "C",
@@ -7018,10 +6943,10 @@
         "aggressive_B": {
           "mode": "aggressive",
           "tier": "B",
-          "trades": 26,
+          "trades": 27,
           "wins": 7,
-          "total_pips": 44.137000000004356,
-          "win_rate": 26.9
+          "total_pips": -8.56299999999672,
+          "win_rate": 25.9
         },
         "conservative_B": {
           "mode": "conservative",
@@ -7068,44 +6993,30 @@
   },
   "equity_curve": [],
   "pair_prices": {
-    "USDJPY": 158.534,
-    "GBPUSD": 1.34041,
-    "AUDUSD": 0.69695,
-    "NZDUSD": 0.58285,
-    "USDCAD": 1.37517,
-    "USDCHF": 0.78692,
-    "EURJPY": 183.82001,
-    "GBPJPY": 212.50101,
-    "GBPCAD": 1.84337,
-    "GBPAUD": 1.92334
+    "USDJPY": 158.47701,
+    "GBPUSD": 1.34072,
+    "AUDUSD": 0.69696,
+    "NZDUSD": 0.58309,
+    "USDCAD": 1.37466,
+    "USDCHF": 0.78686,
+    "EURJPY": 183.80099,
+    "GBPJPY": 212.508,
+    "GBPCAD": 1.84306,
+    "GBPAUD": 1.92369
   },
   "upcoming_events": [
-    {
-      "title": "German Flash Manufacturing PMI",
-      "currency": "EUR",
-      "utc_time": "08:30 UTC",
-      "mins_to": -1,
-      "passed": true
-    },
-    {
-      "title": "German Flash Services PMI",
-      "currency": "EUR",
-      "utc_time": "08:30 UTC",
-      "mins_to": -1,
-      "passed": true
-    },
     {
       "title": "Flash Manufacturing PMI",
       "currency": "GBP",
       "utc_time": "09:30 UTC",
-      "mins_to": 58,
+      "mins_to": 44,
       "passed": false
     },
     {
       "title": "Flash Services PMI",
       "currency": "GBP",
       "utc_time": "09:30 UTC",
-      "mins_to": 58,
+      "mins_to": 44,
       "passed": false
     }
   ],
@@ -7141,7 +7052,7 @@
     "exit_time": "2026-03-24T08:15:57.007177+00:00"
   },
   "system": {
-    "last_update": "2026-03-24T08:31:08.874203+00:00",
+    "last_update": "2026-03-24T08:45:53.127334+00:00",
     "signal_only_mode": true,
     "version": "2.2.2-SAFE"
   }

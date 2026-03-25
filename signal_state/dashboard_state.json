@@ -1,11 +1,11 @@
 {
-  "timestamp": "2026-03-24T23:46:36.095262+00:00",
+  "timestamp": "2026-03-25T00:01:19.829662+00:00",
   "active_signals": 0,
   "active_signals_by_mode": {
     "aggressive": 0,
     "conservative": 0
   },
-  "session": "LATE_US",
+  "session": "ASIAN",
   "mode": "conservative",
   "sentiment_enabled": true,
   "sentiment_engine": "finbert",
@@ -18,7 +18,7 @@
   "market_state": {
     "volatility": "CALM",
     "sentiment_bias": "MIXED",
-    "session": "LATE_US"
+    "session": "ASIAN"
   },
   "signals_by_mode": {
     "aggressive": [],
@@ -6476,7 +6476,7 @@
   ],
   "api_usage": {
     "yfinance": {
-      "successful_downloads": 12
+      "successful_downloads": 10
     },
     "sentiment": {
       "enabled": true,
@@ -6993,73 +6993,41 @@
   },
   "equity_curve": [],
   "pair_prices": {
-    "USDJPY": 158.717,
-    "GBPUSD": 1.34135,
-    "AUDUSD": 0.69957,
-    "NZDUSD": 0.58381,
-    "USDCAD": 1.37599,
-    "USDCHF": 0.78832,
-    "EURJPY": 184.295,
-    "GBPJPY": 212.89101,
-    "GBPAUD": 1.91718,
-    "GBPCAD": 1.8455
+    "USDJPY": 158.705,
+    "GBPUSD": 1.3415,
+    "USDCAD": 1.37585,
+    "USDCHF": 0.78792,
+    "EURJPY": 184.325,
+    "GBPJPY": 212.91701,
+    "GBPAUD": 1.91815,
+    "GBPCAD": 1.84571
   },
   "upcoming_events": [
     {
       "title": "CPI m/m",
       "currency": "AUD",
       "utc_time": "00:30 UTC",
-      "mins_to": 43,
+      "mins_to": 28,
       "passed": false
     },
     {
       "title": "CPI y/y",
       "currency": "AUD",
       "utc_time": "00:30 UTC",
-      "mins_to": 43,
+      "mins_to": 28,
       "passed": false
     },
     {
       "title": "Trimmed Mean CPI m/m",
       "currency": "AUD",
       "utc_time": "00:30 UTC",
-      "mins_to": 43,
+      "mins_to": 28,
       "passed": false
     }
   ],
-  "pick_of_the_day": {
-    "id": "GBPUSD_BUY_85a97788ddb7",
-    "signal_id": "GBPUSD_BUY_85a97788ddb7",
-    "pair": "GBPUSD",
-    "direction": "BUY",
-    "entry_price": 1.34297,
-    "exit_price": 1.34059,
-    "sl": 1.34059,
-    "tp": 1.34965,
-    "status": "LOSS",
-    "pips": -23.800000000000487,
-    "confidence": "MODERATE",
-    "score": 62,
-    "session": "EUROPEAN",
-    "tier": "B",
-    "eligible_modes": [
-      "conservative",
-      "aggressive"
-    ],
-    "sentiment_applied": false,
-    "sentiment_score": 0.0,
-    "sentiment_adjustment": 0.0,
-    "sentiment_engine": null,
-    "estimated_win_rate": null,
-    "risk_reward": 2.8,
-    "adx": 26.7,
-    "rsi": 61.4,
-    "atr": 0.00095,
-    "timestamp": "2026-03-24T08:01:11.871119+00:00",
-    "exit_time": "2026-03-24T08:15:57.007177+00:00"
-  },
+  "pick_of_the_day": null,
   "system": {
-    "last_update": "2026-03-24T23:46:36.095339+00:00",
+    "last_update": "2026-03-25T00:01:19.829733+00:00",
     "signal_only_mode": true,
     "version": "2.2.2-SAFE"
   }

@@ -1,16 +1,23 @@
 """
-Performance Tracker v2.2.2-SAFE - Aligned with Trade Beacon v2.2.2-SAFE
+Performance Tracker v2.3.0-MTF-GEMINI - Aligned with Trade Beacon v2.3.0-MTF-GEMINI
 ============================================================================
 
-CHANGELOG v2.2.2-SAFE (based on v2.1.4-SCORING):
-- Version bumped to 2.2.2-SAFE to match Trade Beacon
-- Stats now include avg_win_pips / avg_loss_pips aliases (beacon reads both names)
-- Stats now include expectancy alias alongside expectancy_pips (beacon reads both)
-- Tier thresholds corrected to A+:80, A:72, B:62
-- AUTOMATIC MIGRATION: migrates v2.1.4-SCORING to v2.2.2-SAFE on load
-- HuggingFace router URL noted in sentinel_engine tracking
-- resolve_active_signals dedup guard: double-record prevention
-- Signal resolution uses high/low window, not just close price
+CHANGELOG v2.3.0-MTF-GEMINI (based on v2.2.2-SAFE):
+- Version bumped to 2.3.0-MTF-GEMINI
+- New signal fields added to schema:
+    mtf_details:      dict of per-timeframe trend values (1h/30m/4h/1d/1wk)
+    gemini_usd_bias:  BULLISH/BEARISH/NEUTRAL/None
+    gemini_engine:    "gemini-2.5-flash" / "finbert-fallback" / None
+- New analytics group: by_mtf_confirmed (WR when all TFs confirmed vs partial)
+- New analytics group: by_gemini_bias (WR when gemini said BULLISH vs BEARISH)
+- AUTOMATIC MIGRATION: migrates v2.2.2-SAFE signals to v2.3.0-MTF-GEMINI on load
+  New fields default to None/False for historical signals
+- All v2.2.2-SAFE fixes retained:
+    avg_win_pips / avg_loss_pips aliases
+    expectancy alias alongside expectancy_pips
+    Tier thresholds: A+:80, A:72, B:55
+    resolve dedup guard
+    signal resolution uses high/low window
 """
 
 import json
@@ -23,7 +30,7 @@ import pandas as pd
 
 log = logging.getLogger("performance-tracker")
 
-TRACKER_VERSION = "2.2.2-SAFE"
+TRACKER_VERSION = "2.3.0-MTF-GEMINI"
 
 def safe_int(val: Any, default: int = 0) -> int:
     try:
@@ -85,21 +92,18 @@ def map_confidence_to_tier(confidence: str) -> str:
     return mapping.get(confidence, 'C')
 
 def map_score_to_tier(score: int) -> str:
-    """
-    Map score to tier using v2.2.2-SAFE thresholds.
-    A+: 80+  A: 72-79  B: 62-71  C: below 62
-    """
+    """Map score to tier — v2.3.0 thresholds: A+:80, A:72, B:55, C:<55"""
     if score >= 80:
         return "A+"
     elif score >= 72:
         return "A"
-    elif score >= 62:
+    elif score >= 55:
         return "B"
     else:
         return "C"
 
 def map_score_to_modes(score: int) -> List[str]:
-    if score >= 62:
+    if score >= 55:
         return ['aggressive', 'conservative']
     else:
         return []
@@ -172,11 +176,21 @@ class PerformanceTracker:
             if "signal_id" not in signal and "id" in signal:
                 signal["signal_id"] = signal["id"]
                 needs_migration = True
-            signal.setdefault("sentiment_applied", False)
-            signal.setdefault("sentiment_score", 0.0)
-            signal.setdefault("sentiment_adjustment", 0.0)
-            signal.setdefault("estimated_win_rate", None)
-            signal.setdefault("sentiment_engine", None)
+
+            # v2.2.2-SAFE fields
+            signal.setdefault("sentiment_applied",     False)
+            signal.setdefault("sentiment_score",       0.0)
+            signal.setdefault("sentiment_adjustment",  0.0)
+            signal.setdefault("estimated_win_rate",    None)
+            signal.setdefault("sentiment_engine",      None)
+
+            # v2.3.0-MTF-GEMINI: new fields — default to None for historical signals
+            signal.setdefault("mtf_details",      None)
+            signal.setdefault("gemini_usd_bias",  None)
+            signal.setdefault("gemini_engine",    None)
+            # htf_confirmed was already a bool in v2.2.x — default False for older signals
+            signal.setdefault("htf_confirmed",    False)
+
             if needs_migration:
                 migrated_count += 1
 
@@ -212,12 +226,14 @@ class PerformanceTracker:
                 normalize_confidence(s.get("confidence")),
                 normalize_tier(s.get("tier")),
                 s.get("eligible_modes", ["aggressive"]),
-                pips, is_win
+                pips, is_win,
+                s.get("htf_confirmed", False),
+                s.get("gemini_usd_bias")
             )
             self._add_sentiment_analytics(
                 analytics, is_win, pips,
                 s.get("sentiment_applied", False),
-                s.get("sentiment_engine")
+                s.get("sentiment_engine") or s.get("gemini_engine")
             )
 
         total      = len(resolved)
@@ -256,7 +272,9 @@ class PerformanceTracker:
 
     def _add_to_analytics(self, analytics: Dict, pair: str, session: str,
                            confidence: str, tier: str, modes: List[str],
-                           pips: float, is_win: bool):
+                           pips: float, is_win: bool,
+                           htf_confirmed: bool = False,
+                           gemini_bias: Optional[str] = None):
         def _update(group: Dict, key: str):
             group.setdefault(key, {"trades": 0, "wins": 0, "total_pips": 0.0})
             group[key]["trades"]     += 1
@@ -270,6 +288,7 @@ class PerformanceTracker:
         for mode in modes:
             _update(analytics["by_mode"], mode)
 
+        # Tier × Session cross-analytics
         tk = f"{tier}_{session}"
         analytics["cross_analytics"]["tier_by_session"].setdefault(tk, {
             "tier": tier, "session": session, "trades": 0, "wins": 0, "total_pips": 0.0
@@ -278,6 +297,7 @@ class PerformanceTracker:
         analytics["cross_analytics"]["tier_by_session"][tk]["total_pips"] += pips
         if is_win: analytics["cross_analytics"]["tier_by_session"][tk]["wins"] += 1
 
+        # Mode × Tier cross-analytics
         for mode in modes:
             mk = f"{mode}_{tier}"
             analytics["cross_analytics"]["mode_by_tier"].setdefault(mk, {
@@ -286,6 +306,20 @@ class PerformanceTracker:
             analytics["cross_analytics"]["mode_by_tier"][mk]["trades"]     += 1
             analytics["cross_analytics"]["mode_by_tier"][mk]["total_pips"] += pips
             if is_win: analytics["cross_analytics"]["mode_by_tier"][mk]["wins"] += 1
+
+        # v2.3.0: MTF confirmation analytics
+        mtf_key = "fully_confirmed" if htf_confirmed else "partial_or_none"
+        analytics["by_mtf_confirmed"].setdefault(mtf_key, {"trades": 0, "wins": 0, "total_pips": 0.0})
+        analytics["by_mtf_confirmed"][mtf_key]["trades"]     += 1
+        analytics["by_mtf_confirmed"][mtf_key]["total_pips"] += pips
+        if is_win: analytics["by_mtf_confirmed"][mtf_key]["wins"] += 1
+
+        # v2.3.0: Gemini USD bias analytics (only for USD pairs that went through the gate)
+        if gemini_bias and gemini_bias in ("BULLISH", "BEARISH"):
+            analytics["by_gemini_bias"].setdefault(gemini_bias, {"trades": 0, "wins": 0, "total_pips": 0.0})
+            analytics["by_gemini_bias"][gemini_bias]["trades"]     += 1
+            analytics["by_gemini_bias"][gemini_bias]["total_pips"] += pips
+            if is_win: analytics["by_gemini_bias"][gemini_bias]["wins"] += 1
 
     def _add_sentiment_analytics(self, analytics: Dict, is_win: bool,
                                   pips: float, sentiment_applied: bool,
@@ -302,7 +336,9 @@ class PerformanceTracker:
     def _calculate_win_rates(self, analytics: Dict):
         for group in [analytics["by_pair"], analytics["by_session"],
                       analytics["by_confidence"], analytics["by_tier"],
-                      analytics["by_mode"]]:
+                      analytics["by_mode"],
+                      analytics.get("by_mtf_confirmed", {}),
+                      analytics.get("by_gemini_bias", {})]:
             for data in group.values():
                 if data["trades"] > 0:
                     data["win_rate"] = safe_round(data["wins"] / data["trades"] * 100, 1)
@@ -324,12 +360,12 @@ class PerformanceTracker:
     def _empty(self) -> Dict:
         now = datetime.now(timezone.utc).isoformat()
         return {
-            "version":  TRACKER_VERSION,
-            "signals":  [],
-            "stats":    self._empty_stats(),
+            "version":   TRACKER_VERSION,
+            "signals":   [],
+            "stats":     self._empty_stats(),
             "analytics": self._empty_analytics(),
-            "daily":    {},
-            "metadata": {"created_at": now, "last_updated": now},
+            "daily":     {},
+            "metadata":  {"created_at": now, "last_updated": now},
         }
 
     def _empty_stats(self) -> Dict:
@@ -357,6 +393,9 @@ class PerformanceTracker:
                 "all": {"trades": 0, "wins": 0, "total_pips": 0.0, "win_rate": 0.0}
             },
             "by_sentiment": {},
+            # v2.3.0 new groups
+            "by_mtf_confirmed": {},
+            "by_gemini_bias":   {},
             "cross_analytics": {
                 "tier_by_session": {},
                 "mode_by_tier":    {},
@@ -383,6 +422,11 @@ class PerformanceTracker:
         signal.setdefault("sentiment_adjustment",  0.0)
         signal.setdefault("sentiment_engine",      None)
         signal.setdefault("estimated_win_rate",    None)
+        # v2.3.0 new fields
+        signal.setdefault("htf_confirmed",    False)
+        signal.setdefault("mtf_details",      None)
+        signal.setdefault("gemini_usd_bias",  None)
+        signal.setdefault("gemini_engine",    None)
 
         self.history["signals"].append(signal)
         today = datetime.now(timezone.utc).date().isoformat()
@@ -409,6 +453,10 @@ class PerformanceTracker:
                      adx: float = None,
                      rsi: float = None,
                      atr: float = None,
+                     htf_confirmed: bool = False,
+                     mtf_details: dict = None,
+                     gemini_usd_bias: str = None,
+                     gemini_engine: str = None,
                      **kwargs):
         signal = self._find_signal(signal_id)
 
@@ -425,6 +473,10 @@ class PerformanceTracker:
                 signal["sentiment_score"]      = sentiment_score
                 signal["sentiment_adjustment"] = sentiment_adjustment
                 signal["sentiment_engine"]     = sentiment_engine or "finbert"
+            if gemini_usd_bias is not None: signal["gemini_usd_bias"] = gemini_usd_bias
+            if gemini_engine   is not None: signal["gemini_engine"]   = gemini_engine
+            if mtf_details     is not None: signal["mtf_details"]     = mtf_details
+            signal["htf_confirmed"] = htf_confirmed
             if risk_reward is not None: signal["risk_reward"] = risk_reward
             if adx         is not None: signal["adx"]         = adx
             if rsi         is not None: signal["rsi"]         = rsi
@@ -458,6 +510,10 @@ class PerformanceTracker:
                 "adx":                  adx,
                 "rsi":                  rsi,
                 "atr":                  atr,
+                "htf_confirmed":        htf_confirmed,
+                "mtf_details":          mtf_details,
+                "gemini_usd_bias":      gemini_usd_bias,
+                "gemini_engine":        gemini_engine,
                 "timestamp":            entry_time or datetime.now(timezone.utc).isoformat(),
                 "exit_time":            exit_time  or datetime.now(timezone.utc).isoformat(),
             }
@@ -496,6 +552,8 @@ class PerformanceTracker:
             tier       = normalize_tier(s.get("tier"))
             modes      = s.get("eligible_modes", ["aggressive"])
             is_win     = s["status"] == "WIN"
+            htf        = s.get("htf_confirmed", False)
+            gemini_b   = s.get("gemini_usd_bias")
 
             if is_win: wins.append(pips)
             else:      losses.append(abs(pips))
@@ -510,11 +568,12 @@ class PerformanceTracker:
                     mode_stats[mode]["total_pips"] += pips
                     if is_win: mode_stats[mode]["wins"] += 1
 
-            self._add_to_analytics(analytics, pair, session, confidence, tier, modes, pips, is_win)
+            self._add_to_analytics(analytics, pair, session, confidence, tier, modes,
+                                   pips, is_win, htf, gemini_b)
             self._add_sentiment_analytics(
                 analytics, is_win, pips,
                 s.get("sentiment_applied", False),
-                s.get("sentiment_engine")
+                s.get("sentiment_engine") or s.get("gemini_engine")
             )
 
         total      = len(resolved)
@@ -578,6 +637,22 @@ class PerformanceTracker:
         )
         if tier_counts:
             log.info(f"Tiers: {' | '.join(f'{t}: {c}' for t,c in sorted(tier_counts.items()))}")
+
+        # Log MTF confirmation stats
+        mtf_data = self.history.get("analytics", {}).get("by_mtf_confirmed", {})
+        if mtf_data:
+            fc = mtf_data.get("fully_confirmed", {})
+            pc = mtf_data.get("partial_or_none", {})
+            log.info(
+                f"MTF Confirmed: {fc.get('trades',0)} trades {fc.get('win_rate',0):.1f}% WR | "
+                f"Partial/None: {pc.get('trades',0)} trades {pc.get('win_rate',0):.1f}% WR"
+            )
+
+        # Log Gemini bias stats
+        gemini_data = self.history.get("analytics", {}).get("by_gemini_bias", {})
+        if gemini_data:
+            for bias, v in gemini_data.items():
+                log.info(f"Gemini [{bias}]: {v.get('trades',0)} trades | WR: {v.get('win_rate',0):.1f}%")
 
         sent = self.history.get("analytics", {}).get("by_sentiment", {})
         if sent:

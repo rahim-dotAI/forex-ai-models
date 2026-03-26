@@ -1,24 +1,27 @@
-name: Trade Beacon v2.2.2-SAFE – Forex Signal Generator
+name: Trade Beacon v2.3.0-MTF-GEMINI – Forex Signal Generator
 
-# CHANGES v2.2.2-SAFE:
-# - NEW PAIRS: GBPAUD + GBPCAD — GBP crosses, BIS 2025 top-25, BoE-driven momentum
-#   GBPAUD: BoE vs RBA divergence — sustained trends, no USD dependency
-#   GBPCAD: BoE vs oil/BoC — commodity-linked, peaks in US session
-# - EURUSD permanently blocked — 7t, 0% WR, -177p, FinBERT gate failed to help
-# - 1-HOUR TREND FILTER: MTF confirmation (Elder Triple Screen)
-#   Score 55-61: requires 1h EMA12>EMA26>EMA50 to agree with 15m direction
-#   Score 62+: 1h disagreement blocks; inconclusive passes on 15m strength
-# - Threshold lowered 62->55/57 — 1h filter is the quality gate (not raw score)
-# - B_min_score 62->55, max_open_positions 3->5
-# - 12 pairs monitored (was 10)
-
-# CARRIED FORWARD from v2.1.7-USD-GATE:
-# - USD pairs US-session-only with FinBERT binary gate
-# - ASIAN/OVERLAP sessions blocked (999 threshold)
-# - EUROPEAN/US 4h signal expiry windows
+# CHANGES v2.3.0-MTF-GEMINI:
+# - FULL MULTI-TIMEFRAME (MTF):
+#   30m, 4h (resampled with London-open offset), Daily, Weekly added on top of 1h
+#   Daily is the decisive filter — blocks entire macro downtrends (March 23 -318pip day)
+#   All MTF caches use _yf_lock (prevents parallel thread contamination)
+# - GEMINI 2.5 FLASH REPLACES FINBERT FOR USD:
+#   Model: gemini-2.5-flash (NOT 2.0-flash — deprecated Feb 2026, retired Mar 3 2026)
+#   Fetches NewsAPI headlines → Gemini reasons about macro context → BULLISH/BEARISH/NEUTRAL
+#   NEUTRAL = block all USD signals. FinBERT kept as automatic fallback.
+#   New secret required: GEMINI_API_KEY (free at aistudio.google.com)
+# - New analytics: by_mtf_confirmed (WR when all TFs confirmed vs partial)
+# - New analytics: by_gemini_bias (WR when Gemini said BULLISH vs BEARISH)
+#
+# CARRIED FORWARD from v2.2.2-SAFE:
+# - Cross-run pair daily cap (get_existing_pair_counts_today)
+# - EURUSD/EURGBP permanently blocked
+# - GBPAUD + GBPCAD (GBP crosses — BoE driven, no USD dependency)
+# - USD pairs US-session-only
+# - Tier A + Tier C blocked
+# - 1h MTF filter (now part of full MTF hierarchy)
+# - git merge -X ours push strategy
 # - Staleness guard: yfinance data rejected if last candle >60min old
-# - git merge -X ours: eliminates concurrent run push conflicts
-# - GBPUSD BUY-only directional filter (50%+ WR live)
 
 on:
   schedule:
@@ -30,7 +33,7 @@ on:
   workflow_dispatch:
     inputs:
       sentiment:
-        description: 'Enable Sentiment Analysis (requires HF_API_KEY, NEWSAPI_KEY, MARKETAUX_API_KEY secrets)'
+        description: 'Enable Sentiment Analysis (requires HF_API_KEY, NEWSAPI_KEY, MARKETAUX_API_KEY)'
         required: false
         type: boolean
         default: false
@@ -64,7 +67,7 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 concurrency:
-  group: trade-beacon-v2.2.2-SAFE-${{ github.ref }}-${{ github.event_name }}
+  group: trade-beacon-v2.3.0-MTF-GEMINI-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: false
 
 permissions:
@@ -187,8 +190,8 @@ jobs:
           echo "Beacon version:  $BEACON_VER"
           echo "Config version:  $CONFIG_VER"
 
-          if [[ "$BEACON_VER" == *"MULTI-PAIR"* ]] || [[ "$BEACON_VER" == *"USD-GATE"* ]] || [[ "$BEACON_VER" == *"OPTIMISED"* ]] || [[ "$BEACON_VER" == *"FIX"* ]] || [[ "$BEACON_VER" == *"SAFE"* ]]; then
-            echo "✅ v2.2.2-SAFE detected"
+          if [[ "$BEACON_VER" == *"MTF-GEMINI"* ]] || [[ "$BEACON_VER" == *"SAFE"* ]] || [[ "$BEACON_VER" == *"FIX"* ]] || [[ "$BEACON_VER" == *"MULTI-PAIR"* ]] || [[ "$BEACON_VER" == *"USD-GATE"* ]]; then
+            echo "✅ v2.3.0-MTF-GEMINI detected"
           elif [[ "$TRACKER_VER" != "$BEACON_VER" ]]; then
             echo "⚠️ Version mismatch (non-fatal — auto-migration will handle)"
           else
@@ -203,28 +206,32 @@ jobs:
 
           CONFIG_VER=$(jq -r '.version // "unknown"' config.json)
           echo "Config version: $CONFIG_VER"
-          if [[ "$CONFIG_VER" == *"MULTI-PAIR"* ]] || [[ "$CONFIG_VER" == *"USD-GATE"* ]] || [[ "$CONFIG_VER" == *"OPTIMISED"* ]] || [[ "$CONFIG_VER" == *"FIX"* ]] || [[ "$CONFIG_VER" == *"SAFE"* ]]; then
-            echo "✅ Config version: v2.2.2-SAFE"
+          if [[ "$CONFIG_VER" == *"MTF-GEMINI"* ]] || [[ "$CONFIG_VER" == *"SAFE"* ]] || [[ "$CONFIG_VER" == *"FIX"* ]] || [[ "$CONFIG_VER" == *"MULTI-PAIR"* ]]; then
+            echo "✅ Config version: v2.3.0-MTF-GEMINI"
           else
-            echo "⚠️ Config version not v2.2.2-SAFE — please update config.json"
+            echo "⚠️ Config version not recognised — please update config.json"
           fi
 
           # Required structure checks
-          jq -e '.settings.aggressive'  config.json > /dev/null || { echo "❌ Missing aggressive settings"; exit 1; }
-          jq -e '.settings.conservative' config.json > /dev/null || { echo "❌ Missing conservative settings"; exit 1; }
-          jq -e '.tiers'                config.json > /dev/null || echo "⚠️ Tier thresholds not found - using defaults (A+:80, A:72, B:62)"
-          jq -e '.advanced.session_thresholds' config.json > /dev/null || echo "⚠️ Session thresholds not found"
-          jq -e '.advanced.pair_limits'        config.json > /dev/null || echo "⚠️ Pair limits not found"
-          jq -e '.sentiment'                   config.json > /dev/null || echo "⚠️ Sentiment block not found"
+          jq -e '.settings.aggressive'         config.json > /dev/null || { echo "❌ Missing aggressive settings"; exit 1; }
+          jq -e '.settings.conservative'        config.json > /dev/null || { echo "❌ Missing conservative settings"; exit 1; }
+          jq -e '.tiers'                         config.json > /dev/null || echo "⚠️ Tier thresholds not found - using defaults (A+:80, A:72, B:55)"
+          jq -e '.mtf_settings'                  config.json > /dev/null || echo "⚠️ MTF settings not found - using defaults (30m+4h+Daily required)"
+          jq -e '.gemini_usd_gate'               config.json > /dev/null || echo "⚠️ Gemini USD gate config not found - using defaults"
+          jq -e '.advanced.session_thresholds'   config.json > /dev/null || echo "⚠️ Session thresholds not found"
+          jq -e '.advanced.pair_limits'           config.json > /dev/null || echo "⚠️ Pair limits not found"
+          jq -e '.sentiment'                      config.json > /dev/null || echo "⚠️ Sentiment block not found"
 
-          AGG_THRESH=$(jq -r  '.settings.aggressive.threshold // 50'    config.json)
-          CONS_THRESH=$(jq -r '.settings.conservative.threshold // 55'  config.json)
-          ATR_STOP=$(jq -r   '.settings.aggressive.atr_stop_multiplier // 2.5' config.json)
-          MIN_RR=$(jq -r     '.settings.aggressive.min_risk_reward // 2.5'     config.json)
-          SENT_THRESH=$(jq -r '.sentiment.min_score_threshold // 60'           config.json)
+          AGG_THRESH=$(jq -r    '.settings.aggressive.threshold // 55'    config.json)
+          CONS_THRESH=$(jq -r   '.settings.conservative.threshold // 57'  config.json)
+          ATR_STOP=$(jq -r      '.settings.aggressive.atr_stop_multiplier // 2.5' config.json)
+          MIN_RR=$(jq -r        '.settings.aggressive.min_risk_reward // 2.5'     config.json)
+          GEMINI_MODEL=$(jq -r  '.gemini_usd_gate.model // "gemini-2.5-flash"'    config.json)
+          MTF_DAILY=$(jq -r     '.mtf_settings.require_daily // true'              config.json)
 
           echo "✅ Thresholds: Aggressive=$AGG_THRESH, Conservative=$CONS_THRESH"
-          echo "✅ ATR Stop: ${ATR_STOP}x | Min R:R: ${MIN_RR} | Sentiment threshold: ${SENT_THRESH}"
+          echo "✅ ATR Stop: ${ATR_STOP}x | Min R:R: ${MIN_RR}"
+          echo "✅ Gemini model: $GEMINI_MODEL | MTF daily required: $MTF_DAILY"
 
           if [ ! -f config.runtime.base.json ]; then
             cp config.json config.runtime.base.json
@@ -232,8 +239,7 @@ jobs:
             echo "📸 Created config baseline snapshot"
           fi
 
-          echo "✅ Configuration valid (v2.2.2-SAFE)"
-
+          echo "✅ Configuration valid (v2.3.0-MTF-GEMINI)"
           MODE=$(jq -r '.mode // "conservative"' config.json)
           echo "ℹ️ Mode: $MODE — Both aggressive and conservative signals generated simultaneously"
 
@@ -324,7 +330,7 @@ jobs:
 
             if jq -e '.analytics.by_tier' signal_state/signal_history.json > /dev/null 2>&1; then
               echo ""
-              echo "🏆 Tier Breakdown (A+≥80, A≥68, B≥62):"
+              echo "🏆 Tier Breakdown (A+≥80, A≥72, B≥55):"
               jq -r '.analytics.by_tier // {} | to_entries | sort_by(.key) | .[] |
                 "  Tier \(.key): \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
                 signal_state/signal_history.json 2>/dev/null || echo "  No tier data yet"
@@ -338,18 +344,20 @@ jobs:
                 signal_state/signal_history.json 2>/dev/null || echo "  No pair data"
             fi
 
-            # FinBERT effectiveness preview
-            if jq -e '.analytics.by_sentiment' signal_state/signal_history.json > /dev/null 2>&1; then
+            if jq -e '.analytics.by_mtf_confirmed' signal_state/signal_history.json > /dev/null 2>&1; then
               echo ""
-              echo "💭 FinBERT Sentiment Effectiveness:"
-              SENT_DATA=$(jq -r '.analytics.by_sentiment // {} | to_entries[] |
+              echo "🔀 MTF Confirmation Effectiveness:"
+              jq -r '.analytics.by_mtf_confirmed // {} | to_entries[] |
                 "  [\(.key)]: \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
-                signal_state/signal_history.json 2>/dev/null)
-              if [ -n "$SENT_DATA" ]; then
-                echo "$SENT_DATA"
-              else
-                echo "  No sentiment data yet (will populate as signals resolve)"
-              fi
+                signal_state/signal_history.json 2>/dev/null || echo "  No MTF data yet (will populate as signals resolve)"
+            fi
+
+            if jq -e '.analytics.by_gemini_bias' signal_state/signal_history.json > /dev/null 2>&1; then
+              echo ""
+              echo "🤖 Gemini USD Bias Effectiveness:"
+              jq -r '.analytics.by_gemini_bias // {} | to_entries[] |
+                "  [\(.key)]: \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
+                signal_state/signal_history.json 2>/dev/null || echo "  No Gemini data yet"
             fi
           fi
 
@@ -360,12 +368,8 @@ jobs:
         if: steps.market_check.outputs.should_run == 'true'
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "📋 ACTIVE CONFIGURATION — v2.2.2-SAFE"
+          echo "📋 ACTIVE CONFIGURATION — v2.3.0-MTF-GEMINI"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo ""
-
-          MODE=$(jq -r '.mode // "conservative"' config.json)
-          echo "🎯 MULTI-MODE: Generating both Aggressive AND Conservative signals"
           echo ""
 
           echo "[Aggressive Mode]"
@@ -386,119 +390,60 @@ jobs:
           echo "  Max Corr:  $(jq -r '.settings.conservative.max_correlated_signals' config.json)"
           echo ""
 
-          echo "[Tier Thresholds — v2.2.2-SAFE]"
+          echo "[MTF Settings — v2.3.0]"
+          echo "  Require 30m:    $(jq -r '.mtf_settings.require_30m // true' config.json)"
+          echo "  Require 4h:     $(jq -r '.mtf_settings.require_4h // true' config.json)"
+          echo "  Require Daily:  $(jq -r '.mtf_settings.require_daily // true' config.json) ← DECISIVE FILTER"
+          echo "  Require Weekly: $(jq -r '.mtf_settings.require_weekly // false' config.json) (bonus only)"
+          echo "  4h anchor:      08:00 UTC (London open)"
+          echo "  Weekly EMA:     EMA12/26 only (EMA50 needs 50-bar warmup)"
+          echo ""
+
+          echo "[Gemini USD Gate — v2.3.0]"
+          echo "  Model:     $(jq -r '.gemini_usd_gate.model // "gemini-2.5-flash"' config.json)"
+          echo "  Cache TTL: $(jq -r '.gemini_usd_gate.cache_minutes // 60' config.json) min"
+          if [ -n "$GEMINI_API_KEY" ]; then
+            echo "  GEMINI_API_KEY: ✅ Configured (Gemini gate active)"
+          else
+            echo "  GEMINI_API_KEY: ❌ Missing — add secret GEMINI_API_KEY at aistudio.google.com"
+            if [ -n "$HF_API_KEY" ]; then
+              echo "  Fallback:  FinBERT (HF_API_KEY present)"
+            else
+              echo "  Fallback:  ❌ No fallback — USD signals will be blocked (safe default)"
+            fi
+          fi
+          echo "  Logic: BULLISH=allow BUY USD | BEARISH=allow SELL USD | NEUTRAL=block all USD"
+          echo ""
+
+          echo "[Tier Thresholds — v2.3.0]"
           echo "  A+: >= $(jq -r '.tiers.A_plus_min_score // 80' config.json)"
-          echo "  A:  >= $(jq -r '.tiers.A_min_score // 72' config.json)"
-          echo "  B:  >= $(jq -r '.tiers.B_min_score // 55' config.json)"
-          echo "  C:  below B threshold"
+          echo "  A:  >= $(jq -r '.tiers.A_min_score // 72' config.json) (BLOCKED — 0% WR, -107 pips)"
+          echo "  B:  >= $(jq -r '.tiers.B_min_score // 55' config.json) (active — best edge)"
+          echo "  C:  below B threshold (BLOCKED — net negative historically)"
           echo ""
 
           echo "[Session Thresholds]"
-          echo "  EUROPEAN: $(jq -r '.advanced.session_thresholds.EUROPEAN // 50' config.json)"
-          echo "  US:       $(jq -r '.advanced.session_thresholds.US // 50' config.json)"
-          echo "  ASIAN:    $(jq -r '.advanced.session_thresholds.ASIAN // 999' config.json) (BLOCKED — 25.8% WR below breakeven)"
+          echo "  EUROPEAN: $(jq -r '.advanced.session_thresholds.EUROPEAN // 48' config.json)"
+          echo "  US:       $(jq -r '.advanced.session_thresholds.US // 48' config.json)"
+          echo "  ASIAN:    $(jq -r '.advanced.session_thresholds.ASIAN // 999' config.json) (BLOCKED)"
           echo "  LATE_US:  $(jq -r '.advanced.session_thresholds.LATE_US // 60' config.json)"
-          echo "  OVERLAP:  $(jq -r '.advanced.session_thresholds.OVERLAP // 999' config.json) (BLOCKED — 0% WR)"
-          echo ""
-
-          echo "[Signal Expiry Windows]"
-          echo "  EUROPEAN: $(jq -r '.advanced.validation.session_expiry_minutes.EUROPEAN // 15' config.json) min (4h — active session)"
-          echo "  US:       $(jq -r '.advanced.validation.session_expiry_minutes.US // 15' config.json) min (4h — active session)"
-          echo "  ASIAN:    $(jq -r '.advanced.validation.session_expiry_minutes.ASIAN // 15' config.json) min (thin liquidity)"
-          echo "  LATE_US:  $(jq -r '.advanced.validation.session_expiry_minutes.LATE_US // 15' config.json) min (winding down)"
-          echo "  OVERLAP:  $(jq -r '.advanced.validation.session_expiry_minutes.OVERLAP // 15' config.json) min (blocked)"
+          echo "  OVERLAP:  $(jq -r '.advanced.session_thresholds.OVERLAP // 999' config.json) (BLOCKED)"
           echo ""
 
           echo "[Pair Limits]"
-          echo "  GBPUSD: max $(jq -r '.advanced.pair_limits.GBPUSD // 5' config.json) (BUY-only, 50%+ WR — unrestricted)"
-          echo "  GBPJPY: max $(jq -r '.advanced.pair_limits.GBPJPY // 1' config.json) (33.3% WR live — capped)"
-          echo "  GBPAUD: max $(jq -r '.advanced.pair_limits.GBPAUD // 3' config.json) (NEW v2.2.0 — BoE vs RBA, GBP cross)"
-          echo "  GBPCAD: max $(jq -r '.advanced.pair_limits.GBPCAD // 3' config.json) (NEW v2.2.0 — BoE vs oil/BoC)"
-          echo "  NZDUSD: max $(jq -r '.advanced.pair_limits.NZDUSD // 1' config.json) (US session only, min score 65)"
-          echo "  AUDUSD: max $(jq -r '.advanced.pair_limits.AUDUSD // 2' config.json) (US session only, min score 65)"
-          echo "  EURGBP: $(jq -r '.advanced.pair_limits.EURGBP // 0' config.json) (PERMANENTLY BLOCKED — 0% WR)"
+          echo "  GBPUSD: max $(jq -r '.advanced.pair_limits.GBPUSD // 5' config.json) (BUY-only)"
+          echo "  GBPJPY: max $(jq -r '.advanced.pair_limits.GBPJPY // 1' config.json) (capped)"
+          echo "  GBPAUD: max $(jq -r '.advanced.pair_limits.GBPAUD // 3' config.json) (BoE vs RBA)"
+          echo "  GBPCAD: max $(jq -r '.advanced.pair_limits.GBPCAD // 3' config.json) (BoE vs oil/BoC)"
           echo "  EURUSD: $(jq -r '.advanced.pair_limits.EURUSD // 0' config.json) (PERMANENTLY BLOCKED — 7t 0% WR -177p)"
+          echo "  EURGBP: $(jq -r '.advanced.pair_limits.EURGBP // 0' config.json) (PERMANENTLY BLOCKED — 0% WR)"
           echo "  Default: $(jq -r '.advanced.pair_limits.default // 3' config.json)"
-          echo ""
-
-          echo "[USD Pair Rules — v2.2.0]"
-          USD_RULES_ENABLED=$(jq -r '.advanced.usd_pair_rules.enabled // false' config.json)
-          if [ "$USD_RULES_ENABLED" = "true" ]; then
-            echo "  Status:    ✅ ACTIVE"
-            echo "  Pairs:     $(jq -r '.advanced.usd_pair_rules.restricted_pairs | join(", ")' config.json)"
-            echo "  Sessions:  $(jq -r '.advanced.usd_pair_rules.allowed_sessions | join(", ")' config.json) only (47.2% WR in US session)"
-            echo "  Min Score: $(jq -r '.advanced.usd_pair_rules.min_score // 65' config.json) (vs 55/58 default — macro pairs need higher conviction)"
-            echo "  Blackout:  -$(jq -r '.advanced.usd_pair_rules.blackout_before_minutes // 45' config.json)min / +$(jq -r '.advanced.usd_pair_rules.blackout_after_minutes // 30' config.json)min (wider than default -30/+15)"
-            echo "  Research:  BIS 2025, ClearEdge, OANDA session analysis"
-          else
-            echo "  Status:    ❌ DISABLED"
-          fi
           echo ""
 
           echo "[Data Quality]"
           echo "  Staleness Guard: ✅ Active — rejects pairs where yfinance last candle > 60min old"
           echo "  Divergence Fix:  ✅ Active — updates entry/SL/TP when yfinance vs X-Rates > 0.5%"
-          echo "  Rationale: yfinance served GBPUSD=1.14639 (real=1.32600, 15.67% off) on Mar 13"
-          echo "             Stale OHLC corrupts ATR, EMAs, SL/TP geometry before live price check"
-          echo ""
-
-          echo "[System]"
-          echo "  Mode:                  $MODE"
-          echo "  Sentiment:             $(jq -r '.use_sentiment' config.json)"
-          echo "  Performance Tracking:  $(jq -r '.performance_tracking.enable' config.json)"
-          echo "  Auto Optimization:     $(jq -r '.performance_tuning.auto_adjust_thresholds' config.json)"
-          echo "  Session Filtering:     $(jq -r '.advanced.enable_session_filtering' config.json)"
-          echo "  Correlation Filter:    $(jq -r '.advanced.enable_correlation_filter' config.json)"
-          echo ""
-
-          # Sentiment block — v2.2.2-SAFE: selective USD binary gate
-          SENTIMENT=$(jq -r '.use_sentiment' config.json)
-          if [ "$SENTIMENT" = "true" ]; then
-            echo "[Sentiment Analysis — v2.1.7 USD GATE ENABLED]"
-            echo "  Architecture: FinBERT gates USD pairs only (binary block/pass)"
-            echo "                GBP pairs (GBPJPY, GBPUSD) = pure technical, zero sentiment noise"
-            echo "  Gate Logic:   BUY blocked if net_sentiment < $(jq -r '.advanced.usd_pair_rules.sentiment_gate_threshold // -0.15' config.json)"
-            echo "                SELL blocked if net_sentiment < $(jq -r '.advanced.usd_pair_rules.sentiment_gate_threshold // -0.15' config.json)"
-            echo "                Neutral / unavailable = signal passes through"
-            if [ -n "$NEWSAPI_KEY" ]; then
-              echo "  NewsAPI:      ✅ Configured"
-            else
-              echo "  NewsAPI:      ❌ Missing secret NEWSAPI_KEY"
-            fi
-            if [ -n "$MARKETAUX_API_KEY" ]; then
-              echo "  MarketAux:    ✅ Configured"
-            else
-              echo "  MarketAux:    ❌ Missing secret MARKETAUX_API_KEY"
-            fi
-            if [ -n "$HF_API_KEY" ]; then
-              echo "  HF_API_KEY:   ✅ Configured (FinBERT active)"
-            else
-              echo "  HF_API_KEY:   ❌ Missing — add secret HF_API_KEY at huggingface.co/settings/tokens"
-            fi
-            echo "  Model:        $(jq -r '.sentiment.hf_model_primary // "ProsusAI/finbert"' config.json)"
-            echo "  Cache TTL:    $(jq -r '.sentiment.cache_ttl_minutes // 30' config.json) min"
-          else
-            echo "[Sentiment Analysis — DISABLED]"
-            echo "  To enable: set use_sentiment=true in config.json"
-            echo "  Required secrets: HF_API_KEY, NEWSAPI_KEY, MARKETAUX_API_KEY"
-          fi
-          echo ""
-
-          echo "[Economic Calendar]"
-          echo "  Source:       Forex Factory weekly feed (plain HTTP — free)"
-          echo "  Refresh:      Once per day, cached to signal_state/economic_calendar_cache.json"
-          echo "  Blackout:     Default: -30min / +15min around High-impact events"
-          echo "  USD Blackout: -45min / +30min for USD-restricted pairs (NFP/CPI linger longer)"
-          echo ""
-
-          echo "[Live Price Validation]"
-          if [ -n "$BROWSERLESS_TOKEN" ]; then
-            echo "  Status:       ✅ Active — X-Rates via Browserless"
-            echo "  Divergence:   Warns + updates entry if yfinance vs X-Rates >0.5%"
-            echo "  Budget:       ~110 calls/month (free tier = 1000)"
-          else
-            echo "  Status:       ❌ Disabled — add BROWSERLESS_TOKEN secret"
-          fi
+          echo "  yfinance lock:   ✅ Active — _yf_lock prevents parallel thread cache contamination"
           echo ""
 
           echo "[Risk Management]"
@@ -508,20 +453,19 @@ jobs:
           echo ""
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         env:
-          NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
-          MARKETAUX_API_KEY: ${{ secrets.MARKETAUX_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
-          BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}
 
-      - name: Run Trade Beacon v2.2.2-SAFE
+      - name: Run Trade Beacon v2.3.0-MTF-GEMINI
         if: steps.market_check.outputs.should_run == 'true'
         env:
           NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
           MARKETAUX_API_KEY: ${{ secrets.MARKETAUX_API_KEY }}
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}
         run: |
-          echo "🚀 Starting Trade Beacon v2.2.2-SAFE..."
+          echo "🚀 Starting Trade Beacon v2.3.0-MTF-GEMINI..."
           python $ENTRY_SCRIPT
           EXIT_CODE=$?
 
@@ -538,18 +482,11 @@ jobs:
             AGG_COUNT=$(jq -r  '.active_signals_by_mode.aggressive // 0'  signal_state/dashboard_state.json)
             CONS_COUNT=$(jq -r '.active_signals_by_mode.conservative // 0' signal_state/dashboard_state.json)
             TOTAL=$(jq -r      '.active_signals // 0'                      signal_state/dashboard_state.json)
-            SENT_ENGINE=$(jq -r '.sentiment_engine // "disabled"'           signal_state/dashboard_state.json)
+            USD_ENGINE=$(jq -r '.sentiment_engine // "disabled"'           signal_state/dashboard_state.json)
             echo "  Aggressive:   $AGG_COUNT signals"
             echo "  Conservative: $CONS_COUNT signals"
             echo "  Total:        $TOTAL unique signals"
-            echo "  Sentiment:    $SENT_ENGINE"
-          fi
-
-          if [ -f signal_state/last_optimization.json ]; then
-            echo ""
-            echo "📊 Optimization Decision:"
-            jq -r '"Old Threshold: \(.old // "N/A") -> New: \(.new // "N/A")"' \
-              signal_state/last_optimization.json || true
+            echo "  USD Engine:   $USD_ENGINE"
           fi
 
       - name: Validate output files
@@ -565,20 +502,21 @@ jobs:
               echo "⚠️ Dashboard missing multi_mode=true"
             fi
             VERSION=$(jq -r '.system.version // "unknown"' signal_state/dashboard_state.json)
-            echo "📋 Dashboard version: $VERSION"
+            USD_ENGINE=$(jq -r '.sentiment_engine // "unknown"' signal_state/dashboard_state.json)
+            echo "📋 Dashboard version: $VERSION | USD engine: $USD_ENGINE"
           else
             echo "⚠️ Dashboard state not found"
           fi
 
           if [ -f signal_state/health.json ]; then
             jq empty signal_state/health.json || exit 1
-            STATUS=$(jq -r  '.status // "unknown"'              signal_state/health.json)
-            VERSION=$(jq -r '.system_info.version // "unknown"' signal_state/health.json)
-            HF_ST=$(jq -r   '.api_status.finbert_hf // "unknown"' signal_state/health.json)
-            echo "📊 Health: $STATUS | Version: $VERSION | FinBERT: $HF_ST"
+            STATUS=$(jq -r      '.status // "unknown"'                      signal_state/health.json)
+            VERSION=$(jq -r     '.system_info.version // "unknown"'         signal_state/health.json)
+            GEMINI_ST=$(jq -r   '.api_status.gemini_usd // "unknown"'       signal_state/health.json)
+            USD_REASON=$(jq -r  '.system_info.usd_reasoning // "unknown"'   signal_state/health.json)
+            echo "📊 Health: $STATUS | Version: $VERSION | Gemini: $GEMINI_ST | USD engine: $USD_REASON"
           fi
 
-          # Calendar cache status
           if [ -f signal_state/economic_calendar_cache.json ]; then
             EVENT_COUNT=$(jq -r '.events | length' signal_state/economic_calendar_cache.json 2>/dev/null || echo "0")
             CACHED_AT=$(jq -r '.cached_at // "unknown"' signal_state/economic_calendar_cache.json 2>/dev/null || echo "unknown")
@@ -591,7 +529,7 @@ jobs:
         if: always()
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "📊 TRADE BEACON v2.2.2-SAFE PERFORMANCE SUMMARY"
+          echo "📊 TRADE BEACON v2.3.0-MTF-GEMINI PERFORMANCE SUMMARY"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
           if [ -f signal_state/signal_history.json ]; then
@@ -621,7 +559,7 @@ jobs:
 
             if jq -e '.analytics.by_tier' signal_state/signal_history.json > /dev/null 2>&1; then
               echo ""
-              echo "🏆 Performance by Tier (A+≥80, A≥68, B≥62):"
+              echo "🏆 Performance by Tier (A+≥80, A≥72, B≥55):"
               jq -r '.analytics.by_tier // {} | to_entries | sort_by(.key) | .[] |
                 "Tier \(.key): \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
                 signal_state/signal_history.json || echo "No tier data"
@@ -639,23 +577,24 @@ jobs:
               "\(.key): \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
               signal_state/signal_history.json || echo "No session data"
 
-            echo ""
-            echo "🎯 Analytics by Confidence:"
-            jq -r '.analytics.by_confidence // {} | to_entries[] |
-              "\(.key): \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
-              signal_state/signal_history.json || echo "No confidence data"
-
-            # FinBERT sentiment effectiveness
-            if jq -e '.analytics.by_sentiment' signal_state/signal_history.json > /dev/null 2>&1; then
+            if jq -e '.analytics.by_mtf_confirmed' signal_state/signal_history.json > /dev/null 2>&1; then
               echo ""
-              echo "💭 FinBERT Sentiment Effectiveness:"
-              SENT_DATA=$(jq -r '.analytics.by_sentiment // {} | to_entries[] |
-                "[\(.key)]: \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips (engine: \(.value.engine // "none"))"' \
+              echo "🔀 MTF Confirmation Effectiveness (v2.3.0):"
+              jq -r '.analytics.by_mtf_confirmed // {} | to_entries[] |
+                "  [\(.key)]: \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
+                signal_state/signal_history.json 2>/dev/null || echo "  No MTF data yet (populates as signals resolve)"
+            fi
+
+            if jq -e '.analytics.by_gemini_bias' signal_state/signal_history.json > /dev/null 2>&1; then
+              echo ""
+              echo "🤖 Gemini USD Bias Effectiveness (v2.3.0):"
+              GEMINI_DATA=$(jq -r '.analytics.by_gemini_bias // {} | to_entries[] |
+                "  [\(.key)]: \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
                 signal_state/signal_history.json 2>/dev/null)
-              if [ -n "$SENT_DATA" ]; then
-                echo "$SENT_DATA"
+              if [ -n "$GEMINI_DATA" ]; then
+                echo "$GEMINI_DATA"
               else
-                echo "No sentiment data yet (will populate as FinBERT-analysed signals resolve)"
+                echo "  No Gemini data yet (will populate as USD signals resolve)"
               fi
             fi
 
@@ -664,14 +603,6 @@ jobs:
               echo "🔀 Cross Analytics (Tier × Session):"
               jq -r '.analytics.cross_analytics.tier_by_session // {} | to_entries[] |
                 "\(.value.tier) in \(.value.session): \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
-                signal_state/signal_history.json || echo "No cross-analytics data"
-            fi
-
-            if jq -e '.analytics.cross_analytics.mode_by_tier' signal_state/signal_history.json > /dev/null 2>&1; then
-              echo ""
-              echo "🔀 Cross Analytics (Mode × Tier):"
-              jq -r '.analytics.cross_analytics.mode_by_tier // {} | to_entries[] |
-                "\(.value.mode) / Tier \(.value.tier): \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
                 signal_state/signal_history.json || echo "No cross-analytics data"
             fi
           else
@@ -684,14 +615,7 @@ jobs:
             echo "  Total:        $(jq -r '.active_signals // 0' signal_state/dashboard_state.json)"
             echo "  Aggressive:   $(jq -r '.active_signals_by_mode.aggressive // 0' signal_state/dashboard_state.json)"
             echo "  Conservative: $(jq -r '.active_signals_by_mode.conservative // 0' signal_state/dashboard_state.json)"
-            echo "  Sentiment:    $(jq -r '.sentiment_engine // "disabled"' signal_state/dashboard_state.json)"
-
-            echo ""
-            echo "📡 System Status:"
-            jq -r '.system |
-              "Version: \(.version // "unknown")\n" +
-              "Signal Only Mode: \(.signal_only_mode // true)"' \
-              signal_state/dashboard_state.json || echo "Status not available"
+            echo "  USD Engine:   $(jq -r '.sentiment_engine // "disabled"' signal_state/dashboard_state.json)"
           fi
           echo ""
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -716,7 +640,7 @@ jobs:
       - name: Commit state changes
         if: steps.market_check.outputs.should_run == 'true'
         run: |
-          git config user.name  "Trade Beacon v2.2.2-SAFE [bot]"
+          git config user.name  "Trade Beacon v2.3.0-MTF-GEMINI [bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git add signal_state/*.json signal_state/last_run.txt signal_state/last_success.txt config.json config.runtime.base.json signals.csv 2>/dev/null || true
@@ -725,16 +649,16 @@ jobs:
             echo "ℹ️ No changes to commit"
           else
             TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
-            TOTAL=$(jq -r    '.active_signals // 0'                      signal_state/dashboard_state.json 2>/dev/null || echo "0")
-            AGG=$(jq -r      '.active_signals_by_mode.aggressive // 0'   signal_state/dashboard_state.json 2>/dev/null || echo "0")
-            CONS=$(jq -r     '.active_signals_by_mode.conservative // 0' signal_state/dashboard_state.json 2>/dev/null || echo "0")
-            SESSION=$(jq -r  '.session // "UNKNOWN"'                     signal_state/dashboard_state.json 2>/dev/null || echo "UNKNOWN")
-            SENT=$(jq -r     '.sentiment_engine // "disabled"'            signal_state/dashboard_state.json 2>/dev/null || echo "disabled")
-            MODE=$(jq -r     '.mode // "conservative"'                   config.json)
+            TOTAL=$(jq -r     '.active_signals // 0'                      signal_state/dashboard_state.json 2>/dev/null || echo "0")
+            AGG=$(jq -r       '.active_signals_by_mode.aggressive // 0'   signal_state/dashboard_state.json 2>/dev/null || echo "0")
+            CONS=$(jq -r      '.active_signals_by_mode.conservative // 0' signal_state/dashboard_state.json 2>/dev/null || echo "0")
+            SESSION=$(jq -r   '.session // "UNKNOWN"'                     signal_state/dashboard_state.json 2>/dev/null || echo "UNKNOWN")
+            USD_ENG=$(jq -r   '.sentiment_engine // "disabled"'           signal_state/dashboard_state.json 2>/dev/null || echo "disabled")
+            MODE=$(jq -r      '.mode // "conservative"'                   config.json)
 
-            git commit -m "📊 Trade Beacon v2.2.2-SAFE [$TIMESTAMP]
+            git commit -m "📊 Trade Beacon v2.3.0-MTF-GEMINI [$TIMESTAMP]
 
-            Mode: $MODE | Session: $SESSION | Sentiment: $SENT
+            Mode: $MODE | Session: $SESSION | USD: $USD_ENG
             Signals: $TOTAL (Agg: $AGG, Cons: $CONS)
             Run: #${{ github.run_number }}
 
@@ -746,10 +670,6 @@ jobs:
       - name: Push changes
         if: steps.market_check.outputs.should_run == 'true'
         run: |
-          # State files (dashboard_state.json, health.json, last_run.txt) are always
-          # "latest run wins" — no meaningful merge exists between two concurrent runs.
-          # Using merge -X ours: fetch remote, keep our version for any conflict.
-          # This eliminates the rebase conflict that fires when two 15-min jobs overlap.
           git fetch origin main
           git merge -X ours origin/main --no-edit 2>/dev/null || {
             echo "⚠️ Merge failed — pushing with force-with-lease as fallback"
@@ -771,7 +691,7 @@ jobs:
         uses: actions/upload-artifact@v6
         if: steps.market_check.outputs.should_run == 'true'
         with:
-          name: trade-beacon-v2.2.2-SAFE-run-${{ github.run_number }}
+          name: trade-beacon-v2.3.0-MTF-GEMINI-run-${{ github.run_number }}
           path: |
             signal_state/
             signals.csv

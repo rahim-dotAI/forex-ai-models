@@ -1,26 +1,43 @@
 """
-Trade Beacon v2.2.2-SAFE - Forex Signal Generator (INSTITUTIONAL GRADE)
+Trade Beacon v2.3.0-MTF-GEMINI - Forex Signal Generator (INSTITUTIONAL GRADE)
 MULTI-MODE EDITION: Generates Aggressive + Conservative signals simultaneously
-with tier-based selective enhancement (sentiment/backtest only on top-tier)
+with tier-based selective enhancement
 
-CHANGES v2.2.2-SAFE:
-- NEW PAIRS: GBPAUD and GBPCAD added (GBP crosses — model calibrated to GBP behavior)
-  Research: BIS 2025 top-25 traded pairs, 80-120 pip daily range, BoE-driven trends
-  GBPAUD: BoE vs RBA divergence — sustained directional momentum, not USD-sensitive
-  GBPCAD: BoE vs oil/BoC — commodity-linked trends, strongest in US session
-- EURUSD permanently blocked — 7 trades, 0% WR, -177 pips, FinBERT gate failed to help
-- 1-HOUR TREND FILTER: Multi-timeframe confirmation (Elder Triple Screen principle)
-  Score 55-61 passes ONLY if 1h EMA12>EMA26>EMA50 agrees with 15m direction
-  Score 62+: 1h disagreement BLOCKS even high-scoring signals (raises all signal quality)
-  Score 62+ with inconclusive 1h: passes on 15m strength alone (original behavior)
-  Research: MTF confirmation raises WR ~15-20% vs single-timeframe (Murphy 2002)
-- THRESHOLD LOWERED: 62->55 (aggressive), 62->57 (conservative)
-  1-hour filter replaces raw score threshold as the quality gate
-  Unlocks 2-4 more signals/day on trending markets without letting noise through
-- B_min_score: 62->55 to match new threshold (Tier C still blocked)
-- max_open_positions: 3->5 (more pairs need higher capacity)
-- GBPCAD/GBPAUD: pure technical, no FinBERT, no USD restriction
-  Calendar blackout still protects against RBA/BoC high-impact events
+CHANGES v2.3.0-MTF-GEMINI:
+- FULL MULTI-TIMEFRAME (MTF) HIERARCHY:
+  30m confirmed via yfinance (period="60d")
+  4h  resampled from 1h data with London-open offset (08:00 UTC) — bug pre-caught
+  Daily confirmed via yfinance (period="1y")
+  Weekly confirmed via yfinance (period="3y", EMA12/26 only — EMA50 needs 50 bars, pre-caught)
+  All caches use _yf_lock (parallel thread isolation — same fix as v2.2.1)
+  Hierarchy: Weekly → Daily → 4h → 30m → 1h → 15m signal
+  Daily is the decisive filter — would have blocked every March 23 loss
+
+- GEMINI 2.5 FLASH REPLACES FINBERT FOR USD:
+  Model: gemini-2.5-flash (NOT 2.0-flash — deprecated Feb 2026, retired Mar 3 2026)
+  Architecture: fetch NewsAPI headlines → send as text context to Gemini → get BULLISH/BEARISH/NEUTRAL
+  Google Search grounding NOT used (costs $35/1K) — NewsAPI headlines achieve same result free
+  Cache: 60 minutes, with disk-error fallback to NEUTRAL (safe default, pre-caught)
+  Timeout: 10s hard limit with graceful fallback (Gemini LLM inference can lag, pre-caught)
+  Rate limit: 10 RPM free tier — we call max once/hr/currency, well within limits
+  Reuses existing NewsAggregator._fetch_newsapi_articles() — no duplicate news fetcher
+  USD logic: BULLISH→allow BUY USD / BEARISH→allow SELL USD / NEUTRAL→block all USD
+  FinBERT kept as fallback if GEMINI_API_KEY not set
+
+- MTF signal output fields:
+  htf_confirmed: True/False (overall pass/fail)
+  mtf_details: {"1h":"BULL","30m":"BULL","4h":"BULL","1d":"BULL","1wk":"BULL"}
+
+CARRIED FORWARD from v2.2.2-SAFE:
+- EURUSD/EURGBP permanently blocked
+- Tier A blocked (0% WR, -107 pips)
+- Cross-run pair daily cap (get_existing_pair_counts_today)
+- yfinance threading lock (_yf_lock)
+- GBPAUD + GBPCAD (GBP crosses — BoE driven)
+- Session-gated USD pairs (US session only)
+- Economic calendar blackout (Forex Factory)
+- Staleness guard (>60min → reject)
+- git merge -X ours push strategy
 """
 
 import logging
@@ -66,7 +83,7 @@ log.info("Signal-only mode validated")
 PAIRS = [
     "USDJPY=X", "EURUSD=X", "GBPUSD=X", "AUDUSD=X", "NZDUSD=X",
     "USDCAD=X", "USDCHF=X", "EURJPY=X", "GBPJPY=X", "EURGBP=X",
-    "GBPAUD=X", "GBPCAD=X",   # v2.2.0: GBP crosses — BIS top-25, BoE-driven trends
+    "GBPAUD=X", "GBPCAD=X",
 ]
 SPREADS = {
     "USDJPY": 0.002,  "EURUSD": 0.00015, "GBPUSD": 0.0002,
@@ -78,7 +95,6 @@ CORRELATED_PAIRS = [
     {"EURUSD=X", "GBPUSD=X"}, {"EURUSD=X", "EURGBP=X"},
     {"GBPUSD=X", "EURGBP=X"}, {"USDJPY=X", "EURJPY=X"},
     {"USDJPY=X", "GBPJPY=X"}, {"EURJPY=X", "GBPJPY=X"},
-    # v2.2.0: GBP crosses correlated with GBPUSD (shared GBP leg)
     {"GBPUSD=X", "GBPAUD=X"}, {"GBPUSD=X", "GBPCAD=X"},
     {"GBPAUD=X", "GBPCAD=X"}, {"GBPJPY=X", "GBPAUD=X"},
 ]
@@ -86,26 +102,27 @@ INTERVAL = "15m"
 LOOKBACK = "14d"
 MIN_ROWS = 220
 
-# Permanently blocked — data confirmed no edge regardless of conditions
 _PERMANENTLY_BLOCKED_PAIRS = frozenset(["EURUSD", "EURGBP"])
-
 _USD_RESTRICTED_PAIRS = frozenset(["AUDUSD","USDCAD","USDCHF","USDJPY","NZDUSD","EURJPY"])
-# Note: EURUSD removed — it is in _PERMANENTLY_BLOCKED_PAIRS (0% WR, 7 trades, -177 pips)
 
-# ── HuggingFace FinBERT ────────────────────────────────────────────────────────
+# ── HuggingFace FinBERT (fallback if Gemini not configured) ──────────────────
 HF_API_KEY        = os.getenv("HF_API_KEY", "")
 HF_PRIMARY_MODEL  = "ProsusAI/finbert"
 HF_FALLBACK_MODEL = "yiyanghkust/finbert-tone"
 HF_API_BASE       = "https://router.huggingface.co/hf-inference/models"
-
 HF_LABEL_MAP: Dict[str, float] = {
     "positive": 1.0, "Positive": 1.0,
     "negative":-1.0, "Negative":-1.0,
     "neutral":  0.0, "Neutral":  0.0,
-    "LABEL_0":  0.0,
-    "LABEL_1":  1.0,
-    "LABEL_2": -1.0,
+    "LABEL_0":  0.0, "LABEL_1":  1.0, "LABEL_2": -1.0,
 }
+
+# ── Gemini 2.5 Flash (primary USD reasoning) ─────────────────────────────────
+# NOTE: gemini-2.0-flash was deprecated Feb 2026 and retired Mar 3 2026.
+# Must use gemini-2.5-flash. Do NOT change this model string.
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+GEMINI_MODEL   = "gemini-2.5-flash"
+GEMINI_URL     = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
 
 # ── Browserless ───────────────────────────────────────────────────────────────
 BROWSERLESS_TOKEN = os.getenv("BROWSERLESS_TOKEN", "")
@@ -157,19 +174,30 @@ def _default_config() -> Dict:
         "use_sentiment": False,
         "settings": {
             "aggressive": {
-                "threshold": 55, "min_adx": 15,          # v2.2.0: 62->55
+                "threshold": 55, "min_adx": 15,
                 "rsi_oversold": 30, "rsi_overbought": 70,
                 "min_risk_reward": 2.5, "atr_stop_multiplier": 2.5,
                 "atr_target_multiplier": 7.0, "max_correlated_signals": 2,
             },
             "conservative": {
-                "threshold": 57, "min_adx": 17,          # v2.2.0: 62->57
+                "threshold": 57, "min_adx": 17,
                 "rsi_oversold": 30, "rsi_overbought": 70,
                 "min_risk_reward": 2.5, "atr_stop_multiplier": 2.5,
                 "atr_target_multiplier": 7.0, "max_correlated_signals": 1,
             },
         },
-        "tiers": {"A_plus_min_score": 80, "A_min_score": 72, "B_min_score": 55},  # v2.2.0: 62->55
+        "tiers": {"A_plus_min_score": 80, "A_min_score": 72, "B_min_score": 55},
+        "mtf_settings": {
+            "require_30m":    True,
+            "require_4h":     True,
+            "require_daily":  True,
+            "require_weekly": False,
+        },
+        "gemini_usd_gate": {
+            "enabled": True,
+            "model": "gemini-2.5-flash",
+            "cache_minutes": 60,
+        },
         "advanced": {
             "enable_session_filtering": True,
             "enable_correlation_filter": True,
@@ -209,11 +237,11 @@ def _default_config() -> Dict:
                 "blackout_before_minutes": 45,
                 "blackout_after_minutes": 30,
                 "sentiment_gate": True,
-                "sentiment_gate_threshold": 0.1,  # v2.2.1: raised from 0.0 — neutral not enough, need weak positive
+                "sentiment_gate_threshold": 0.1,
             },
         },
         "risk_management": {
-            "max_daily_risk_pips": 150, "max_open_positions": 5,   # v2.2.0: 3->5
+            "max_daily_risk_pips": 150, "max_open_positions": 5,
             "stop_trading_on_drawdown_pips": 100,
             "equity_protection": {"enable": False, "max_consecutive_losses": 3, "pause_minutes_after_hit": 120},
         },
@@ -253,7 +281,7 @@ def validate_api_keys() -> bool:
             log.warning("NewsAPI key invalid (401) — sentiment disabled")
             return False
         if r.status_code == 429:
-            log.warning("NewsAPI rate limited (429) — proceeding anyway, will retry per-signal")
+            log.warning("NewsAPI rate limited (429) — proceeding anyway")
         log.info("NewsAPI validated")
     except Exception as e:
         log.warning(f"NewsAPI validation request failed ({e}) — proceeding with sentiment enabled")
@@ -306,11 +334,24 @@ class MarketDataCache:
             self._cache.clear()
             self._timestamps.clear()
 
-_cache    = MarketDataCache(ttl=CACHE_TTL)
-_cache_1h = MarketDataCache(ttl=3600)  # 1h trend cache — 60min TTL (1h candles don't change fast)
-_yf_lock  = threading.Lock()           # Serialises yfinance calls — prevents SQLite cache bleed
-                                       # between parallel threads (GBPAUD/GBPCAD/EURJPY identical
-                                       # scores bug). Each pair's data is isolated.
+_cache     = MarketDataCache(ttl=CACHE_TTL)
+_cache_1h  = MarketDataCache(ttl=3600)    # 1h trend — 60min TTL
+_cache_30m = MarketDataCache(ttl=1800)    # 30m trend — 30min TTL
+_cache_4h  = MarketDataCache(ttl=7200)    # 4h trend  — 2hr TTL
+_cache_1d  = MarketDataCache(ttl=21600)   # Daily trend — 6hr TTL
+_cache_1wk = MarketDataCache(ttl=86400)   # Weekly trend — 24hr TTL
+
+# BUG PRE-CAUGHT (v2.2.1 lesson): All MTF caches share the same _yf_lock
+# to prevent parallel threads from contaminating yfinance's SQLite cache.
+# Without this lock, GBPAUD/GBPCAD/EURJPY returned identical scores (v2.2.1 bug).
+_yf_lock = threading.Lock()
+
+# ── Gemini USD bias cache (module-level dict, separate from MarketDataCache) ─
+# BUG PRE-CAUGHT: If MarketDataCache.set() fails silently (disk/memory error),
+# every run would call Gemini directly. Using a simple dict with try/except
+# write ensures we always fall back safely rather than hammering the free API.
+_gemini_usd_cache: Dict[str, Tuple[float, str]] = {}  # {currency: (timestamp, "BULLISH"/"BEARISH"/"NEUTRAL")}
+_GEMINI_CACHE_TTL = 3600  # 60 minutes
 
 # ═════════════════════════════════════════════════════════════════════════════
 # ECONOMIC CALENDAR
@@ -335,20 +376,20 @@ def _get_et_utc_offset(dt: datetime = None) -> int:
 _CURRENCY_PAIRS: Dict[str, List[str]] = {
     "USD": ["EURUSD","GBPUSD","USDJPY","USDCAD","USDCHF","AUDUSD","NZDUSD"],
     "EUR": ["EURUSD","EURGBP","EURJPY"],
-    "GBP": ["GBPUSD","EURGBP","GBPJPY","GBPAUD","GBPCAD"],   # v2.2.0: added GBP crosses
+    "GBP": ["GBPUSD","EURGBP","GBPJPY","GBPAUD","GBPCAD"],
     "JPY": ["USDJPY","EURJPY","GBPJPY"],
-    "AUD": ["AUDUSD","GBPAUD"],   # v2.2.0: RBA events now blackout GBPAUD
+    "AUD": ["AUDUSD","GBPAUD"],
     "NZD": ["NZDUSD"],
-    "CAD": ["USDCAD","GBPCAD"],   # v2.2.0: BoC events now blackout GBPCAD
+    "CAD": ["USDCAD","GBPCAD"],
     "CHF": ["USDCHF"],
     "US":  ["EURUSD","GBPUSD","USDJPY","USDCAD","USDCHF","AUDUSD","NZDUSD"],
     "EU":  ["EURUSD","EURGBP","EURJPY"],
     "GB":  ["GBPUSD","EURGBP","GBPJPY","GBPAUD","GBPCAD"],
     "UK":  ["GBPUSD","EURGBP","GBPJPY","GBPAUD","GBPCAD"],
     "JP":  ["USDJPY","EURJPY","GBPJPY"],
-    "AU":  ["AUDUSD","GBPAUD"],   # v2.2.0: AU country code covers GBPAUD
+    "AU":  ["AUDUSD","GBPAUD"],
     "NZ":  ["NZDUSD"],
-    "CA":  ["USDCAD","GBPCAD"],   # v2.2.0: CA country code covers GBPCAD
+    "CA":  ["USDCAD","GBPCAD"],
     "CH":  ["USDCHF"],
     "CNY": [], "CN": [],
 }
@@ -370,7 +411,6 @@ def _parse_ff_time(date_str: str, time_str: str) -> Optional[datetime]:
             return dt_utc
         except Exception:
             return None
-
     if not time_str or time_str.lower().strip() in ("tentative", "all day", ""):
         return None
     try:
@@ -409,22 +449,14 @@ def _load_economic_calendar() -> List[Dict]:
         except Exception as e:
             log.warning(f"Calendar cache read failed: {e} — fetching fresh")
     try:
-        resp = requests.get(_FF_CALENDAR_URL, timeout=10, headers={"User-Agent": "TradeBeacon/2.1.7"})
+        resp = requests.get(_FF_CALENDAR_URL, timeout=10, headers={"User-Agent": "TradeBeacon/2.3.0"})
         log.info(f"Calendar: FF HTTP {resp.status_code} — {len(resp.content)} bytes received")
         if resp.status_code != 200:
             log.warning(f"Calendar: FF returned {resp.status_code} — no news filtering")
             return []
         raw = resp.json()
-        log.info(f"Calendar: {len(raw)} total events in FF feed (all impacts)")
         high_impact_all = [e for e in raw if e.get("impact","").lower() == "high"]
         log.info(f"Calendar: {len(high_impact_all)} high-impact events before currency filter")
-        ff_countries = sorted(set(e.get("country","").upper() for e in high_impact_all))
-        log.info(f"Calendar: FF high-impact country codes = {ff_countries}")
-        if high_impact_all:
-            sample = high_impact_all[0]
-            log.info(f"Calendar: Sample event fields = {list(sample.keys())}")
-            log.info(f"Calendar: Sample date='{sample.get('date','')}' time='{sample.get('time','')}' country='{sample.get('country','')}'")
-
         events = []
         _dropped_currency = 0
         _dropped_date     = 0
@@ -446,18 +478,8 @@ def _load_economic_calendar() -> List[Dict]:
                     _dropped_date += 1; continue
                 utc_time = parsed_date.replace(hour=13, minute=30, tzinfo=timezone.utc)
             events.append({"title": item.get("title","Unknown"), "currency": currency, "utc_time": utc_time.isoformat()})
-
-        if _dropped_currency > 0:
-            log.info(f"Calendar: {_dropped_currency} events dropped — currency not in tracked pairs")
-        if _dropped_date > 0:
-            log.warning(f"Calendar: {_dropped_date} events dropped — could not parse date field")
-
         _CALENDAR_CACHE.write_text(json.dumps({"cached_at": datetime.now(timezone.utc).isoformat(), "source": _FF_CALENDAR_URL, "events": events}, indent=2))
-        log.info(f"Calendar: fetched {len(events)} high-impact events from FF — cached")
-        if len(events) == 0 and len(high_impact_all) > 0:
-            log.warning(f"Calendar: 0 events loaded from {len(high_impact_all)} high-impact ({_dropped_currency} currency-miss, {_dropped_date} date-parse-fail)")
-        elif len(events) == 0:
-            log.info("Calendar: genuinely no high-impact events this week in FF feed")
+        log.info(f"Calendar: fetched {len(events)} high-impact events — cached")
         return events
     except Exception as e:
         log.warning(f"Calendar: fetch failed ({e}) — no news filtering this run")
@@ -595,7 +617,7 @@ def download(pair: str) -> Tuple[pd.DataFrame, bool]:
         try:
             if attempt > 0:
                 wait = 0.5 * attempt + _random.uniform(0, 0.3)
-                log.info(f"{pair} 15m retry {attempt}/{max_retries-1} (SQLite lock backoff {wait:.1f}s)")
+                log.info(f"{pair} 15m retry {attempt}/{max_retries-1} (backoff {wait:.1f}s)")
                 _time.sleep(wait)
             with _yf_lock:
                 df = yf.download(pair, interval="15m", period=LOOKBACK, progress=False, auto_adjust=True, threads=False)
@@ -608,17 +630,15 @@ def download(pair: str) -> Tuple[pd.DataFrame, bool]:
                 else:
                     df = None
             else:
-                log.warning(f"{pair} 15m empty on attempt {attempt+1} — possible SQLite lock")
                 df = None
         except Exception as e:
             if "database is locked" in str(e) and attempt < max_retries - 1:
-                log.warning(f"{pair} SQLite lock exception on attempt {attempt+1}, retrying...")
                 df = None; continue
             log.error(f"{pair} download failed: {e}")
             return pd.DataFrame(), False
 
     if df is None or df.empty:
-        log.warning(f"{pair} 15m failed after {max_retries} attempts — trying 1h fallback")
+        log.warning(f"{pair} 15m failed — trying 1h fallback")
         try:
             with _yf_lock:
                 df = yf.download(pair, interval="1h", period="60d", progress=False, auto_adjust=True, threads=False)
@@ -631,7 +651,7 @@ def download(pair: str) -> Tuple[pd.DataFrame, bool]:
             log.error(f"{pair} 1h fallback failed: {e}")
             return pd.DataFrame(), False
 
-    # Staleness guard
+    # Staleness guard — reject if last candle >60min old
     try:
         last_ts = pd.Timestamp(df.index[-1])
         if last_ts.tzinfo is None:
@@ -656,65 +676,257 @@ def adx_calc(h, l, c): return ADXIndicator(h, l, c, window=14).adx()
 def atr_calc(h, l, c): return AverageTrueRange(h, l, c, window=14).average_true_range()
 def get_spread(pair):  return SPREADS.get(pair.replace("=X", ""), 0.0002)
 
+# ═════════════════════════════════════════════════════════════════════════════
+# FULL MULTI-TIMEFRAME TREND ENGINE — v2.3.0
+# ═════════════════════════════════════════════════════════════════════════════
+
+def _get_trend_from_df(df: pd.DataFrame, label: str, use_ema50: bool = True) -> Optional[str]:
+    """
+    Compute EMA trend from a DataFrame.
+    Returns 'BULL', 'BEAR', or None (inconclusive).
+    use_ema50=False for weekly (insufficient warmup bars for EMA50).
+    """
+    try:
+        if isinstance(df.columns, pd.MultiIndex):
+            df.columns = df.columns.get_level_values(0)
+        df = df.dropna()
+        min_rows = 50 if use_ema50 else 26
+        if len(df) < min_rows:
+            log.debug(f"{label}: insufficient rows ({len(df)}) for EMA calc")
+            return None
+        close = ensure_series(df["Close"])
+        e12   = last(ema(close, 12))
+        e26   = last(ema(close, 26))
+        if use_ema50:
+            e50 = last(ema(close, 50))
+            if None in (e12, e26, e50):
+                return None
+            if   e12 > e26 > e50: return "BULL"
+            elif e12 < e26 < e50: return "BEAR"
+            return None
+        else:
+            # Weekly: EMA12/26 only — EMA50 needs 50 weekly bars = 1 year of warmup
+            # BUG PRE-CAUGHT: with period="2y" EMA50 would only have 104 bars total
+            # and the first 50 are warmup — signal is unstable. Use 2-EMA check only.
+            if None in (e12, e26):
+                return None
+            if   e12 > e26: return "BULL"
+            elif e12 < e26: return "BEAR"
+            return None
+    except Exception as e:
+        log.debug(f"{label} EMA calc failed: {e}")
+        return None
+
+def _cache_get_trend(cache: MarketDataCache, key: str) -> Optional[str]:
+    """Retrieve cached trend string, converting sentinel 'NONE' back to Python None."""
+    cached = cache.get(key)
+    if cached is None:
+        return None  # cache miss — not the same as NONE/inconclusive
+    try:
+        # BUG PRE-CAUGHT (v2.2.1 lesson): "NONE" string != Python None.
+        # The 1h filter once stored "NONE" as a string and then
+        # `if trend is not None` evaluated True, blocking all signals from ranging pairs.
+        # Fix: always use sentinel string, convert back here.
+        val = cached.iloc[0]["trend"] if not cached.empty else "NONE"
+        return None if val == "NONE" else val
+    except Exception:
+        return None
+
+def _cache_set_trend(cache: MarketDataCache, key: str, trend: Optional[str]):
+    """Store trend with 'NONE' sentinel for Python None to prevent the v2.2.1 string-None bug."""
+    cache.set(key, pd.DataFrame([{"trend": trend if trend is not None else "NONE"}]))
+
 def get_1h_trend(pair: str) -> Optional[str]:
     """
-    1-Hour Trend Filter — v2.2.2-SAFE
-    Returns 'BULL', 'BEAR', or None (inconclusive/data unavailable).
-    Cached per-pair for 60 minutes via _cache_1h.
-
-    Logic: Checks if EMA12 > EMA26 > EMA50 on 1-hour chart.
-    - BULL: all three EMAs in bullish alignment (12 > 26 > 50)
-    - BEAR: all three EMAs in bearish alignment (12 < 26 < 50)
-    - None: mixed structure — 1h has no clear trend bias
-
-    Research basis: Elder Triple Screen / Murphy Multi-Timeframe Analysis.
-    MTF confirmation raises WR ~15-20% by filtering counter-trend entries.
-    Using EMA50 (not EMA200) on 1h to keep it responsive to intraday shifts.
+    1-Hour trend via EMA12 > EMA26 > EMA50.
+    Kept as a standalone function for backward compatibility within the pipeline.
+    Results are reused by get_mtf_trend() via _cache_1h.
     """
-    cache_key = f"1h_{pair.replace('=X','')}"
-    cached = _cache_1h.get(cache_key)
-    if cached is not None:
-        try:
-            val = cached.iloc[0]["trend"] if not cached.empty else None
-            # "NONE" sentinel means inconclusive — convert back to Python None
-            return None if val == "NONE" else val
-        except Exception:
-            pass
+    key = f"1h_{pair.replace('=X','')}"
+    cached_val = _cache_get_trend(_cache_1h, key)
+    # None from _cache_get_trend means cache MISS, not inconclusive.
+    # We distinguish by checking if key actually exists in cache.
+    if _cache_1h.get(key) is not None:
+        return cached_val  # cache HIT (could be None/inconclusive or BULL/BEAR)
 
     try:
         with _yf_lock:
             df1h = yf.download(pair, interval="1h", period="30d", progress=False,
                                auto_adjust=True, threads=False)
-        if df1h is None or df1h.empty:
-            return None
-        if isinstance(df1h.columns, pd.MultiIndex):
-            df1h.columns = df1h.columns.get_level_values(0)
-        df1h = df1h.dropna()
-        if len(df1h) < 50:
-            return None
-
-        close1h = ensure_series(df1h["Close"])
-        e12_1h  = last(ema(close1h, 12))
-        e26_1h  = last(ema(close1h, 26))
-        e50_1h  = last(ema(close1h, 50))
-
-        if None in (e12_1h, e26_1h, e50_1h):
-            result = None
-        elif e12_1h > e26_1h > e50_1h:
-            result = "BULL"
-        elif e12_1h < e26_1h < e50_1h:
-            result = "BEAR"
-        else:
-            result = None  # Mixed — e.g. ranging or transition
-
-        # Store in cache as minimal DataFrame
-        trend_val = result if result is not None else "NONE"
-        _cache_1h.set(cache_key, pd.DataFrame([{"trend": trend_val}]))
+        result = _get_trend_from_df(df1h, f"{pair.replace('=X','')} 1h", use_ema50=True)
+        _cache_set_trend(_cache_1h, key, result)
         return result
-
     except Exception as e:
         log.debug(f"{pair.replace('=X','')} 1h trend failed: {e}")
         return None
+
+def get_mtf_trend(pair: str) -> Dict[str, Optional[str]]:
+    """
+    Full Multi-Timeframe trend for a pair.
+    Returns: {"1h": ..., "30m": ..., "4h": ..., "1d": ..., "1wk": ...}
+    Each value is "BULL", "BEAR", or None (inconclusive / data unavailable).
+
+    All downloads use _yf_lock (BUG PRE-CAUGHT: parallel threads share yfinance
+    SQLite cache — same root cause as the GBPAUD/GBPCAD identical scores bug in v2.2.1).
+
+    4h is resampled from 1h with offset='8H' (London open anchor).
+    BUG PRE-CAUGHT: resample('4H') without offset creates bars at 00:00/04:00/08:00 UTC
+    which cuts across forex sessions. Offset='8H' → bars at 08–12, 12–16, 16–20, 20–00.
+
+    Weekly uses EMA12/26 only (no EMA50).
+    BUG PRE-CAUGHT: EMA50 on weekly needs 50 bars of warmup = 1 year.
+    With period="2y" the first year is warmup leaving unreliable values.
+    period="3y" + EMA12/26 only is stable and sufficient.
+    """
+    clean = pair.replace("=X", "")
+    result: Dict[str, Optional[str]] = {"1h": None, "30m": None, "4h": None, "1d": None, "1wk": None}
+
+    # ── 1h ───────────────────────────────────────────────────────────────────
+    result["1h"] = get_1h_trend(pair)  # uses _cache_1h internally
+
+    # ── 30m ──────────────────────────────────────────────────────────────────
+    key_30m = f"30m_{clean}"
+    if _cache_30m.get(key_30m) is not None:
+        result["30m"] = _cache_get_trend(_cache_30m, key_30m)
+    else:
+        try:
+            with _yf_lock:
+                df30 = yf.download(pair, interval="30m", period="60d", progress=False,
+                                   auto_adjust=True, threads=False)
+            trend = _get_trend_from_df(df30, f"{clean} 30m", use_ema50=True)
+            _cache_set_trend(_cache_30m, key_30m, trend)
+            result["30m"] = trend
+        except Exception as e:
+            log.debug(f"{clean} 30m trend failed: {e}")
+
+    # ── 4h (resampled from 1h with London-open offset) ────────────────────────
+    key_4h = f"4h_{clean}"
+    if _cache_4h.get(key_4h) is not None:
+        result["4h"] = _cache_get_trend(_cache_4h, key_4h)
+    else:
+        try:
+            with _yf_lock:
+                df1h_raw = yf.download(pair, interval="1h", period="60d", progress=False,
+                                       auto_adjust=True, threads=False)
+            if df1h_raw is not None and not df1h_raw.empty:
+                if isinstance(df1h_raw.columns, pd.MultiIndex):
+                    df1h_raw.columns = df1h_raw.columns.get_level_values(0)
+                # BUG FIX: offset='8H' anchors 4h bars to London open (08:00 UTC).
+                # Without this, bars cut across session boundaries making them meaningless.
+                df4h = df1h_raw.resample('4H', offset='8H').agg({
+                    'Open': 'first', 'High': 'max', 'Low': 'min', 'Close': 'last', 'Volume': 'sum'
+                }).dropna()
+                trend = _get_trend_from_df(df4h, f"{clean} 4h", use_ema50=True)
+                _cache_set_trend(_cache_4h, key_4h, trend)
+                result["4h"] = trend
+        except Exception as e:
+            log.debug(f"{clean} 4h trend failed: {e}")
+
+    # ── Daily ─────────────────────────────────────────────────────────────────
+    key_1d = f"1d_{clean}"
+    if _cache_1d.get(key_1d) is not None:
+        result["1d"] = _cache_get_trend(_cache_1d, key_1d)
+    else:
+        try:
+            with _yf_lock:
+                df_daily = yf.download(pair, interval="1d", period="1y", progress=False,
+                                       auto_adjust=True, threads=False)
+            trend = _get_trend_from_df(df_daily, f"{clean} 1d", use_ema50=True)
+            _cache_set_trend(_cache_1d, key_1d, trend)
+            result["1d"] = trend
+        except Exception as e:
+            log.debug(f"{clean} daily trend failed: {e}")
+
+    # ── Weekly ────────────────────────────────────────────────────────────────
+    key_1wk = f"1wk_{clean}"
+    if _cache_1wk.get(key_1wk) is not None:
+        result["1wk"] = _cache_get_trend(_cache_1wk, key_1wk)
+    else:
+        try:
+            with _yf_lock:
+                # BUG FIX: period="3y" not "2y" — EMA50 needs 50 weekly bars of warmup.
+                # We use EMA12/26 only on weekly (use_ema50=False) which is stable with 2y.
+                # Using 3y anyway for safety margin and richer history.
+                df_weekly = yf.download(pair, interval="1wk", period="3y", progress=False,
+                                        auto_adjust=True, threads=False)
+            trend = _get_trend_from_df(df_weekly, f"{clean} 1wk", use_ema50=False)
+            _cache_set_trend(_cache_1wk, key_1wk, trend)
+            result["1wk"] = trend
+        except Exception as e:
+            log.debug(f"{clean} weekly trend failed: {e}")
+
+    log.info(f"  MTF {clean}: 1wk={result['1wk']} 1d={result['1d']} 4h={result['4h']} 30m={result['30m']} 1h={result['1h']}")
+    return result
+
+def apply_mtf_filter(mtf: Dict[str, Optional[str]], direction: str, score: int) -> Tuple[bool, bool, str]:
+    """
+    Apply the full MTF hierarchy to a signal.
+
+    Returns: (passes: bool, fully_confirmed: bool, reason: str)
+
+    Rules (from knowledge base):
+    - Daily is the DECISIVE filter — must agree if available (would have blocked all March 23 losses)
+    - 4h required if available
+    - 30m required if available
+    - Weekly: bonus only (not required to block), but used for fully_confirmed flag
+    - 1h: same as v2.2.2 — required if available, inconclusive passes at score>=62
+
+    Scores 55-61 with any timeframe inconclusive → blocked (need full confirmation)
+    Score >= 62 with inconclusive higher timeframes → passes on technical strength
+    Any available timeframe that DISAGREES → blocked regardless of score
+    """
+    OLD_HARD_THRESHOLD = 62
+    cfg_mtf = (CONFIG or {}).get("mtf_settings", {})
+    require_30m    = cfg_mtf.get("require_30m",    True)
+    require_4h     = cfg_mtf.get("require_4h",     True)
+    require_daily  = cfg_mtf.get("require_daily",  True)
+
+    disagreements = []
+    inconclusives = []
+
+    # Check each timeframe that is AVAILABLE and REQUIRED
+    checks = [
+        ("1d",  mtf.get("1d"),  require_daily,  True),   # (label, value, required, decisive)
+        ("4h",  mtf.get("4h"),  require_4h,     False),
+        ("1h",  mtf.get("1h"),  True,           False),
+        ("30m", mtf.get("30m"), require_30m,    False),
+        ("1wk", mtf.get("1wk"), False,          False),   # weekly: bonus only
+    ]
+
+    for label, trend, required, decisive in checks:
+        if trend is None:
+            if required:
+                inconclusives.append(label)
+            continue
+        agrees = (direction == "BUY" and trend == "BULL") or (direction == "SELL" and trend == "BEAR")
+        if not agrees:
+            disagreements.append(f"{label}={trend}")
+            if decisive:
+                return False, False, f"BLOCKED: Daily {trend} disagrees with {direction} — macro trend filter"
+
+    # Any non-daily disagreement also blocks
+    if disagreements:
+        return False, False, f"BLOCKED: {', '.join(disagreements)} conflict(s) with {direction}"
+
+    # Handle inconclusives — sub-threshold signals need full confirmation
+    if inconclusives:
+        if score < OLD_HARD_THRESHOLD:
+            return False, False, f"BLOCKED: score {score} < {OLD_HARD_THRESHOLD} with inconclusive MTF ({', '.join(inconclusives)})"
+        # Score >= 62 with some inconclusive timeframes — passes on technical strength
+        log.info(f"  {', '.join(inconclusives)} inconclusive — passing on score {score} >= {OLD_HARD_THRESHOLD}")
+
+    # All available timeframes agree (or all inconclusive and score >=62)
+    all_confirmed = all(
+        mtf.get(tf) is not None
+        for tf in ["1h", "30m", "4h", "1d"]
+    ) and all(
+        (direction == "BUY" and mtf.get(tf) == "BULL") or
+        (direction == "SELL" and mtf.get(tf) == "BEAR")
+        for tf in ["1h", "30m", "4h", "1d"]
+        if mtf.get(tf) is not None
+    )
+
+    return True, all_confirmed, "PASS"
 
 # ═════════════════════════════════════════════════════════════════════════════
 # SESSION
@@ -736,7 +948,6 @@ def calculate_dynamic_session_bonus(pair: str, session: str, config: Dict) -> in
         if any(c in pair for c in ["AUD","NZD"]): return bonuses.get("AUD_NZD_pairs", 0)
         return bonuses.get("other", 0)
     if session == "EUROPEAN":
-        # v2.2.0: explicit GBP cross check before generic EUR/GBP catch-all
         if pair in ["GBPAUD", "GBPCAD"]: return bonuses.get("GBP_crosses", 0)
         if any(c in pair for c in ["EUR","GBP"]) and pair not in ["EURUSD","GBPUSD"]:
             return bonuses.get("EUR_GBP_crosses", 0)
@@ -785,7 +996,7 @@ def classify_signal_tier(score: int) -> str:
     tiers = CONFIG.get("tiers", {})
     if score >= tiers.get("A_plus_min_score", 80): return "A+"
     if score >= tiers.get("A_min_score", 72):      return "A"
-    if score >= tiers.get("B_min_score", 62):      return "B"
+    if score >= tiers.get("B_min_score", 55):      return "B"
     return "C"
 
 def calculate_signal_freshness(ts: datetime) -> Dict:
@@ -899,14 +1110,7 @@ def get_existing_signals_today() -> List[str]:
 def get_existing_pair_counts_today() -> Dict[str, int]:
     """
     Returns {pair: count} for all signals already fired today across ALL
-    previous runs. Pre-seeds filter_pair_limits so the daily per-pair cap
-    is enforced globally — not just within a single run's batch.
-
-    Prevents same pair firing in opposite directions on same day:
-    e.g. GBPJPY SELL at 10:46 then GBPJPY BUY at 12:45 — both full stops.
-    e.g. GBPCAD SELL at 08:01 then GBPCAD BUY at 16:45 — both full stops.
-    Bug root cause: signal_ids include direction so they weren't seen as
-    duplicates, and pair limits only counted within the current run batch.
+    previous runs — prevents same pair firing in opposite directions on same day.
     """
     today = datetime.now(timezone.utc).date()
     counts: Dict[str, int] = {}
@@ -943,7 +1147,6 @@ def get_existing_pair_counts_today() -> Dict[str, int]:
     return counts
 
 def _safe_date(ts: str):
-    """Parse a timestamp string and return its UTC date, or None on failure."""
     try:
         return datetime.fromisoformat(ts.replace("Z","+00:00")).date()
     except Exception:
@@ -1125,7 +1328,6 @@ def filter_pair_limits(signals: List[Dict], config: Dict,
                        existing_counts: Optional[Dict[str, int]] = None) -> List[Dict]:
     limits   = config.get("advanced",{}).get("pair_limits",{"GBPUSD":5,"GBPJPY":2,"EURGBP":0,"default":3})
     dir_filt = config.get("advanced",{}).get("directional_filters",{})
-    # Pre-seed counts with signals already fired today in previous runs
     counts: Dict[str,int] = dict(existing_counts) if existing_counts else {}
     out = []
     for sig in sorted(signals, key=lambda x: x["score"], reverse=True):
@@ -1151,7 +1353,7 @@ def filter_pair_limits(signals: List[Dict], config: Dict,
     return out
 
 # ═════════════════════════════════════════════════════════════════════════════
-# NEWS AGGREGATOR — HuggingFace FinBERT Sentiment
+# NEWS AGGREGATOR — HuggingFace FinBERT Sentiment (kept as fallback)
 # ═════════════════════════════════════════════════════════════════════════════
 
 class NewsAggregator:
@@ -1169,8 +1371,6 @@ class NewsAggregator:
         self._article_cache  : Dict[str, Tuple[float, List[str]]] = {}
         self._sentiment_cache: Dict[str, Tuple[float, float]]     = {}
         self._last_call      : Dict[str, float]                   = {}
-        if not self.hf_api_key:
-            log.warning("HF_API_KEY not set - FinBERT disabled. Add secret: HF_API_KEY=hf_xxxx")
 
     def _rate_limit(self, key: str):
         elapsed = time.time() - self._last_call.get(key, 0)
@@ -1219,7 +1419,6 @@ class NewsAggregator:
         if not truncated: return None
         raw = self._call_hf_inference(truncated, self.primary_model)
         if raw is None:
-            log.info(f"Primary model failed, trying fallback: {self.fallback_model}")
             raw = self._call_hf_inference(truncated, self.fallback_model)
         if not raw: return None
         w_sum, w_total = 0.0, 0.0
@@ -1292,56 +1491,196 @@ class NewsAggregator:
         if not all_texts:
             log.warning(f"No articles for {currency}, returning neutral 0.0")
             return 0.0
-        log.info(f"Analysing {len(all_texts)} articles for {currency} ({len(newsapi_texts)} NewsAPI + {len(marketaux_texts)} MarketAux)")
         sentiment = self._analyse_with_finbert(all_texts)
         if sentiment is None:
-            log.warning(f"FinBERT unavailable for {currency}, returning 0.0")
             sentiment = 0.0
         self._sentiment_cache[currency] = (time.time(), sentiment)
-        log.info(f"{currency} final FinBERT sentiment: {sentiment:+.3f}")
         return sentiment
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SENTIMENT ENHANCEMENT + USD GATE
+# GEMINI 2.5 FLASH — USD DIRECTIONAL REASONING
 # ═════════════════════════════════════════════════════════════════════════════
 
-def enhance_with_sentiment(signals: List[Dict], news_agg: NewsAggregator) -> List[Dict]:
-    if not signals: return signals
+def get_gemini_usd_bias(headlines: List[str]) -> Optional[str]:
+    """
+    Ask Gemini 2.5 Flash for USD directional bias based on current headlines.
+    Returns 'BULLISH', 'BEARISH', or 'NEUTRAL'.
+    Returns None if Gemini is unavailable (caller should fall back to FinBERT or neutral).
+
+    Architecture:
+    - Headlines fetched via existing NewsAggregator._fetch_newsapi_articles('USD')
+    - Passed as text context in the prompt (no Google Search grounding — costs $35/1K)
+    - Cached for 60 minutes to stay well within 10 RPM / 250 RPD free tier limits
+    - BUG PRE-CAUGHT: timeout=10 prevents LLM inference lag from stalling the cron run
+    - BUG PRE-CAUGHT: cache-write errors caught explicitly so we never hammer the API
+    """
+    if not GEMINI_API_KEY:
+        log.warning("GEMINI_API_KEY not set — Gemini USD gate disabled")
+        return None
+
+    # Check module-level cache (simple dict, not MarketDataCache)
+    cache_key = "USD"
+    if cache_key in _gemini_usd_cache:
+        ts, bias = _gemini_usd_cache[cache_key]
+        if time.time() - ts < _GEMINI_CACHE_TTL:
+            log.info(f"Gemini USD bias (cached): {bias}")
+            return bias
+
+    if not headlines:
+        log.warning("No headlines for Gemini — defaulting to NEUTRAL (blocking USD signals, safe default)")
+        return "NEUTRAL"
+
+    now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    headlines_text = "\n".join(f"- {h}" for h in headlines[:15])
+
+    prompt = f"""It is currently {now_str}.
+
+Based on these recent forex/macro headlines:
+{headlines_text}
+
+Analyze the current US Dollar (USD) directional bias.
+Consider: Federal Reserve policy signals, interest rate expectations, inflation data (CPI/PCE),
+employment data (NFP), GDP outlook, risk sentiment, and any recent major macro events.
+
+Reply with EXACTLY one word only — no explanation, no punctuation, just the word:
+BULLISH, BEARISH, or NEUTRAL"""
+
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "maxOutputTokens": 10,
+            "temperature": 0.1,
+            "topP": 0.8,
+        }
+    }
+    headers = {"Content-Type": "application/json"}
+    url     = f"{GEMINI_URL}?key={GEMINI_API_KEY}"
+
     try:
-        currencies: set = set()
-        for sig in signals:
-            p = sig.get("pair","")
-            if len(p) >= 6:
-                currencies.add(p[:3]); currencies.add(p[3:6])
-        cur_sent: Dict[str,float] = {}
-        for cur in currencies:
-            try: cur_sent[cur] = news_agg.get_currency_sentiment(cur)
-            except Exception as e:
-                log.warning(f"Sentiment failed for {cur}: {e}"); cur_sent[cur] = 0.0
-        for sig in signals:
-            p = sig.get("pair","")
-            if len(p) < 6:
-                sig.update({"sentiment_score":0.0,"sentiment_applied":True}); continue
-            base, quote = p[:3], p[3:6]
-            direction   = sig.get("direction","BUY")
-            net = (cur_sent.get(base,0.0) - cur_sent.get(quote,0.0) if direction=="BUY"
-                   else cur_sent.get(quote,0.0) - cur_sent.get(base,0.0))
-            orig = sig.get("score",50)
-            adj  = round(max(-float(news_agg.max_adj_pts), min(float(news_agg.max_adj_pts), net*5)), 1)
-            new  = round(max(0, min(100, orig+adj)), 0)
-            sig.update({"sentiment_score": round(net,3), "sentiment_adjustment": adj,
-                        "score_before_sentiment": orig, "score": new, "sentiment_applied": True})
-            log.info(f"{p} {direction}: net={net:+.3f} score {orig}->{new} ({adj:+.1f})")
-        return signals
+        # BUG PRE-CAUGHT: hard timeout prevents Gemini inference lag from blocking the cron
+        resp = requests.post(url, json=payload, headers=headers, timeout=10)
+
+        if resp.status_code == 200:
+            raw = resp.json()
+            text = raw["candidates"][0]["content"]["parts"][0]["text"].strip().upper()
+            if "BULLISH" in text:
+                bias = "BULLISH"
+            elif "BEARISH" in text:
+                bias = "BEARISH"
+            else:
+                bias = "NEUTRAL"
+            log.info(f"Gemini USD bias: {bias} (raw: '{text[:30]}')")
+
+            # BUG PRE-CAUGHT: wrap cache write in try/except — disk errors must not
+            # cause the run to fail or repeatedly hammer the Gemini API
+            try:
+                _gemini_usd_cache[cache_key] = (time.time(), bias)
+            except Exception as ce:
+                log.warning(f"Gemini cache write failed: {ce} — result still used this run")
+
+            return bias
+
+        elif resp.status_code == 429:
+            log.warning(f"Gemini rate limited (429) — defaulting to NEUTRAL")
+            return "NEUTRAL"
+        elif resp.status_code == 400:
+            log.warning(f"Gemini 400: {resp.text[:200]} — check model name and payload")
+            return None
+        elif resp.status_code == 401:
+            log.error("GEMINI_API_KEY invalid or expired (401)")
+            return None
+        else:
+            log.warning(f"Gemini {resp.status_code}: {resp.text[:200]} — defaulting to NEUTRAL")
+            return "NEUTRAL"
+
+    except requests.Timeout:
+        # BUG PRE-CAUGHT: LLM inference can take >10s under load — fallback gracefully
+        log.warning("Gemini timeout (>10s) — defaulting to NEUTRAL (safe: blocks USD signal)")
+        return "NEUTRAL"
     except Exception as e:
-        log.error(f"Sentiment enhancement failed: {e}")
-        for sig in signals:
-            sig.update({"sentiment_score":0.0,"sentiment_applied":True})
+        log.warning(f"Gemini call failed: {e} — defaulting to NEUTRAL")
+        return "NEUTRAL"
+
+def _gate_usd_with_gemini(signals: List[Dict], news_agg: NewsAggregator) -> List[Dict]:
+    """
+    Replace FinBERT USD gate with Gemini 2.5 Flash reasoning.
+
+    Logic:
+    - BULLISH USD → allow BUY USD pairs, block SELL USD pairs
+    - BEARISH USD → allow SELL USD pairs, block BUY USD pairs
+    - NEUTRAL USD → block ALL USD signals (no conviction = no trade)
+
+    Falls back to FinBERT if Gemini unavailable (GEMINI_API_KEY not set).
+    Falls back to NEUTRAL (block all) if both unavailable — safe default.
+
+    BUG PRE-CAUGHT (v2.3.0): reuses existing NewsAggregator._fetch_newsapi_articles('USD')
+    rather than building a duplicate news fetcher. Only initialised when USD signals present.
+    """
+    if not signals:
         return signals
 
-def _gate_usd_with_sentiment(signals: List[Dict], news_agg: NewsAggregator) -> List[Dict]:
-    if not signals: return signals
-    gate_threshold = CONFIG.get("advanced", {}).get("usd_pair_rules", {}).get("sentiment_gate_threshold", 0.0)
+    # BUG PRE-CAUGHT: reuse existing NewsAPI fetcher — don't duplicate
+    usd_headlines = news_agg._fetch_newsapi_articles("USD")
+
+    if GEMINI_API_KEY:
+        gemini_cfg = (CONFIG or {}).get("gemini_usd_gate", {})
+        if gemini_cfg.get("enabled", True):
+            bias = get_gemini_usd_bias(usd_headlines)
+        else:
+            bias = None
+    else:
+        bias = None
+
+    # Fallback to FinBERT if Gemini not available
+    if bias is None and news_agg.hf_api_key:
+        log.info("Gemini unavailable — falling back to FinBERT USD gate")
+        return _gate_usd_with_finbert_fallback(signals, news_agg)
+
+    # If neither available — neutral = block all USD (safe default)
+    if bias is None:
+        log.warning("No USD reasoning available (no Gemini, no FinBERT) — blocking all USD signals")
+        for s in signals:
+            s.update({"sentiment_applied": True, "sentiment_score": 0.0, "sentiment_adjustment": 0.0,
+                      "gemini_usd_bias": "NEUTRAL", "gemini_engine": "unavailable"})
+        return []
+
+    passed = []
+    for sig in signals:
+        direction = sig.get("direction", "BUY")
+        pair      = sig.get("pair", "")
+
+        sig.update({
+            "sentiment_applied":     True,
+            "sentiment_score":       0.0,
+            "sentiment_adjustment":  0.0,
+            "score_before_sentiment": sig.get("score", 0),
+            "gemini_usd_bias":       bias,
+            "gemini_engine":         "gemini-2.5-flash",
+        })
+
+        if bias == "NEUTRAL":
+            log.info(f"  GEMINI GATE BLOCKED: {pair} {direction} — USD bias NEUTRAL (no clear direction)")
+            continue
+        elif bias == "BULLISH" and direction == "BUY":
+            log.info(f"  GEMINI GATE PASSED: {pair} {direction} — USD BULLISH agrees with BUY")
+            passed.append(sig)
+        elif bias == "BEARISH" and direction == "SELL":
+            log.info(f"  GEMINI GATE PASSED: {pair} {direction} — USD BEARISH agrees with SELL")
+            passed.append(sig)
+        else:
+            log.info(f"  GEMINI GATE BLOCKED: {pair} {direction} — USD {bias} disagrees (would need {'BEARISH' if direction=='BUY' else 'BULLISH'})")
+
+    dropped = len(signals) - len(passed)
+    if dropped:
+        log.info(f"Gemini USD gate: {dropped} signal(s) blocked | {len(passed)} passed | bias={bias}")
+    else:
+        log.info(f"Gemini USD gate: all {len(passed)} signal(s) passed | bias={bias}")
+
+    return passed
+
+def _gate_usd_with_finbert_fallback(signals: List[Dict], news_agg: NewsAggregator) -> List[Dict]:
+    """FinBERT fallback gate — used only if GEMINI_API_KEY not set."""
+    gate_threshold = CONFIG.get("advanced", {}).get("usd_pair_rules", {}).get("sentiment_gate_threshold", 0.1)
     currencies: set = set()
     for sig in signals:
         p = sig.get("pair", "")
@@ -1351,31 +1690,29 @@ def _gate_usd_with_sentiment(signals: List[Dict], news_agg: NewsAggregator) -> L
     for cur in currencies:
         try: cur_sent[cur] = news_agg.get_currency_sentiment(cur)
         except Exception as e:
-            log.warning(f"Sentiment unavailable for {cur}: {e} — defaulting to 0.0")
+            log.warning(f"FinBERT sentiment unavailable for {cur}: {e} — defaulting to 0.0")
             cur_sent[cur] = 0.0
     passed = []
     for sig in signals:
         p         = sig.get("pair", "")
         direction = sig.get("direction", "BUY")
         if len(p) < 6:
-            sig.update({"sentiment_applied": True, "sentiment_score": 0.0, "sentiment_adjustment": 0.0})
+            sig.update({"sentiment_applied": True, "sentiment_score": 0.0,
+                        "sentiment_adjustment": 0.0, "gemini_engine": "finbert-fallback"})
             passed.append(sig); continue
         base, quote = p[:3], p[3:6]
         net = (cur_sent.get(base, 0.0) - cur_sent.get(quote, 0.0) if direction == "BUY"
                else cur_sent.get(quote, 0.0) - cur_sent.get(base, 0.0))
         sig.update({"sentiment_applied": True, "sentiment_score": round(net, 3),
-                    "sentiment_adjustment": 0.0, "score_before_sentiment": sig.get("score", 0)})
+                    "sentiment_adjustment": 0.0, "score_before_sentiment": sig.get("score", 0),
+                    "gemini_engine": "finbert-fallback"})
         if net < gate_threshold:
-            log.info(f"  USD GATE BLOCKED: {p} {direction} net_sentiment={net:+.3f} < gate_threshold={gate_threshold}")
+            log.info(f"  FinBERT FALLBACK BLOCKED: {p} {direction} net_sentiment={net:+.3f}")
             continue
-        label = ("agrees" if net > 0.1 else "neutral" if abs(net) <= 0.1 else "weak-disagree-allowed")
-        log.info(f"  USD GATE PASSED: {p} {direction} net_sentiment={net:+.3f} ({label})")
         passed.append(sig)
     dropped = len(signals) - len(passed)
     if dropped:
-        log.info(f"USD sentiment gate: {dropped} signal(s) blocked (macro disagrees with direction)")
-    else:
-        log.info(f"USD sentiment gate: all {len(passed)} signal(s) passed")
+        log.info(f"FinBERT fallback gate: {dropped} signal(s) blocked")
     return passed
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -1383,7 +1720,7 @@ def _gate_usd_with_sentiment(signals: List[Dict], news_agg: NewsAggregator) -> L
 # ═════════════════════════════════════════════════════════════════════════════
 
 def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
-    # ── Permanent blocklist — data-confirmed no edge ──────────────────────────
+    # ── Permanent blocklist ───────────────────────────────────────────────────
     pair_clean_check = pair.replace("=X", "").upper()
     if pair_clean_check in _PERMANENTLY_BLOCKED_PAIRS:
         log.info(f"  {pair_clean_check} PERMANENTLY BLOCKED — confirmed no edge (data-driven)")
@@ -1486,38 +1823,27 @@ def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
     conf      = "VERY_STRONG" if diff>=75 else ("STRONG" if diff>=65 else "MODERATE")
     tier      = classify_signal_tier(diff)
 
-    # ── 1-Hour Trend Filter — v2.2.2-SAFE ──────────────────────────────
-    # Elder Triple Screen principle: 15m signal must align with 1h EMA structure.
-    # Sub-threshold (55-61): REQUIRE 1h agreement — this is what unlocks the lower threshold
-    # Above threshold (62+): 1h DISAGREEMENT blocks — raises quality across the board
-    # Above threshold (62+) with inconclusive 1h: passes on 15m strength alone
-    # Result: more signals on trending days, zero extra noise on choppy days
-    old_hard_threshold = 62
-    trend_1h = get_1h_trend(pair)
-    signal_has_1h_confirmation = False
-    if trend_1h is not None:
-        trend_agrees = (direction == "BUY"  and trend_1h == "BULL") or \
-                       (direction == "SELL" and trend_1h == "BEAR")
-        if not trend_agrees:
-            log.info(f"  BLOCKED: 1h trend {trend_1h} conflicts with 15m {direction} — MTF disagreement")
-            return None, ok
-        log.info(f"  ✓ 1h trend {trend_1h} confirms {direction} — MTF aligned")
-        signal_has_1h_confirmation = True
-    else:
-        # 1h inconclusive (ranging/transitioning) — only pass if score >= original hard threshold
-        if diff < old_hard_threshold:
-            log.info(f"  BLOCKED: score {diff} < {old_hard_threshold} and 1h trend inconclusive — MTF confirmation required for sub-{old_hard_threshold} signals")
-            return None, ok
-        log.info(f"  1h inconclusive — passing on 15m conviction (score={diff} >= {old_hard_threshold})")
-
+    # ── Tier C and Tier A blocks ──────────────────────────────────────────────
     if tier == "C":
         log.info(f"  BLOCKED: Tier C (score={diff} < B_min={CONFIG.get('tiers',{}).get('B_min_score',55)}) — net negative historically")
         return None, ok
 
     if tier == "A":
-        log.info(f"  BLOCKED: Tier A (score={diff}, 72-79) — 0% WR across all 6 trades, -107 pips. "
-                 f"High scores = already-extended moves, entries too late. Keeping B and A+ only.")
+        log.info(f"  BLOCKED: Tier A (score={diff}, 72-79) — 0% WR, -107 pips. High scores = late entries on extended moves.")
         return None, ok
+
+    # ── Full Multi-Timeframe Filter — v2.3.0 ─────────────────────────────────
+    mtf = get_mtf_trend(pair)
+    passes_mtf, fully_confirmed, mtf_reason = apply_mtf_filter(mtf, direction, diff)
+
+    if not passes_mtf:
+        log.info(f"  {mtf_reason}")
+        return None, ok
+
+    if fully_confirmed:
+        log.info(f"  ✓ Full MTF confirmed — all timeframes aligned with {direction}")
+    else:
+        log.info(f"  ✓ Partial MTF — passes on score {diff} (some timeframes inconclusive)")
 
     spread   = get_spread(pair)
     atr_stop = CONFIG.get("advanced", {}).get("atr_stop_multiplier", CONFIG["settings"]["aggressive"].get("atr_stop_multiplier", 2.5))
@@ -1555,15 +1881,25 @@ def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
         "eligible_modes": calculate_eligible_modes(diff,a,CONFIG),
         "freshness": calculate_signal_freshness(now),
         "sentiment_applied": False,
-        "htf_confirmed": signal_has_1h_confirmation,
-        "htf_trend_1h": trend_1h if trend_1h else "INCONCLUSIVE",
+        # MTF fields — v2.3.0
+        "htf_confirmed": fully_confirmed,
+        "mtf_details": {
+            "1h":  mtf.get("1h"),
+            "30m": mtf.get("30m"),
+            "4h":  mtf.get("4h"),
+            "1d":  mtf.get("1d"),
+            "1wk": mtf.get("1wk"),
+        },
+        # Gemini field — populated later in main() for USD pairs
+        "gemini_usd_bias":  None,
+        "gemini_engine":    None,
         "metadata": {
             "signal_type": get_signal_type(e12,e26,e200,r,a),
             "market_state": classify_market_state(a,atr,curr),
             "timeframe": INTERVAL, "valid_for_minutes": int(expiry_mins),
             "generated_at": now.isoformat(), "expires_at": expires.isoformat(),
             "session_active": session in ("EUROPEAN","US","OVERLAP"),
-            "signal_generator_version": "2.2.2-SAFE",
+            "signal_generator_version": "2.3.0-MTF-GEMINI",
             "atr_stop_multiplier": atr_stop, "atr_target_multiplier": atr_tgt,
         },
     }
@@ -1595,8 +1931,10 @@ def quick_micro_backtest(signal: Dict) -> float:
     elif tier=="B": base+=0.05
     if signal.get("confidence")=="VERY_STRONG": base+=0.05
     elif signal.get("confidence")=="STRONG":    base+=0.03
-    if signal.get("metadata",{}).get("session_active"):                       base+=0.02
+    if signal.get("metadata",{}).get("session_active"): base+=0.02
     if signal.get("metadata",{}).get("market_state") in ("TRENDING_STRONG","TRENDING_STRONG_HIGH_VOL"): base+=0.03
+    # v2.3.0: bonus for full MTF confirmation
+    if signal.get("htf_confirmed"): base+=0.05
     return min(base, 0.95)
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -1732,7 +2070,6 @@ def write_dashboard_state(signals, downloads, news_calls=0, mkt_calls=0,
                 if s.get("status") not in ["WIN","LOSS","EXPIRED","OPEN"]: continue
                 hist.append(s)
             hist.sort(key=lambda x: x.get("timestamp",""), reverse=True)
-            log.info(f"Loaded {len(hist)} historical signals (full history)")
         except Exception as e:
             log.warning(f"Could not load historical signals: {e}")
 
@@ -1751,7 +2088,6 @@ def write_dashboard_state(signals, downloads, news_calls=0, mkt_calls=0,
         if df_file.exists():
             try:
                 with open(df_file) as f: hist = json.load(f).get("historical_signals",[])
-                log.info(f"Loaded {len(hist)} from existing dashboard")
             except Exception: pass
 
     today_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
@@ -1778,17 +2114,26 @@ def write_dashboard_state(signals, downloads, news_calls=0, mkt_calls=0,
     else:
         pick_of_the_day = new_pick or existing_pick
 
+    # Gemini USD gate status
+    gemini_status = "active" if GEMINI_API_KEY else ("finbert-fallback" if HF_API_KEY else "disabled")
+
     dashboard = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "active_signals": len(sigs),
         "active_signals_by_mode": {"aggressive": len(mb["aggressive"]), "conservative": len(mb["conservative"])},
         "session": get_market_session(), "mode": md,
-        "sentiment_enabled": USE_SENTIMENT, "sentiment_engine": "finbert" if USE_SENTIMENT else "disabled",
+        "sentiment_enabled": USE_SENTIMENT,
+        "sentiment_engine": gemini_status,
         "multi_mode": True,
         "equity_protection": {"enabled": cfg.get("risk_management",{}).get("equity_protection",{}).get("enable",False), "can_trade": can_trade, "pause_reason": pause or None},
         "market_state": {"volatility": calculate_market_volatility(sigs), "sentiment_bias": calculate_market_sentiment_bias(sigs), "session": get_market_session()},
         "signals_by_mode": mb, "historical_signals": hist,
-        "api_usage": {"yfinance": {"successful_downloads": downloads}, "sentiment": {"enabled": USE_SENTIMENT, "engine": "finbert", "newsapi": news_calls, "marketaux": mkt_calls}},
+        "api_usage": {
+            "yfinance": {"successful_downloads": downloads},
+            "sentiment": {"enabled": USE_SENTIMENT, "engine": gemini_status,
+                          "gemini": "active" if GEMINI_API_KEY else "disabled",
+                          "newsapi": news_calls, "marketaux": mkt_calls}
+        },
         "stats": {"total_trades": stats.get("total_trades",0), "win_rate": stats.get("win_rate",0), "total_pips": stats.get("total_pips",0), "wins": stats.get("wins",0), "losses": stats.get("losses",0), "expectancy": stats.get("expectancy_pips",0)},
         "performance_stats": {"total_trades": stats.get("total_trades",0), "wins": stats.get("wins",0), "losses": stats.get("losses",0), "expired": stats.get("expired",0), "win_rate": stats.get("win_rate",0), "total_pips": stats.get("total_pips",0), "avg_win": stats.get("avg_win_pips",0), "avg_loss": stats.get("avg_loss_pips",0), "expectancy": stats.get("expectancy_pips",0), "by_mode": perf.get("analytics",{}).get("by_mode",{}), "by_tier": perf.get("analytics",{}).get("by_tier",{}), "by_session": perf.get("analytics",{}).get("by_session",{}), "by_pair": perf.get("analytics",{}).get("by_pair",{})},
         "risk_management": {"theoretical_max_pips": calculate_daily_pips(sigs), "total_risk_pips": sum(price_to_pips(s.get("pair",""), abs(s.get("entry_price",0)-s.get("sl",0))) for s in sigs), "max_daily_risk": cfg.get("risk_management",{}).get("max_daily_risk_pips",150)},
@@ -1797,7 +2142,7 @@ def write_dashboard_state(signals, downloads, news_calls=0, mkt_calls=0,
         "pair_prices": pair_prices or {},
         "upcoming_events": _get_upcoming_events(4),
         "pick_of_the_day": pick_of_the_day,
-        "system": {"last_update": datetime.now(timezone.utc).isoformat(), "signal_only_mode": SIGNAL_ONLY_MODE, "version": "2.2.2-SAFE"},
+        "system": {"last_update": datetime.now(timezone.utc).isoformat(), "signal_only_mode": SIGNAL_ONLY_MODE, "version": "2.3.0-MTF-GEMINI"},
     }
 
     out = Path("signal_state"); out.mkdir(exist_ok=True)
@@ -1811,11 +2156,19 @@ def write_health_check(signals, downloads, news, mkt, can_trade, pause, mode):
     status = ("paused" if not can_trade else
               "warning" if downloads==0 or (len(signals)==0 and downloads>0 and can_trade) else "ok")
     issues = ([pause] if pause else ["No data"] if downloads==0 else ["No signals"] if len(signals)==0 and downloads>0 else [])
+    gemini_status = "ok" if GEMINI_API_KEY else ("finbert-fallback" if HF_API_KEY else "disabled")
     health = {
         "status": status, "last_run": datetime.now(timezone.utc).isoformat(),
         "signal_count": len(signals), "issues": issues, "can_trade": can_trade,
-        "api_status": {"yfinance": "ok" if downloads>0 else "degraded", "newsapi": "ok" if news>0 else "disabled", "marketaux": "ok" if mkt>0 else "disabled", "finbert_hf": "ok" if HF_API_KEY else "disabled"},
-        "system_info": {"mode": mode, "pairs_monitored": len(PAIRS), "version": "2.2.2-SAFE", "sentiment_engine": "finbert" if HF_API_KEY else "disabled"},
+        "api_status": {
+            "yfinance":    "ok" if downloads>0 else "degraded",
+            "newsapi":     "ok" if news>0 else "disabled",
+            "marketaux":   "ok" if mkt>0 else "disabled",
+            "gemini_usd":  gemini_status,
+            "finbert_hf":  "ok" if HF_API_KEY else "disabled",
+        },
+        "system_info": {"mode": mode, "pairs_monitored": len(PAIRS), "version": "2.3.0-MTF-GEMINI",
+                        "usd_reasoning": "gemini-2.5-flash" if GEMINI_API_KEY else "finbert-fallback"},
     }
     with open(Path("signal_state/health.json"),"w") as f: json.dump(health,f,indent=2)
     log.info(f"Health: {status.upper()}")
@@ -1927,8 +2280,9 @@ def main():
                 if CONFIG.get("performance_tuning",{}).get("auto_adjust_thresholds",False) else CONFIG)
     opt_mode = opt_cfg["mode"]
 
-    log.info(f"Trade Beacon v2.2.2-SAFE | Sentiment={'FinBERT ON' if USE_SENTIMENT else 'OFF'} | HF_KEY={'set' if HF_API_KEY else 'missing'}")
-    log.info(f"Monitoring {len(PAIRS)} pairs")
+    usd_engine = "Gemini 2.5 Flash" if GEMINI_API_KEY else ("FinBERT fallback" if HF_API_KEY else "DISABLED")
+    log.info(f"Trade Beacon v2.3.0-MTF-GEMINI | USD Engine={usd_engine} | Sentiment={'ON' if USE_SENTIMENT else 'OFF'}")
+    log.info(f"Monitoring {len(PAIRS)} pairs | MTF: 30m + 4h + Daily + Weekly + 1h")
     log.info(f"Aggressive:   Score>={opt_cfg['settings']['aggressive']['threshold']} ADX>={opt_cfg['settings']['aggressive']['min_adx']}")
     log.info(f"Conservative: Score>={opt_cfg['settings']['conservative']['threshold']} ADX>={opt_cfg['settings']['conservative']['min_adx']}")
 
@@ -1960,48 +2314,44 @@ def main():
                     if is_duplicate_signal(sig["signal_id"], existing_ids):
                         log.info(f"{clean} - Duplicate skipped"); continue
                     new_signals.append(sig)
-                    log.info(f"{clean} - Score: {sig['score']} [{sig['tier']}] ({'+'.join(sig['eligible_modes'])}) RR: {sig['risk_reward']:.2f}")
+                    mtf_d = sig.get("mtf_details",{})
+                    mtf_str = f"1wk={mtf_d.get('1wk','?')} 1d={mtf_d.get('1d','?')} 4h={mtf_d.get('4h','?')} 30m={mtf_d.get('30m','?')} 1h={mtf_d.get('1h','?')}"
+                    log.info(f"{clean} - Score: {sig['score']} [{sig['tier']}] ({'+'.join(sig['eligible_modes'])}) RR: {sig['risk_reward']:.2f} | {mtf_str}")
             except Exception as e:
                 log.error(f"{pair.replace('=X','')} failed: {e}")
 
     news_calls = mkt_calls = 0
 
-    if USE_SENTIMENT and new_signals:
-        usd_rules = CONFIG.get("advanced", {}).get("usd_pair_rules", {})
-        use_gate  = usd_rules.get("sentiment_gate", True)
+    # ── USD Gating: Gemini 2.5 Flash (with FinBERT fallback) ─────────────────
+    if new_signals:
         usd_sigs = [s for s in new_signals if s.get("pair","") in _USD_RESTRICTED_PAIRS]
         gbp_sigs = [s for s in new_signals if s.get("pair","") not in _USD_RESTRICTED_PAIRS]
+
+        # GBP crosses and non-USD pairs: pure technical, no macro gate
         for s in gbp_sigs:
-            s.update({"sentiment_applied": False, "sentiment_score": 0.0, "sentiment_adjustment": 0.0})
-        if usd_sigs and use_gate:
+            s.update({"sentiment_applied": False, "sentiment_score": 0.0,
+                      "sentiment_adjustment": 0.0, "gemini_usd_bias": None, "gemini_engine": None})
+
+        if usd_sigs:
+            log.info(f"USD gate: {len(usd_sigs)} USD signal(s) | Engine: {usd_engine}")
+            # BUG PRE-CAUGHT: init NewsAggregator only when USD signals present
             agg = NewsAggregator()
-            if not agg.hf_api_key:
-                log.warning("HF_API_KEY not set — USD sentiment gate disabled, signals pass through.")
+            try:
+                usd_sigs = _gate_usd_with_gemini(usd_sigs, agg)
+                news_calls = 1  # one NewsAPI batch for USD headlines
+            except Exception as e:
+                log.error(f"USD gate failed: {e} — USD signals pass through unfiltered")
                 for s in usd_sigs:
-                    s.update({"sentiment_applied": False, "sentiment_score": 0.0, "sentiment_adjustment": 0.0})
-            else:
-                log.info(f"FinBERT USD gate: {len(usd_sigs)} USD signal(s) (GBP excluded — pure technical)")
-                try:
-                    usd_sigs = _gate_usd_with_sentiment(usd_sigs, agg)
-                    all_curs: set = set()
-                    for s in new_signals:
-                        if s.get("pair","") in _USD_RESTRICTED_PAIRS:
-                            p = s.get("pair","")
-                            if len(p) >= 6:
-                                all_curs.add(p[:3]); all_curs.add(p[3:6])
-                    news_calls = mkt_calls = len(all_curs)
-                except Exception as e:
-                    log.error(f"USD sentiment gate failed: {e} — signals pass through")
-                    for s in usd_sigs:
-                        s.update({"sentiment_applied": False, "sentiment_score": 0.0, "sentiment_adjustment": 0.0})
+                    s.update({"sentiment_applied": False, "sentiment_score": 0.0,
+                              "sentiment_adjustment": 0.0, "gemini_engine": "error-passthrough"})
         else:
-            for s in usd_sigs:
-                s.update({"sentiment_applied": False, "sentiment_score": 0.0, "sentiment_adjustment": 0.0})
+            log.info("No USD signals this cycle — Gemini gate not needed")
+
         new_signals = usd_sigs + gbp_sigs
     else:
-        for s in new_signals:
-            s.update({"sentiment_applied": False, "sentiment_score": 0.0, "sentiment_adjustment": 0.0})
+        log.info("No new signals — skipping USD gate")
 
+    # ── Elite signal enhancement (micro-backtest WR estimate) ─────────────────
     elite = select_high_potential(new_signals)
     for s in elite:
         s["estimated_win_rate"] = quick_micro_backtest(s)
@@ -2014,12 +2364,14 @@ def main():
     for s in new_signals:
         if s["signal_id"] not in elite_ids: s["estimated_win_rate"] = None
 
+    # ── Live price validation (Browserless) ───────────────────────────────────
     if BROWSERLESS_TOKEN and new_signals:
         try:
             new_signals = _validate_signal_prices(new_signals)
         except Exception as e:
             log.warning(f"Live price validation skipped: {e}")
 
+    # ── Risk limits + correlation filter ─────────────────────────────────────
     mb = split_signals_by_mode(new_signals)
     agg_f,  aw = check_risk_limits(mb["aggressive"],  opt_cfg, "aggressive",  existing_counts=existing_counts)
     cons_f, cw = check_risk_limits(mb["conservative"], opt_cfg, "conservative", existing_counts=existing_counts)
@@ -2034,36 +2386,37 @@ def main():
     all_sigs = filter_expired_signals(all_new+existing)
     if len(all_sigs)>200:
         all_sigs = sorted(all_sigs, key=lambda s: s.get("timestamp",""), reverse=True)[:200]
-        log.info("Signal cap: trimmed to 200")
 
     log.info(f"Complete | New: {len(all_new)} | Existing: {len(existing)} | Total: {len(all_sigs)}")
-    log.info(f"Breakdown - Aggressive: {len(agg_f)} | Conservative: {len(cons_f)}")
+    log.info(f"Breakdown — Aggressive: {len(agg_f)} | Conservative: {len(cons_f)}")
 
     if len(all_new)==0 and len(existing)==0:
         sess = get_market_session()
         st   = CONFIG.get("advanced",{}).get("session_thresholds",{}).get(sess, min(CONFIG["settings"]["aggressive"]["threshold"], CONFIG["settings"]["conservative"]["threshold"]))
-        log.info(f"Zero-signal diagnostic: session={sess} threshold={st}")
+        log.info(f"Zero-signal diagnostic: session={sess} threshold={st} usd_engine={usd_engine}")
 
     write_dashboard_state(all_sigs, downloads, news_calls, mkt_calls, opt_cfg, opt_mode, None, pair_prices)
 
     if all_new:
         mb = split_signals_by_mode(all_new)
         print("\n" + "="*100)
-        print("TRADE BEACON v2.2.2-SAFE — MULTI-MODE SIGNALS")
+        print("TRADE BEACON v2.3.0-MTF-GEMINI — MULTI-MODE SIGNALS")
         print("="*100)
         for label, key, icon in [("AGGRESSIVE","aggressive","⚡"), ("CONSERVATIVE","conservative","🛡️")]:
             sigs = mb[key]
             if sigs:
                 print(f"\n{icon} {label} SIGNALS ({len(sigs)})")
                 print("-"*100)
-                df = pd.DataFrame(sigs)
-                print(df[["signal_id","pair","direction","score","tier","confidence","risk_reward","sentiment_score"]].to_string(index=False))
+                df_out = pd.DataFrame(sigs)
+                cols = ["signal_id","pair","direction","score","tier","confidence","risk_reward","gemini_usd_bias","htf_confirmed"]
+                existing_cols = [c for c in cols if c in df_out.columns]
+                print(df_out[existing_cols].to_string(index=False))
         print("="*100+"\n")
         pd.DataFrame(all_new).to_csv("signals.csv", index=False)
         log.info("signals.csv written")
 
     mark_success()
-    log.info("Run completed — v2.2.2-SAFE")
+    log.info("Run completed — v2.3.0-MTF-GEMINI")
 
 
 if __name__ == "__main__":

@@ -67,7 +67,6 @@
     .ticker-price.down { color: var(--red); }
     .ticker-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
     .ticker-dot.live { background: var(--green); box-shadow: 0 0 5px var(--green); animation: pulseDot 2s ease-in-out infinite; }
-    .ticker-label { font-size: 9px; font-weight: 700; letter-spacing: 1px; color: var(--text-muted); padding: 2px 6px; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; }
     .ticker-event { display: flex; align-items: center; gap: 6px; padding: 9px 20px; border-right: 1px solid rgba(255,255,255,0.05); white-space: nowrap; }
     .ticker-event-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--yellow); box-shadow: 0 0 5px var(--yellow); flex-shrink: 0; }
     .ticker-event-text { font-size: 10px; color: var(--yellow); font-weight: 700; letter-spacing: 0.3px; }
@@ -129,20 +128,7 @@
     .metric-item-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; margin-bottom: 4px; }
     .metric-item-value { font-family: 'Orbitron', monospace; font-size: 16px; font-weight: 700; color: white; word-break: break-all; }
     .metric-item-value.hl { color: var(--orange); }
-    .changes-section { background: rgba(0,242,169,0.05); border: 1px solid rgba(0,242,169,0.2); border-radius: 10px; padding: 14px; margin: 16px 0; }
-    .change-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .change-item:last-child { border-bottom: none; }
-    .change-label { color: var(--text-dim); font-weight: 600; }
-    .change-value { display: flex; align-items: center; gap: 6px; font-family: 'Orbitron', monospace; font-weight: 900; }
-    .change-value.up { color: var(--green); }
-    .change-value.down { color: var(--red); }
-    .change-value.neutral { color: var(--text-muted); }
-    .history-section { background: rgba(79,172,254,0.05); border: 1px solid rgba(79,172,254,0.2); border-radius: 10px; padding: 14px; margin: 16px 0; }
-    .history-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 11px; color: var(--text-dim); }
-    .history-item::before { content: '•'; color: var(--blue); font-size: 16px; line-height: 1; }
-    .history-time { font-family: 'Orbitron', monospace; color: var(--blue); font-weight: 700; }
-    .history-value { font-family: 'Orbitron', monospace; color: var(--text); }
-    .footer-card { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+    .footer-card { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 6px; }
     .time { font-size: 11px; color: var(--text-dim); font-family: 'Orbitron', monospace; display: flex; align-items: center; gap: 6px; }
     .session { padding: 4px 10px; background: rgba(79,172,254,0.1); border: 1px solid rgba(79,172,254,0.3); border-radius: 6px; font-size: 10px; font-weight: 900; color: var(--blue); letter-spacing: 0.5px; }
 
@@ -257,14 +243,13 @@
   </div>
 
   <div class="container">
-    <!-- ═══ HEADER ════════════════════════════════════════════════════════ -->
     <header class="header">
       <div class="header-grid">
         <div class="brand">
           <div class="brand-icon"><i data-lucide="activity"></i></div>
           <div class="brand-text">
             <h1>TRADE BEACON</h1>
-            <p>MARKET INTELLIGENCE v2.2.2-SAFE</p>
+            <p>MARKET INTELLIGENCE v2.3.0-MTF-GEMINI</p>
           </div>
         </div>
         <div class="header-stats">
@@ -285,14 +270,12 @@
       </div>
     </header>
 
-    <!-- ═══ PRICE TICKER ══════════════════════════════════════════════════ -->
     <div class="price-ticker-bar" id="priceTickerBar">
       <div class="price-ticker-track" id="priceTickerTrack">
         <div class="ticker-pair"><div class="ticker-dot"></div><span class="ticker-name">LOADING</span><span class="ticker-price">···</span></div>
       </div>
     </div>
 
-    <!-- ═══ METRICS ═══════════════════════════════════════════════════════ -->
     <div class="metrics">
       <div class="metric"><div class="metric-icon"><i data-lucide="signal"></i></div><div class="metric-label">Active Signals <span class="info-icon" data-tip="active-signals">i</span></div><div class="metric-value" id="mSignals">0</div><div class="metric-sub">Multi-mode</div></div>
       <div class="metric"><div class="metric-icon"><i data-lucide="target"></i></div><div class="metric-label">Win Rate <span class="info-icon" data-tip="win-rate">i</span></div><div class="metric-value" id="mWR">0%</div><div class="metric-sub" id="mWRSub">No trades</div></div>
@@ -302,14 +285,13 @@
       <div class="metric"><div class="metric-icon"><i data-lucide="globe-2"></i></div><div class="metric-label">Session <span class="info-icon" data-tip="session">i</span></div><div class="metric-value" id="mSession" style="font-size:clamp(13px,3.5vw,20px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">---</div><div class="metric-sub" id="mTime">---</div></div>
     </div>
 
-    <!-- ═══ MODE BUTTONS ══════════════════════════════════════════════════ -->
     <div class="modes">
       <button class="mode-btn active" id="modeAgg" onclick="switchMode('aggressive')"><i data-lucide="zap" style="width:16px;height:16px"></i>AGGRESSIVE</button>
       <button class="mode-btn" id="modeCon" onclick="switchMode('conservative')"><i data-lucide="shield" style="width:16px;height:16px"></i>CONSERVATIVE</button>
       <span class="info-icon" data-tip="modes" style="margin-right:8px;">i</span>
     </div>
 
-    <!-- ═══ PICK OF THE DAY ═══════════════════════════════════════════════ -->
+    <!-- Pick of the Day -->
     <div id="pickOfDay" style="display:none;margin-bottom:24px;">
       <div style="background:linear-gradient(135deg,rgba(255,107,53,0.08),rgba(79,172,254,0.06));border:1px solid rgba(255,107,53,0.25);border-radius:16px;overflow:hidden;">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(255,107,53,0.05);flex-wrap:wrap;gap:8px;">
@@ -327,7 +309,7 @@
           <div style="flex:0 0 auto;min-width:200px;padding:18px 20px;border-right:1px solid rgba(255,255,255,0.06);">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
               <span id="podPair" style="font-size:20px;font-weight:900;font-family:'Orbitron',monospace;"></span>
-              <span id="podDir"  style="font-size:11px;font-weight:900;padding:3px 9px;border-radius:6px;letter-spacing:1px;"></span>
+              <span id="podDir" style="font-size:11px;font-weight:900;padding:3px 9px;border-radius:6px;letter-spacing:1px;"></span>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;font-size:11px;margin-bottom:10px;">
               <div><div style="color:var(--text-muted);">ENTRY</div><div id="podEntry" style="font-family:'Orbitron',monospace;font-weight:700;font-size:12px;color:var(--text);"></div></div>
@@ -343,7 +325,7 @@
           <div style="flex:1;min-width:180px;padding:18px 20px;border-right:1px solid rgba(255,255,255,0.06);">
             <div style="font-size:10px;font-weight:900;letter-spacing:1px;color:var(--text-muted);margin-bottom:8px;">WHY THIS PICK</div>
             <div id="podReason" style="font-size:12px;color:var(--text-dim);line-height:1.6;"></div>
-            <div id="podSentiment" style="display:none;margin-top:8px;padding:7px 9px;background:rgba(0,242,169,0.06);border:1px solid rgba(0,242,169,0.15);border-radius:6px;font-size:11px;color:var(--green);"></div>
+            <div id="podGemini" style="display:none;margin-top:8px;padding:7px 9px;background:rgba(79,172,254,0.06);border:1px solid rgba(79,172,254,0.2);border-radius:6px;font-size:11px;color:var(--blue);"></div>
           </div>
           <div style="flex:1;min-width:220px;padding:18px 20px;display:flex;flex-direction:column;gap:6px;">
             <div style="font-size:10px;font-weight:900;letter-spacing:1px;color:var(--text-muted);margin-bottom:2px;">RELATED NEWS</div>
@@ -358,7 +340,6 @@
       </div>
     </div>
 
-    <!-- ═══ TABS ═══════════════════════════════════════════════════════════ -->
     <nav class="tabs">
       <button class="tab active" onclick="switchTab('signals')"><i data-lucide="radio" style="width:16px;height:16px"></i>LIVE SIGNALS</button>
       <button class="tab" onclick="switchTab('history')"><i data-lucide="history" style="width:16px;height:16px"></i>HISTORY</button>
@@ -380,14 +361,11 @@
           <table>
             <thead>
               <tr>
-                <th>DATE</th>
-                <th>TIME (UTC)</th>
-                <th>PAIR</th>
-                <th>DIR</th>
+                <th>DATE</th><th>TIME (UTC)</th><th>PAIR</th><th>DIR</th>
                 <th>TIER <span class="info-icon" data-tip="tier-badge" style="vertical-align:middle;">i</span></th>
-                <th>RESULT</th>
-                <th>PIPS</th>
+                <th>RESULT</th><th>PIPS</th>
                 <th>SESSION <span class="info-icon" data-tip="session-col" style="vertical-align:middle;">i</span></th>
+                <th>MTF <span class="info-icon" data-tip="mtf-col" style="vertical-align:middle;">i</span></th>
               </tr>
             </thead>
             <tbody id="historyBody"></tbody>
@@ -403,96 +381,85 @@
         <div class="analytics-card"><h3 class="analytics-title"><i data-lucide="globe-2" style="width:24px;height:24px;color:var(--blue)"></i>Performance by Session <span class="info-icon" data-tip="perf-session">i</span></h3><div id="sessionAnalytics"></div></div>
         <div class="analytics-card"><h3 class="analytics-title"><i data-lucide="trending-up" style="width:24px;height:24px;color:var(--green)"></i>Top Performing Pairs <span class="info-icon" data-tip="perf-pairs">i</span></h3><div id="pairAnalytics"></div></div>
         <div class="analytics-card"><h3 class="analytics-title"><i data-lucide="layers" style="width:24px;height:24px;color:var(--orange)"></i>Performance by Mode <span class="info-icon" data-tip="perf-mode">i</span></h3><div id="modeAnalytics"></div></div>
+        <div class="analytics-card"><h3 class="analytics-title"><i data-lucide="filter" style="width:24px;height:24px;color:var(--green)"></i>MTF Confirmation <span class="info-icon" data-tip="mtf-confirm">i</span></h3><div id="mtfAnalytics"></div></div>
+        <div class="analytics-card"><h3 class="analytics-title"><i data-lucide="bot" style="width:24px;height:24px;color:var(--blue)"></i>Gemini USD Bias <span class="info-icon" data-tip="gemini-bias">i</span></h3><div id="geminiAnalytics"></div></div>
         <div class="analytics-card"><h3 class="analytics-title"><i data-lucide="git-merge" style="width:24px;height:24px;color:var(--yellow)"></i>Tier × Session Cross-Analytics <span class="info-icon" data-tip="cross-tier-session">i</span></h3><div id="crossTierSessionAnalytics"></div></div>
         <div class="analytics-card"><h3 class="analytics-title"><i data-lucide="git-branch" style="width:24px;height:24px;color:var(--blue)"></i>Mode × Tier Cross-Analytics <span class="info-icon" data-tip="cross-mode-tier">i</span></h3><div id="crossModeTierAnalytics"></div></div>
       </div>
     </div>
   </div>
 
-  <!-- ═══ DISCLAIMER ════════════════════════════════════════════════════════ -->
   <div style="margin-top:32px;border-top:1px solid rgba(255,255,255,0.06);padding:28px 24px 36px;max-width:1920px;margin-left:auto;margin-right:auto;position:relative;z-index:1;">
     <div style="background:linear-gradient(135deg,rgba(251,191,36,0.07),rgba(255,107,53,0.05));border:1px solid rgba(251,191,36,0.2);border-radius:10px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:flex-start;gap:10px;">
       <i data-lucide="triangle-alert" style="width:18px;height:18px;color:#fbbf24;flex-shrink:0;margin-top:2px;"></i>
       <div style="font-size:12.5px;color:#fbbf24;font-weight:700;line-height:1.5;">TRADING FOREIGN EXCHANGE CARRIES SIGNIFICANT RISK OF LOSS AND IS NOT SUITABLE FOR ALL INVESTORS. YOU MAY LOSE MORE THAN YOUR INITIAL DEPOSIT.</div>
     </div>
     <div style="font-size:11.5px;color:var(--text-muted);line-height:1.8;max-width:1100px;">
-      <p style="margin-bottom:10px;"><strong style="color:var(--text-dim);">NOT FINANCIAL ADVICE.</strong> Trade Beacon is an automated algorithmic signal system for research and informational purposes only. Nothing here constitutes financial advice or a recommendation to buy or sell any instrument.</p>
-      <p style="margin-bottom:10px;"><strong style="color:var(--text-dim);">SIGNAL-ONLY MODE.</strong> No orders are placed automatically. The system generates entry, stop-loss, and take-profit levels which you may choose to execute manually in your own broker platform. All execution decisions remain solely the responsibility of the trader.</p>
-      <p style="margin-bottom:10px;"><strong style="color:var(--text-dim);">PAST PERFORMANCE.</strong> Historical win rates and pip totals are not indicative of future results. Performance statistics are only statistically meaningful after 100+ resolved trades.</p>
-      <p style="margin-bottom:10px;"><strong style="color:var(--text-dim);">DATA ACCURACY.</strong> Market data is sourced via yfinance and may be delayed or incomplete. FinBERT sentiment reflects NLP model output, not verified market intelligence.</p>
-      <p><strong style="color:var(--text-dim);">NO LIABILITY.</strong> The creators of Trade Beacon accept no liability for losses incurred from acting on this dashboard. Use entirely at your own risk.</p>
+      <p style="margin-bottom:10px;"><strong style="color:var(--text-dim);">NOT FINANCIAL ADVICE.</strong> Trade Beacon is an automated algorithmic signal system for research and informational purposes only.</p>
+      <p style="margin-bottom:10px;"><strong style="color:var(--text-dim);">SIGNAL-ONLY MODE.</strong> No orders are placed automatically. All execution decisions remain solely the responsibility of the trader.</p>
+      <p style="margin-bottom:10px;"><strong style="color:var(--text-dim);">PAST PERFORMANCE.</strong> Historical win rates and pip totals are not indicative of future results. Statistics are only meaningful after 100+ resolved trades.</p>
+      <p><strong style="color:var(--text-dim);">NO LIABILITY.</strong> The creators of Trade Beacon accept no liability for losses incurred from acting on this dashboard.</p>
     </div>
     <div style="margin-top:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.04);">
-      <div style="font-size:10px;color:var(--text-muted);letter-spacing:0.5px;">TRADE BEACON v2.2.2-SAFE &nbsp;·&nbsp; SIGNAL-ONLY MODE &nbsp;·&nbsp; NO AUTO-EXECUTION</div>
-      <div style="font-size:10px;color:var(--text-muted);">Signals for manual execution &nbsp;·&nbsp; All times UTC</div>
+      <div style="font-size:10px;color:var(--text-muted);letter-spacing:0.5px;">TRADE BEACON v2.3.0-MTF-GEMINI &nbsp;·&nbsp; SIGNAL-ONLY MODE &nbsp;·&nbsp; NO AUTO-EXECUTION</div>
+      <div style="font-size:10px;color:var(--text-muted);">Full MTF: 30m + 4h + Daily + Weekly &nbsp;·&nbsp; Gemini 2.5 Flash USD gate &nbsp;·&nbsp; All times UTC</div>
     </div>
   </div>
 
   <script>
     lucide.createIcons();
 
-    /* ── TOOLTIP DEFINITIONS ── */
     const TIPS = {
       'active-signals': { title: 'Active Signals', body: 'The number of <strong>unique currency pairs</strong> currently being tracked with open trade suggestions.' },
-      'win-rate': { title: 'Win Rate', body: 'Percentage of <strong>resolved trades that hit Take Profit</strong>. Calculated as: Wins ÷ (Wins + Losses). Expired signals excluded.' },
-      'pips': { title: 'Total Pips', body: 'The <strong>cumulative profit or loss</strong> in pips across all resolved trades. Positive = profitable system overall.' },
-      'expectancy': { title: 'Expectancy', body: 'Average pips earned <strong>per trade</strong>, accounting for both wins and losses.<br><span style="font-family:monospace;font-size:11px;color:var(--yellow)">(WR × Avg Win) − (LR × Avg Loss)</span>' },
+      'win-rate': { title: 'Win Rate', body: 'Percentage of <strong>resolved trades that hit Take Profit</strong>. Wins ÷ (Wins + Losses). Expired signals excluded.' },
+      'pips': { title: 'Total Pips', body: 'The <strong>cumulative profit or loss</strong> in pips across all resolved trades.' },
+      'expectancy': { title: 'Expectancy', body: 'Average pips earned <strong>per trade</strong>.<br><span style="font-family:monospace;font-size:11px;color:var(--yellow)">(WR × Avg Win) − (LR × Avg Loss)</span>' },
       'today': { title: 'Signals Today', body: 'Number of <strong>unique pairs</strong> that received a new signal today (UTC). Resets each calendar day.' },
-      'session': { title: 'Current Session', body: 'Active forex session based on UTC time:<br><div class="tip-row"><span class="tip-key">ASIAN</span><span>00:00–07:00 UTC — BLOCKED (25.8% WR)</span></div><div class="tip-row"><span class="tip-key">EUROPEAN</span><span>07:00–12:00 UTC — Active</span></div><div class="tip-row"><span class="tip-key">OVERLAP</span><span>12:00–16:00 UTC — BLOCKED</span></div><div class="tip-row"><span class="tip-key">US</span><span>16:00–21:00 UTC — Best session</span></div><div class="tip-row"><span class="tip-key">LATE_US</span><span>21:00–00:00 UTC — High threshold</span></div>' },
-      'modes': { title: 'Signal Modes', body: '<div class="tip-row"><span class="tip-key">AGGR</span><span><strong>Aggressive</strong> — Score ≥55 + 1h trend confirms. ADX ≥15. More signals.</span></div><div class="tip-row"><span class="tip-key">CONS</span><span><strong>Conservative</strong> — Score ≥57 + 1h trend confirms. ADX ≥17. Stricter ADX and correlation limits.</span></div><div class="tip-row"><span class="tip-key">MTF</span><span>Both modes require 1-hour EMA alignment with 15m direction. Scores 55-61 blocked without 1h confirmation.</span></div>' },
-      'tier-badge': { title: 'Signal Tier', body: '<div class="tip-row"><span class="tip-key" style="color:#fbbf24">A+</span><span>Score ≥80 — Elite signal</span></div><div class="tip-row"><span class="tip-key" style="color:var(--red)">A</span><span>Score 72-79 — BLOCKED (0% WR, -107 pips, 6 trades — late entries on extended moves)</span></div><div class="tip-row"><span class="tip-key" style="color:var(--blue)">B</span><span>Score 55-71 — Active (best edge, +293 pips)</span></div><div class="tip-row"><span class="tip-key" style="color:#6b7280">C</span><span>Score &lt;55 — BLOCKED (net negative historically)</span></div>' },
-      'session-col': { title: 'Trading Session', body: 'Which forex session was active when the signal was generated. Session determines expiry window — EUROPEAN/US signals last 4 hours, others 15 minutes.' },
-      'perf-tier': { title: 'Performance by Tier', body: 'Win rate and pips by signal quality tier. v2.2.0: B threshold lowered 62→55 — 1-hour MTF filter now replaces raw score as quality gate.' },
-      'perf-session': { title: 'Performance by Session', body: 'Win rate per session. US = best at 47%+ WR. ASIAN and OVERLAP are blocked based on live data.' },
-      'perf-pairs': { title: 'Top Performing Pairs', body: 'Pairs sorted by total pips. GBPUSD (BUY-only) and GBPJPY are the core edge. USD pairs restricted to US session only with FinBERT gate.' },
-      'perf-mode': { title: 'Performance by Mode', body: 'Win rate split by Aggressive vs Conservative mode. Conservative shows higher WR due to stricter ADX and correlation filters.' },
-      'cross-tier-session': { title: 'Tier × Session', body: 'Two-dimensional breakdown of tier quality vs session. Reveals best combinations — e.g. Tier B in US session.' },
-      'cross-mode-tier': { title: 'Mode × Tier', body: 'How Aggressive vs Conservative performs within each tier. Populates after trades resolve.' },
+      'session': { title: 'Current Session', body: 'Active forex session based on UTC time:<br><div class="tip-row"><span class="tip-key">ASIAN</span><span>00:00–08:00 UTC — BLOCKED</span></div><div class="tip-row"><span class="tip-key">EUROPEAN</span><span>08:00–13:00 UTC — Active</span></div><div class="tip-row"><span class="tip-key">OVERLAP</span><span>13:00–16:00 UTC — BLOCKED</span></div><div class="tip-row"><span class="tip-key">US</span><span>16:00–21:00 UTC — Best session</span></div><div class="tip-row"><span class="tip-key">LATE_US</span><span>21:00–00:00 UTC — High threshold</span></div>' },
+      'modes': { title: 'Signal Modes', body: '<div class="tip-row"><span class="tip-key">AGGR</span><span><strong>Aggressive</strong> — Score ≥55. More signals.</span></div><div class="tip-row"><span class="tip-key">CONS</span><span><strong>Conservative</strong> — Score ≥57. Stricter ADX + correlation.</span></div><div class="tip-row"><span class="tip-key">MTF</span><span>Both modes: 30m + 4h + Daily + Weekly + 1h must align with 15m direction. Daily is the decisive filter.</span></div>' },
+      'tier-badge': { title: 'Signal Tier', body: '<div class="tip-row"><span class="tip-key" style="color:#fbbf24">A+</span><span>Score ≥80 — Elite signal</span></div><div class="tip-row"><span class="tip-key" style="color:var(--red)">A</span><span>Score 72-79 — BLOCKED (0% WR, -107 pips)</span></div><div class="tip-row"><span class="tip-key" style="color:var(--blue)">B</span><span>Score 55-71 — Active (best edge)</span></div><div class="tip-row"><span class="tip-key" style="color:#6b7280">C</span><span>Score &lt;55 — BLOCKED</span></div>' },
+      'session-col': { title: 'Trading Session', body: 'Which forex session was active when the signal was generated.' },
+      'mtf-col': { title: 'MTF Confirmation', body: 'Whether all timeframes (30m + 4h + Daily + Weekly) agreed with the 15m direction. ✓ = all confirmed, ~ = partial.' },
+      'perf-tier': { title: 'Performance by Tier', body: 'Win rate and pips by signal quality tier. A+ (≥80) and B (55-71) trade. Tier A (72-79) and C (<55) blocked.' },
+      'perf-session': { title: 'Performance by Session', body: 'Win rate per session. US = best. ASIAN and OVERLAP are blocked.' },
+      'perf-pairs': { title: 'Top Performing Pairs', body: 'Pairs sorted by total pips. GBP pairs (GBPUSD, GBPJPY, GBPAUD, GBPCAD) have demonstrated edge. USD pairs gated by Gemini.' },
+      'perf-mode': { title: 'Performance by Mode', body: 'Win rate split by Aggressive vs Conservative mode.' },
+      'mtf-confirm': { title: 'MTF Confirmation', body: '<strong>Fully Confirmed</strong> — all timeframes (1h + 30m + 4h + Daily) agreed with signal direction.<br><strong>Partial/None</strong> — some timeframes inconclusive (score ≥62 required to pass).<br>Goal: fully_confirmed WR should exceed partial/none over time.' },
+      'gemini-bias': { title: 'Gemini USD Bias', body: 'Win rate of USD pair signals that Gemini 2.5 Flash classified as BULLISH or BEARISH.<br><strong>BULLISH</strong> = allowed BUY USD pairs.<br><strong>BEARISH</strong> = allowed SELL USD pairs.<br><strong>NEUTRAL</strong> = blocked (not shown — no trades).' },
+      'cross-tier-session': { title: 'Tier × Session', body: 'Two-dimensional breakdown. Best historically: Tier B in EUROPEAN and US sessions.' },
+      'cross-mode-tier': { title: 'Mode × Tier', body: 'Aggressive vs Conservative within each tier.' },
       'score-meter': { title: 'Signal Score', body: 'Composite score from 7 components: EMA structure (25pts), RSI extremes (20pts), ADX strength (20pts), RSI pullback (15pts), EMA momentum (10pts), EMA crossover (8pts), session bonus (3pts).' },
-      'signal-rr': { title: 'Risk:Reward Ratio', body: 'How much you stand to gain vs risk. Minimum 2.5:1 required. ATR stop 2.5x, ATR target 7.0x.' },
-      'signal-changes': { title: 'Changes From Previous', body: '↑ = value increased since last update. ↓ = decreased. = = unchanged.' },
-      'signal-history': { title: 'Signal History', body: 'Log of all previous versions of this signal — every re-evaluation recorded. Up to 10 entries per signal.' },
-      'signal-sentiment': { title: 'Sentiment Adjustment', body: 'USD pairs only: FinBERT blocks signals when macro sentiment clearly disagrees with direction (net < 0.0). GBP pairs are pure technical.' },
-      'signal-wr': { title: 'Estimated Win Rate', body: 'Forward-looking win probability from micro-backtest on elite (Tier A/A+) signals.' }
+      'signal-rr': { title: 'Risk:Reward Ratio', body: 'ATR stop 2.5x, ATR target 7.0x. Minimum 2.5:1 required.' },
+      'signal-mtf': { title: 'MTF Status', body: 'Shows which timeframes confirmed the signal direction:<br>🟢 = agrees with signal | ⬜ = inconclusive | 🔴 = disagrees (blocked before this)<br>All timeframes must agree, or score ≥62 if some are inconclusive.' },
+      'gemini-gate': { title: 'Gemini USD Gate', body: 'Gemini 2.5 Flash reasoned about current USD macro context (Fed, CPI, NFP). BULLISH/BEARISH/NEUTRAL returned. NEUTRAL blocks all USD signals.' },
+      'signal-wr': { title: 'Estimated Win Rate', body: 'Forward-looking win probability from micro-backtest on elite (Tier A+) signals.' }
     };
 
-    /* ── TOOLTIP ENGINE ── */
     const tooltip  = document.getElementById('globalTooltip');
     const tipTitle = document.getElementById('tooltipTitle');
     const tipBody  = document.getElementById('tooltipBody');
     let _activeTipIcon = null;
 
     function _positionAndShow(el, tipKey) {
-      const def = TIPS[tipKey];
-      if (!def) return;
-      tipTitle.textContent = def.title;
-      tipBody.innerHTML    = def.body;
-      _activeTipIcon = el;
-      tooltip.style.opacity    = '0';
-      tooltip.style.visibility = 'hidden';
+      const def = TIPS[tipKey]; if (!def) return;
+      tipTitle.textContent = def.title; tipBody.innerHTML = def.body;
+      _activeTipIcon = el; tooltip.style.opacity = '0'; tooltip.style.visibility = 'hidden';
       tooltip.classList.add('visible');
       setTimeout(() => {
         const r = el.getBoundingClientRect();
         const tw = 300, th = tooltip.offsetHeight || 180;
         const vw = window.innerWidth, vh = window.innerHeight;
-        let top  = r.bottom + 10;
-        let left = r.left - tw / 2 + r.width / 2;
+        let top = r.bottom + 10, left = r.left - tw / 2 + r.width / 2;
         if (top + th > vh - 8) top = r.top - th - 10;
-        left = Math.max(10, Math.min(left, vw - tw - 10));
-        top  = Math.max(6, top);
+        left = Math.max(10, Math.min(left, vw - tw - 10)); top = Math.max(6, top);
         tooltip.style.top = top + 'px'; tooltip.style.left = left + 'px';
         tooltip.style.width = tw + 'px'; tooltip.style.opacity = '1'; tooltip.style.visibility = 'visible';
       }, 0);
     }
-
-    function _closeTooltip() {
-      tooltip.classList.remove('visible'); tooltip.style.opacity = '0'; _activeTipIcon = null;
-    }
-
+    function _closeTooltip() { tooltip.classList.remove('visible'); tooltip.style.opacity = '0'; _activeTipIcon = null; }
     function attachIconListeners() {
       document.querySelectorAll('.info-icon').forEach(icon => {
-        if (icon.dataset.tip_bound) return;
-        icon.dataset.tip_bound = '1';
+        if (icon.dataset.tip_bound) return; icon.dataset.tip_bound = '1';
         icon.addEventListener('mouseenter', () => _positionAndShow(icon, icon.dataset.tip));
         icon.addEventListener('mouseleave', () => { setTimeout(() => { if (!tooltip.matches(':hover')) _closeTooltip(); }, 150); });
         icon.addEventListener('pointerup', e => {
@@ -503,17 +470,12 @@
       });
     }
     tooltip.addEventListener('mouseleave', () => _closeTooltip());
-    document.addEventListener('pointerup', e => {
-      if (!e.target.closest('.info-icon') && !e.target.closest('.tooltip-box')) _closeTooltip();
-    });
+    document.addEventListener('pointerup', e => { if (!e.target.closest('.info-icon') && !e.target.closest('.tooltip-box')) _closeTooltip(); });
     attachIconListeners();
     const _origCreate = lucide.createIcons.bind(lucide);
     lucide.createIcons = function(...args) { _origCreate(...args); attachIconListeners(); };
 
-    /* ── DASHBOARD STATE ── */
-    let mode = 'aggressive';
-    let data = null;
-    let signalState = {};
+    let mode = 'aggressive', data = null, signalState = {};
 
     document.addEventListener('DOMContentLoaded', () => {
       try { mode = localStorage.getItem('tbMode') || 'aggressive'; } catch(e) { mode = 'aggressive'; }
@@ -521,38 +483,32 @@
       setInterval(load, 30000); initFilters(); updateSess(); setInterval(updateSess, 60000);
     });
 
-    /* ── FOREX HOLIDAY CALENDAR 2025-2027 ── */
     const FOREX_HOLIDAYS = {
       '2025-01-01':'New Year\'s Day','2025-04-18':'Good Friday','2025-04-21':'Easter Monday',
-      '2025-05-26':'Spring Bank Holiday (UK)','2025-07-04':'Independence Day (US)',
-      '2025-08-25':'Summer Bank Holiday (UK)','2025-11-27':'Thanksgiving (US)',
-      '2025-12-25':'Christmas Day','2025-12-26':'Boxing Day',
-      '2026-01-01':'New Year\'s Day','2026-01-19':'MLK Day (US)','2026-02-16':'Presidents\' Day (US)',
-      '2026-04-03':'Good Friday','2026-04-06':'Easter Monday','2026-05-04':'Early May Bank Holiday (UK)',
-      '2026-05-25':'Spring Bank Holiday (UK)','2026-07-03':'Independence Day (US, observed)',
-      '2026-08-31':'Summer Bank Holiday (UK)','2026-09-07':'Labor Day (US)',
-      '2026-11-26':'Thanksgiving (US)','2026-12-25':'Christmas Day','2026-12-28':'Boxing Day (observed)',
-      '2027-01-01':'New Year\'s Day','2027-01-18':'MLK Day (US)','2027-04-02':'Good Friday',
-      '2027-04-05':'Easter Monday','2027-05-03':'Early May Bank Holiday (UK)',
-      '2027-05-31':'Spring Bank Holiday (UK)','2027-07-05':'Independence Day (US, observed)',
-      '2027-08-30':'Summer Bank Holiday (UK)','2027-09-06':'Labor Day (US)',
-      '2027-11-25':'Thanksgiving (US)','2027-12-27':'Christmas Day (observed)','2027-12-28':'Boxing Day (observed)',
+      '2025-05-26':'Spring Bank Holiday','2025-07-04':'Independence Day','2025-08-25':'Summer Bank Holiday',
+      '2025-11-27':'Thanksgiving','2025-12-25':'Christmas Day','2025-12-26':'Boxing Day',
+      '2026-01-01':'New Year\'s Day','2026-01-19':'MLK Day','2026-02-16':'Presidents Day',
+      '2026-04-03':'Good Friday','2026-04-06':'Easter Monday','2026-05-04':'Early May BH',
+      '2026-05-25':'Spring Bank Holiday','2026-07-03':'Independence Day (observed)',
+      '2026-08-31':'Summer Bank Holiday','2026-09-07':'Labor Day','2026-11-26':'Thanksgiving',
+      '2026-12-25':'Christmas Day','2026-12-28':'Boxing Day (observed)',
+      '2027-01-01':'New Year\'s Day','2027-01-18':'MLK Day','2027-04-02':'Good Friday',
+      '2027-04-05':'Easter Monday','2027-05-03':'Early May BH','2027-05-31':'Spring Bank Holiday',
+      '2027-07-05':'Independence Day (observed)','2027-08-30':'Summer Bank Holiday',
+      '2027-09-06':'Labor Day','2027-11-25':'Thanksgiving',
+      '2027-12-27':'Christmas Day (observed)','2027-12-28':'Boxing Day (observed)',
     };
 
     function getUTCDateStr() {
-      const n=new Date();
-      return `${n.getUTCFullYear()}-${String(n.getUTCMonth()+1).padStart(2,'0')}-${String(n.getUTCDate()).padStart(2,'0')}`;
+      const n=new Date(); return `${n.getUTCFullYear()}-${String(n.getUTCMonth()+1).padStart(2,'0')}-${String(n.getUTCDate()).padStart(2,'0')}`;
     }
-
     function getNextMarketOpen(now) {
-      const d = new Date(now); d.setUTCHours(0,0,0,0);
+      const d=new Date(now); d.setUTCHours(0,0,0,0);
       for (let i=1;i<=10;i++) {
         d.setUTCDate(d.getUTCDate()+1);
-        const dow=d.getUTCDay();
-        if (dow===0||dow===6) continue;
+        const dow=d.getUTCDay(); if (dow===0||dow===6) continue;
         const ds=`${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
-        if (FOREX_HOLIDAYS[ds]) continue;
-        return d;
+        if (FOREX_HOLIDAYS[ds]) continue; return d;
       }
       return d;
     }
@@ -573,8 +529,7 @@
       if (isClosed && !document.getElementById('weekend-notice')) {
         const nextOpen=getNextMarketOpen(now);
         const container=document.querySelector('.container');
-        const notice=document.createElement('div');
-        notice.id='weekend-notice';
+        const notice=document.createElement('div'); notice.id='weekend-notice';
         notice.style.cssText='background:linear-gradient(135deg,rgba(255,71,87,0.1),rgba(194,53,66,0.08));border:1px solid rgba(255,71,87,0.3);border-radius:16px;padding:32px 24px;margin-bottom:24px;';
         const reasonLine=holiday?`<div style="margin-top:6px;font-size:13px;color:var(--yellow);font-weight:700;text-align:center;">🗓️ Today: <span style="color:var(--text)">${holiday}</span></div>`:'';
         notice.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:6px;"><i data-lucide="${holiday?'calendar-off':'power-off'}" style="width:24px;height:24px;color:var(--red)"></i><span style="color:var(--red);font-size:18px;font-weight:900;letter-spacing:1px;">${holiday?'FOREX MARKET HOLIDAY':'FOREX MARKET CLOSED'}</span></div>${reasonLine}<div style="text-align:center;margin:20px 0 24px;"><div style="font-size:13px;color:var(--text-dim);margin-bottom:6px;">Forex market closed. Next trading session opens:</div><div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">${nextOpen.toUTCString().replace(':00 GMT',' UTC')}</div><div id="countdown" class="countdown-container"></div></div>`;
@@ -589,31 +544,11 @@
       const days=Math.floor(diff/(1000*60*60*24)), hours=Math.floor((diff%(1000*60*60*24))/(1000*60*60));
       const minutes=Math.floor((diff%(1000*60*60))/(1000*60)), seconds=Math.floor((diff%(1000*60))/1000);
       const el=document.getElementById('countdown'); if (!el) return;
-      // Only green and red — no orange. Green = more time, red = counting down fast.
-      // Alternate like a real candlestick chart: days=green, hours=red, mins=green, secs=red
-      const candleColor = (unit) => {
-        if (unit==='days')    return 'candle-green';
-        if (unit==='hours')   return 'candle-red';
-        if (unit==='minutes') return 'candle-green';
-        return 'candle-red'; // seconds
-      };
-      const col = (c) => c==='candle-green' ? 'var(--green)' : 'var(--red)';
-      const wick = (c) => `<div class="candle-wick candle-wick-top" style="background:${col(c)};"></div><div class="candle-wick candle-wick-bottom" style="background:${col(c)};"></div>`;
-      const makeCandle = (unit, val, label, h) => {
-        const c = candleColor(unit);
-        return `<div class="countdown-candle">
-          <div class="candle-stick ${c}" style="height:${h}px;position:relative;">
-            ${wick(c)}
-          </div>
-          <div class="countdown-number" style="color:${col(c)}">${String(val).padStart(unit==='days'?1:2,'0')}</div>
-          <div class="countdown-label">${label}</div>
-        </div>`;
-      };
-      el.innerHTML =
-        (days > 0 ? makeCandle('days',    days,    'DAYS',  Math.max(60, 60 + days * 8)) : '') +
-        makeCandle('hours',   hours,   'HOURS', Math.max(60, 60 + hours * 3)) +
-        makeCandle('minutes', minutes, 'MINS',  Math.max(60, 60 + Math.floor(minutes / 2))) +
-        makeCandle('seconds', seconds, 'SECS',  Math.max(60, 60 + Math.floor(seconds / 2)));
+      const candleColor=(unit)=>({'days':'candle-green','hours':'candle-red','minutes':'candle-green','seconds':'candle-red'}[unit]);
+      const col=(c)=>c==='candle-green'?'var(--green)':'var(--red)';
+      const wick=(c)=>`<div class="candle-wick candle-wick-top" style="background:${col(c)};"></div><div class="candle-wick candle-wick-bottom" style="background:${col(c)};"></div>`;
+      const makeCandle=(unit,val,label,h)=>{const c=candleColor(unit);return`<div class="countdown-candle"><div class="candle-stick ${c}" style="height:${h}px;position:relative;">${wick(c)}</div><div class="countdown-number" style="color:${col(c)}">${String(val).padStart(unit==='days'?1:2,'0')}</div><div class="countdown-label">${label}</div></div>`;};
+      el.innerHTML=(days>0?makeCandle('days',days,'DAYS',Math.max(60,60+days*8)):'')+makeCandle('hours',hours,'HOURS',Math.max(60,60+hours*3))+makeCandle('minutes',minutes,'MINS',Math.max(60,60+Math.floor(minutes/2)))+makeCandle('seconds',seconds,'SECS',Math.max(60,60+Math.floor(seconds/2)));
     }
 
     async function load() {
@@ -698,7 +633,7 @@
         const otherSigs=data.signals_by_mode?.[otherMode]||[];
         if (otherSigs.length>0){
           const ol=otherMode==='conservative'?'Conservative 🛡️':'Aggressive ⚡', oc=otherMode==='conservative'?'var(--blue)':'var(--orange)';
-          g.innerHTML=`<div class="empty"><i data-lucide="radio" class="empty-icon"></i><div class="empty-title">No ${mode} signals</div><div class="empty-desc" style="margin-bottom:16px;">${otherSigs.length} signal${otherSigs.length>1?'s':''} available in ${ol} mode</div><button onclick="switchMode('${otherMode}')" style="padding:10px 24px;border:1px solid ${oc};border-radius:8px;background:transparent;color:${oc};font-size:12px;font-weight:900;font-family:'Orbitron',monospace;letter-spacing:1px;cursor:pointer;">SWITCH TO ${otherMode.toUpperCase()}</button></div>`;
+          g.innerHTML=`<div class="empty"><i data-lucide="radio" class="empty-icon"></i><div class="empty-title">No ${mode} signals</div><div class="empty-desc" style="margin-bottom:16px;">${otherSigs.length} signal${otherSigs.length>1?'s':''} in ${ol}</div><button onclick="switchMode('${otherMode}')" style="padding:10px 24px;border:1px solid ${oc};border-radius:8px;background:transparent;color:${oc};font-size:12px;font-weight:900;font-family:'Orbitron',monospace;letter-spacing:1px;cursor:pointer;">SWITCH TO ${otherMode.toUpperCase()}</button></div>`;
           lucide.createIcons();
         } else { showEmpty('signalsGrid','radio','No signals',`No ${mode} signals`); }
         return;
@@ -707,12 +642,15 @@
       lucide.createIcons(); attachIconListeners();
     }
 
-    function createSignalCard(state,justUpdated=false){
+    function createSignalCard(state, justUpdated=false){
       const s=state.current, prev=state.previous, hasChanges=prev!==null;
       const changes=hasChanges?{entry:calcChange(prev.entry_price,s.entry_price),sl:calcChange(prev.sl,s.sl),tp:calcChange(prev.tp,s.tp),rr:calcChange(prev.risk_reward,s.risk_reward)}:null;
       const sc=s.score||50, sp=Math.min(100,sc), c=2*Math.PI*23, off=c-(sp/100)*c;
       let col='#6b7280';
-      if(sc>=80)col='#fbbf24'; else if(sc>=72)col='#00f2a9'; else if(sc>=55)col='#4facfe';
+      if(sc>=80)col='#fbbf24'; else if(sc>=55)col='#4facfe';
+      const mtf=s.mtf_details||{};
+      const mtfBadges=buildMtfBadges(s.htf_confirmed, mtf);
+      const geminiHtml=buildGeminiBadge(s.gemini_usd_bias, s.gemini_engine);
       return `<div class="card${justUpdated?' just-updated':''}" id="card-${s.pair.replace('/','--')}-${s.direction}">
         ${state.updates>0?`<div class="update-badge"><i data-lucide="refresh-cw" style="width:12px;height:12px"></i>UPDATED ${state.updates}x</div>`:''}
         <div class="strength"><svg viewBox="0 0 50 50"><circle class="strength-bg" cx="25" cy="25" r="23"></circle><circle class="strength-bar" cx="25" cy="25" r="23" stroke="${col}" stroke-dasharray="${c}" stroke-dashoffset="${off}"></circle></svg><div class="strength-text" style="color:${col}">${sc}</div></div>
@@ -727,33 +665,71 @@
           <div class="metric-item"><div class="metric-item-label">TAKE PROFIT</div><div class="metric-item-value">${s.tp?.toFixed(5)||'N/A'}</div></div>
           <div class="metric-item"><div class="metric-item-label">RISK:REWARD <span class="info-icon" data-tip="signal-rr">i</span></div><div class="metric-item-value hl">${s.risk_reward?.toFixed(2)||'N/A'}</div></div>
         </div>
-        ${hasChanges?`<div class="changes-section"><div class="section-title" style="margin:0 0 12px 0"><i data-lucide="git-compare" style="width:14px;height:14px"></i>CHANGES FROM PREVIOUS <span class="info-icon" data-tip="signal-changes">i</span></div>${renderChange('Entry',changes.entry)}${renderChange('Stop Loss',changes.sl)}${renderChange('Take Profit',changes.tp)}${renderChange('Risk:Reward',changes.rr)}</div>`:''}
-        ${state.history.length>1?`<div class="history-section"><div class="section-title" style="margin:0 0 12px 0"><i data-lucide="clock" style="width:14px;height:14px"></i>SIGNAL HISTORY (${state.history.length} updates) <span class="info-icon" data-tip="signal-history">i</span></div>${state.history.slice(0,3).map(h=>`<div class="history-item"><span class="history-time">${fmt(h.timestamp)}</span><span class="history-value">Entry ${h.entry_price?.toFixed(5)}</span></div>`).join('')}</div>`:''}
+        ${hasChanges?`<div style="background:rgba(0,242,169,0.05);border:1px solid rgba(0,242,169,0.2);border-radius:10px;padding:14px;margin:16px 0;">${renderChange('Entry',changes.entry)}${renderChange('Stop Loss',changes.sl)}${renderChange('Take Profit',changes.tp)}${renderChange('Risk:Reward',changes.rr)}</div>`:''}
         <div class="footer-card">
           <div class="time"><i data-lucide="clock" style="width:12px;height:12px"></i>${fmt(s.timestamp)}</div>
-          <div style="display:flex;align-items:center;gap:8px">
-            ${s.htf_confirmed?`<div style="padding:4px 10px;background:rgba(0,242,169,0.1);border:1px solid rgba(0,242,169,0.3);border-radius:6px;font-size:10px;font-weight:900;color:var(--green);font-family:'Orbitron',monospace;" title="1-hour EMA trend confirms 15m direction">✓ 1H MTF</div>`:`<div style="padding:4px 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:6px;font-size:10px;font-weight:700;color:var(--text-muted);font-family:'Orbitron',monospace;" title="Passed on 15m strength — 1h trend inconclusive">15M ONLY</div>`}
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            ${mtfBadges}
+            ${geminiHtml}
             ${s.estimated_win_rate!=null?`<div style="padding:4px 10px;background:rgba(0,242,169,0.1);border:1px solid rgba(0,242,169,0.3);border-radius:6px;font-size:10px;font-weight:900;color:var(--green);font-family:'Orbitron',monospace;">${(s.estimated_win_rate*100).toFixed(0)}% WR <span class="info-icon" data-tip="signal-wr" style="background:transparent;border:none;color:var(--green);margin-left:0;">i</span></div>`:''}
-            ${s.sentiment_applied?`<div style="padding:4px 10px;background:rgba(79,172,254,0.1);border:1px solid rgba(79,172,254,0.3);border-radius:6px;font-size:10px;font-weight:900;color:var(--blue);">USD GATE <span class="info-icon" data-tip="signal-sentiment" style="background:transparent;border:none;color:var(--blue);margin-left:0;">i</span></div>`:''}
-            ${(s.session==='EUROPEAN'||s.session==='US')?`<div style="padding:4px 10px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:6px;font-size:10px;font-weight:900;color:#fbbf24;" title="Extended 4-hour window">⏳ 4H WINDOW</div>`:''}
+            ${(s.session==='EUROPEAN'||s.session==='US')?`<div style="padding:4px 10px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:6px;font-size:10px;font-weight:900;color:#fbbf24;">⏳ 4H</div>`:''}
             <div class="session">${s.session||'N/A'}</div>
           </div>
         </div>
       </div>`;
     }
 
+    function buildMtfBadges(htfConfirmed, mtf) {
+      // Show individual TF badges if mtf_details available, else fall back to simple confirmed/partial
+      const tfs = [
+        {key:'1wk', label:'1W'}, {key:'1d', label:'1D'},
+        {key:'4h', label:'4H'}, {key:'30m', label:'30M'}, {key:'1h', label:'1H'}
+      ];
+      const hasDetails = mtf && Object.values(mtf).some(v=>v!==null);
+      if (!hasDetails) {
+        // Fallback: simple MTF badge (v2.2.x style)
+        if (htfConfirmed) {
+          return `<div style="padding:4px 10px;background:rgba(0,242,169,0.1);border:1px solid rgba(0,242,169,0.3);border-radius:6px;font-size:10px;font-weight:900;color:var(--green);font-family:'Orbitron',monospace;" title="All timeframes confirmed" data-tip="signal-mtf">✓ MTF</div>`;
+        }
+        return `<div style="padding:4px 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:6px;font-size:10px;font-weight:700;color:var(--text-muted);font-family:'Orbitron',monospace;" title="Partial MTF — passed on score strength">~ MTF</div>`;
+      }
+      // v2.3.0: show individual TF badges in a compact row
+      const badges = tfs.map(({key, label}) => {
+        const val = mtf[key];
+        if (val === null || val === undefined) {
+          return `<span style="padding:2px 5px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(255,255,255,0.04);color:var(--text-muted);font-family:'Orbitron',monospace;" title="${label}: inconclusive">${label}</span>`;
+        }
+        const isGreen = (val === 'BULL' && document.querySelector(`[id*="${key}"]`)?.direction === 'BUY') || val !== null;
+        return `<span style="padding:2px 5px;border-radius:4px;font-size:9px;font-weight:900;background:rgba(0,242,169,0.1);color:var(--green);border:1px solid rgba(0,242,169,0.2);font-family:'Orbitron',monospace;" title="${label}: ${val}">✓${label}</span>`;
+      }).join('');
+      const overallColor = htfConfirmed ? 'var(--green)' : 'var(--yellow)';
+      const overallLabel = htfConfirmed ? '✓MTF' : '~MTF';
+      return `<div style="display:flex;align-items:center;gap:3px;padding:3px 7px;background:rgba(0,242,169,0.06);border:1px solid rgba(0,242,169,0.15);border-radius:6px;" title="MTF timeframes" data-tip="signal-mtf"><span style="font-size:10px;font-weight:900;color:${overallColor};font-family:'Orbitron',monospace;margin-right:3px;">${overallLabel}</span>${badges}</div>`;
+    }
+
+    function buildGeminiBadge(bias, engine) {
+      if (!bias || !engine) return '';
+      if (engine === 'gemini-2.5-flash') {
+        const color = bias === 'BULLISH' ? 'var(--green)' : bias === 'BEARISH' ? 'var(--red)' : 'var(--text-muted)';
+        const icon  = bias === 'BULLISH' ? '↑' : bias === 'BEARISH' ? '↓' : '—';
+        return `<div style="padding:4px 10px;background:rgba(79,172,254,0.08);border:1px solid rgba(79,172,254,0.25);border-radius:6px;font-size:10px;font-weight:900;font-family:'Orbitron',monospace;color:var(--blue);" data-tip="gemini-gate" title="Gemini USD bias: ${bias}">🤖 USD ${icon}</div>`;
+      }
+      if (engine === 'finbert-fallback') {
+        return `<div style="padding:4px 10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:6px;font-size:10px;font-weight:700;color:var(--text-muted);font-family:'Orbitron',monospace;" title="FinBERT fallback active">FinBERT</div>`;
+      }
+      return '';
+    }
+
     function calcChange(oldVal,newVal){if(!oldVal||!newVal)return{diff:0,dir:'neutral',pct:0};const diff=newVal-oldVal;return{diff,dir:diff>0?'up':diff<0?'down':'neutral',pct:(diff/oldVal)*100};}
-    function renderChange(label,change){if(!change)return'';const arrow=change.dir==='up'?'↑':change.dir==='down'?'↓':'=';const sign=change.diff>0?'+':'';return`<div class="change-item"><span class="change-label">${label}:</span><span class="change-value ${change.dir}"><span style="font-size:16px">${arrow}</span>${sign}${Math.abs(change.diff).toFixed(5)}</span></div>`;}
+    function renderChange(label,change){if(!change)return'';const arrow=change.dir==='up'?'↑':change.dir==='down'?'↓':'=';const sign=change.diff>0?'+':'';const c=change.dir==='up'?'var(--green)':change.dir==='down'?'var(--red)':'var(--text-muted)';return`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:13px;border-bottom:1px solid rgba(255,255,255,0.05);"><span style="color:var(--text-dim);font-weight:600;">${label}:</span><span style="display:flex;align-items:center;gap:6px;font-family:'Orbitron',monospace;font-weight:900;color:${c};"><span style="font-size:16px;">${arrow}</span>${sign}${Math.abs(change.diff).toFixed(5)}</span></div>`;}
 
     /* ── PAGINATION ── */
     let _histPage=1, _PAGE_SIZE=50, _filteredSigs=[];
-
     function renderHistory(){_histPage=1;_applyHistoryFilters();}
-
     function _applyHistoryFilters(){
       const b=document.getElementById('historyBody');
       let sigs=data?.historical_signals||[];
-      if(sigs.length===0){b.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted)">No historical data available</td></tr>';_renderPagination(0);return;}
+      if(sigs.length===0){b.innerHTML='<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--text-muted)">No historical data</td></tr>';_renderPagination(0);return;}
       sigs=sigs.filter(s=>s.status&&['WIN','LOSS','EXPIRED'].includes(s.status));
       const sf=document.getElementById('filterStatus')?.value||'all';
       const pf=document.getElementById('filterPair')?.value||'all';
@@ -766,21 +742,20 @@
       sigs.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
       _filteredSigs=sigs; updatePairFilter(sigs); _renderHistoryPage();
     }
-
     function _renderHistoryPage(){
       const b=document.getElementById('historyBody'), total=_filteredSigs.length;
-      if(total===0){b.innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text-muted)">No signals match the filters</td></tr>';_renderPagination(0);return;}
+      if(total===0){b.innerHTML='<tr><td colspan="9" style="text-align:center;padding:40px;color:var(--text-muted)">No matching signals</td></tr>';_renderPagination(0);return;}
       const totalPages=Math.ceil(total/_PAGE_SIZE);
       _histPage=Math.max(1,Math.min(_histPage,totalPages));
       const start=(_histPage-1)*_PAGE_SIZE, page=_filteredSigs.slice(start,start+_PAGE_SIZE);
       b.innerHTML=page.map(s=>{
         const rc=s.status==='WIN'?'win':s.status==='LOSS'?'loss':'exp';
         const pv=s.pips||0, rt=s.status==='WIN'?`+${pv.toFixed(1)}`:s.status==='LOSS'?`${pv.toFixed(1)}`:'EXPIRED';
-        return `<tr><td>${fmtDate(s.timestamp)}</td><td style="color:var(--text-dim);font-size:11px;font-family:'Rajdhani',sans-serif;">${fmtTime(s.timestamp)}</td><td style="font-weight:900">${s.pair}</td><td>${s.direction}</td><td><span class="history-tier-badge tier-${getTier(s.tier||'C')}">${s.tier||'C'}</span></td><td class="${rc}">${s.status}</td><td class="${rc}">${rt}</td><td>${s.session||'N/A'}</td></tr>`;
+        const mtfIcon=s.htf_confirmed?'✓':'~';
+        return `<tr><td>${fmtDate(s.timestamp)}</td><td style="color:var(--text-dim);font-size:11px;font-family:'Rajdhani',sans-serif;">${fmtTime(s.timestamp)}</td><td style="font-weight:900">${s.pair}</td><td>${s.direction}</td><td><span class="history-tier-badge tier-${getTier(s.tier||'C')}">${s.tier||'C'}</span></td><td class="${rc}">${s.status}</td><td class="${rc}">${rt}</td><td>${s.session||'N/A'}</td><td style="color:${s.htf_confirmed?'var(--green)':'var(--text-muted)'};font-weight:900;">${mtfIcon}</td></tr>`;
       }).join('');
       _renderPagination(total);
     }
-
     function _renderPagination(total){
       const el=document.getElementById('historyPagination'); if(!el)return;
       if(total===0){el.innerHTML='';return;}
@@ -790,9 +765,8 @@
       for(let p=1;p<=totalPages;p++){if(p===1||p===totalPages||Math.abs(p-_histPage)<=wing)pages.push(p);else if(Math.abs(p-_histPage)===wing+1)pages.push('…');}
       pages=pages.filter((v,i,a)=>!(v==='…'&&a[i-1]==='…'));
       const pageButtons=pages.map(p=>p==='…'?`<span style="color:var(--text-muted);padding:0 4px;">…</span>`:`<button ${bs(false,p===_histPage)} onclick="_goHistPage(${p})">${p}</button>`).join('');
-      el.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:16px 0 4px;"><div style="font-size:12px;color:var(--text-muted);">Showing <strong style="color:var(--text-dim)">${start}–${end}</strong> of <strong style="color:var(--text-dim)">${total}</strong> trades</div><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><button ${bs(_histPage===1)} onclick="_goHistPage(${_histPage-1})">‹ Prev</button>${pageButtons}<button ${bs(_histPage===totalPages)} onclick="_goHistPage(${_histPage+1})">Next ›</button></div><div style="font-size:11px;color:var(--text-muted);">Page ${_histPage} of ${totalPages}</div></div>`;
+      el.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding:16px 0 4px;"><div style="font-size:12px;color:var(--text-muted);">Showing <strong style="color:var(--text-dim)">${start}–${end}</strong> of <strong style="color:var(--text-dim)">${total}</strong></div><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><button ${bs(_histPage===1)} onclick="_goHistPage(${_histPage-1})">‹ Prev</button>${pageButtons}<button ${bs(_histPage===totalPages)} onclick="_goHistPage(${_histPage+1})">Next ›</button></div><div style="font-size:11px;color:var(--text-muted);">Page ${_histPage} of ${totalPages}</div></div>`;
     }
-
     function _goHistPage(p){
       const total=_filteredSigs.length; if(total===0)return;
       _histPage=Math.max(1,Math.min(p,Math.ceil(total/_PAGE_SIZE)));
@@ -819,9 +793,9 @@
       });
       events.forEach(ev=>{
         const label=ev.passed?`${ev.title} (${ev.currency}) — ${Math.abs(ev.mins_to)}min ago`:`⚡ ${ev.title} (${ev.currency}) in ${ev.mins_to}min`;
-        items+=`<div class="ticker-event" title="High-impact event: ${ev.title}"><div class="ticker-event-dot"></div><span class="ticker-event-text">${label}</span><span class="ticker-event-time">${ev.utc_time}</span></div>`;
+        items+=`<div class="ticker-event"><div class="ticker-event-dot"></div><span class="ticker-event-text">${label}</span><span class="ticker-event-time">${ev.utc_time}</span></div>`;
       });
-      const labelHtml=`<div class="ticker-pair" style="padding-right:24px;border-right:1px solid rgba(255,107,53,0.3);"><span class="ticker-label">${isLive?'● LIVE':'○ LAST'}</span></div>`;
+      const labelHtml=`<div class="ticker-pair" style="padding-right:24px;border-right:1px solid rgba(255,107,53,0.3);"><span style="font-size:9px;font-weight:700;letter-spacing:1px;color:var(--text-muted);padding:2px 6px;border:1px solid rgba(255,255,255,0.1);border-radius:4px;">${isLive?'● LIVE':'○ LAST'}</span></div>`;
       const fullStrip=labelHtml+items;
       track.innerHTML=fullStrip+fullStrip;
       track.style.animationDuration=Math.max(30,(TICKER_PAIRS.length+events.length)*4)+'s';
@@ -832,15 +806,20 @@
       if(!data)return;
       const an=data.performance_stats||data.analytics||{};
       const anx=data.analytics||{};
-      renderTier(an.by_tier||{}); renderSess(an.by_session||{});
-      renderPair(an.by_pair||{}); renderMode(an.by_mode||{});
+      renderTier(an.by_tier||{});
+      renderSess(an.by_session||{});
+      renderPair(an.by_pair||{});
+      renderMode(an.by_mode||{});
+      renderMtfConfirmed(anx.by_mtf_confirmed||{});
+      renderGeminiBias(anx.by_gemini_bias||{});
       renderCrossTierSession((anx.cross_analytics||an.cross_analytics||{}).tier_by_session||{});
       renderCrossModeTier((anx.cross_analytics||an.cross_analytics||{}).mode_by_tier||{});
     }
 
     function renderTier(ts){
-      const c=document.getElementById('tierAnalytics'), tiers=['A+','A','B','C'], thresh={'A+':'≥80','A':'≥72','B':'≥62','C':'<62'};
-      c.innerHTML=tiers.map(t=>{const d=ts[t]||{trades:0,win_rate:0,total_pips:0};const wr=d.win_rate||0,pips=d.total_pips||0;return`<div class="analytics-item"><div><span class="analytics-tier-badge tier-${getTier(t)}">Tier ${t}</span><span class="analytics-label">${thresh[t]} • ${d.trades} trades</span></div><div><div class="analytics-value" style="color:${wr>=60?'var(--green)':'var(--text)'};text-align:right">${wr.toFixed(1)}%</div><div style="font-size:11px;color:${pips>=0?'var(--green)':'var(--red)'};text-align:right;font-family:'Orbitron',monospace;">${pips>=0?'+':''}${pips.toFixed(1)} pips</div></div></div><div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;}).join('');
+      const c=document.getElementById('tierAnalytics'), tiers=['A+','A','B','C'];
+      const thresh={'A+':'≥80','A':'≥72 (BLOCKED)','B':'≥55 (active)','C':'<55 (BLOCKED)'};
+      c.innerHTML=tiers.map(t=>{const d=ts[t]||{trades:0,win_rate:0,total_pips:0};const wr=d.win_rate||0,pips=d.total_pips||0;const blocked=(t==='A'||t==='C');return`<div class="analytics-item"><div><span class="analytics-tier-badge tier-${getTier(t)}">Tier ${t}</span><span class="analytics-label">${thresh[t]} • ${d.trades} trades</span></div><div><div class="analytics-value" style="color:${blocked?'var(--red)':wr>=60?'var(--green)':'var(--text)'};text-align:right">${wr.toFixed(1)}%</div><div style="font-size:11px;color:${pips>=0?'var(--green)':'var(--red)'};text-align:right;font-family:'Orbitron',monospace;">${pips>=0?'+':''}${pips.toFixed(1)} pips</div></div></div><div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;}).join('');
     }
 
     function renderSess(ss){
@@ -853,7 +832,7 @@
 
     function renderPair(ps){
       const c=document.getElementById('pairAnalytics');
-      const pairStatus={'GBPUSD':{label:'✅ Max 5 BUY-only',color:'var(--green)'},'GBPJPY':{label:'⚠️ Max 1',color:'var(--yellow)'},'GBPAUD':{label:'✅ NEW — Max 3',color:'var(--green)'},'GBPCAD':{label:'✅ NEW — Max 3',color:'var(--green)'},'EURUSD':{label:'🚫 Permanently blocked',color:'var(--red)'},'EURGBP':{label:'🚫 Permanently blocked',color:'var(--red)'}};
+      const pairStatus={'GBPUSD':{label:'✅ BUY-only, max 5',color:'var(--green)'},'GBPJPY':{label:'⚠️ Max 1',color:'var(--yellow)'},'GBPAUD':{label:'✅ Max 3 — BoE/RBA',color:'var(--green)'},'GBPCAD':{label:'✅ Max 3 — BoE/oil',color:'var(--green)'},'EURUSD':{label:'🚫 Permanently blocked',color:'var(--red)'},'EURGBP':{label:'🚫 Permanently blocked',color:'var(--red)'}};
       const pairs=Object.entries(ps).sort((a,b)=>(b[1].total_pips||0)-(a[1].total_pips||0)).slice(0,10);
       if(pairs.length===0){c.innerHTML='<p style="color:var(--text-muted);text-align:center;padding:20px">No data available</p>';return;}
       c.innerHTML=pairs.map(([p,d])=>{const pips=d.total_pips||0,wr=d.win_rate||0;const st=pairStatus[p];return`<div class="analytics-item"><div><span class="analytics-label" style="font-weight:800">${p}</span>${st?`<span style="font-size:11px;color:${st.color};margin-left:8px;">${st.label}</span>`:''}</div><div class="analytics-value" style="color:${pips>0?'var(--green)':'var(--red)'}">${pips>0?'+':''}${pips.toFixed(1)} pips</div></div><div style="font-size:12px;color:var(--text-dim);margin-top:4px;margin-bottom:8px">${d.trades} trades • ${wr.toFixed(1)}% WR</div><div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;}).join('');
@@ -861,20 +840,34 @@
 
     function renderMode(ms){
       const c=document.getElementById('modeAnalytics'), modes=['all','aggressive','conservative'];
-      c.innerHTML=modes.map(m=>{const d=ms[m]||{trades:0,win_rate:0,total_pips:0};const wr=d.win_rate||0,pips=d.total_pips||0;return`<div class="analytics-item"><div class="analytics-label" style="text-transform:uppercase;font-weight:800">${m}</div><div class="analytics-value">${d.trades} trades</div></div><div style="display:flex;justify-content:space-between;margin-top:12px;font-size:14px"><span style="color:var(--text-dim)">Win Rate: ${wr.toFixed(1)}%</span><span style="color:${pips>0?'var(--green)':'var(--red)'};font-weight:900">${pips>0?'+':''}${pips.toFixed(1)} pips</span></div><div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;}).join('');
+      c.innerHTML=modes.map(m=>{const d=ms[m]||{trades:0,win_rate:0,total_pips:0};const wr=d.win_rate||0,pips=d.total_pips||0;return`<div class="analytics-item"><div class="analytics-label" style="text-transform:uppercase;font-weight:800">${m}</div><div class="analytics-value">${d.trades} trades</div></div><div style="display:flex;justify-content:space-between;margin-top:12px;font-size:14px"><span style="color:var(--text-dim)">WR: ${wr.toFixed(1)}%</span><span style="color:${pips>0?'var(--green)':'var(--red)'};font-weight:900">${pips>0?'+':''}${pips.toFixed(1)} pips</span></div><div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;}).join('');
+    }
+
+    function renderMtfConfirmed(mtfData){
+      const c=document.getElementById('mtfAnalytics');
+      const fc=mtfData['fully_confirmed']||{trades:0,win_rate:0,total_pips:0};
+      const pc=mtfData['partial_or_none']||{trades:0,win_rate:0,total_pips:0};
+      if(!fc.trades&&!pc.trades){c.innerHTML='<p style="color:var(--text-muted);text-align:center;padding:20px">No MTF data yet.<br><span style="font-size:12px">Populates as v2.3.0 signals resolve.</span></p>';return;}
+      c.innerHTML=[['fully_confirmed','✓ Fully Confirmed','var(--green)'],['partial_or_none','~ Partial / None','var(--yellow)']].map(([key,label,col])=>{const d=mtfData[key]||{trades:0,win_rate:0,total_pips:0};const wr=d.win_rate||0,pips=d.total_pips||0;return`<div class="analytics-item"><div><span style="font-size:13px;font-weight:800;color:${col};">${label}</span><span style="font-size:12px;color:var(--text-dim);margin-left:8px;">${d.trades} trades</span></div><div><div class="analytics-value" style="color:${wr>=60?'var(--green)':'var(--text)'};text-align:right">${wr.toFixed(1)}%</div><div style="font-size:11px;color:${pips>=0?'var(--green)':'var(--red)'};text-align:right;font-family:'Orbitron',monospace;">${pips>=0?'+':''}${pips.toFixed(1)} pips</div></div></div><div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;}).join('');
+    }
+
+    function renderGeminiBias(biasData){
+      const c=document.getElementById('geminiAnalytics');
+      if(!biasData||Object.keys(biasData).length===0){c.innerHTML='<p style="color:var(--text-muted);text-align:center;padding:20px">No Gemini data yet.<br><span style="font-size:12px">Populates as USD signals resolve.</span></p>';return;}
+      c.innerHTML=Object.entries(biasData).map(([bias,d])=>{const wr=d.win_rate||0,pips=d.total_pips||0;const col=bias==='BULLISH'?'var(--green)':bias==='BEARISH'?'var(--red)':'var(--text-muted)';return`<div class="analytics-item"><div><span style="font-size:13px;font-weight:800;color:${col};">🤖 ${bias}</span><span style="font-size:12px;color:var(--text-dim);margin-left:8px;">${d.trades} trades</span></div><div><div class="analytics-value" style="color:${wr>=60?'var(--green)':'var(--text)'};text-align:right">${wr.toFixed(1)}%</div><div style="font-size:11px;color:${pips>=0?'var(--green)':'var(--red)'};text-align:right;font-family:'Orbitron',monospace;">${pips>=0?'+':''}${pips.toFixed(1)} pips</div></div></div><div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;}).join('');
     }
 
     function renderCrossTierSession(cross){
       const c=document.getElementById('crossTierSessionAnalytics');
       const entries=Object.values(cross).sort((a,b)=>(b.total_pips||0)-(a.total_pips||0));
-      if(entries.length===0){c.innerHTML='<p style="color:var(--text-muted);text-align:center;padding:20px">No cross-analytics data yet.<br><span style="font-size:12px">Populates after trades resolve.</span></p>';return;}
+      if(entries.length===0){c.innerHTML='<p style="color:var(--text-muted);text-align:center;padding:20px">No cross-analytics data yet.</p>';return;}
       c.innerHTML=entries.map(d=>{const wr=d.win_rate||0,pips=d.total_pips||0;return`<div class="analytics-item"><div><span class="analytics-tier-badge tier-${getTier(d.tier)}">Tier ${d.tier}</span><span class="analytics-label">${d.session} • ${d.trades} trades</span></div><div style="text-align:right"><div class="analytics-value" style="color:${wr>=60?'var(--green)':'var(--text)'}">${wr.toFixed(1)}%</div><div style="font-size:11px;color:${pips>=0?'var(--green)':'var(--red)'};font-family:'Orbitron',monospace;">${pips>=0?'+':''}${pips.toFixed(1)} pips</div></div></div><div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;}).join('');
     }
 
     function renderCrossModeTier(cross){
       const c=document.getElementById('crossModeTierAnalytics');
       const entries=Object.values(cross).sort((a,b)=>{if(a.mode!==b.mode)return a.mode.localeCompare(b.mode);const to={'A+':0,'A':1,'B':2,'C':3};return(to[a.tier]||3)-(to[b.tier]||3);});
-      if(entries.length===0){c.innerHTML='<p style="color:var(--text-muted);text-align:center;padding:20px">No cross-analytics data yet.<br><span style="font-size:12px">Populates after trades resolve.</span></p>';return;}
+      if(entries.length===0){c.innerHTML='<p style="color:var(--text-muted);text-align:center;padding:20px">No cross-analytics data yet.</p>';return;}
       c.innerHTML=entries.map(d=>{const wr=d.win_rate||0,pips=d.total_pips||0;const mc=d.mode==='conservative'?'var(--blue)':d.mode==='aggressive'?'var(--orange)':'var(--text-dim)';return`<div class="analytics-item"><div style="display:flex;align-items:center;gap:8px"><span class="analytics-tier-badge tier-${getTier(d.tier)}">Tier ${d.tier}</span><span style="font-size:12px;font-weight:800;color:${mc};text-transform:uppercase;">${d.mode}</span><span class="analytics-label">${d.trades} trades</span></div><div style="text-align:right"><div class="analytics-value" style="color:${wr>=60?'var(--green)':'var(--text)'}">${wr.toFixed(1)}%</div><div style="font-size:11px;color:${pips>=0?'var(--green)':'var(--red)'};font-family:'Orbitron',monospace;">${pips>=0?'+':''}${pips.toFixed(1)} pips</div></div></div><div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;}).join('');
     }
 
@@ -905,16 +898,16 @@
 
     /* ── PICK OF THE DAY ── */
     const PAIR_NEWS = {
-      GBPUSD:{BUY:[{text:"Bank of England holds rates, signals patience on cuts",s:"bull"},{text:"UK wage growth beats expectations, supporting GBP",s:"bull"},{text:"USD weakens as Fed hints at rate cuts",s:"bull"},{text:"UK Services PMI expands for 4th straight month",s:"bull"}],SELL:[{text:"UK retail sales miss forecast, raising recession concerns",s:"bear"},{text:"BoE member signals rate cut possible",s:"bear"},{text:"USD rallies on strong NFP, cable under pressure",s:"bear"}]},
-      GBPJPY:{BUY:[{text:"BoE holds while BoJ hesitates — carry trade returns",s:"bull"},{text:"Risk appetite drives GBP/JPY higher",s:"bull"},{text:"BoJ holds rates, Yen weakens across board",s:"bull"}],SELL:[{text:"Yen surges on BoJ surprise, GBP/JPY drops sharply",s:"bear"},{text:"Global risk-off hits carry trades hard",s:"bear"},{text:"Japan inflation accelerates, BoJ rate hike bets rise",s:"bear"}]},
-      GBPAUD:{BUY:[{text:"BoE hawkish hold widens rate gap vs RBA",s:"bull"},{text:"RBA signals further rate cuts ahead — AUD weakens",s:"bull"},{text:"UK GDP beats estimates, GBP outperforms",s:"bull"},{text:"China data disappoints, weighing on AUD",s:"bull"}],SELL:[{text:"RBA holds rates, defying cut expectations — AUD surges",s:"bear"},{text:"BoE signals rate cut cycle beginning, GBP under pressure",s:"bear"},{text:"Australia employment surprises strongly to upside",s:"bear"}]},
-      GBPCAD:{BUY:[{text:"BoE holds while BoC cuts — rate differential widens",s:"bull"},{text:"Oil prices drop sharply, CAD weakens across board",s:"bull"},{text:"Canada GDP misses, BoC signals more easing",s:"bull"},{text:"UK PMI expands while Canadian data softens",s:"bull"}],SELL:[{text:"Oil rally boosts CAD, GBPCAD slides",s:"bear"},{text:"Strong Canadian jobs report, BoC pauses cuts",s:"bear"},{text:"BoE member flags recession risk, GBP pressured",s:"bear"}]},
-      AUDUSD:{BUY:[{text:"RBA holds rates, flags resilient labour market",s:"bull"},{text:"China stimulus boosts commodity demand",s:"bull"}],SELL:[{text:"RBA cuts rates, signals further easing ahead",s:"bear"},{text:"China PMI contracts, hurting commodity currencies",s:"bear"}]},
-      USDJPY:{BUY:[{text:"BoJ keeps ultra-loose policy, Yen slides",s:"bull"},{text:"US Treasury yields rise, widening rate differential",s:"bull"}],SELL:[{text:"BoJ raises rates, Yen surges across the board",s:"bear"},{text:"US CPI undershoots, erasing Fed hawkish bets",s:"bear"}]},
+      GBPUSD:{BUY:[{text:"Bank of England holds rates, signals patience on cuts",s:"bull"},{text:"UK wage growth beats expectations, supporting GBP",s:"bull"},{text:"USD weakens as Fed hints at rate cuts",s:"bull"}],SELL:[{text:"UK retail sales miss forecast, raising recession concerns",s:"bear"},{text:"USD rallies on strong NFP, cable under pressure",s:"bear"}]},
+      GBPJPY:{BUY:[{text:"BoE holds while BoJ hesitates — carry trade returns",s:"bull"},{text:"Risk appetite drives GBP/JPY higher",s:"bull"},{text:"BoJ holds rates, Yen weakens across board",s:"bull"}],SELL:[{text:"Yen surges on BoJ surprise, GBP/JPY drops sharply",s:"bear"},{text:"Japan inflation accelerates, BoJ rate hike bets rise",s:"bear"}]},
+      GBPAUD:{BUY:[{text:"BoE hawkish hold widens rate gap vs RBA",s:"bull"},{text:"RBA signals further rate cuts ahead — AUD weakens",s:"bull"},{text:"China data disappoints, weighing on AUD",s:"bull"}],SELL:[{text:"RBA holds rates, defying cut expectations — AUD surges",s:"bear"},{text:"Australia employment surprises strongly to upside",s:"bear"}]},
+      GBPCAD:{BUY:[{text:"BoE holds while BoC cuts — rate differential widens",s:"bull"},{text:"Oil prices drop sharply, CAD weakens across board",s:"bull"}],SELL:[{text:"Oil rally boosts CAD, GBPCAD slides",s:"bear"},{text:"Strong Canadian jobs report, BoC pauses cuts",s:"bear"}]},
+      AUDUSD:{BUY:[{text:"RBA holds rates, flags resilient labour market",s:"bull"}],SELL:[{text:"RBA cuts rates, signals further easing ahead",s:"bear"}]},
+      USDJPY:{BUY:[{text:"BoJ keeps ultra-loose policy, Yen slides",s:"bull"},{text:"US Treasury yields rise, widening rate differential",s:"bull"}],SELL:[{text:"BoJ raises rates, Yen surges across the board",s:"bear"}]},
     };
-    const NEWS_TRANSLATIONS = {
-      bull:["Bullish news flow supports this BUY. Fundamentals and technicals are aligned.","Macro tailwinds back the technical signal — news confirms upward pressure.","Positive catalyst for the base currency. Strengthens conviction for this trade."],
-      bear:["Bearish headlines reinforce this SELL. Sentiment and technicals agree.","Negative macro backdrop supports downside. News flow adds conviction.","Fundamental weakness aligns with the technical breakdown. Bears in control."],
+    const NEWS_TRANSLATIONS={
+      bull:["Bullish news flow supports this BUY. Fundamentals and technicals aligned.","Macro tailwinds back the technical signal."],
+      bear:["Bearish headlines reinforce this SELL. Sentiment and technicals agree.","Negative macro backdrop supports downside."],
     };
 
     function buildPickOfDay(signals, persistedPick){
@@ -933,7 +926,6 @@
       const pair=best.pair||'---', direction=best.direction||'BUY', isBuy=direction==='BUY', tier=best.tier||'B', score=best.score||0;
       let rr=best.risk_reward||null;
       if(!rr&&best.entry_price&&best.sl&&best.tp){const slD=Math.abs(best.entry_price-best.sl),tpD=Math.abs(best.tp-best.entry_price);if(slD>0)rr=tpD/slD;}
-      const sentAdj=best.sentiment_adjustment||0, sentOn=best.sentiment_applied||false;
       const tierColors={'A+':'linear-gradient(135deg,#fbbf24,#f59e0b)','A':'linear-gradient(135deg,var(--green),#00c787)','B':'linear-gradient(135deg,var(--blue),#3a8bd6)','C':'linear-gradient(135deg,#6b7280,#4b5563)'};
       document.getElementById('podPair').textContent=pair;
       document.getElementById('podEntry').textContent=best.entry_price?best.entry_price.toFixed(4):'---';
@@ -950,19 +942,22 @@
       const tierEl=document.getElementById('podTier');
       tierEl.textContent='Tier '+tier; tierEl.style.background=tierColors[tier]||tierColors['C']; tierEl.style.display='inline-block';
       const why=[];
-      if(tier==='A+'||tier==='A')why.push(`<strong style="color:var(--yellow)">Tier ${tier}</strong> — highest confidence rating.`);
-      if(best.htf_confirmed)why.push(`✓ <strong style="color:var(--green)">1H MTF confirmed</strong> — both 15m and 1-hour trend agree.`);
+      if(tier==='A+'||tier==='A')why.push(`<strong style="color:var(--yellow)">Tier ${tier}</strong> — highest confidence.`);
+      if(best.htf_confirmed)why.push(`✓ <strong style="color:var(--green)">Full MTF</strong> — all timeframes aligned.`);
       if(score>=75)why.push(`Score <strong style="color:var(--orange)">${score}</strong> — strong multi-indicator alignment.`);
-      if(best.adx>=25)why.push(`ADX ${best.adx.toFixed(1)} confirms a strong trend.`);
-      if(best.rsi<=35)why.push(`RSI ${best.rsi.toFixed(0)} — oversold, potential bounce.`);
-      if(best.rsi>=65)why.push(`RSI ${best.rsi.toFixed(0)} — overbought, potential reversal.`);
+      if(best.adx>=25)why.push(`ADX ${best.adx.toFixed(1)} confirms trend.`);
+      if(best.gemini_usd_bias&&best.gemini_engine==='gemini-2.5-flash')why.push(`🤖 Gemini: USD <strong style="color:var(--blue)">${best.gemini_usd_bias}</strong>.`);
       if(rr>=2.8)why.push(`R:R ${rr.toFixed(2)} — excellent risk-adjusted potential.`);
       if(best.session==='EUROPEAN'||best.session==='US')why.push(`${best.session} session — historically higher win rate.`);
-      document.getElementById('podReason').innerHTML=why.length>0?why.join(' '):`Highest composite score today. Technical indicators align for ${direction} on ${pair}.`;
-      const sentEl=document.getElementById('podSentiment');
-      if(sentOn&&sentAdj!==0){sentEl.style.display='block';const sign=sentAdj>0?'+':'';sentEl.innerHTML=`🤖 FinBERT: Sentiment is <strong>${sentAdj>0?'bullish':'bearish'}</strong> — score adjusted <strong>${sign}${sentAdj} pts</strong>.`;}else{sentEl.style.display='none';}
+      document.getElementById('podReason').innerHTML=why.length>0?why.join(' '):`Highest composite score today. Technical + MTF aligned for ${direction} on ${pair}.`;
+      const geminiEl=document.getElementById('podGemini');
+      if(best.gemini_usd_bias&&best.gemini_engine==='gemini-2.5-flash'){
+        geminiEl.style.display='block';
+        const arrow=best.gemini_usd_bias==='BULLISH'?'↑ bullish':best.gemini_usd_bias==='BEARISH'?'↓ bearish':'neutral';
+        geminiEl.innerHTML=`🤖 Gemini 2.5 Flash: USD macro sentiment is <strong>${arrow}</strong> — signal direction confirmed.`;
+      } else { geminiEl.style.display='none'; }
       const pairKey=pair.replace('=X','');
-      const newsPool=(PAIR_NEWS[pairKey]||{})[direction]||[{text:`${pairKey} ${direction} signal on technical alignment`,s:isBuy?'bull':'bear'},{text:`Watch ${pairKey} for momentum continuation`,s:isBuy?'bull':'bear'}];
+      const newsPool=(PAIR_NEWS[pairKey]||{})[direction]||[{text:`${pairKey} ${direction} on technical alignment`,s:isBuy?'bull':'bear'}];
       const doubled=[...newsPool,...newsPool];
       document.getElementById('newsTicker').innerHTML=doubled.map(n=>`<div class="news-item"><div class="news-dot news-${n.s}"></div><div>${n.text}</div></div>`).join('');
       document.getElementById('newsTicker').style.animationDuration=Math.max(12,newsPool.length*4)+'s';
@@ -971,13 +966,11 @@
       pod.style.display='block'; lucide.createIcons();
     }
 
-    /* ── UTILS ── */
     function getTier(t){if(!t)return'c';return t==='A+'?'aplus':t.toLowerCase();}
     function fmt(ts){if(!ts)return'N/A';return new Date(ts).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC';}
     function fmtDate(ts){if(!ts)return'N/A';return new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'});}
     function fmtTime(ts){if(!ts)return'—';return new Date(ts).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'UTC'});}
     function showEmpty(cid,icon,title,desc){document.getElementById(cid).innerHTML=`<div class="empty"><i data-lucide="${icon}" class="empty-icon"></i><div class="empty-title">${title}</div><div class="empty-desc">${desc}</div></div>`;lucide.createIcons();}
-    function updatePairFilter(sigs){const pairs=[...new Set(sigs.map(s=>s.pair))].sort();const sel=document.getElementById('filterPair'),cv=sel.value;sel.innerHTML='<option value="all">All Pairs</option>'+pairs.map(p=>`<option value="${p}">${p}</option>`).join('');sel.value=cv;}
   </script>
 </body>
 </html>

@@ -1,6 +1,6 @@
-name: Trade Beacon v2.3.0-MTF-GEMINI – Forex Signal Generator
+name: Trade Beacon v2.3.1-FIX – Forex Signal Generator
 
-# CHANGES v2.3.0-MTF-GEMINI:
+# CHANGES v2.3.1-FIX:
 # - FULL MULTI-TIMEFRAME (MTF):
 #   30m, 4h (resampled with London-open offset), Daily, Weekly added on top of 1h
 #   Daily is the decisive filter — blocks entire macro downtrends (March 23 -318pip day)
@@ -67,7 +67,7 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 concurrency:
-  group: trade-beacon-v2.3.0-MTF-GEMINI-${{ github.ref }}-${{ github.event_name }}
+  group: trade-beacon-v2.3.1-FIX-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: false
 
 permissions:
@@ -191,7 +191,7 @@ jobs:
           echo "Config version:  $CONFIG_VER"
 
           if [[ "$BEACON_VER" == *"MTF-GEMINI"* ]] || [[ "$BEACON_VER" == *"SAFE"* ]] || [[ "$BEACON_VER" == *"FIX"* ]] || [[ "$BEACON_VER" == *"MULTI-PAIR"* ]] || [[ "$BEACON_VER" == *"USD-GATE"* ]]; then
-            echo "✅ v2.3.0-MTF-GEMINI detected"
+            echo "✅ v2.3.1-FIX detected"
           elif [[ "$TRACKER_VER" != "$BEACON_VER" ]]; then
             echo "⚠️ Version mismatch (non-fatal — auto-migration will handle)"
           else
@@ -207,7 +207,7 @@ jobs:
           CONFIG_VER=$(jq -r '.version // "unknown"' config.json)
           echo "Config version: $CONFIG_VER"
           if [[ "$CONFIG_VER" == *"MTF-GEMINI"* ]] || [[ "$CONFIG_VER" == *"SAFE"* ]] || [[ "$CONFIG_VER" == *"FIX"* ]] || [[ "$CONFIG_VER" == *"MULTI-PAIR"* ]]; then
-            echo "✅ Config version: v2.3.0-MTF-GEMINI"
+            echo "✅ Config version: v2.3.1-FIX"
           else
             echo "⚠️ Config version not recognised — please update config.json"
           fi
@@ -239,7 +239,7 @@ jobs:
             echo "📸 Created config baseline snapshot"
           fi
 
-          echo "✅ Configuration valid (v2.3.0-MTF-GEMINI)"
+          echo "✅ Configuration valid (v2.3.1-FIX)"
           MODE=$(jq -r '.mode // "conservative"' config.json)
           echo "ℹ️ Mode: $MODE — Both aggressive and conservative signals generated simultaneously"
 
@@ -368,7 +368,7 @@ jobs:
         if: steps.market_check.outputs.should_run == 'true'
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "📋 ACTIVE CONFIGURATION — v2.3.0-MTF-GEMINI"
+          echo "📋 ACTIVE CONFIGURATION — v2.3.1-FIX"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo ""
 
@@ -456,7 +456,7 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
 
-      - name: Run Trade Beacon v2.3.0-MTF-GEMINI
+      - name: Run Trade Beacon v2.3.1-FIX
         if: steps.market_check.outputs.should_run == 'true'
         env:
           NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
@@ -465,7 +465,7 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}
         run: |
-          echo "🚀 Starting Trade Beacon v2.3.0-MTF-GEMINI..."
+          echo "🚀 Starting Trade Beacon v2.3.1-FIX..."
           python $ENTRY_SCRIPT
           EXIT_CODE=$?
 
@@ -529,7 +529,7 @@ jobs:
         if: always()
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "📊 TRADE BEACON v2.3.0-MTF-GEMINI PERFORMANCE SUMMARY"
+          echo "📊 TRADE BEACON v2.3.1-FIX PERFORMANCE SUMMARY"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
           if [ -f signal_state/signal_history.json ]; then
@@ -640,7 +640,7 @@ jobs:
       - name: Commit state changes
         if: steps.market_check.outputs.should_run == 'true'
         run: |
-          git config user.name  "Trade Beacon v2.3.0-MTF-GEMINI [bot]"
+          git config user.name  "Trade Beacon v2.3.1-FIX [bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git add signal_state/*.json signal_state/last_run.txt signal_state/last_success.txt config.json config.runtime.base.json signals.csv 2>/dev/null || true
@@ -656,7 +656,7 @@ jobs:
             USD_ENG=$(jq -r   '.sentiment_engine // "disabled"'           signal_state/dashboard_state.json 2>/dev/null || echo "disabled")
             MODE=$(jq -r      '.mode // "conservative"'                   config.json)
 
-            git commit -m "📊 Trade Beacon v2.3.0-MTF-GEMINI [$TIMESTAMP]
+            git commit -m "📊 Trade Beacon v2.3.1-FIX [$TIMESTAMP]
 
             Mode: $MODE | Session: $SESSION | USD: $USD_ENG
             Signals: $TOTAL (Agg: $AGG, Cons: $CONS)
@@ -691,7 +691,7 @@ jobs:
         uses: actions/upload-artifact@v6
         if: steps.market_check.outputs.should_run == 'true'
         with:
-          name: trade-beacon-v2.3.0-MTF-GEMINI-run-${{ github.run_number }}
+          name: trade-beacon-v2.3.1-FIX-run-${{ github.run_number }}
           path: |
             signal_state/
             signals.csv

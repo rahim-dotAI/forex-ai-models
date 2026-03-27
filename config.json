@@ -1,5 +1,5 @@
 {
-  "version": "2.3.0-MTF-GEMINI",
+  "version": "2.3.1-FIX",
   "mode": "conservative",
 
   "_v2.3.0_changes": "1) Full MTF: 30m+4h+Daily+Weekly added on top of existing 1h filter. Daily is decisive gate — blocks entire macro downtrends. 4h resampled from 1h with London-open offset (08:00 UTC). Weekly uses EMA12/26 only (EMA50 needs 50-bar warmup). 2) Gemini 2.5 Flash replaces FinBERT for USD reasoning. Fetches NewsAPI headlines, reasons about macro context, returns BULLISH/BEARISH/NEUTRAL. FinBERT kept as fallback. NEUTRAL blocks all USD signals.",
@@ -183,7 +183,7 @@
   "performance_tracking": {
     "enable": true,
     "history_file": "signal_state/signal_history.json",
-    "tracker_version": "2.3.0-MTF-GEMINI",
+    "tracker_version": "2.3.1-FIX",
     "idempotency": {
       "enabled": true
     },

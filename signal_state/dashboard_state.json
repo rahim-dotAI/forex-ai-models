@@ -1,11 +1,11 @@
 {
-  "timestamp": "2026-03-26T23:45:54.631919+00:00",
+  "timestamp": "2026-03-27T00:01:17.836559+00:00",
   "active_signals": 0,
   "active_signals_by_mode": {
     "aggressive": 0,
     "conservative": 0
   },
-  "session": "LATE_US",
+  "session": "ASIAN",
   "mode": "conservative",
   "sentiment_enabled": true,
   "sentiment_engine": "finbert-fallback",
@@ -18,7 +18,7 @@
   "market_state": {
     "volatility": "CALM",
     "sentiment_bias": "MIXED",
-    "session": "LATE_US"
+    "session": "ASIAN"
   },
   "signals_by_mode": {
     "aggressive": [],
@@ -7602,7 +7602,7 @@
   ],
   "api_usage": {
     "yfinance": {
-      "successful_downloads": 12
+      "successful_downloads": 10
     },
     "sentiment": {
       "enabled": true,
@@ -8121,55 +8121,19 @@
   },
   "equity_curve": [],
   "pair_prices": {
-    "USDJPY": 159.677,
-    "GBPUSD": 1.33357,
-    "AUDUSD": 0.68909,
-    "NZDUSD": 0.5762,
-    "USDCAD": 1.385,
-    "USDCHF": 0.79464,
-    "EURJPY": 184.202,
-    "GBPJPY": 212.96201,
-    "GBPAUD": 1.93541,
-    "GBPCAD": 1.84693
+    "USDJPY": 159.71001,
+    "GBPUSD": 1.33351,
+    "USDCAD": 1.3848,
+    "USDCHF": 0.79469,
+    "EURJPY": 184.228,
+    "GBPJPY": 212.981,
+    "GBPAUD": 1.93571,
+    "GBPCAD": 1.84703
   },
   "upcoming_events": [],
-  "pick_of_the_day": {
-    "id": "GBPAUD_BUY_30cceafde663",
-    "signal_id": "GBPAUD_BUY_30cceafde663",
-    "pair": "GBPAUD",
-    "direction": "BUY",
-    "entry_price": 1.9315,
-    "exit_price": 1.92742,
-    "sl": 1.92742,
-    "tp": 1.94293,
-    "status": "LOSS",
-    "pips": -40.800000000000836,
-    "confidence": "MODERATE",
-    "score": 61,
-    "session": "US",
-    "tier": "B",
-    "eligible_modes": [
-      "conservative",
-      "aggressive"
-    ],
-    "sentiment_applied": false,
-    "sentiment_score": 0.0,
-    "sentiment_adjustment": 0.0,
-    "sentiment_engine": null,
-    "estimated_win_rate": null,
-    "risk_reward": 2.8,
-    "adx": 41.7,
-    "rsi": 65.9,
-    "atr": 0.00163,
-    "timestamp": "2026-03-26T16:01:24.465423+00:00",
-    "exit_time": "2026-03-26T16:16:04.447732+00:00",
-    "mtf_details": null,
-    "gemini_usd_bias": null,
-    "gemini_engine": null,
-    "htf_confirmed": false
-  },
+  "pick_of_the_day": null,
   "system": {
-    "last_update": "2026-03-26T23:45:54.631970+00:00",
+    "last_update": "2026-03-27T00:01:17.836608+00:00",
     "signal_only_mode": true,
     "version": "2.3.0-MTF-GEMINI"
   }

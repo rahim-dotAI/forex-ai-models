@@ -1,9 +1,19 @@
 """
-Trade Beacon v2.3.0-MTF-GEMINI - Forex Signal Generator (INSTITUTIONAL GRADE)
+Trade Beacon v2.3.1-FIX - Forex Signal Generator (INSTITUTIONAL GRADE)
 MULTI-MODE EDITION: Generates Aggressive + Conservative signals simultaneously
 with tier-based selective enhancement
 
-CHANGES v2.3.0-MTF-GEMINI:
+CHANGES v2.3.1-FIX:
+- BUG FIX: apply_mtf_filter was blocking on weekly disagreements even when
+  require_weekly=false. Root cause: disagreements.append() ran for ALL timeframes
+  regardless of required flag. Fix: gate append behind `if required`.
+  Impact: GBPUSD SELL at 09:30 UTC (run 8760) had 1d/4h/30m/1h all BEAR but
+  1wk=BULL blocked it — a valid signal lost. Now weekly only contributes to
+  fully_confirmed flag, never blocks.
+- BUG FIX: pandas FutureWarning — resample('4H', offset='8H') deprecated.
+  Changed to resample('4h', offset='8h') to prevent future pandas breakage.
+
+CARRIED FORWARD from v2.3.0-MTF-GEMINI:
 - FULL MULTI-TIMEFRAME (MTF) HIERARCHY:
   30m confirmed via yfinance (period="60d")
   4h  resampled from 1h data with London-open offset (08:00 UTC) — bug pre-caught
@@ -769,9 +779,9 @@ def get_mtf_trend(pair: str) -> Dict[str, Optional[str]]:
     All downloads use _yf_lock (BUG PRE-CAUGHT: parallel threads share yfinance
     SQLite cache — same root cause as the GBPAUD/GBPCAD identical scores bug in v2.2.1).
 
-    4h is resampled from 1h with offset='8H' (London open anchor).
-    BUG PRE-CAUGHT: resample('4H') without offset creates bars at 00:00/04:00/08:00 UTC
-    which cuts across forex sessions. Offset='8H' → bars at 08–12, 12–16, 16–20, 20–00.
+    4h is resampled from 1h with offset='8h' (London open anchor).
+    BUG PRE-CAUGHT: resample('4h') without offset creates bars at 00:00/04:00/08:00 UTC
+    which cuts across forex sessions. Offset='8h' → bars at 08–12, 12–16, 16–20, 20–00.
 
     Weekly uses EMA12/26 only (no EMA50).
     BUG PRE-CAUGHT: EMA50 on weekly needs 50 bars of warmup = 1 year.
@@ -813,7 +823,8 @@ def get_mtf_trend(pair: str) -> Dict[str, Optional[str]]:
                     df1h_raw.columns = df1h_raw.columns.get_level_values(0)
                 # BUG FIX: offset='8H' anchors 4h bars to London open (08:00 UTC).
                 # Without this, bars cut across session boundaries making them meaningless.
-                df4h = df1h_raw.resample('4H', offset='8H').agg({
+                # BUG FIX v2.3.1: '4H'/'8H' deprecated in pandas — use lowercase '4h'/'8h'
+                df4h = df1h_raw.resample('4h', offset='8h').agg({
                     'Open': 'first', 'High': 'max', 'Low': 'min', 'Close': 'last', 'Volume': 'sum'
                 }).dropna()
                 trend = _get_trend_from_df(df4h, f"{clean} 4h", use_ema50=True)
@@ -900,11 +911,20 @@ def apply_mtf_filter(mtf: Dict[str, Optional[str]], direction: str, score: int) 
             continue
         agrees = (direction == "BUY" and trend == "BULL") or (direction == "SELL" and trend == "BEAR")
         if not agrees:
-            disagreements.append(f"{label}={trend}")
             if decisive:
                 return False, False, f"BLOCKED: Daily {trend} disagrees with {direction} — macro trend filter"
+            if required:
+                # Only add to block list if this timeframe is required.
+                # BUG FIX v2.3.1: weekly (required=False) was incorrectly blocking signals.
+                # 09:30 UTC run 8760: GBPUSD SELL had 1d/4h/30m/1h all BEAR but 1wk=BULL
+                # blocked the signal despite require_weekly=false. Weekly is bonus-only —
+                # a disagreement means it doesn't contribute to fully_confirmed, not that
+                # it blocks. Non-required timeframes that disagree are simply ignored.
+                disagreements.append(f"{label}={trend}")
+            else:
+                log.info(f"  {label}={trend} disagrees but not required (bonus only) — ignored")
 
-    # Any non-daily disagreement also blocks
+    # Required timeframe disagreements block the signal
     if disagreements:
         return False, False, f"BLOCKED: {', '.join(disagreements)} conflict(s) with {direction}"
 
@@ -1899,7 +1919,7 @@ def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
             "timeframe": INTERVAL, "valid_for_minutes": int(expiry_mins),
             "generated_at": now.isoformat(), "expires_at": expires.isoformat(),
             "session_active": session in ("EUROPEAN","US","OVERLAP"),
-            "signal_generator_version": "2.3.0-MTF-GEMINI",
+            "signal_generator_version": "2.3.1-FIX",
             "atr_stop_multiplier": atr_stop, "atr_target_multiplier": atr_tgt,
         },
     }
@@ -2142,7 +2162,7 @@ def write_dashboard_state(signals, downloads, news_calls=0, mkt_calls=0,
         "pair_prices": pair_prices or {},
         "upcoming_events": _get_upcoming_events(4),
         "pick_of_the_day": pick_of_the_day,
-        "system": {"last_update": datetime.now(timezone.utc).isoformat(), "signal_only_mode": SIGNAL_ONLY_MODE, "version": "2.3.0-MTF-GEMINI"},
+        "system": {"last_update": datetime.now(timezone.utc).isoformat(), "signal_only_mode": SIGNAL_ONLY_MODE, "version": "2.3.1-FIX"},
     }
 
     out = Path("signal_state"); out.mkdir(exist_ok=True)
@@ -2167,7 +2187,7 @@ def write_health_check(signals, downloads, news, mkt, can_trade, pause, mode):
             "gemini_usd":  gemini_status,
             "finbert_hf":  "ok" if HF_API_KEY else "disabled",
         },
-        "system_info": {"mode": mode, "pairs_monitored": len(PAIRS), "version": "2.3.0-MTF-GEMINI",
+        "system_info": {"mode": mode, "pairs_monitored": len(PAIRS), "version": "2.3.1-FIX",
                         "usd_reasoning": "gemini-2.5-flash" if GEMINI_API_KEY else "finbert-fallback"},
     }
     with open(Path("signal_state/health.json"),"w") as f: json.dump(health,f,indent=2)
@@ -2281,7 +2301,7 @@ def main():
     opt_mode = opt_cfg["mode"]
 
     usd_engine = "Gemini 2.5 Flash" if GEMINI_API_KEY else ("FinBERT fallback" if HF_API_KEY else "DISABLED")
-    log.info(f"Trade Beacon v2.3.0-MTF-GEMINI | USD Engine={usd_engine} | Sentiment={'ON' if USE_SENTIMENT else 'OFF'}")
+    log.info(f"Trade Beacon v2.3.1-FIX | USD Engine={usd_engine} | Sentiment={'ON' if USE_SENTIMENT else 'OFF'}")
     log.info(f"Monitoring {len(PAIRS)} pairs | MTF: 30m + 4h + Daily + Weekly + 1h")
     log.info(f"Aggressive:   Score>={opt_cfg['settings']['aggressive']['threshold']} ADX>={opt_cfg['settings']['aggressive']['min_adx']}")
     log.info(f"Conservative: Score>={opt_cfg['settings']['conservative']['threshold']} ADX>={opt_cfg['settings']['conservative']['min_adx']}")
@@ -2416,7 +2436,7 @@ def main():
         log.info("signals.csv written")
 
     mark_success()
-    log.info("Run completed — v2.3.0-MTF-GEMINI")
+    log.info("Run completed — v2.3.1-FIX")
 
 
 if __name__ == "__main__":

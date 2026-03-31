@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-03-31T19:41:36.000639+00:00",
-  "active_signals": 0,
+  "timestamp": "2026-03-31T20:01:28.828894+00:00",
+  "active_signals": 1,
   "active_signals_by_mode": {
-    "aggressive": 0,
-    "conservative": 0
+    "aggressive": 1,
+    "conservative": 1
   },
   "session": "US",
   "mode": "conservative",
@@ -16,15 +16,200 @@
     "pause_reason": null
   },
   "market_state": {
-    "volatility": "CALM",
-    "sentiment_bias": "MIXED",
+    "volatility": "NORMAL",
+    "sentiment_bias": "BEARISH",
     "session": "US"
   },
   "signals_by_mode": {
-    "aggressive": [],
-    "conservative": []
+    "aggressive": [
+      {
+        "signal_id": "GBPAUD_SELL_d89b3165eddb",
+        "id": "GBPAUD_SELL_d89b3165eddb",
+        "pair": "GBPAUD",
+        "direction": "SELL",
+        "score": 66,
+        "technical_score": 66,
+        "sentiment_score": 0.0,
+        "sentiment_adjustment": 0.0,
+        "score_before_sentiment": 66,
+        "confidence": "STRONG",
+        "tier": "B",
+        "rsi": 32.0,
+        "adx": 34.7,
+        "atr": 0.00172,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.91797,
+        "sl": 1.92227,
+        "tp": 1.90594,
+        "risk_reward": 2.8,
+        "spread": 0.0004,
+        "timestamp": "2026-03-31T20:01:23.357938+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "htf_confirmed": false,
+        "mtf_details": {
+          "1h": "BEAR",
+          "30m": "BEAR",
+          "4h": null,
+          "1d": null,
+          "1wk": "BEAR"
+        },
+        "gemini_usd_bias": null,
+        "gemini_engine": null,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 240,
+          "generated_at": "2026-03-31T20:01:23.357938+00:00",
+          "expires_at": "2026-04-01T00:01:23.357938+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.3.1-FIX",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null,
+        "price_source": "yfinance_confirmed",
+        "price_divergence": 2e-05
+      }
+    ],
+    "conservative": [
+      {
+        "signal_id": "GBPAUD_SELL_d89b3165eddb",
+        "id": "GBPAUD_SELL_d89b3165eddb",
+        "pair": "GBPAUD",
+        "direction": "SELL",
+        "score": 66,
+        "technical_score": 66,
+        "sentiment_score": 0.0,
+        "sentiment_adjustment": 0.0,
+        "score_before_sentiment": 66,
+        "confidence": "STRONG",
+        "tier": "B",
+        "rsi": 32.0,
+        "adx": 34.7,
+        "atr": 0.00172,
+        "volume_ratio": 0,
+        "session": "US",
+        "entry_price": 1.91797,
+        "sl": 1.92227,
+        "tp": 1.90594,
+        "risk_reward": 2.8,
+        "spread": 0.0004,
+        "timestamp": "2026-03-31T20:01:23.357938+00:00",
+        "status": "OPEN",
+        "hold_time": "SWING",
+        "eligible_modes": [
+          "conservative",
+          "aggressive"
+        ],
+        "freshness": {
+          "status": "FRESH",
+          "age_minutes": 0.0,
+          "confidence_decay": 100.0
+        },
+        "sentiment_applied": false,
+        "htf_confirmed": false,
+        "mtf_details": {
+          "1h": "BEAR",
+          "30m": "BEAR",
+          "4h": null,
+          "1d": null,
+          "1wk": "BEAR"
+        },
+        "gemini_usd_bias": null,
+        "gemini_engine": null,
+        "metadata": {
+          "signal_type": "trend-continuation",
+          "market_state": "TRENDING_STRONG",
+          "timeframe": "15m",
+          "valid_for_minutes": 240,
+          "generated_at": "2026-03-31T20:01:23.357938+00:00",
+          "expires_at": "2026-04-01T00:01:23.357938+00:00",
+          "session_active": true,
+          "signal_generator_version": "2.3.1-FIX",
+          "atr_stop_multiplier": 2.5,
+          "atr_target_multiplier": 7.0
+        },
+        "estimated_win_rate": null,
+        "price_source": "yfinance_confirmed",
+        "price_divergence": 2e-05
+      }
+    ]
   },
   "historical_signals": [
+    {
+      "signal_id": "GBPAUD_SELL_d89b3165eddb",
+      "id": "GBPAUD_SELL_d89b3165eddb",
+      "pair": "GBPAUD",
+      "direction": "SELL",
+      "score": 66,
+      "technical_score": 66,
+      "sentiment_score": 0.0,
+      "sentiment_adjustment": 0.0,
+      "score_before_sentiment": 66,
+      "confidence": "STRONG",
+      "tier": "B",
+      "rsi": 32.0,
+      "adx": 34.7,
+      "atr": 0.00172,
+      "volume_ratio": 0,
+      "session": "US",
+      "entry_price": 1.91797,
+      "sl": 1.92227,
+      "tp": 1.90594,
+      "risk_reward": 2.8,
+      "spread": 0.0004,
+      "timestamp": "2026-03-31T20:01:23.357938+00:00",
+      "status": "OPEN",
+      "hold_time": "SWING",
+      "eligible_modes": [
+        "conservative",
+        "aggressive"
+      ],
+      "freshness": {
+        "status": "FRESH",
+        "age_minutes": 0.0,
+        "confidence_decay": 100.0
+      },
+      "sentiment_applied": false,
+      "htf_confirmed": false,
+      "mtf_details": {
+        "1h": "BEAR",
+        "30m": "BEAR",
+        "4h": null,
+        "1d": null,
+        "1wk": "BEAR"
+      },
+      "gemini_usd_bias": null,
+      "gemini_engine": null,
+      "metadata": {
+        "signal_type": "trend-continuation",
+        "market_state": "TRENDING_STRONG",
+        "timeframe": "15m",
+        "valid_for_minutes": 240,
+        "generated_at": "2026-03-31T20:01:23.357938+00:00",
+        "expires_at": "2026-04-01T00:01:23.357938+00:00",
+        "session_active": true,
+        "signal_generator_version": "2.3.1-FIX",
+        "atr_stop_multiplier": 2.5,
+        "atr_target_multiplier": 7.0
+      },
+      "estimated_win_rate": null,
+      "price_source": "yfinance_confirmed",
+      "price_divergence": 2e-05
+    },
     {
       "id": "GBPCAD_BUY_70ff042e0069",
       "signal_id": "GBPCAD_BUY_70ff042e0069",
@@ -7813,8 +7998,8 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 0.0,
-    "total_risk_pips": 0,
+    "theoretical_max_pips": 43.0,
+    "total_risk_pips": 42.9999999999997,
     "max_daily_risk": 150
   },
   "analytics": {
@@ -8156,55 +8341,81 @@
   },
   "equity_curve": [],
   "pair_prices": {
-    "USDJPY": 158.752,
-    "GBPUSD": 1.32346,
-    "AUDUSD": 0.68987,
-    "NZDUSD": 0.57468,
-    "USDCAD": 1.39268,
-    "USDCHF": 0.79969,
-    "EURJPY": 183.42,
-    "GBPJPY": 210.09399,
-    "GBPCAD": 1.84295,
-    "GBPAUD": 1.91841
+    "USDJPY": 158.71001,
+    "GBPUSD": 1.32357,
+    "AUDUSD": 0.68996,
+    "NZDUSD": 0.57475,
+    "USDCAD": 1.39119,
+    "USDCHF": 0.79954,
+    "EURJPY": 183.46001,
+    "GBPJPY": 210.05099,
+    "GBPCAD": 1.84119,
+    "GBPAUD": 1.91797
   },
   "upcoming_events": [],
   "pick_of_the_day": {
-    "id": "GBPCAD_BUY_70ff042e0069",
-    "signal_id": "GBPCAD_BUY_70ff042e0069",
-    "pair": "GBPCAD",
-    "direction": "BUY",
-    "entry_price": 1.84341,
-    "exit_price": 1.83978,
-    "sl": 1.83978,
-    "tp": 1.85357,
-    "status": "LOSS",
-    "pips": -36.30000000000022,
-    "confidence": "MODERATE",
-    "score": 62,
-    "session": "EUROPEAN",
+    "signal_id": "GBPAUD_SELL_d89b3165eddb",
+    "id": "GBPAUD_SELL_d89b3165eddb",
+    "pair": "GBPAUD",
+    "direction": "SELL",
+    "score": 66,
+    "technical_score": 66,
+    "sentiment_score": 0.0,
+    "sentiment_adjustment": 0.0,
+    "score_before_sentiment": 66,
+    "confidence": "STRONG",
     "tier": "B",
+    "rsi": 32.0,
+    "adx": 34.7,
+    "atr": 0.00172,
+    "volume_ratio": 0,
+    "session": "US",
+    "entry_price": 1.91797,
+    "sl": 1.92227,
+    "tp": 1.90594,
+    "risk_reward": 2.8,
+    "spread": 0.0004,
+    "timestamp": "2026-03-31T20:01:23.357938+00:00",
+    "status": "OPEN",
+    "hold_time": "SWING",
     "eligible_modes": [
       "conservative",
       "aggressive"
     ],
+    "freshness": {
+      "status": "FRESH",
+      "age_minutes": 0.0,
+      "confidence_decay": 100.0
+    },
     "sentiment_applied": false,
-    "sentiment_score": 0.0,
-    "sentiment_adjustment": 0.0,
-    "sentiment_engine": null,
-    "estimated_win_rate": null,
-    "risk_reward": 2.8,
-    "adx": 30.7,
-    "rsi": 67.1,
-    "atr": 0.00145,
     "htf_confirmed": false,
-    "mtf_details": null,
+    "mtf_details": {
+      "1h": "BEAR",
+      "30m": "BEAR",
+      "4h": null,
+      "1d": null,
+      "1wk": "BEAR"
+    },
     "gemini_usd_bias": null,
     "gemini_engine": null,
-    "timestamp": "2026-03-31T11:46:08.276374+00:00",
-    "exit_time": "2026-03-31T12:01:13.132616+00:00"
+    "metadata": {
+      "signal_type": "trend-continuation",
+      "market_state": "TRENDING_STRONG",
+      "timeframe": "15m",
+      "valid_for_minutes": 240,
+      "generated_at": "2026-03-31T20:01:23.357938+00:00",
+      "expires_at": "2026-04-01T00:01:23.357938+00:00",
+      "session_active": true,
+      "signal_generator_version": "2.3.1-FIX",
+      "atr_stop_multiplier": 2.5,
+      "atr_target_multiplier": 7.0
+    },
+    "estimated_win_rate": null,
+    "price_source": "yfinance_confirmed",
+    "price_divergence": 2e-05
   },
   "system": {
-    "last_update": "2026-03-31T19:41:36.000689+00:00",
+    "last_update": "2026-03-31T20:01:28.828955+00:00",
     "signal_only_mode": true,
     "version": "2.3.1-FIX"
   }

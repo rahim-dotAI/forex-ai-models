@@ -7609,41 +7609,76 @@
       "gemini_engine": null,
       "timestamp": "2026-03-31T11:46:08.276374+00:00",
       "exit_time": "2026-03-31T12:01:13.132616+00:00"
+    },
+    {
+      "id": "GBPAUD_SELL_d89b3165eddb",
+      "signal_id": "GBPAUD_SELL_d89b3165eddb",
+      "pair": "GBPAUD",
+      "direction": "SELL",
+      "entry_price": 1.91797,
+      "exit_price": 1.92227,
+      "sl": 1.92227,
+      "tp": 1.90594,
+      "status": "LOSS",
+      "pips": -42.9999999999997,
+      "confidence": "STRONG",
+      "score": 66,
+      "session": "US",
+      "tier": "B",
+      "eligible_modes": [
+        "conservative",
+        "aggressive"
+      ],
+      "sentiment_applied": false,
+      "sentiment_score": 0.0,
+      "sentiment_adjustment": 0.0,
+      "sentiment_engine": null,
+      "estimated_win_rate": null,
+      "risk_reward": 2.8,
+      "adx": 34.7,
+      "rsi": 32.0,
+      "atr": 0.00172,
+      "htf_confirmed": false,
+      "mtf_details": null,
+      "gemini_usd_bias": null,
+      "gemini_engine": null,
+      "timestamp": "2026-03-31T20:01:23.357938+00:00",
+      "exit_time": "2026-03-31T20:15:55.775644+00:00"
     }
   ],
   "stats": {
-    "total_trades": 163,
-    "total_resolved": 163,
+    "total_trades": 164,
+    "total_resolved": 164,
     "wins": 43,
-    "losses": 120,
+    "losses": 121,
     "expired": 81,
-    "win_rate": 26.4,
-    "total_pips": -651.7,
+    "win_rate": 26.2,
+    "total_pips": -694.7,
     "avg_win": 64.4,
-    "avg_loss": 28.5,
+    "avg_loss": 28.6,
     "avg_win_pips": 64.4,
-    "avg_loss_pips": 28.5,
-    "expectancy_pips": -4.0,
-    "expectancy": -4.0,
+    "avg_loss_pips": 28.6,
+    "expectancy_pips": -4.24,
+    "expectancy": -4.24,
     "validated": true,
     "by_mode": {
       "all": {
-        "trades": 163,
+        "trades": 164,
         "wins": 43,
-        "total_pips": -651.6870000000075,
-        "win_rate": 26.4
+        "total_pips": -694.6870000000072,
+        "win_rate": 26.2
       },
       "aggressive": {
-        "trades": 156,
+        "trades": 157,
         "wins": 43,
-        "total_pips": -470.5280000000102,
-        "win_rate": 27.6
+        "total_pips": -513.5280000000099,
+        "win_rate": 27.4
       },
       "conservative": {
-        "trades": 73,
+        "trades": 74,
         "wins": 15,
-        "total_pips": -313.24899999998894,
-        "win_rate": 20.5
+        "total_pips": -356.24899999998865,
+        "win_rate": 20.3
       }
     }
   },
@@ -7716,18 +7751,18 @@
         "win_rate": 0.0
       },
       "GBPAUD": {
-        "trades": 6,
+        "trades": 7,
         "wins": 0,
-        "total_pips": -243.70000000000223,
+        "total_pips": -286.7000000000019,
         "win_rate": 0.0
       }
     },
     "by_session": {
       "US": {
-        "trades": 46,
+        "trades": 47,
         "wins": 17,
-        "total_pips": 87.51200000000978,
-        "win_rate": 37.0
+        "total_pips": 44.512000000010076,
+        "win_rate": 36.2
       },
       "LATE_US": {
         "trades": 14,
@@ -7762,18 +7797,18 @@
         "win_rate": 26.2
       },
       "STRONG": {
-        "trades": 14,
+        "trades": 15,
         "wins": 4,
-        "total_pips": 118.20700000000379,
-        "win_rate": 28.6
+        "total_pips": 75.20700000000409,
+        "win_rate": 26.7
       }
     },
     "by_tier": {
       "B": {
-        "trades": 80,
+        "trades": 81,
         "wins": 17,
-        "total_pips": -442.79399999999254,
-        "win_rate": 21.2
+        "total_pips": -485.79399999999225,
+        "win_rate": 21.0
       },
       "C": {
         "trades": 79,
@@ -7796,25 +7831,25 @@
         "win_rate": 0.0
       },
       "aggressive": {
-        "trades": 156,
+        "trades": 157,
         "wins": 43,
-        "total_pips": -470.5280000000102,
-        "win_rate": 27.6
+        "total_pips": -513.5280000000099,
+        "win_rate": 27.4
       },
       "conservative": {
-        "trades": 73,
+        "trades": 74,
         "wins": 15,
-        "total_pips": -313.24899999998894,
-        "win_rate": 20.5
+        "total_pips": -356.24899999998865,
+        "win_rate": 20.3
       }
     },
     "by_sentiment": {
       "sentiment_off": {
-        "trades": 150,
+        "trades": 151,
         "wins": 40,
-        "total_pips": -582.6160000000126,
+        "total_pips": -625.6160000000123,
         "engine": "none",
-        "win_rate": 26.7
+        "win_rate": 26.5
       },
       "sentiment_on": {
         "trades": 13,
@@ -7826,10 +7861,10 @@
     },
     "by_mtf_confirmed": {
       "partial_or_none": {
-        "trades": 163,
+        "trades": 164,
         "wins": 43,
-        "total_pips": -651.6870000000075,
-        "win_rate": 26.4
+        "total_pips": -694.6870000000072,
+        "win_rate": 26.2
       }
     },
     "by_gemini_bias": {},
@@ -7838,10 +7873,10 @@
         "B_US": {
           "tier": "B",
           "session": "US",
-          "trades": 25,
+          "trades": 26,
           "wins": 7,
-          "total_pips": -109.17599999999206,
-          "win_rate": 28.0
+          "total_pips": -152.17599999999175,
+          "win_rate": 26.9
         },
         "C_LATE_US": {
           "tier": "C",
@@ -7944,18 +7979,18 @@
         "aggressive_B": {
           "mode": "aggressive",
           "tier": "B",
-          "trades": 73,
+          "trades": 74,
           "wins": 17,
-          "total_pips": -261.6349999999953,
-          "win_rate": 23.3
+          "total_pips": -304.634999999995,
+          "win_rate": 23.0
         },
         "conservative_B": {
           "mode": "conservative",
           "tier": "B",
-          "trades": 69,
+          "trades": 70,
           "wins": 15,
-          "total_pips": -239.34899999999112,
-          "win_rate": 21.7
+          "total_pips": -282.34899999999084,
+          "win_rate": 21.4
         },
         "aggressive_C": {
           "mode": "aggressive",
@@ -7987,6 +8022,6 @@
   "daily": {},
   "metadata": {
     "created_at": "2026-01-28T16:31:06.713234+00:00",
-    "last_updated": "2026-03-31T12:01:13.134690+00:00"
+    "last_updated": "2026-03-31T20:15:55.777792+00:00"
   }
 }

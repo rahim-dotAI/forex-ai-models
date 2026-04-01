@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-04-01T08:31:31.142058+00:00",
-  "active_signals": 1,
+  "timestamp": "2026-04-01T08:46:02.902535+00:00",
+  "active_signals": 0,
   "active_signals_by_mode": {
-    "aggressive": 1,
-    "conservative": 1
+    "aggressive": 0,
+    "conservative": 0
   },
   "session": "EUROPEAN",
   "mode": "conservative",
@@ -16,199 +16,49 @@
     "pause_reason": null
   },
   "market_state": {
-    "volatility": "NORMAL",
-    "sentiment_bias": "BEARISH",
+    "volatility": "CALM",
+    "sentiment_bias": "MIXED",
     "session": "EUROPEAN"
   },
   "signals_by_mode": {
-    "aggressive": [
-      {
-        "signal_id": "GBPAUD_SELL_635b47668ece",
-        "id": "GBPAUD_SELL_635b47668ece",
-        "pair": "GBPAUD",
-        "direction": "SELL",
-        "score": 62,
-        "technical_score": 62,
-        "sentiment_score": 0.0,
-        "sentiment_adjustment": 0.0,
-        "score_before_sentiment": 62,
-        "confidence": "MODERATE",
-        "tier": "B",
-        "rsi": 38.6,
-        "adx": 29.3,
-        "atr": 0.00196,
-        "volume_ratio": 0,
-        "session": "EUROPEAN",
-        "entry_price": 1.91245,
-        "sl": 1.91735,
-        "tp": 1.89874,
-        "risk_reward": 2.8,
-        "spread": 0.0004,
-        "timestamp": "2026-04-01T08:31:27.910106+00:00",
-        "status": "OPEN",
-        "hold_time": "SWING",
-        "eligible_modes": [
-          "conservative",
-          "aggressive"
-        ],
-        "freshness": {
-          "status": "FRESH",
-          "age_minutes": 0.0,
-          "confidence_decay": 100.0
-        },
-        "sentiment_applied": false,
-        "htf_confirmed": false,
-        "mtf_details": {
-          "1h": "BEAR",
-          "30m": "BEAR",
-          "4h": null,
-          "1d": null,
-          "1wk": "BEAR"
-        },
-        "gemini_usd_bias": null,
-        "gemini_engine": null,
-        "metadata": {
-          "signal_type": "trend-continuation",
-          "market_state": "TRENDING_STRONG",
-          "timeframe": "15m",
-          "valid_for_minutes": 240,
-          "generated_at": "2026-04-01T08:31:27.910106+00:00",
-          "expires_at": "2026-04-01T12:31:27.910106+00:00",
-          "session_active": true,
-          "signal_generator_version": "2.3.1-FIX",
-          "atr_stop_multiplier": 2.5,
-          "atr_target_multiplier": 7.0
-        },
-        "estimated_win_rate": null,
-        "price_source": "yfinance_confirmed",
-        "price_divergence": 0.00024
-      }
-    ],
-    "conservative": [
-      {
-        "signal_id": "GBPAUD_SELL_635b47668ece",
-        "id": "GBPAUD_SELL_635b47668ece",
-        "pair": "GBPAUD",
-        "direction": "SELL",
-        "score": 62,
-        "technical_score": 62,
-        "sentiment_score": 0.0,
-        "sentiment_adjustment": 0.0,
-        "score_before_sentiment": 62,
-        "confidence": "MODERATE",
-        "tier": "B",
-        "rsi": 38.6,
-        "adx": 29.3,
-        "atr": 0.00196,
-        "volume_ratio": 0,
-        "session": "EUROPEAN",
-        "entry_price": 1.91245,
-        "sl": 1.91735,
-        "tp": 1.89874,
-        "risk_reward": 2.8,
-        "spread": 0.0004,
-        "timestamp": "2026-04-01T08:31:27.910106+00:00",
-        "status": "OPEN",
-        "hold_time": "SWING",
-        "eligible_modes": [
-          "conservative",
-          "aggressive"
-        ],
-        "freshness": {
-          "status": "FRESH",
-          "age_minutes": 0.0,
-          "confidence_decay": 100.0
-        },
-        "sentiment_applied": false,
-        "htf_confirmed": false,
-        "mtf_details": {
-          "1h": "BEAR",
-          "30m": "BEAR",
-          "4h": null,
-          "1d": null,
-          "1wk": "BEAR"
-        },
-        "gemini_usd_bias": null,
-        "gemini_engine": null,
-        "metadata": {
-          "signal_type": "trend-continuation",
-          "market_state": "TRENDING_STRONG",
-          "timeframe": "15m",
-          "valid_for_minutes": 240,
-          "generated_at": "2026-04-01T08:31:27.910106+00:00",
-          "expires_at": "2026-04-01T12:31:27.910106+00:00",
-          "session_active": true,
-          "signal_generator_version": "2.3.1-FIX",
-          "atr_stop_multiplier": 2.5,
-          "atr_target_multiplier": 7.0
-        },
-        "estimated_win_rate": null,
-        "price_source": "yfinance_confirmed",
-        "price_divergence": 0.00024
-      }
-    ]
+    "aggressive": [],
+    "conservative": []
   },
   "historical_signals": [
     {
-      "signal_id": "GBPAUD_SELL_635b47668ece",
       "id": "GBPAUD_SELL_635b47668ece",
+      "signal_id": "GBPAUD_SELL_635b47668ece",
       "pair": "GBPAUD",
       "direction": "SELL",
-      "score": 62,
-      "technical_score": 62,
-      "sentiment_score": 0.0,
-      "sentiment_adjustment": 0.0,
-      "score_before_sentiment": 62,
-      "confidence": "MODERATE",
-      "tier": "B",
-      "rsi": 38.6,
-      "adx": 29.3,
-      "atr": 0.00196,
-      "volume_ratio": 0,
-      "session": "EUROPEAN",
       "entry_price": 1.91245,
+      "exit_price": 1.91735,
       "sl": 1.91735,
       "tp": 1.89874,
-      "risk_reward": 2.8,
-      "spread": 0.0004,
-      "timestamp": "2026-04-01T08:31:27.910106+00:00",
-      "status": "OPEN",
-      "hold_time": "SWING",
+      "status": "LOSS",
+      "pips": -49.000000000001265,
+      "confidence": "MODERATE",
+      "score": 62,
+      "session": "EUROPEAN",
+      "tier": "B",
       "eligible_modes": [
         "conservative",
         "aggressive"
       ],
-      "freshness": {
-        "status": "FRESH",
-        "age_minutes": 0.0,
-        "confidence_decay": 100.0
-      },
       "sentiment_applied": false,
+      "sentiment_score": 0.0,
+      "sentiment_adjustment": 0.0,
+      "sentiment_engine": null,
+      "estimated_win_rate": null,
+      "risk_reward": 2.8,
+      "adx": 29.3,
+      "rsi": 38.6,
+      "atr": 0.00196,
       "htf_confirmed": false,
-      "mtf_details": {
-        "1h": "BEAR",
-        "30m": "BEAR",
-        "4h": null,
-        "1d": null,
-        "1wk": "BEAR"
-      },
+      "mtf_details": null,
       "gemini_usd_bias": null,
       "gemini_engine": null,
-      "metadata": {
-        "signal_type": "trend-continuation",
-        "market_state": "TRENDING_STRONG",
-        "timeframe": "15m",
-        "valid_for_minutes": 240,
-        "generated_at": "2026-04-01T08:31:27.910106+00:00",
-        "expires_at": "2026-04-01T12:31:27.910106+00:00",
-        "session_active": true,
-        "signal_generator_version": "2.3.1-FIX",
-        "atr_stop_multiplier": 2.5,
-        "atr_target_multiplier": 7.0
-      },
-      "estimated_win_rate": null,
-      "price_source": "yfinance_confirmed",
-      "price_divergence": 0.00024
+      "timestamp": "2026-04-01T08:31:27.910106+00:00",
+      "exit_time": "2026-04-01T08:45:58.935102+00:00"
     },
     {
       "id": "GBPAUD_SELL_d89b3165eddb",
@@ -7868,23 +7718,23 @@
     }
   },
   "stats": {
-    "total_trades": 164,
-    "win_rate": 26.2,
-    "total_pips": -694.7,
+    "total_trades": 165,
+    "win_rate": 26.1,
+    "total_pips": -743.7,
     "wins": 43,
-    "losses": 121,
-    "expectancy": -4.24
+    "losses": 122,
+    "expectancy": -4.51
   },
   "performance_stats": {
-    "total_trades": 164,
+    "total_trades": 165,
     "wins": 43,
-    "losses": 121,
+    "losses": 122,
     "expired": 81,
-    "win_rate": 26.2,
-    "total_pips": -694.7,
+    "win_rate": 26.1,
+    "total_pips": -743.7,
     "avg_win": 64.4,
-    "avg_loss": 28.6,
-    "expectancy": -4.24,
+    "avg_loss": 28.8,
+    "expectancy": -4.51,
     "by_mode": {
       "all": {
         "trades": 0,
@@ -7893,24 +7743,24 @@
         "win_rate": 0.0
       },
       "aggressive": {
-        "trades": 157,
+        "trades": 158,
         "wins": 43,
-        "total_pips": -513.5280000000099,
-        "win_rate": 27.4
+        "total_pips": -562.5280000000112,
+        "win_rate": 27.2
       },
       "conservative": {
-        "trades": 74,
+        "trades": 75,
         "wins": 15,
-        "total_pips": -356.24899999998865,
-        "win_rate": 20.3
+        "total_pips": -405.2489999999899,
+        "win_rate": 20.0
       }
     },
     "by_tier": {
       "B": {
-        "trades": 81,
+        "trades": 82,
         "wins": 17,
-        "total_pips": -485.79399999999225,
-        "win_rate": 21.0
+        "total_pips": -534.7939999999935,
+        "win_rate": 20.7
       },
       "C": {
         "trades": 79,
@@ -7945,10 +7795,10 @@
         "win_rate": 25.0
       },
       "EUROPEAN": {
-        "trades": 67,
+        "trades": 68,
         "wins": 15,
-        "total_pips": -442.2150000000093,
-        "win_rate": 22.4
+        "total_pips": -491.21500000001055,
+        "win_rate": 22.1
       },
       "OVERLAP": {
         "trades": 4,
@@ -8025,16 +7875,16 @@
         "win_rate": 0.0
       },
       "GBPAUD": {
-        "trades": 7,
+        "trades": 8,
         "wins": 0,
-        "total_pips": -286.7000000000019,
+        "total_pips": -335.7000000000032,
         "win_rate": 0.0
       }
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 49.0,
-    "total_risk_pips": 49.000000000001265,
+    "theoretical_max_pips": 0.0,
+    "total_risk_pips": 0,
     "max_daily_risk": 150
   },
   "analytics": {
@@ -8106,9 +7956,9 @@
         "win_rate": 0.0
       },
       "GBPAUD": {
-        "trades": 7,
+        "trades": 8,
         "wins": 0,
-        "total_pips": -286.7000000000019,
+        "total_pips": -335.7000000000032,
         "win_rate": 0.0
       }
     },
@@ -8132,10 +7982,10 @@
         "win_rate": 25.0
       },
       "EUROPEAN": {
-        "trades": 67,
+        "trades": 68,
         "wins": 15,
-        "total_pips": -442.2150000000093,
-        "win_rate": 22.4
+        "total_pips": -491.21500000001055,
+        "win_rate": 22.1
       },
       "OVERLAP": {
         "trades": 4,
@@ -8146,10 +7996,10 @@
     },
     "by_confidence": {
       "MODERATE": {
-        "trades": 149,
+        "trades": 150,
         "wins": 39,
-        "total_pips": -769.8940000000113,
-        "win_rate": 26.2
+        "total_pips": -818.8940000000125,
+        "win_rate": 26.0
       },
       "STRONG": {
         "trades": 15,
@@ -8160,10 +8010,10 @@
     },
     "by_tier": {
       "B": {
-        "trades": 81,
+        "trades": 82,
         "wins": 17,
-        "total_pips": -485.79399999999225,
-        "win_rate": 21.0
+        "total_pips": -534.7939999999935,
+        "win_rate": 20.7
       },
       "C": {
         "trades": 79,
@@ -8186,25 +8036,25 @@
         "win_rate": 0.0
       },
       "aggressive": {
-        "trades": 157,
+        "trades": 158,
         "wins": 43,
-        "total_pips": -513.5280000000099,
-        "win_rate": 27.4
+        "total_pips": -562.5280000000112,
+        "win_rate": 27.2
       },
       "conservative": {
-        "trades": 74,
+        "trades": 75,
         "wins": 15,
-        "total_pips": -356.24899999998865,
-        "win_rate": 20.3
+        "total_pips": -405.2489999999899,
+        "win_rate": 20.0
       }
     },
     "by_sentiment": {
       "sentiment_off": {
-        "trades": 151,
+        "trades": 152,
         "wins": 40,
-        "total_pips": -625.6160000000123,
+        "total_pips": -674.6160000000135,
         "engine": "none",
-        "win_rate": 26.5
+        "win_rate": 26.3
       },
       "sentiment_on": {
         "trades": 13,
@@ -8216,10 +8066,10 @@
     },
     "by_mtf_confirmed": {
       "partial_or_none": {
-        "trades": 164,
+        "trades": 165,
         "wins": 43,
-        "total_pips": -694.6870000000072,
-        "win_rate": 26.2
+        "total_pips": -743.6870000000084,
+        "win_rate": 26.1
       }
     },
     "by_gemini_bias": {},
@@ -8260,10 +8110,10 @@
         "B_EUROPEAN": {
           "tier": "B",
           "session": "EUROPEAN",
-          "trades": 38,
+          "trades": 39,
           "wins": 6,
-          "total_pips": -389.93400000000196,
-          "win_rate": 15.8
+          "total_pips": -438.9340000000032,
+          "win_rate": 15.4
         },
         "C_US": {
           "tier": "C",
@@ -8334,18 +8184,18 @@
         "aggressive_B": {
           "mode": "aggressive",
           "tier": "B",
-          "trades": 74,
+          "trades": 75,
           "wins": 17,
-          "total_pips": -304.634999999995,
-          "win_rate": 23.0
+          "total_pips": -353.63499999999624,
+          "win_rate": 22.7
         },
         "conservative_B": {
           "mode": "conservative",
           "tier": "B",
-          "trades": 70,
+          "trades": 71,
           "wins": 15,
-          "total_pips": -282.34899999999084,
-          "win_rate": 21.4
+          "total_pips": -331.3489999999921,
+          "win_rate": 21.1
         },
         "aggressive_C": {
           "mode": "aggressive",
@@ -8376,103 +8226,77 @@
   },
   "equity_curve": [],
   "pair_prices": {
-    "USDJPY": 158.60699,
-    "AUDUSD": 0.69465,
-    "NZDUSD": 0.57677,
-    "USDCAD": 1.3889,
-    "USDCHF": 0.79341,
-    "EURJPY": 183.96201,
-    "GBPJPY": 210.71201,
-    "GBPUSD": 1.32893,
-    "GBPAUD": 1.91245,
-    "GBPCAD": 1.84548
+    "USDJPY": 158.448,
+    "GBPUSD": 1.32997,
+    "AUDUSD": 0.69519,
+    "NZDUSD": 0.57737,
+    "USDCAD": 1.38883,
+    "USDCHF": 0.79306,
+    "EURJPY": 183.88499,
+    "GBPJPY": 210.642,
+    "GBPAUD": 1.913,
+    "GBPCAD": 1.84631
   },
   "upcoming_events": [
     {
       "title": "ADP Non-Farm Employment Change",
       "currency": "USD",
       "utc_time": "12:15 UTC",
-      "mins_to": 223,
+      "mins_to": 208,
       "passed": false
     },
     {
       "title": "Core Retail Sales m/m",
       "currency": "USD",
       "utc_time": "12:30 UTC",
-      "mins_to": 238,
+      "mins_to": 223,
       "passed": false
     },
     {
       "title": "Retail Sales m/m",
       "currency": "USD",
       "utc_time": "12:30 UTC",
-      "mins_to": 238,
+      "mins_to": 223,
       "passed": false
     }
   ],
   "pick_of_the_day": {
-    "signal_id": "GBPAUD_SELL_635b47668ece",
     "id": "GBPAUD_SELL_635b47668ece",
+    "signal_id": "GBPAUD_SELL_635b47668ece",
     "pair": "GBPAUD",
     "direction": "SELL",
-    "score": 62,
-    "technical_score": 62,
-    "sentiment_score": 0.0,
-    "sentiment_adjustment": 0.0,
-    "score_before_sentiment": 62,
-    "confidence": "MODERATE",
-    "tier": "B",
-    "rsi": 38.6,
-    "adx": 29.3,
-    "atr": 0.00196,
-    "volume_ratio": 0,
-    "session": "EUROPEAN",
     "entry_price": 1.91245,
+    "exit_price": 1.91735,
     "sl": 1.91735,
     "tp": 1.89874,
-    "risk_reward": 2.8,
-    "spread": 0.0004,
-    "timestamp": "2026-04-01T08:31:27.910106+00:00",
-    "status": "OPEN",
-    "hold_time": "SWING",
+    "status": "LOSS",
+    "pips": -49.000000000001265,
+    "confidence": "MODERATE",
+    "score": 62,
+    "session": "EUROPEAN",
+    "tier": "B",
     "eligible_modes": [
       "conservative",
       "aggressive"
     ],
-    "freshness": {
-      "status": "FRESH",
-      "age_minutes": 0.0,
-      "confidence_decay": 100.0
-    },
     "sentiment_applied": false,
+    "sentiment_score": 0.0,
+    "sentiment_adjustment": 0.0,
+    "sentiment_engine": null,
+    "estimated_win_rate": null,
+    "risk_reward": 2.8,
+    "adx": 29.3,
+    "rsi": 38.6,
+    "atr": 0.00196,
     "htf_confirmed": false,
-    "mtf_details": {
-      "1h": "BEAR",
-      "30m": "BEAR",
-      "4h": null,
-      "1d": null,
-      "1wk": "BEAR"
-    },
+    "mtf_details": null,
     "gemini_usd_bias": null,
     "gemini_engine": null,
-    "metadata": {
-      "signal_type": "trend-continuation",
-      "market_state": "TRENDING_STRONG",
-      "timeframe": "15m",
-      "valid_for_minutes": 240,
-      "generated_at": "2026-04-01T08:31:27.910106+00:00",
-      "expires_at": "2026-04-01T12:31:27.910106+00:00",
-      "session_active": true,
-      "signal_generator_version": "2.3.1-FIX",
-      "atr_stop_multiplier": 2.5,
-      "atr_target_multiplier": 7.0
-    },
-    "estimated_win_rate": null,
-    "price_source": "yfinance_confirmed",
-    "price_divergence": 0.00024
+    "timestamp": "2026-04-01T08:31:27.910106+00:00",
+    "exit_time": "2026-04-01T08:45:58.935102+00:00"
   },
   "system": {
-    "last_update": "2026-04-01T08:31:31.142161+00:00",
+    "last_update": "2026-04-01T08:46:02.902616+00:00",
     "signal_only_mode": true,
     "version": "2.3.1-FIX"
   }

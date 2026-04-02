@@ -1,6 +1,6 @@
 {
   "status": "warning",
-  "last_run": "2026-04-02T05:01:29.119776+00:00",
+  "last_run": "2026-04-02T05:15:58.266042+00:00",
   "signal_count": 0,
   "issues": [
     "No signals"
@@ -10,13 +10,20 @@
     "yfinance": "ok",
     "newsapi": "disabled",
     "marketaux": "disabled",
-    "gemini_usd": "ok",
+    "gemini": "ok",
     "finbert_hf": "ok"
   },
   "system_info": {
     "mode": "conservative",
     "pairs_monitored": 12,
-    "version": "2.3.1-FIX",
-    "usd_reasoning": "gemini-2.5-flash"
+    "version": "2.4.0",
+    "gemini_engine": "gemini-2.5-flash",
+    "permanently_blocked": [
+      "EURGBP",
+      "EURUSD",
+      "GBPAUD",
+      "GBPCAD"
+    ],
+    "european_session_start": "09:30 UTC"
   }
 }

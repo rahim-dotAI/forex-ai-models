@@ -7961,41 +7961,77 @@
       "timestamp": "2026-04-01T10:15:55.528321+00:00",
       "exit_time": "2026-04-01T10:31:06.513795+00:00",
       "mtf_confirmed": false
+    },
+    {
+      "id": "GBPJPY_BUY_eded035952c5",
+      "signal_id": "GBPJPY_BUY_eded035952c5",
+      "pair": "GBPJPY",
+      "direction": "BUY",
+      "entry_price": 212.82401,
+      "exit_price": 212.46264,
+      "sl": 212.46264,
+      "tp": 213.83583,
+      "status": "LOSS",
+      "pips": -36.136999999999375,
+      "confidence": "MODERATE",
+      "score": 57,
+      "session": "EUROPEAN",
+      "tier": "B",
+      "eligible_modes": [
+        "conservative",
+        "aggressive"
+      ],
+      "sentiment_applied": false,
+      "sentiment_score": 0.0,
+      "sentiment_adjustment": 0.0,
+      "sentiment_engine": null,
+      "estimated_win_rate": null,
+      "risk_reward": 2.8,
+      "adx": 26.0,
+      "rsi": 66.6,
+      "atr": 0.14455,
+      "htf_confirmed": false,
+      "mtf_confirmed": false,
+      "mtf_details": null,
+      "gemini_usd_bias": null,
+      "gemini_engine": null,
+      "timestamp": "2026-04-08T10:16:06.853044+00:00",
+      "exit_time": "2026-04-08T10:31:15.860398+00:00"
     }
   ],
   "stats": {
-    "total_trades": 166,
-    "total_resolved": 166,
+    "total_trades": 167,
+    "total_resolved": 167,
     "wins": 43,
-    "losses": 123,
+    "losses": 124,
     "expired": 81,
-    "win_rate": 25.9,
-    "total_pips": -782.2,
+    "win_rate": 25.7,
+    "total_pips": -818.3,
     "avg_win": 64.4,
     "avg_loss": 28.9,
     "avg_win_pips": 64.4,
     "avg_loss_pips": 28.9,
-    "expectancy_pips": -4.71,
-    "expectancy": -4.71,
+    "expectancy_pips": -4.9,
+    "expectancy": -4.9,
     "validated": true,
     "by_mode": {
       "all": {
-        "trades": 166,
+        "trades": 167,
         "wins": 43,
-        "total_pips": -782.1870000000075,
-        "win_rate": 25.9
+        "total_pips": -818.3240000000069,
+        "win_rate": 25.7
       },
       "aggressive": {
-        "trades": 159,
+        "trades": 160,
         "wins": 43,
-        "total_pips": -601.0280000000103,
-        "win_rate": 27.0
+        "total_pips": -637.1650000000096,
+        "win_rate": 26.9
       },
       "conservative": {
-        "trades": 76,
+        "trades": 77,
         "wins": 15,
-        "total_pips": -443.748999999989,
-        "win_rate": 19.7
+        "total_pips": -479.88599999998837,
+        "win_rate": 19.5
       }
     }
   },
@@ -8008,10 +8044,10 @@
         "win_rate": 39.1
       },
       "GBPJPY": {
-        "trades": 90,
+        "trades": 91,
         "wins": 29,
-        "total_pips": 177.3679999999871,
-        "win_rate": 32.2
+        "total_pips": 141.23099999998772,
+        "win_rate": 31.9
       },
       "USDCHF": {
         "trades": 6,
@@ -8094,10 +8130,10 @@
         "win_rate": 25.0
       },
       "EUROPEAN": {
-        "trades": 69,
+        "trades": 70,
         "wins": 15,
-        "total_pips": -529.7150000000097,
-        "win_rate": 21.7
+        "total_pips": -565.8520000000091,
+        "win_rate": 21.4
       },
       "OVERLAP": {
         "trades": 4,
@@ -8108,10 +8144,10 @@
     },
     "by_confidence": {
       "MODERATE": {
-        "trades": 151,
+        "trades": 152,
         "wins": 39,
-        "total_pips": -857.3940000000116,
-        "win_rate": 25.8
+        "total_pips": -893.531000000011,
+        "win_rate": 25.7
       },
       "STRONG": {
         "trades": 15,
@@ -8122,10 +8158,10 @@
     },
     "by_tier": {
       "B": {
-        "trades": 83,
+        "trades": 84,
         "wins": 17,
-        "total_pips": -573.2939999999926,
-        "win_rate": 20.5
+        "total_pips": -609.430999999992,
+        "win_rate": 20.2
       },
       "C": {
         "trades": 79,
@@ -8148,25 +8184,25 @@
         "win_rate": 0.0
       },
       "aggressive": {
-        "trades": 159,
+        "trades": 160,
         "wins": 43,
-        "total_pips": -601.0280000000103,
-        "win_rate": 27.0
+        "total_pips": -637.1650000000096,
+        "win_rate": 26.9
       },
       "conservative": {
-        "trades": 76,
+        "trades": 77,
         "wins": 15,
-        "total_pips": -443.748999999989,
-        "win_rate": 19.7
+        "total_pips": -479.88599999998837,
+        "win_rate": 19.5
       }
     },
     "by_sentiment": {
       "sentiment_off": {
-        "trades": 153,
+        "trades": 154,
         "wins": 40,
-        "total_pips": -713.1160000000126,
+        "total_pips": -749.253000000012,
         "engine": "none",
-        "win_rate": 26.1
+        "win_rate": 26.0
       },
       "sentiment_on": {
         "trades": 13,
@@ -8178,10 +8214,10 @@
     },
     "by_mtf_confirmed": {
       "partial_or_none": {
-        "trades": 166,
+        "trades": 167,
         "wins": 43,
-        "total_pips": -782.1870000000075,
-        "win_rate": 25.9
+        "total_pips": -818.3240000000069,
+        "win_rate": 25.7
       }
     },
     "by_gemini_bias": {},
@@ -8222,10 +8258,10 @@
         "B_EUROPEAN": {
           "tier": "B",
           "session": "EUROPEAN",
-          "trades": 40,
+          "trades": 41,
           "wins": 6,
-          "total_pips": -477.4340000000023,
-          "win_rate": 15.0
+          "total_pips": -513.5710000000017,
+          "win_rate": 14.6
         },
         "C_US": {
           "tier": "C",
@@ -8296,18 +8332,18 @@
         "aggressive_B": {
           "mode": "aggressive",
           "tier": "B",
-          "trades": 76,
+          "trades": 77,
           "wins": 17,
-          "total_pips": -392.13499999999533,
-          "win_rate": 22.4
+          "total_pips": -428.2719999999947,
+          "win_rate": 22.1
         },
         "conservative_B": {
           "mode": "conservative",
           "tier": "B",
-          "trades": 72,
+          "trades": 73,
           "wins": 15,
-          "total_pips": -369.8489999999912,
-          "win_rate": 20.8
+          "total_pips": -405.98599999999055,
+          "win_rate": 20.5
         },
         "aggressive_C": {
           "mode": "aggressive",
@@ -8339,6 +8375,6 @@
   "daily": {},
   "metadata": {
     "created_at": "2026-01-28T16:31:06.713234+00:00",
-    "last_updated": "2026-04-01T10:31:06.516016+00:00"
+    "last_updated": "2026-04-08T10:31:15.862515+00:00"
   }
 }

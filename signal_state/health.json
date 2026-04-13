@@ -1,6 +1,6 @@
 {
   "status": "warning",
-  "last_run": "2026-04-13T04:16:09.767535+00:00",
+  "last_run": "2026-04-13T04:31:24.641767+00:00",
   "signal_count": 0,
   "issues": [
     "No signals"
@@ -16,8 +16,10 @@
   "system_info": {
     "mode": "conservative",
     "pairs_monitored": 12,
-    "version": "2.4.0",
+    "version": "2.5.0",
+    "timeframe": "1h",
     "gemini_engine": "gemini-2.5-flash",
+    "exit_mode": "TP1=2.5xATR | 120min time stop",
     "permanently_blocked": [
       "EURGBP",
       "EURUSD",

@@ -1246,16 +1246,25 @@ def resolve_active_signals():
             if hasattr(close_val, 'iloc'): close_val = close_val.iloc[0]
             curr = float(close_val)
 
-            # Get price window since entry
+            # Get price window: entry_time → time_stop_at (upper bound REQUIRED)
+            # BUG FIX: old code only applied `idx >= entry_time` (no upper bound).
+            # Resolution runs every 15min so by the time it fires, the full day's
+            # 1-min bars are present. Without the upper bound, price action AFTER
+            # the 2h time stop is incorrectly credited as TP1 hits.
+            # Fix: apply both bounds → entry_time to time_stop_at.
             try:
                 idx = df.index
                 if not hasattr(idx, 'tz') or idx.tz is None:
                     idx = idx.tz_localize("UTC")
                 elif str(idx.tz) != "UTC":
                     idx = idx.tz_convert("UTC")
-                mask = idx >= entry_time
+                # Upper bound = time_stop_at (hard 2h window), capped at now
+                upper = min(time_stop_at, now)
+                mask = (idx >= entry_time) & (idx <= upper)
                 window_df = df[mask.values] if mask.any() else df
-            except Exception:
+                log.debug(f"  Resolution window: {entry_time.strftime('%H:%M')} → {upper.strftime('%H:%M')} UTC | {len(window_df)} bars")
+            except Exception as e:
+                log.warning(f"  Resolution window filter failed ({e}) — using full day data")
                 window_df = df
 
             period_high = float(window_df["High"].max()) if not window_df.empty else curr

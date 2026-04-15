@@ -1495,17 +1495,40 @@ def get_gemini_usd_bias(headlines: List[str]) -> Optional[str]:
     try:
         resp = requests.post(f"{GEMINI_URL}?key={GEMINI_API_KEY}",
                              json=payload, headers={"Content-Type":"application/json"}, timeout=10)
-        if resp.status_code != 200: return "NEUTRAL"
-        text = resp.json()["candidates"][0]["content"]["parts"][0]["text"].strip().upper()
+        if resp.status_code != 200:
+            log.warning(f"Gemini {resp.status_code} — defaulting to NEUTRAL")
+            return "NEUTRAL"
+        # Safe navigation — Gemini can return various structures:
+        # normal: {"candidates": [{"content": {"parts": [{"text": "BULLISH"}]}}]}
+        # filtered: {"candidates": [{"finishReason": "SAFETY", "content": {}}]}
+        # quota/error: {"error": {...}} with no candidates
+        raw = resp.json()
+        candidates = raw.get("candidates", [])
+        if not candidates:
+            log.warning(f"Gemini returned no candidates — defaulting to NEUTRAL. Response: {str(raw)[:200]}")
+            return "NEUTRAL"
+        content = candidates[0].get("content", {})
+        parts = content.get("parts", [])
+        if not parts:
+            finish = candidates[0].get("finishReason", "unknown")
+            log.warning(f"Gemini returned no parts (finishReason={finish}) — defaulting to NEUTRAL")
+            return "NEUTRAL"
+        text = parts[0].get("text", "").strip().upper()
+        if not text:
+            log.warning("Gemini returned empty text — defaulting to NEUTRAL")
+            return "NEUTRAL"
         result = "BULLISH" if "BULLISH" in text else ("BEARISH" if "BEARISH" in text else "NEUTRAL")
-        _gemini_usd_cache["USD"] = (time.time(), result)
-        log.info(f"Gemini USD bias: {result}")
+        try:
+            _gemini_usd_cache["USD"] = (time.time(), result)
+        except Exception as ce:
+            log.warning(f"Gemini cache write failed: {ce}")
+        log.info(f"Gemini USD bias: {result} (raw: '{text[:30]}')")
         return result
     except requests.Timeout:
-        log.warning("Gemini timeout — defaulting to NEUTRAL")
+        log.warning("Gemini timeout (>10s) — defaulting to NEUTRAL")
         return "NEUTRAL"
     except Exception as e:
-        log.warning(f"Gemini error: {e}")
+        log.warning(f"Gemini error: {e} — defaulting to NEUTRAL")
         return "NEUTRAL"
 
 

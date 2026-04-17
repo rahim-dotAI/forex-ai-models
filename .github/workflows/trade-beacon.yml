@@ -26,8 +26,6 @@ on:
   schedule:
     - cron: "*/15 * * * 1-5"
 
-  repository_dispatch:
-    types: [trade-signal-check, performance-check]
 
   workflow_dispatch:
     inputs:

@@ -1,12 +1,9 @@
 {
-  "version": "2.5.0",
+  "version": "2.6.0-FOCUSED",
   "mode": "conservative",
-
-  "_v2.5.0_changes": "LAYERED EXIT EDITION. Signal timeframe 15m→1h. SL 2.5x→2.0x ATR. TP1=2.5x ATR (partial profit lock). 2-hour time stop on remainder. 45-min momentum check exits dead trades. Session end guard: no new signals if <2h remain in session. MTF updated: 30m and 1h removed (now signal timeframe), only 4h+Daily+Weekly remain above signal timeframe. All else from v2.4.0 retained.",
-
+  "_v2.5.0_changes": "LAYERED EXIT EDITION. Signal timeframe 15m\u21921h. SL 2.5x\u21922.0x ATR. TP1=2.5x ATR (partial profit lock). 2-hour time stop on remainder. 45-min momentum check exits dead trades. Session end guard: no new signals if <2h remain in session. MTF updated: 30m and 1h removed (now signal timeframe), only 4h+Daily+Weekly remain above signal timeframe. All else from v2.4.0 retained.",
   "use_sentiment": true,
   "_sentiment_note": "Gemini 2.5 Flash is primary USD reasoning engine. GBP pairs remain pure technical. FinBERT kept as automatic fallback.",
-
   "settings": {
     "aggressive": {
       "threshold": 55,
@@ -17,7 +14,7 @@
       "atr_stop_multiplier": 2.0,
       "atr_tp1_multiplier": 2.5,
       "max_correlated_signals": 2,
-      "_note": "v2.5.0: min_risk_reward 2.5→1.2 (TP1/SL = 2.5/2.0 = 1.25x). atr_target_multiplier replaced by atr_tp1_multiplier."
+      "_note": "v2.5.0: min_risk_reward 2.5\u21921.2 (TP1/SL = 2.5/2.0 = 1.25x). atr_target_multiplier replaced by atr_tp1_multiplier."
     },
     "conservative": {
       "threshold": 57,
@@ -28,23 +25,20 @@
       "atr_stop_multiplier": 2.0,
       "atr_tp1_multiplier": 2.5,
       "max_correlated_signals": 1,
-      "_note": "v2.5.0: same exit parameters as aggressive — exit logic is not mode-dependent."
+      "_note": "v2.5.0: same exit parameters as aggressive \u2014 exit logic is not mode-dependent."
     }
   },
-
   "tiers": {
     "A_plus_min_score": 80,
     "A_min_score": 72,
     "B_min_score": 55,
-    "_note": "Tier A (72-79) BLOCKED — 0% WR historically. Tier C (<55) BLOCKED. A+ (>=80) and B (55-71) trade."
+    "_note": "Tier A (72-79) BLOCKED \u2014 0% WR historically. Tier C (<55) BLOCKED. A+ (>=80) and B (55-71) trade."
   },
-
   "sessions": {
     "european_start_hour": 9,
     "european_start_minute": 30,
-    "_note": "v2.4.0: EU session delayed to 09:30 UTC — 08:00-09:30 is noise zone. v2.5.0: session end guard added (see exit_rules)."
+    "_note": "v2.4.0: EU session delayed to 09:30 UTC \u2014 08:00-09:30 is noise zone. v2.5.0: session end guard added (see exit_rules)."
   },
-
   "exit_rules": {
     "time_stop_minutes": 120,
     "momentum_check_minutes": 45,
@@ -52,21 +46,18 @@
     "session_min_remaining_minutes": 120,
     "_note": "v2.5.0 layered exit: TP1 at 2.5xATR locks partial profit. 2-hour time stop closes remainder at market. 45-min momentum check exits dead trades that haven't moved 10 pips. Session end guard prevents new signals if <2h remain (EUROPEAN: no new after 11:00 UTC, US: no new after 19:00 UTC)."
   },
-
   "mtf_settings": {
     "require_4h": true,
     "require_daily": true,
     "require_weekly": false,
-    "_note": "v2.5.0: 30m and 1h REMOVED from MTF — signal is now generated on 1h chart. MTF only checks above signal timeframe: 4h (required), Daily (decisive), Weekly (bonus only, never blocks). Daily would have blocked the entire March 23 -318 pip day."
+    "_note": "v2.5.0: 30m and 1h REMOVED from MTF \u2014 signal is now generated on 1h chart. MTF only checks above signal timeframe: 4h (required), Daily (decisive), Weekly (bonus only, never blocks). Daily would have blocked the entire March 23 -318 pip day."
   },
-
   "gemini_usd_gate": {
     "enabled": true,
     "model": "gemini-2.5-flash",
     "cache_minutes": 60,
-    "_note": "gemini-2.5-flash only. NOT 2.0-flash (deprecated Feb 2026, retired Mar 3 2026). Free tier: 10 RPM, 250 RPD. NewsAPI headlines passed as text context — no Google Search grounding ($35/1K). BULLISH=allow BUY USD, BEARISH=allow SELL USD, NEUTRAL=block all USD. Falls back to FinBERT if GEMINI_API_KEY not set."
+    "_note": "gemini-2.5-flash only. NOT 2.0-flash (deprecated Feb 2026, retired Mar 3 2026). Free tier: 10 RPM, 250 RPD. NewsAPI headlines passed as text context \u2014 no Google Search grounding ($35/1K). BULLISH=allow BUY USD, BEARISH=allow SELL USD, NEUTRAL=block all USD. Falls back to FinBERT if GEMINI_API_KEY not set."
   },
-
   "advanced": {
     "enable_session_filtering": true,
     "enable_correlation_filter": true,
@@ -75,7 +66,6 @@
     "parallel_workers": 4,
     "atr_stop_multiplier": 2.0,
     "atr_tp1_multiplier": 2.5,
-
     "session_bonuses": {
       "ASIAN": {
         "JPY_pairs": 3,
@@ -100,16 +90,14 @@
         "all_major_pairs": 0
       }
     },
-
     "session_thresholds": {
       "ASIAN": 999,
-      "EUROPEAN": 48,
+      "EUROPEAN": 999,
       "US": 48,
-      "LATE_US": 60,
+      "LATE_US": 999,
       "OVERLAP": 999,
-      "_note": "ASIAN/OVERLAP blocked. Effective score threshold is 55/57 from settings — 48 is the raw session gate."
+      "_note": "v2.6.0-FOCUSED: US session ONLY. European blocked (999) \u2014 75 trades 22.7% WR -599 pips. LATE_US blocked \u2014 thin volume, not edge target. Only US active: 48t 37.5% WR +79 pips."
     },
-
     "pair_limits": {
       "GBPUSD": 5,
       "GBPJPY": 1,
@@ -117,36 +105,42 @@
       "GBPCAD": 0,
       "EURGBP": 0,
       "EURUSD": 0,
-      "NZDUSD": 1,
-      "AUDUSD": 2,
-      "default": 3,
-      "_note": "EURUSD=0 (7t 0%WR -177p). EURGBP=0 (no edge). GBPAUD=0 (8t 0%WR -335p, v2.4.0). GBPCAD=0 (6t 0%WR -261p, v2.4.0). GBPUSD=5 BUY-only. GBPJPY=1 (prevents same-day BUY+SELL)."
+      "NZDUSD": 0,
+      "AUDUSD": 0,
+      "USDCAD": 0,
+      "USDCHF": 0,
+      "USDJPY": 0,
+      "EURJPY": 0,
+      "default": 0,
+      "_note": "v2.6.0-FOCUSED: GBPUSD + GBPJPY only. All others zeroed. Edge isolation \u2014 174 trades confirm only these two pairs profitable. Next 60 trades collect clean US session data on proven pairs only."
     },
-
     "directional_filters": {
       "GBPUSD": {
-        "allowed_directions": ["BUY"],
-        "blocked_directions": ["SELL"],
+        "allowed_directions": [
+          "BUY"
+        ],
+        "blocked_directions": [
+          "SELL"
+        ],
         "reason": "GBPUSD SELL: 0/3 wins historically (-49.7p). BUY: 39%+ WR. BoE structural bid 2025-26."
       },
       "_note": "Block specific directions for pairs with confirmed directional bias."
     },
-
     "validation": {
       "max_signal_age_seconds": 3600,
-      "_age_note": "v2.5.0: 900→3600 seconds. 1h signals are valid for up to 1 hour before stale check.",
+      "_age_note": "v2.5.0: 900\u21923600 seconds. 1h signals are valid for up to 1 hour before stale check.",
       "session_expiry_minutes": {
         "EUROPEAN": 120,
         "US": 120,
         "ASIAN": 60,
         "LATE_US": 60,
         "OVERLAP": 60,
-        "_note": "v2.5.0: 240→120 minutes. Matches 2-hour time stop — signal expires when time stop fires."
+        "_note": "v2.5.0: 240\u2192120 minutes. Matches 2-hour time stop \u2014 signal expires when time stop fires."
       },
       "min_sl_pips": {
         "JPY_pairs": 15,
         "other": 8,
-        "_note": "v2.5.0: reduced slightly — 1h ATR is larger so absolute pip SL is still adequate at 2.0x."
+        "_note": "v2.5.0: reduced slightly \u2014 1h ATR is larger so absolute pip SL is still adequate at 2.0x."
       },
       "max_spread_ratio": 0.3,
       "max_sl_distance_pct": 0.015,
@@ -154,22 +148,27 @@
       "require_direction": true,
       "reject_missing_pips": true
     },
-
     "usd_pair_rules": {
       "enabled": true,
       "restricted_pairs": [
-        "AUDUSD", "USDCAD", "USDCHF", "USDJPY", "NZDUSD", "EURJPY"
+        "AUDUSD",
+        "USDCAD",
+        "USDCHF",
+        "USDJPY",
+        "NZDUSD",
+        "EURJPY"
       ],
-      "allowed_sessions": ["US"],
+      "allowed_sessions": [
+        "US"
+      ],
       "min_score": 60,
       "blackout_before_minutes": 45,
       "blackout_after_minutes": 30,
       "sentiment_gate": true,
       "sentiment_gate_threshold": 0.1,
-      "_note": "USD pairs: US session only + Gemini 2.5 Flash gate (or FinBERT fallback). Min score raised 65→60 to allow more 1h signals through (1h scoring is more stable than 15m)."
+      "_note": "USD pairs: US session only + Gemini 2.5 Flash gate (or FinBERT fallback). Min score raised 65\u219260 to allow more 1h signals through (1h scoring is more stable than 15m)."
     }
   },
-
   "sentiment": {
     "min_score_threshold": 60,
     "newsapi_enabled": true,
@@ -181,11 +180,10 @@
     "max_adjustment_pts": 10,
     "_setup": "HF_API_KEY = FinBERT fallback. GEMINI_API_KEY = primary USD gate. Both secrets needed for full functionality."
   },
-
   "risk_management": {
     "max_daily_risk_pips": 150,
     "max_open_positions": 5,
-    "_note": "v2.5.0: 1h signals with 2h time stop means positions close faster — 5 positions is reasonable.",
+    "_note": "v2.5.0: 1h signals with 2h time stop means positions close faster \u2014 5 positions is reasonable.",
     "stop_trading_on_drawdown_pips": 100,
     "equity_protection": {
       "enable": false,
@@ -193,11 +191,10 @@
       "pause_minutes_after_hit": 120
     }
   },
-
   "performance_tracking": {
     "enable": true,
     "history_file": "signal_state/signal_history.json",
-    "tracker_version": "2.5.0",
+    "tracker_version": "2.6.0-FOCUSED",
     "idempotency": {
       "enabled": true
     },
@@ -212,42 +209,39 @@
       "track_exit_reason": true
     }
   },
-
   "performance_tuning": {
     "auto_adjust_thresholds": false,
     "min_trades_for_optimization": 50,
     "target_win_rate": 0.42,
-    "_target_note": "v2.5.0: target WR 0.65→0.42. With 1.25 R:R (TP1/SL), breakeven is ~44%. Realistic target 38-45%.",
+    "_target_note": "v2.5.0: target WR 0.65\u21920.42. With 1.25 R:R (TP1/SL), breakeven is ~44%. Realistic target 38-45%.",
     "target_expectancy_pips": 10,
     "optimization_interval_days": 14,
     "optimization_inputs": {
       "min_expectancy": 5
     }
   },
-
   "economic_calendar": {
     "enabled": true,
     "blackout_before_minutes": 30,
     "blackout_after_minutes": 15,
     "cache_ttl_hours": 24,
     "source": "https://nfs.faireconomy.media/ff_calendar_thisweek.json",
-    "_note": "High-impact events only. With 2h time stop, single news event impact is contained — but blackout still prevents entering INTO the event window."
+    "_note": "High-impact events only. With 2h time stop, single news event impact is contained \u2014 but blackout still prevents entering INTO the event window."
   },
-
   "live_price_validation": {
     "enabled": true,
     "divergence_threshold_pct": 0.5,
     "cache_ttl_minutes": 5,
     "source": "https://www.x-rates.com"
   },
-
   "_research_notes": {
     "signal_half_life": "15m signals have edge for 30-90 minutes. v2.4.0 was holding 6-12 hours. By hour 3+, edge expired and macro events hit stops. Root cause of 25.6% WR and -845 pip total. Fix: 1h timeframe + 2h time stop aligns holding period with prediction window.",
     "exit_architecture": "Partial TP (TP1 at 2.5xATR) locks profit early. Time stop eliminates entropy accumulation from long holds. Momentum check removes dead trades that show no movement 45 min in. Together these reduce variance and convert edge into realized profit.",
     "session_end_guard": "No new signal if <2h remain in session. EUROPEAN guard fires at 11:00 UTC (session ends 13:00). US guard fires at 19:00 UTC (session ends 21:00). Prevents 2h time stop from closing in thin end-of-session liquidity.",
-    "MTF_1h_removal": "30m and 1h removed from MTF checks in v2.5.0. Signal is generated on 1h chart — you cannot use the signal timeframe as a confirmation filter. Filtering must be from above. 4h + Daily + Weekly are above 1h and remain.",
-    "ATR_multiplier_change": "SL reduced 2.5x→2.0x. 1h ATR is significantly larger than 15m ATR in absolute pip terms. 2.0x on 1h gives adequate stop distance while keeping SL tighter in pips to maintain R:R.",
-    "breakeven_WR": "With TP1=2.5xATR and SL=2.0xATR, R:R = 1.25. Breakeven WR = 1/(1+1.25) = 44.4%. Target 38-45% is realistic based on GBPJPY/GBPUSD historical edge. Prior system needed 26% WR at 7x TP — sounds easier but 7x targets were rarely hit before time/reversal.",
-    "GBPUSD_GBPJPY_edge": "Only confirmed profitable pairs. GBPJPY: 92t 31.5% WR +114p. GBPUSD: 23t 39.1% WR +84p. All others net negative. System built around these two pairs — everything else is opportunistic when conditions align."
-  }
+    "MTF_1h_removal": "30m and 1h removed from MTF checks in v2.5.0. Signal is generated on 1h chart \u2014 you cannot use the signal timeframe as a confirmation filter. Filtering must be from above. 4h + Daily + Weekly are above 1h and remain.",
+    "ATR_multiplier_change": "SL reduced 2.5x\u21922.0x. 1h ATR is significantly larger than 15m ATR in absolute pip terms. 2.0x on 1h gives adequate stop distance while keeping SL tighter in pips to maintain R:R.",
+    "breakeven_WR": "With TP1=2.5xATR and SL=2.0xATR, R:R = 1.25. Breakeven WR = 1/(1+1.25) = 44.4%. Target 38-45% is realistic based on GBPJPY/GBPUSD historical edge. Prior system needed 26% WR at 7x TP \u2014 sounds easier but 7x targets were rarely hit before time/reversal.",
+    "GBPUSD_GBPJPY_edge": "Only confirmed profitable pairs. GBPJPY: 92t 31.5% WR +114p. GBPUSD: 23t 39.1% WR +84p. All others net negative. System built around these two pairs \u2014 everything else is opportunistic when conditions align."
+  },
+  "_v2.6.0_changes": "EDGE ISOLATION MODE: Pair + Session concentration based on 174-trade evidence. GBPUSD (44% WR +148p) and GBPJPY (32% WR +107p) only. US session only (37.5% WR +79p). European blocked (22.7% WR -599p). Goal: 60 clean trades on proven bucket. Bootstrap CI analysis after. Recommended by Claude + ChatGPT after Bayesian Monte Carlo discussion."
 }

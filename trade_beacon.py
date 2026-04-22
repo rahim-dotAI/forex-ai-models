@@ -1643,7 +1643,8 @@ def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
 
     if None in (e12, e26, e200, r, a, curr, atr):
         log.info(f"{pair.replace('=X','')} skipped: missing indicators"); return None, ok
-    if a < min_a:
+    # BUG FIX: floating point — ADX 14.9999 was incorrectly failing `< 15`
+    if round(a, 1) < min_a:
         log.info(f"{pair.replace('=X','')} skipped: ADX {a:.1f} < {min_a}"); return None, ok
 
     # ── 3. Scoring (7 components — same logic, now on 1h bars) ───────────

@@ -1,9 +1,9 @@
 {
-  "timestamp": "2026-04-27T16:01:49.055116+00:00",
-  "active_signals": 1,
+  "timestamp": "2026-04-27T16:16:15.065199+00:00",
+  "active_signals": 0,
   "active_signals_by_mode": {
-    "aggressive": 1,
-    "conservative": 1
+    "aggressive": 0,
+    "conservative": 0
   },
   "session": "US",
   "mode": "conservative",
@@ -18,231 +18,52 @@
   },
   "market_state": {
     "volatility": "CALM",
-    "sentiment_bias": "BULLISH",
+    "sentiment_bias": "MIXED",
     "session": "US"
   },
   "signals_by_mode": {
-    "aggressive": [
-      {
-        "signal_id": "GBPUSD_BUY_98e394124362",
-        "id": "GBPUSD_BUY_98e394124362",
-        "pair": "GBPUSD",
-        "direction": "BUY",
-        "score": 61,
-        "technical_score": 61,
-        "sentiment_score": 0.0,
-        "sentiment_adjustment": 0.0,
-        "score_before_sentiment": 61,
-        "confidence": "MODERATE",
-        "tier": "B",
-        "rsi": 60.6,
-        "adx": 34.8,
-        "atr": 0.00118,
-        "volume_ratio": 0,
-        "session": "US",
-        "entry_price": 1.35522,
-        "sl": 1.35285,
-        "tp1": 1.35817,
-        "tp": 1.35817,
-        "risk_reward": 1.25,
-        "spread": 0.0002,
-        "timestamp": "2026-04-27T16:01:44.529832+00:00",
-        "status": "OPEN",
-        "time_stop_at": "2026-04-27T18:01:44.529832+00:00",
-        "momentum_check_at": "2026-04-27T16:46:44.529832+00:00",
-        "momentum_min_pips": 10,
-        "time_stop_minutes": 120,
-        "exit_mode": "tp1_time_stop",
-        "hold_time": "1H-2H",
-        "eligible_modes": [
-          "conservative",
-          "aggressive"
-        ],
-        "freshness": {
-          "status": "FRESH",
-          "age_minutes": 0.0,
-          "confidence_decay": 100.0
-        },
-        "sentiment_applied": false,
-        "gemini_usd_bias": null,
-        "mtf_confirmed": true,
-        "htf_confirmed": true,
-        "mtf_details": {
-          "4h": "BULL",
-          "1d": "BULL",
-          "1wk": "BULL"
-        },
-        "metadata": {
-          "signal_type": "trend-continuation",
-          "market_state": "TRENDING_STRONG",
-          "timeframe": "1h",
-          "valid_for_minutes": 120,
-          "generated_at": "2026-04-27T16:01:44.529832+00:00",
-          "expires_at": "2026-04-27T18:01:44.529832+00:00",
-          "session_active": true,
-          "signal_generator_version": "2.5.0",
-          "atr_stop_multiplier": 2.0,
-          "atr_tp1_multiplier": 2.5,
-          "exit_architecture": "SL=2.0xATR | TP1=2.5xATR | TimeStop=120min",
-          "mtf_summary": {
-            "4h": "BULL",
-            "1d": "BULL",
-            "1wk": "BULL",
-            "fully_confirmed": true
-          }
-        },
-        "estimated_win_rate": null,
-        "price_source": "yfinance_confirmed",
-        "price_divergence": 0.00016
-      }
-    ],
-    "conservative": [
-      {
-        "signal_id": "GBPUSD_BUY_98e394124362",
-        "id": "GBPUSD_BUY_98e394124362",
-        "pair": "GBPUSD",
-        "direction": "BUY",
-        "score": 61,
-        "technical_score": 61,
-        "sentiment_score": 0.0,
-        "sentiment_adjustment": 0.0,
-        "score_before_sentiment": 61,
-        "confidence": "MODERATE",
-        "tier": "B",
-        "rsi": 60.6,
-        "adx": 34.8,
-        "atr": 0.00118,
-        "volume_ratio": 0,
-        "session": "US",
-        "entry_price": 1.35522,
-        "sl": 1.35285,
-        "tp1": 1.35817,
-        "tp": 1.35817,
-        "risk_reward": 1.25,
-        "spread": 0.0002,
-        "timestamp": "2026-04-27T16:01:44.529832+00:00",
-        "status": "OPEN",
-        "time_stop_at": "2026-04-27T18:01:44.529832+00:00",
-        "momentum_check_at": "2026-04-27T16:46:44.529832+00:00",
-        "momentum_min_pips": 10,
-        "time_stop_minutes": 120,
-        "exit_mode": "tp1_time_stop",
-        "hold_time": "1H-2H",
-        "eligible_modes": [
-          "conservative",
-          "aggressive"
-        ],
-        "freshness": {
-          "status": "FRESH",
-          "age_minutes": 0.0,
-          "confidence_decay": 100.0
-        },
-        "sentiment_applied": false,
-        "gemini_usd_bias": null,
-        "mtf_confirmed": true,
-        "htf_confirmed": true,
-        "mtf_details": {
-          "4h": "BULL",
-          "1d": "BULL",
-          "1wk": "BULL"
-        },
-        "metadata": {
-          "signal_type": "trend-continuation",
-          "market_state": "TRENDING_STRONG",
-          "timeframe": "1h",
-          "valid_for_minutes": 120,
-          "generated_at": "2026-04-27T16:01:44.529832+00:00",
-          "expires_at": "2026-04-27T18:01:44.529832+00:00",
-          "session_active": true,
-          "signal_generator_version": "2.5.0",
-          "atr_stop_multiplier": 2.0,
-          "atr_tp1_multiplier": 2.5,
-          "exit_architecture": "SL=2.0xATR | TP1=2.5xATR | TimeStop=120min",
-          "mtf_summary": {
-            "4h": "BULL",
-            "1d": "BULL",
-            "1wk": "BULL",
-            "fully_confirmed": true
-          }
-        },
-        "estimated_win_rate": null,
-        "price_source": "yfinance_confirmed",
-        "price_divergence": 0.00016
-      }
-    ]
+    "aggressive": [],
+    "conservative": []
   },
   "historical_signals": [
     {
-      "signal_id": "GBPUSD_BUY_98e394124362",
       "id": "GBPUSD_BUY_98e394124362",
+      "signal_id": "GBPUSD_BUY_98e394124362",
       "pair": "GBPUSD",
       "direction": "BUY",
-      "score": 61,
-      "technical_score": 61,
-      "sentiment_score": 0.0,
-      "sentiment_adjustment": 0.0,
-      "score_before_sentiment": 61,
-      "confidence": "MODERATE",
-      "tier": "B",
-      "rsi": 60.6,
-      "adx": 34.8,
-      "atr": 0.00118,
-      "volume_ratio": 0,
-      "session": "US",
       "entry_price": 1.35522,
+      "exit_price": 1.35285,
       "sl": 1.35285,
-      "tp1": 1.35817,
       "tp": 1.35817,
-      "risk_reward": 1.25,
-      "spread": 0.0002,
-      "timestamp": "2026-04-27T16:01:44.529832+00:00",
-      "status": "OPEN",
-      "time_stop_at": "2026-04-27T18:01:44.529832+00:00",
-      "momentum_check_at": "2026-04-27T16:46:44.529832+00:00",
-      "momentum_min_pips": 10,
-      "time_stop_minutes": 120,
-      "exit_mode": "tp1_time_stop",
-      "hold_time": "1H-2H",
+      "tp1": 1.35817,
+      "status": "LOSS",
+      "pips": -23.699999999999832,
+      "confidence": "MODERATE",
+      "score": 61,
+      "session": "US",
+      "tier": "B",
       "eligible_modes": [
         "conservative",
         "aggressive"
       ],
-      "freshness": {
-        "status": "FRESH",
-        "age_minutes": 0.0,
-        "confidence_decay": 100.0
-      },
       "sentiment_applied": false,
-      "gemini_usd_bias": null,
-      "mtf_confirmed": true,
-      "htf_confirmed": true,
-      "mtf_details": {
-        "4h": "BULL",
-        "1d": "BULL",
-        "1wk": "BULL"
-      },
-      "metadata": {
-        "signal_type": "trend-continuation",
-        "market_state": "TRENDING_STRONG",
-        "timeframe": "1h",
-        "valid_for_minutes": 120,
-        "generated_at": "2026-04-27T16:01:44.529832+00:00",
-        "expires_at": "2026-04-27T18:01:44.529832+00:00",
-        "session_active": true,
-        "signal_generator_version": "2.5.0",
-        "atr_stop_multiplier": 2.0,
-        "atr_tp1_multiplier": 2.5,
-        "exit_architecture": "SL=2.0xATR | TP1=2.5xATR | TimeStop=120min",
-        "mtf_summary": {
-          "4h": "BULL",
-          "1d": "BULL",
-          "1wk": "BULL",
-          "fully_confirmed": true
-        }
-      },
+      "sentiment_score": 0.0,
+      "sentiment_adjustment": 0.0,
+      "gemini_engine": null,
       "estimated_win_rate": null,
-      "price_source": "yfinance_confirmed",
-      "price_divergence": 0.00016
+      "risk_reward": 1.25,
+      "adx": 34.8,
+      "rsi": 60.6,
+      "atr": 0.00118,
+      "htf_confirmed": false,
+      "mtf_details": null,
+      "gemini_usd_bias": null,
+      "exit_reason": "LOSS",
+      "exit_mode": "tp1_time_stop",
+      "time_stop_at": null,
+      "momentum_min_pips": 10,
+      "timestamp": "2026-04-27T16:01:44.529832+00:00",
+      "exit_time": "2026-04-27T16:16:08.401151+00:00"
     },
     {
       "id": "GBPUSD_BUY_5fae47f1694a",
@@ -10060,23 +9881,23 @@
     }
   },
   "stats": {
-    "total_trades": 175,
-    "win_rate": 26.9,
-    "total_pips": -812.2,
+    "total_trades": 176,
+    "win_rate": 26.7,
+    "total_pips": -835.9,
     "wins": 47,
-    "losses": 128,
-    "expectancy": -4.64
+    "losses": 129,
+    "expectancy": -4.75
   },
   "performance_stats": {
-    "total_trades": 175,
+    "total_trades": 176,
     "wins": 47,
-    "losses": 128,
+    "losses": 129,
     "expired": 81,
-    "win_rate": 26.9,
-    "total_pips": -812.2,
+    "win_rate": 26.7,
+    "total_pips": -835.9,
     "avg_win": 61.5,
     "avg_loss": 28.9,
-    "expectancy": -4.64,
+    "expectancy": -4.75,
     "by_mode": {
       "all": {
         "trades": 0,
@@ -10085,24 +9906,24 @@
         "win_rate": 0.0
       },
       "aggressive": {
-        "trades": 168,
+        "trades": 169,
         "wins": 47,
-        "total_pips": -631.024585937511,
-        "win_rate": 28.0
+        "total_pips": -654.7245859375108,
+        "win_rate": 27.8
       },
       "conservative": {
-        "trades": 84,
+        "trades": 85,
         "wins": 18,
-        "total_pips": -480.04399999998896,
-        "win_rate": 21.4
+        "total_pips": -503.7439999999888,
+        "win_rate": 21.2
       }
     },
     "by_tier": {
       "B": {
-        "trades": 92,
+        "trades": 93,
         "wins": 21,
-        "total_pips": -603.2905859374933,
-        "win_rate": 22.8
+        "total_pips": -626.9905859374932,
+        "win_rate": 22.6
       },
       "C": {
         "trades": 79,
@@ -10119,10 +9940,10 @@
     },
     "by_session": {
       "US": {
-        "trades": 49,
+        "trades": 50,
         "wins": 18,
-        "total_pips": 54.81200000001093,
-        "win_rate": 36.7
+        "total_pips": 31.1120000000111,
+        "win_rate": 36.0
       },
       "LATE_US": {
         "trades": 15,
@@ -10151,10 +9972,10 @@
     },
     "by_pair": {
       "GBPUSD": {
-        "trades": 26,
+        "trades": 27,
         "wins": 11,
-        "total_pips": 123.9999999999985,
-        "win_rate": 42.3
+        "total_pips": 100.29999999999866,
+        "win_rate": 40.7
       },
       "GBPJPY": {
         "trades": 96,
@@ -10225,17 +10046,17 @@
     }
   },
   "risk_management": {
-    "theoretical_max_pips": 23.7,
-    "total_risk_pips": 23.699999999999832,
+    "theoretical_max_pips": 0.0,
+    "total_risk_pips": 0,
     "max_daily_risk": 150
   },
   "analytics": {
     "by_pair": {
       "GBPUSD": {
-        "trades": 26,
+        "trades": 27,
         "wins": 11,
-        "total_pips": 123.9999999999985,
-        "win_rate": 42.3
+        "total_pips": 100.29999999999866,
+        "win_rate": 40.7
       },
       "GBPJPY": {
         "trades": 96,
@@ -10306,10 +10127,10 @@
     },
     "by_session": {
       "US": {
-        "trades": 49,
+        "trades": 50,
         "wins": 18,
-        "total_pips": 54.81200000001093,
-        "win_rate": 36.7
+        "total_pips": 31.1120000000111,
+        "win_rate": 36.0
       },
       "LATE_US": {
         "trades": 15,
@@ -10338,10 +10159,10 @@
     },
     "by_confidence": {
       "MODERATE": {
-        "trades": 159,
+        "trades": 160,
         "wins": 42,
-        "total_pips": -921.9905859375125,
-        "win_rate": 26.4
+        "total_pips": -945.6905859375123,
+        "win_rate": 26.2
       },
       "STRONG": {
         "trades": 16,
@@ -10352,10 +10173,10 @@
     },
     "by_tier": {
       "B": {
-        "trades": 92,
+        "trades": 93,
         "wins": 21,
-        "total_pips": -603.2905859374933,
-        "win_rate": 22.8
+        "total_pips": -626.9905859374932,
+        "win_rate": 22.6
       },
       "C": {
         "trades": 79,
@@ -10378,25 +10199,25 @@
         "win_rate": 0.0
       },
       "aggressive": {
-        "trades": 168,
+        "trades": 169,
         "wins": 47,
-        "total_pips": -631.024585937511,
-        "win_rate": 28.0
+        "total_pips": -654.7245859375108,
+        "win_rate": 27.8
       },
       "conservative": {
-        "trades": 84,
+        "trades": 85,
         "wins": 18,
-        "total_pips": -480.04399999998896,
-        "win_rate": 21.4
+        "total_pips": -503.7439999999888,
+        "win_rate": 21.2
       }
     },
     "by_sentiment": {
       "sentiment_off": {
-        "trades": 162,
+        "trades": 163,
         "wins": 44,
-        "total_pips": -743.1125859375134,
+        "total_pips": -766.8125859375132,
         "engine": "none",
-        "win_rate": 27.2
+        "win_rate": 27.0
       },
       "sentiment_on": {
         "trades": 13,
@@ -10408,18 +10229,18 @@
     },
     "by_mtf_confirmed": {
       "partial_or_none": {
-        "trades": 175,
+        "trades": 176,
         "wins": 47,
-        "total_pips": -812.1835859375083,
-        "win_rate": 26.9
+        "total_pips": -835.8835859375081,
+        "win_rate": 26.7
       }
     },
     "by_gemini_bias": {},
     "by_exit_reason": {
       "sl_hit": {
-        "trades": 2,
+        "trades": 3,
         "wins": 0,
-        "total_pips": -63.04599999999976,
+        "total_pips": -86.74599999999958,
         "win_rate": 0.0
       },
       "MOMENTUM_EXIT": {
@@ -10440,10 +10261,10 @@
         "B_US": {
           "tier": "B",
           "session": "US",
-          "trades": 28,
+          "trades": 29,
           "wins": 8,
-          "total_pips": -141.87599999999088,
-          "win_rate": 28.6
+          "total_pips": -165.5759999999907,
+          "win_rate": 27.6
         },
         "C_LATE_US": {
           "tier": "C",
@@ -10546,18 +10367,18 @@
         "aggressive_B": {
           "mode": "aggressive",
           "tier": "B",
-          "trades": 85,
+          "trades": 86,
           "wins": 21,
-          "total_pips": -422.13158593749614,
-          "win_rate": 24.7
+          "total_pips": -445.83158593749596,
+          "win_rate": 24.4
         },
         "conservative_B": {
           "mode": "conservative",
           "tier": "B",
-          "trades": 80,
+          "trades": 81,
           "wins": 18,
-          "total_pips": -406.1439999999911,
-          "win_rate": 22.5
+          "total_pips": -429.8439999999909,
+          "win_rate": 22.2
         },
         "aggressive_C": {
           "mode": "aggressive",
@@ -10588,90 +10409,57 @@
   },
   "equity_curve": [],
   "pair_prices": {
-    "USDJPY": 159.30099,
-    "AUDUSD": 0.71942,
-    "NZDUSD": 0.59189,
-    "USDCHF": 0.78453,
-    "EURJPY": 186.869,
-    "GBPJPY": 215.868,
-    "GBPUSD": 1.35522,
-    "USDCAD": 1.36163
+    "USDJPY": 159.308,
+    "AUDUSD": 0.71948,
+    "USDCHF": 0.78478,
+    "EURJPY": 186.89,
+    "GBPUSD": 1.35516,
+    "GBPJPY": 215.871,
+    "NZDUSD": 0.59179,
+    "USDCAD": 1.36159
   },
   "upcoming_events": [],
   "pick_of_the_day": {
-    "signal_id": "GBPUSD_BUY_98e394124362",
     "id": "GBPUSD_BUY_98e394124362",
+    "signal_id": "GBPUSD_BUY_98e394124362",
     "pair": "GBPUSD",
     "direction": "BUY",
-    "score": 61,
-    "technical_score": 61,
-    "sentiment_score": 0.0,
-    "sentiment_adjustment": 0.0,
-    "score_before_sentiment": 61,
-    "confidence": "MODERATE",
-    "tier": "B",
-    "rsi": 60.6,
-    "adx": 34.8,
-    "atr": 0.00118,
-    "volume_ratio": 0,
-    "session": "US",
     "entry_price": 1.35522,
+    "exit_price": 1.35285,
     "sl": 1.35285,
-    "tp1": 1.35817,
     "tp": 1.35817,
-    "risk_reward": 1.25,
-    "spread": 0.0002,
-    "timestamp": "2026-04-27T16:01:44.529832+00:00",
-    "status": "OPEN",
-    "time_stop_at": "2026-04-27T18:01:44.529832+00:00",
-    "momentum_check_at": "2026-04-27T16:46:44.529832+00:00",
-    "momentum_min_pips": 10,
-    "time_stop_minutes": 120,
-    "exit_mode": "tp1_time_stop",
-    "hold_time": "1H-2H",
+    "tp1": 1.35817,
+    "status": "LOSS",
+    "pips": -23.699999999999832,
+    "confidence": "MODERATE",
+    "score": 61,
+    "session": "US",
+    "tier": "B",
     "eligible_modes": [
       "conservative",
       "aggressive"
     ],
-    "freshness": {
-      "status": "FRESH",
-      "age_minutes": 0.0,
-      "confidence_decay": 100.0
-    },
     "sentiment_applied": false,
-    "gemini_usd_bias": null,
-    "mtf_confirmed": true,
-    "htf_confirmed": true,
-    "mtf_details": {
-      "4h": "BULL",
-      "1d": "BULL",
-      "1wk": "BULL"
-    },
-    "metadata": {
-      "signal_type": "trend-continuation",
-      "market_state": "TRENDING_STRONG",
-      "timeframe": "1h",
-      "valid_for_minutes": 120,
-      "generated_at": "2026-04-27T16:01:44.529832+00:00",
-      "expires_at": "2026-04-27T18:01:44.529832+00:00",
-      "session_active": true,
-      "signal_generator_version": "2.5.0",
-      "atr_stop_multiplier": 2.0,
-      "atr_tp1_multiplier": 2.5,
-      "exit_architecture": "SL=2.0xATR | TP1=2.5xATR | TimeStop=120min",
-      "mtf_summary": {
-        "4h": "BULL",
-        "1d": "BULL",
-        "1wk": "BULL",
-        "fully_confirmed": true
-      }
-    },
+    "sentiment_score": 0.0,
+    "sentiment_adjustment": 0.0,
+    "gemini_engine": null,
     "estimated_win_rate": null,
-    "price_source": "yfinance_confirmed",
-    "price_divergence": 0.00016
+    "risk_reward": 1.25,
+    "adx": 34.8,
+    "rsi": 60.6,
+    "atr": 0.00118,
+    "htf_confirmed": false,
+    "mtf_details": null,
+    "gemini_usd_bias": null,
+    "exit_reason": "LOSS",
+    "exit_mode": "tp1_time_stop",
+    "time_stop_at": null,
+    "momentum_min_pips": 10,
+    "timestamp": "2026-04-27T16:01:44.529832+00:00",
+    "exit_time": "2026-04-27T16:16:08.401151+00:00"
   },
   "system": {
-    "last_update": "2026-04-27T16:01:49.055193+00:00",
+    "last_update": "2026-04-27T16:16:15.065278+00:00",
     "signal_only_mode": true,
     "version": "2.5.0",
     "gemini_active": true,

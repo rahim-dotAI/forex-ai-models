@@ -1,7 +1,7 @@
-name: Trade Beacon v2.5.0-1H-EXIT – Forex Signal Generator
+name: Trade Beacon v2.7.0-SMART-EXIT – Forex Signal Generator
 
-# CHANGES v2.5.0-1H-EXIT:
-# - LAYERED EXIT EDITION: 1H timeframe + partial TP + 2h time stop + momentum check
+# CHANGES v2.7.0-SMART-EXIT:
+# - SMART EXIT EDITION: 1H timeframe + partial TP + 2h time stop + momentum check
 # - Signal timeframe: 15m → 1h (filters noise, aligns with signal edge window)
 # - SL: 2.5x → 2.0x ATR (1h ATR is larger; tighter multiplier, appropriate pip distance)
 # - TP1: 2.5x ATR partial profit lock (replaces 7x full target that was rarely hit)
@@ -61,7 +61,7 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 concurrency:
-  group: trade-beacon-v2.5.0-${{ github.ref }}-${{ github.event_name }}
+  group: trade-beacon-v2.7.0-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: false
 
 permissions:
@@ -216,8 +216,8 @@ jobs:
           CONS_THRESH=$(jq -r '.settings.conservative.threshold // 57'         config.json)
           ATR_STOP=$(jq -r   '.settings.aggressive.atr_stop_multiplier // 2.0' config.json)
           ATR_TP1=$(jq -r    '.settings.aggressive.atr_tp1_multiplier // 2.5'  config.json)
-          TIME_STOP=$(jq -r  '.exit_rules.time_stop_minutes // 120'            config.json)
-          MOMENTUM=$(jq -r   '.exit_rules.momentum_check_minutes // 45'        config.json)
+          TTL_H=$(jq -r    '.exit_rules.signal_ttl_hours // 48'            config.json)
+          STALL_H=$(jq -r  '.exit_rules.stalled_check_hours // 4'          config.json)
           SESS_GUARD=$(jq -r '.exit_rules.session_min_remaining_minutes // 120' config.json)
           EU_H=$(jq -r       '.sessions.european_start_hour // 9'              config.json)
           EU_M=$(jq -r       '.sessions.european_start_minute // 30'           config.json)
@@ -227,7 +227,7 @@ jobs:
 
           echo "✅ Thresholds: Aggressive=$AGG_THRESH, Conservative=$CONS_THRESH"
           echo "✅ ATR Stop: ${ATR_STOP}x | ATR TP1: ${ATR_TP1}x"
-          echo "✅ Time stop: ${TIME_STOP}min | Momentum check: ${MOMENTUM}min | Session guard: ${SESS_GUARD}min"
+          echo "✅ TTL: ${TTL_H}h | Stall check: ${STALL_H}h | Session guard: ${SESS_GUARD}min | Friday kill: 21:00 UTC"
           printf "✅ European session start: %02d:%02d UTC\n" "$EU_H" "$EU_M"
           echo "✅ GBPAUD limit: $GBPAUD_LIM | GBPCAD limit: $GBPCAD_LIM"
           if [ "$GBPAUD_LIM" = "0" ] && [ "$GBPCAD_LIM" = "0" ]; then
@@ -241,7 +241,7 @@ jobs:
             echo "📸 Created config baseline snapshot"
           fi
 
-          echo "✅ Configuration valid (v2.5.0-1H-EXIT)"
+          echo "✅ Configuration valid (v2.7.0-SMART-EXIT)"
 
       - name: Reset performance history (DESTRUCTIVE)
         if: github.event.inputs.reset_performance == 'YES'
@@ -318,10 +318,10 @@ jobs:
 
             if jq -e '.analytics.by_exit_reason' signal_state/signal_history.json > /dev/null 2>&1; then
               echo ""
-              echo "🚪 Exit Reason Breakdown (v2.5.0):"
+              echo "🚪 Exit Reason Breakdown (v2.7.0):"
               jq -r '.analytics.by_exit_reason // {} | to_entries[] |
                 "  [\(.key)]: \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
-                signal_state/signal_history.json 2>/dev/null || echo "  No exit data yet (populates as v2.5.0 signals resolve)"
+                signal_state/signal_history.json 2>/dev/null || echo "  No exit data yet (populates as v2.7.0 signals resolve)"
             fi
 
             if jq -e '.analytics.by_mtf_confirmed' signal_state/signal_history.json > /dev/null 2>&1; then
@@ -340,18 +340,21 @@ jobs:
         if: steps.market_check.outputs.should_run == 'true'
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "📋 ACTIVE CONFIGURATION — v2.5.0-1H-EXIT"
+          echo "📋 ACTIVE CONFIGURATION — v2.7.0-SMART-EXIT"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo ""
 
-          echo "[v2.5.0 Changes — Layered Exit]"
+          echo "[v2.7.0 Changes — Smart Exit]"
           echo "  Timeframe:       1H (was 15m)"
-          echo "  SL:              $(jq -r '.settings.aggressive.atr_stop_multiplier // 2.0' config.json)x ATR (was 2.5x)"
+          echo "  SL:              $(jq -r '.settings.aggressive.atr_stop_multiplier // 2.0' config.json)x ATR"
           echo "  TP1:             $(jq -r '.settings.aggressive.atr_tp1_multiplier // 2.5' config.json)x ATR (partial profit lock)"
-          echo "  Time stop:       $(jq -r '.exit_rules.time_stop_minutes // 120' config.json)min hard close on remainder"
-          echo "  Momentum check:  $(jq -r '.exit_rules.momentum_check_minutes // 45' config.json)min — exit if <$(jq -r '.exit_rules.momentum_min_pips // 10' config.json) pips movement"
+          echo "  Exit 1:          EMA20 structural invalidation (BUY closes if 1H close < EMA20)"
+          echo "  Exit 2:          4h stall — close if open 4h+ AND PnL negative (dead trade)"
+          echo "  Exit 3:          $(jq -r '.exit_rules.signal_ttl_hours // 48' config.json)h TTL — database garbage collection"
+          echo "  Exit 4:          Friday 21:00 UTC kill switch — no weekend gap exposure"
+          echo "  ADX min:         $(jq -r '.settings.aggressive.min_adx' config.json) (raised from 15 — ADX<20=no trend)"
+          echo "  ATR% filter:     threshold=$(jq -r '.atr_pct_filter.threshold // 0.85' config.json) lookback=$(jq -r '.atr_pct_filter.lookback // 100' config.json) bars per-pair"
           echo "  Session guard:   No new signals if <$(jq -r '.exit_rules.session_min_remaining_minutes // 120' config.json)min remain in session"
-          echo "  EUROPEAN guard:  Fires at 11:00 UTC (session ends 13:00)"
           echo "  US guard:        Fires at 19:00 UTC (session ends 21:00)"
           echo ""
 
@@ -361,7 +364,7 @@ jobs:
           echo "  Min R:R:      $(jq -r '.settings.aggressive.min_risk_reward // 1.2' config.json) (TP1/SL = 2.5/2.0)"
           echo ""
 
-          echo "[MTF Settings — v2.5.0]"
+          echo "[MTF Settings — v2.7.0]"
           echo "  Require 4h:     $(jq -r '.mtf_settings.require_4h // true' config.json) (required)"
           echo "  Require Daily:  $(jq -r '.mtf_settings.require_daily // true' config.json) ← DECISIVE FILTER"
           echo "  Require Weekly: $(jq -r '.mtf_settings.require_weekly // false' config.json) (bonus only)"
@@ -415,7 +418,7 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
-      - name: Run Trade Beacon v2.5.0-1H-EXIT
+      - name: Run Trade Beacon v2.7.0-SMART-EXIT
         if: steps.market_check.outputs.should_run == 'true'
         env:
           NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
@@ -424,7 +427,7 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}
         run: |
-          echo "🚀 Starting Trade Beacon v2.5.0-1H-EXIT..."
+          echo "🚀 Starting Trade Beacon v2.7.0-SMART-EXIT..."
           python $ENTRY_SCRIPT
           EXIT_CODE=$?
 
@@ -489,7 +492,7 @@ jobs:
         if: always()
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "📊 TRADE BEACON v2.5.0-1H-EXIT PERFORMANCE SUMMARY"
+          echo "📊 TRADE BEACON v2.7.0-SMART-EXIT PERFORMANCE SUMMARY"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
           if [ -f signal_state/signal_history.json ]; then
@@ -523,7 +526,7 @@ jobs:
               signal_state/signal_history.json || echo "No session data"
 
             echo ""
-            echo "🚪 Exit Reason Breakdown (v2.5.0):"
+            echo "🚪 Exit Reason Breakdown (v2.7.0):"
             jq -r '.analytics.by_exit_reason // {} | to_entries[] |
               "  [\(.key)]: \(.value.trades // 0) trades, \(.value.win_rate // 0)% WR, \(.value.total_pips // 0) pips"' \
               signal_state/signal_history.json 2>/dev/null || echo "  No exit data yet (populates as signals resolve)"
@@ -583,7 +586,7 @@ jobs:
       - name: Commit state changes
         if: steps.market_check.outputs.should_run == 'true'
         run: |
-          git config user.name  "Trade Beacon v2.5.0 [bot]"
+          git config user.name  "Trade Beacon v2.7.0 [bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git add signal_state/*.json signal_state/last_run.txt signal_state/last_success.txt \
@@ -598,10 +601,10 @@ jobs:
             CONS=$(jq -r    '.active_signals_by_mode.conservative // 0' signal_state/dashboard_state.json 2>/dev/null || echo "0")
             SESSION=$(jq -r '.session // "UNKNOWN"'                     signal_state/dashboard_state.json 2>/dev/null || echo "UNKNOWN")
 
-            git commit -m "📊 Trade Beacon v2.5.0-1H-EXIT [$TIMESTAMP]
+            git commit -m "📊 Trade Beacon v2.7.0-SMART-EXIT [$TIMESTAMP]
 
             Session: $SESSION | Signals: $TOTAL (Agg: $AGG, Cons: $CONS)
-            Exit: TP1@2.5xATR | 2h TimeStop | 45min MomentumCheck
+            Exit: TP1@2.5xATR | EMA20-structural | 4h-stall | 48h-TTL
             Run: #${{ github.run_number }}
 
             [skip ci]"
@@ -633,7 +636,7 @@ jobs:
         uses: actions/upload-artifact@v6
         if: steps.market_check.outputs.should_run == 'true'
         with:
-          name: trade-beacon-v2.5.0-run-${{ github.run_number }}
+          name: trade-beacon-v2.7.0-run-${{ github.run_number }}
           path: |
             signal_state/
             signals.csv

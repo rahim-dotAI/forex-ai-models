@@ -1,11 +1,11 @@
 {
-  "timestamp": "2026-04-28T10:16:19.762850+00:00",
+  "timestamp": "2026-04-28T21:16:25.151626+00:00",
   "active_signals": 0,
   "active_signals_by_mode": {
     "aggressive": 0,
     "conservative": 0
   },
-  "session": "EUROPEAN",
+  "session": "LATE_US",
   "mode": "conservative",
   "sentiment_enabled": true,
   "sentiment_engine": "gemini-2.5-flash",
@@ -19,7 +19,7 @@
   "market_state": {
     "volatility": "CALM",
     "sentiment_bias": "MIXED",
-    "session": "EUROPEAN"
+    "session": "LATE_US"
   },
   "signals_by_mode": {
     "aggressive": [],
@@ -10923,24 +10923,26 @@
   },
   "equity_curve": [],
   "pair_prices": {
-    "USDJPY": 159.56599,
-    "GBPUSD": 1.34893,
-    "AUDUSD": 0.71741,
-    "NZDUSD": 0.58872,
-    "USDCAD": 1.36554,
-    "USDCHF": 0.78985,
-    "EURJPY": 186.51801,
-    "GBPJPY": 215.214
+    "USDJPY": 159.536,
+    "GBPUSD": 1.35146,
+    "AUDUSD": 0.71834,
+    "NZDUSD": 0.5882,
+    "USDCAD": 1.36746,
+    "USDCHF": 0.78853,
+    "EURJPY": 186.79201,
+    "GBPJPY": 215.72
   },
   "upcoming_events": [],
   "pick_of_the_day": null,
   "system": {
-    "last_update": "2026-04-28T10:16:19.762917+00:00",
+    "last_update": "2026-04-28T21:16:25.151722+00:00",
     "signal_only_mode": true,
-    "version": "2.5.0",
+    "version": "2.7.0",
     "gemini_active": true,
     "timeframe": "1h",
-    "exit_mode": "TP1=2.5xATR | TimeStop=120min | Momentum=45min",
+    "exit_mode": "TP1=2.5xATR | EMA20-structural | 4h-stall | 48h-TTL",
+    "adx_min": 20,
+    "atr_pct_threshold": 0.85,
     "european_session_start": "09:30 UTC",
     "permanently_blocked": [
       "EURGBP",

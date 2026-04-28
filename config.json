@@ -1,31 +1,30 @@
 {
-  "version": "2.6.0-FOCUSED",
+  "version": "2.7.0-SMART-EXIT",
   "mode": "conservative",
-  "_v2.5.0_changes": "LAYERED EXIT EDITION. Signal timeframe 15m\u21921h. SL 2.5x\u21922.0x ATR. TP1=2.5x ATR (partial profit lock). 2-hour time stop on remainder. 45-min momentum check exits dead trades. Session end guard: no new signals if <2h remain in session. MTF updated: 30m and 1h removed (now signal timeframe), only 4h+Daily+Weekly remain above signal timeframe. All else from v2.4.0 retained.",
   "use_sentiment": true,
   "_sentiment_note": "Gemini 2.5 Flash is primary USD reasoning engine. GBP pairs remain pure technical. FinBERT kept as automatic fallback.",
   "settings": {
     "aggressive": {
       "threshold": 55,
-      "min_adx": 15,
+      "min_adx": 20,
       "rsi_oversold": 30,
       "rsi_overbought": 70,
       "min_risk_reward": 1.2,
       "atr_stop_multiplier": 2.0,
       "atr_tp1_multiplier": 2.5,
       "max_correlated_signals": 2,
-      "_note": "v2.5.0: min_risk_reward 2.5\u21921.2 (TP1/SL = 2.5/2.0 = 1.25x). atr_target_multiplier replaced by atr_tp1_multiplier."
+      "_note": "v2.7.0: ADX 15->20. ADX<20=no confirmed trend=no edge for trend-following."
     },
     "conservative": {
       "threshold": 57,
-      "min_adx": 17,
+      "min_adx": 20,
       "rsi_oversold": 30,
       "rsi_overbought": 70,
       "min_risk_reward": 1.2,
       "atr_stop_multiplier": 2.0,
       "atr_tp1_multiplier": 2.5,
       "max_correlated_signals": 1,
-      "_note": "v2.5.0: same exit parameters as aggressive \u2014 exit logic is not mode-dependent."
+      "_note": "v2.7.0: same ADX threshold as aggressive \u2014 both require trend confirmation."
     }
   },
   "tiers": {
@@ -40,11 +39,11 @@
     "_note": "v2.4.0: EU session delayed to 09:30 UTC \u2014 08:00-09:30 is noise zone. v2.5.0: session end guard added (see exit_rules)."
   },
   "exit_rules": {
-    "time_stop_minutes": 120,
-    "momentum_check_minutes": 45,
-    "momentum_min_pips": 10,
+    "signal_ttl_hours": 48,
+    "stalled_check_hours": 4,
     "session_min_remaining_minutes": 120,
-    "_note": "v2.5.0 layered exit: TP1 at 2.5xATR locks partial profit. 2-hour time stop closes remainder at market. 45-min momentum check exits dead trades that haven't moved 10 pips. Session end guard prevents new signals if <2h remain (EUROPEAN: no new after 11:00 UTC, US: no new after 19:00 UTC)."
+    "friday_kill_utc_hour": 21,
+    "_note": "v2.7.0 exits: TP1(2.5xATR) | SL(2.0xATR) | EMA20 structural invalidation (BUY closes if 1H close < EMA20) | 4h stall (neg PnL after 4h = dead trade) | 48h TTL (garbage collection for stateless cron) | Friday 21:00 UTC kill (no weekend gap exposure)."
   },
   "mtf_settings": {
     "require_4h": true,
@@ -128,14 +127,14 @@
     },
     "validation": {
       "max_signal_age_seconds": 3600,
-      "_age_note": "v2.5.0: 900\u21923600 seconds. 1h signals are valid for up to 1 hour before stale check.",
+      "_age_note": "v2.7.0: signal age checked via TTL (48h), not max_signal_age_seconds.",
       "session_expiry_minutes": {
-        "EUROPEAN": 120,
-        "US": 120,
+        "EUROPEAN": 480,
+        "US": 480,
         "ASIAN": 60,
         "LATE_US": 60,
         "OVERLAP": 60,
-        "_note": "v2.5.0: 240\u2192120 minutes. Matches 2-hour time stop \u2014 signal expires when time stop fires."
+        "_note": "v2.7.0: 120->480 min. Structural exits (EMA20, 4h stall) need room to work. 48h TTL is the hard ceiling."
       },
       "min_sl_pips": {
         "JPY_pairs": 15,
@@ -194,7 +193,7 @@
   "performance_tracking": {
     "enable": true,
     "history_file": "signal_state/signal_history.json",
-    "tracker_version": "2.6.0-FOCUSED",
+    "tracker_version": "2.7.0-SMART-EXIT",
     "idempotency": {
       "enabled": true
     },
@@ -235,13 +234,20 @@
     "source": "https://www.x-rates.com"
   },
   "_research_notes": {
-    "signal_half_life": "15m signals have edge for 30-90 minutes. v2.4.0 was holding 6-12 hours. By hour 3+, edge expired and macro events hit stops. Root cause of 25.6% WR and -845 pip total. Fix: 1h timeframe + 2h time stop aligns holding period with prediction window.",
-    "exit_architecture": "Partial TP (TP1 at 2.5xATR) locks profit early. Time stop eliminates entropy accumulation from long holds. Momentum check removes dead trades that show no movement 45 min in. Together these reduce variance and convert edge into realized profit.",
-    "session_end_guard": "No new signal if <2h remain in session. EUROPEAN guard fires at 11:00 UTC (session ends 13:00). US guard fires at 19:00 UTC (session ends 21:00). Prevents 2h time stop from closing in thin end-of-session liquidity.",
-    "MTF_1h_removal": "30m and 1h removed from MTF checks in v2.5.0. Signal is generated on 1h chart \u2014 you cannot use the signal timeframe as a confirmation filter. Filtering must be from above. 4h + Daily + Weekly are above 1h and remain.",
-    "ATR_multiplier_change": "SL reduced 2.5x\u21922.0x. 1h ATR is significantly larger than 15m ATR in absolute pip terms. 2.0x on 1h gives adequate stop distance while keeping SL tighter in pips to maintain R:R.",
-    "breakeven_WR": "With TP1=2.5xATR and SL=2.0xATR, R:R = 1.25. Breakeven WR = 1/(1+1.25) = 44.4%. Target 38-45% is realistic based on GBPJPY/GBPUSD historical edge. Prior system needed 26% WR at 7x TP \u2014 sounds easier but 7x targets were rarely hit before time/reversal.",
-    "GBPUSD_GBPJPY_edge": "Only confirmed profitable pairs. GBPJPY: 92t 31.5% WR +114p. GBPUSD: 23t 39.1% WR +84p. All others net negative. System built around these two pairs \u2014 everything else is opportunistic when conditions align."
+    "adx_threshold": "ADX<20 = market not trending. Trend signals have no edge in ADX 15-20 zone. All three AIs (ChatGPT, Kimi, Gemini) independently agreed on raising to 20.",
+    "atr_pct_filter": "Kimi derived from April 2026 GBPUSD 1H data. ATR%_ratio < 0.85 means stops are too tight relative to normal noise. April 14: ADX=40 but ratio=0.69-0.76, effective SL ~13 pips = easily hunted. Filter blocks without requiring any API.",
+    "ema20_structural_exit": "Gemini identified that 120-min time stop was killing trades before 2.5xATR could develop. EMA20 cross is market-structure-based \u2014 closes BUY when 1H bar closes below EMA20 (trend broken). Allows trades the breathing room a 1H signal needs.",
+    "stall_exit": "Replace 45-min/10-pip momentum check (too tight for 1H) with 4h stall: if open 4h+ AND PnL negative, trade is dead. Gives 1H setups room through normal pullback/retest phases.",
+    "friday_kill": "yfinance cannot model weekend gap slippage. Hard close at Friday 21:00 UTC prevents silently distorted performance data.",
+    "session_focus": "US session 37.5% WR +79 pips vs European 22.7% WR -599 pips on same pairs. v2.6.0-FOCUSED: US session only, GBPUSD+GBPJPY only.",
+    "breakeven_WR": "TP1=2.5xATR, SL=2.0xATR \u2192 R:R=1.25 \u2192 breakeven=44.4%. GBPUSD at 44% WR historically is at breakeven. Structural exits and ATR% filter aim to move this above 44%."
   },
-  "_v2.6.0_changes": "EDGE ISOLATION MODE: Pair + Session concentration based on 174-trade evidence. GBPUSD (44% WR +148p) and GBPJPY (32% WR +107p) only. US session only (37.5% WR +79p). European blocked (22.7% WR -599p). Goal: 60 clean trades on proven bucket. Bootstrap CI analysis after. Recommended by Claude + ChatGPT after Bayesian Monte Carlo discussion."
+  "_v2.7.0_changes": "SMART EXIT (Claude+ChatGPT+Kimi+Gemini research). 1) ADX 15->20 (all AIs agreed; ADX<20=not trending). 2) ATR% regime filter: threshold=0.85, lookback=100 bars, per-pair. 3) 120-min time stop REMOVED -> EMA20 structural invalidation. 4) 45-min momentum check REMOVED -> 4h stall exit (neg PnL after 4h). 5) 48h TTL garbage collection. 6) Friday 21:00 UTC kill switch.",
+  "atr_pct_filter": {
+    "enabled": true,
+    "lookback": 100,
+    "threshold": 0.85,
+    "scope": "per_pair",
+    "_note": "v2.7.0 (Kimi research, April 2026 GBPUSD data). Blocks bottom ~30% of compressed-volatility bars. Threshold=0.85 sits just above 25th percentile. Addresses April 14 2026: ADX=40 (ADX filter passes) but ATR%_ratio=0.69-0.76 (stop was ~13 pips = stop-hunt zone). Per-pair because GBPUSD and GBPJPY have different vol baselines."
+  }
 }

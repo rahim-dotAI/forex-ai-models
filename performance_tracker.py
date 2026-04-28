@@ -1,26 +1,18 @@
 """
-Performance Tracker v2.5.0-1H-EXIT — Aligned with Trade Beacon v2.5.0
+Performance Tracker v2.7.0-SMART-EXIT — Aligned with Trade Beacon v2.7.0
 ============================================================================
 
-CHANGELOG v2.5.0-1H-EXIT (based on v2.4.0):
-- Version bumped to 2.5.0
-- New signal fields added to schema:
-    tp1:              float — partial profit target (2.5x ATR)
-    time_stop_at:     ISO timestamp — when 2h time stop fires
-    momentum_check_at: ISO timestamp — when 45-min momentum check fires
-    momentum_min_pips: float — pips required by momentum check
-    exit_reason:      str — "tp1_hit" / "sl_hit" / "TIME_EXIT" / "MOMENTUM_EXIT" / "EXPIRED"
-    exit_mode:        str — "tp1_time_stop" for all v2.5.0 signals
-- New analytics group: by_exit_reason (WR and pips by exit type)
-  Tracks: tp1_hit, sl_hit, TIME_EXIT, MOMENTUM_EXIT, EXPIRED
-  Goal: TIME_EXIT should be net positive (closed profitably at time stop)
-        MOMENTUM_EXIT should be near-zero (exiting dead trades early)
-- AUTOMATIC MIGRATION: migrates all prior versions to 2.5.0 schema on load
-  tp1 defaults to tp value for pre-2.5.0 signals
-  exit_reason defaults to None for historical signals
-- All v2.4.0 analytics retained:
-    by_mtf_confirmed, by_gemini_bias, by_tier, by_session, by_pair, by_mode
-    cross_analytics (tier_by_session, mode_by_tier)
+CHANGELOG v2.7.0-SMART-EXIT:
+- Version bumped to 2.7.0-SMART-EXIT
+- normalize_exit_reason updated: STRUCTURAL_EXIT, STALL_EXIT, WEEKEND_CLOSE,
+  TTL_EXPIRED added. TIME_EXIT/MOMENTUM_EXIT preserved as legacy aliases.
+- record_trade: time_stop_at replaced by ttl_at + stall_check_at params
+- exit_mode default changed from 'tp1_time_stop' to 'structural_ema20'
+- _migrate: ttl_at and stall_check_at defaulted for historical signals
+- by_exit_reason now tracks: tp1_hit, sl_hit, structural_exit, stall_exit,
+  weekend_close, ttl_expired, and legacy time_exit/momentum_exit
+- All prior analytics retained: by_mtf_confirmed, by_gemini_bias, by_tier,
+  by_session, by_pair, by_mode, cross_analytics
 """
 
 import json
@@ -33,7 +25,7 @@ import pandas as pd
 
 log = logging.getLogger("performance-tracker")
 
-TRACKER_VERSION = "2.5.0"
+TRACKER_VERSION = "2.7.0-SMART-EXIT"
 
 
 def safe_int(val: Any, default: int = 0) -> int:
@@ -81,14 +73,18 @@ def map_score_to_modes(score: int) -> List[str]:
     return []
 
 def normalize_exit_reason(reason: Optional[str]) -> str:
-    """Normalise exit reason to known categories."""
+    """Normalise exit reason to known categories — v2.7.0."""
     if not reason: return "unknown"
     r = reason.upper()
-    if "TP1" in r or r == "WIN":          return "tp1_hit"
-    if "MOMENTUM" in r:                    return "MOMENTUM_EXIT"
-    if "TIME" in r:                        return "TIME_EXIT"
-    if r in ("SL_HIT","LOSS"):             return "sl_hit"
-    if r == "EXPIRED":                     return "EXPIRED"
+    if "TP1" in r or r == "WIN":             return "tp1_hit"
+    if "STRUCTURAL" in r:                    return "structural_exit"   # EMA20 cross
+    if "STALL" in r:                         return "stall_exit"        # 4h neg PnL
+    if "WEEKEND" in r:                       return "weekend_close"     # Friday kill
+    if "TTL" in r or "EXPIRED" in r:         return "ttl_expired"       # 48h garbage collect
+    if r in ("SL_HIT","LOSS"):               return "sl_hit"
+    # Legacy v2.5.0 exits (historical records)
+    if "MOMENTUM" in r:                      return "momentum_exit_legacy"
+    if "TIME" in r:                          return "time_exit_legacy"
     return reason.lower()
 
 
@@ -165,13 +161,16 @@ class PerformanceTracker:
             signal.setdefault("mtf_details",     None)
             signal.setdefault("gemini_usd_bias", None)
             signal.setdefault("gemini_engine",   None)
-            # v2.5.0 NEW fields
-            signal.setdefault("tp1",              signal.get("tp"))  # use tp as tp1 for legacy
-            signal.setdefault("time_stop_at",     None)
-            signal.setdefault("momentum_check_at", None)
-            signal.setdefault("momentum_min_pips", 10)
-            signal.setdefault("exit_reason",       None)
-            signal.setdefault("exit_mode",         "legacy")
+            # v2.5.0 fields (kept for historical records)
+            signal.setdefault("tp1",         signal.get("tp"))
+            signal.setdefault("exit_reason", None)
+            signal.setdefault("exit_mode",   "legacy")
+            # v2.7.0 NEW fields — replace time_stop_at/momentum_check_at
+            signal.setdefault("ttl_at",         None)  # 48h TTL
+            signal.setdefault("stall_check_at", None)  # 4h stall check
+            # Remove stale v2.5.0 fields from live signals (keep for history)
+            # time_stop_at / momentum_check_at / momentum_min_pips stay in
+            # historical records but are no longer written for new signals
             if needs_migration: migrated_count += 1
 
         # Rebuild all analytics from migrated signals
@@ -299,7 +298,7 @@ class PerformanceTracker:
             analytics["by_gemini_bias"][gemini_bias]["total_pips"] += pips
             if is_win: analytics["by_gemini_bias"][gemini_bias]["wins"] += 1
 
-        # v2.5.0: Exit reason analytics
+        # v2.7.0: Exit reason analytics (structural_exit, stall_exit, tp1_hit, sl_hit, weekend_close, ttl_expired)
         if exit_reason:
             er_key = normalize_exit_reason(exit_reason)
             analytics["by_exit_reason"].setdefault(er_key, {"trades":0,"wins":0,"total_pips":0.0})
@@ -432,11 +431,14 @@ class PerformanceTracker:
                      mtf_details: dict = None,
                      gemini_usd_bias: str = None,
                      gemini_engine: str = None,
-                     # v2.5.0 new params
+                     # v2.7.0 exit params (replaces time_stop_at, momentum_check_at)
                      tp1: float = None,
-                     time_stop_at: str = None,
+                     ttl_at: str = None,
+                     stall_check_at: str = None,
                      exit_reason: str = None,
                      exit_mode: str = None,
+                     # legacy compat (ignored, kept so old calls don't crash)
+                     time_stop_at: str = None,
                      **kwargs):
 
         signal = self._find_signal(signal_id)
@@ -448,10 +450,11 @@ class PerformanceTracker:
             signal["exit_price"] = exit_price
             signal["exit_time"]  = exit_time or datetime.now(timezone.utc).isoformat()
             signal["pips"]       = pips
-            if tp1 is not None:   signal["tp1"]          = tp1
-            if exit_reason:       signal["exit_reason"]   = exit_reason
-            if exit_mode:         signal["exit_mode"]     = exit_mode
-            if time_stop_at:      signal["time_stop_at"]  = time_stop_at
+            if tp1 is not None:       signal["tp1"]            = tp1
+            if exit_reason:           signal["exit_reason"]    = exit_reason
+            if exit_mode:             signal["exit_mode"]      = exit_mode
+            if ttl_at:                signal["ttl_at"]         = ttl_at
+            if stall_check_at:        signal["stall_check_at"] = stall_check_at
             if sentiment_applied:
                 signal["sentiment_applied"]    = sentiment_applied
                 signal["sentiment_score"]      = sentiment_score
@@ -490,11 +493,11 @@ class PerformanceTracker:
                 "htf_confirmed": htf_confirmed,
                 "mtf_details": mtf_details,
                 "gemini_usd_bias": gemini_usd_bias,
-                # v2.5.0
-                "exit_reason": exit_reason,
-                "exit_mode": exit_mode or "tp1_time_stop",
-                "time_stop_at": time_stop_at,
-                "momentum_min_pips": 10,
+                # v2.7.0 exit fields
+                "exit_reason":    exit_reason,
+                "exit_mode":      exit_mode or "structural_ema20",
+                "ttl_at":         ttl_at,
+                "stall_check_at": stall_check_at,
                 "timestamp": entry_time or datetime.now(timezone.utc).isoformat(),
                 "exit_time": exit_time or datetime.now(timezone.utc).isoformat(),
             }
@@ -608,12 +611,12 @@ class PerformanceTracker:
         if tier_counts:
             log.info(f"Tiers: {' | '.join(f'{t}: {c}' for t,c in sorted(tier_counts.items()))}")
 
-        # Exit reason breakdown (v2.5.0)
+        # Exit reason breakdown (v2.7.0: tp1_hit, sl_hit, structural_exit, stall_exit, weekend_close, ttl_expired)
         exit_data = self.history.get("analytics",{}).get("by_exit_reason",{})
         if exit_data:
             log.info("Exit reasons: " + " | ".join(
                 f"{k}: {v.get('trades',0)}t {v.get('win_rate',0):.1f}%WR"
-                for k, v in exit_data.items()
+                for k, v in sorted(exit_data.items())
             ))
 
         mtf_data = self.history.get("analytics",{}).get("by_mtf_confirmed",{})

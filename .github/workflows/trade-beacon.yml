@@ -181,7 +181,7 @@ jobs:
           echo "Beacon version:  $BEACON_VER"
           echo "Config version:  $CONFIG_VER"
 
-          if [[ "$BEACON_VER" == *"2.5"* ]] || [[ "$BEACON_VER" == *"2.6"* ]] || [[ "$CONFIG_VER" == *"2.5"* ]] || [[ "$CONFIG_VER" == *"2.6"* ]] || [[ "$CONFIG_VER" == *"FOCUSED"* ]]; then
+          if [[ "$BEACON_VER" == *"2.7"* ]] || [[ "$CONFIG_VER" == *"SMART-EXIT"* ]] || [[ "$CONFIG_VER" == *"2.7"* ]]; then
             echo "✅ $CONFIG_VER detected"
           elif [[ "$TRACKER_VER" != "$BEACON_VER" ]]; then
             echo "⚠️ Version mismatch (non-fatal — auto-migration handles)"
@@ -197,7 +197,7 @@ jobs:
 
           CONFIG_VER=$(jq -r '.version // "unknown"' config.json)
           echo "Config version: $CONFIG_VER"
-          if [[ "$CONFIG_VER" == *"2.5"* ]] || [[ "$CONFIG_VER" == *"2.6"* ]] || [[ "$CONFIG_VER" == *"FOCUSED"* ]]; then
+          if [[ "$CONFIG_VER" == *"2.7"* ]] || [[ "$CONFIG_VER" == *"SMART-EXIT"* ]]; then
             echo "✅ Config version: $CONFIG_VER"
           else
             echo "⚠️ Config version not recognised: $CONFIG_VER"

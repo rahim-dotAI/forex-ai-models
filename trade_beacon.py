@@ -1,48 +1,45 @@
 """
-Trade Beacon v2.5.0-1H-EXIT — Forex Signal Generator
-LAYERED EXIT EDITION: 1H Timeframe + Partial TP + Time Stop + Momentum Check
+Trade Beacon v2.7.0-SMART-EXIT — Forex Signal Generator
+RESEARCH-BACKED EXIT OVERHAUL: ADX 20 + ATR% Regime Filter + Structural Exits
 
-CHANGES v2.5.0-1H-EXIT:
-Core architectural upgrade — fixes signal half-life mismatch identified in data analysis.
+CHANGES v2.7.0-SMART-EXIT (research from Claude + ChatGPT + Kimi + Gemini):
 
-ROOT CAUSE OF LOSSES (confirmed by 168-trade dataset):
-  15-minute signals have edge for ~30-90 minutes.
-  v2.4.0 was holding trades 6-12 hours waiting for 7x ATR target.
-  By hour 3+, the original edge had expired and random events (macro news,
-  session transitions, liquidity shifts) were hitting stops before targets.
-  Result: 25.6% WR, -845 pips overall despite real edge on GBPJPY/GBPUSD entries.
+1. ADX threshold raised 15 → 20 (all three AIs agreed independently)
+   ADX < 20 = market not trending = trend system has no edge.
+   ADX 15–20 was the "hope zone" — weak trend emerging but not confirmed.
 
-THE FIX — Three changes working together:
-  1. Signal timeframe: 15m → 1h
-     1h bars filter out 15m noise. EMA/RSI/ADX on 1h represent real momentum.
-     Signal edge window: 2-4 hours (matches new exit structure).
+2. ATR% volatility regime filter added (Kimi — derived from April 2026 data)
+   Formula: ATR(14)/Close vs 100-period MA of ATR(14)/Close
+   Threshold: 0.85 (blocks bottom ~30% of compressed-volatility bars)
+   Per-pair (GBPUSD and GBPJPY have different vol baselines)
+   Prevents stop-hunting on days where ADX says trend but ATR is too compressed
+   to survive normal noise (e.g. April 14 2026: ADX 40, ATR% ratio 0.69-0.76)
 
-  2. Layered exit system (replaces fixed 7x ATR target):
-     SL:    2.0x ATR (reduced from 2.5x — 1h ATR is larger, tighter multiplier)
-     TP1:   2.5x ATR — partial profit lock (50% of position concept)
-     TIME:  2-hour hard stop — close remainder regardless of price
-     DEAD:  45-minute momentum check — exit if price hasn't moved +10 pips in direction
+3. 120-minute hard time stop REMOVED → replaced with structural exit (Gemini)
+   OLD: Arbitrary 2h clock that killed trades before 2.5x ATR could develop
+   NEW: Close if 1H bar closes below EMA20 (BUY) / above EMA20 (SELL)
+        = structural invalidation, not calendar watching
+   FALLBACK: 48-hour TTL as database garbage collection (stateless cron safety)
 
-  3. Session end guard:
-     No new signal if session has <2 hours remaining.
-     EUROPEAN: no new signals after 11:00 UTC (session ends 13:00)
-     US: no new signals after 19:00 UTC (session ends 21:00)
-     Prevents time stop from closing in low/end-of-session liquidity.
+4. 45-minute/10-pip momentum check REMOVED → replaced with 4h stall exit (Gemini)
+   OLD: Killed trades 45min in if <10 pips — assassinating valid 1H pullbacks
+   NEW: If open 4+ hours AND PnL is negative → close (stalled = dead trade)
+        Gives 1H structure time to breathe through normal retest phases
 
-MTF hierarchy updated for 1h signal timeframe:
-  Signal is now generated on 1h chart, so 1h is no longer an MTF filter.
-  Filters above signal timeframe: 4h (required), Daily (decisive), Weekly (bonus).
-  30m filter removed — below signal timeframe, not meaningful.
+5. Friday 21:00 UTC kill switch ADDED (Gemini)
+   All open signals force-closed at Friday 21:00 UTC.
+   Prevents weekend gap exposure. yfinance cannot model gap slippage.
 
-CARRIED FROM v2.4.0:
+6. GBPUSD BUY-only + GBPJPY both directions — v2.6.0-FOCUSED experiment continues
+
+CARRIED FROM v2.5.0:
+  - 1H signal timeframe
+  - SL 2.0x ATR, TP1 2.5x ATR
+  - 4H + Daily MTF filter (decisive)
   - GBPAUD/GBPCAD permanently blocked
-  - European session start: 09:30 UTC
-  - GBPUSD BUY-only directional filter
   - Gemini 2.5 Flash USD gate
-  - Calendar blackout
-  - Cross-run pair daily cap
-  - All session logic (ASIAN/OVERLAP blocked)
-  - Daily MTF filter (decisive — blocks macro downtrend days)
+  - Session end guard (no new signal if <2h remain)
+  - Calendar blackout, cross-run pair daily cap
 """
 
 import logging
@@ -109,13 +106,16 @@ INTERVAL    = "1h"
 LOOKBACK    = "60d"   # 1h data: yfinance supports 60 days
 MIN_ROWS    = 200     # 60 days × ~24 bars/day = ~1440 bars, 200 is conservative minimum
 
-# Exit parameters v2.5.0
-ATR_STOP_MULT      = 2.0   # SL: reduced from 2.5x — 1h ATR is larger
+# Exit parameters v2.7.0
+ATR_STOP_MULT      = 2.0   # SL: 2x ATR
 ATR_TP1_MULT       = 2.5   # TP1: partial profit lock
-TIME_STOP_MINUTES  = 120   # 2-hour hard close on remaining position
-MOMENTUM_MINUTES   = 45    # Exit early if no progress by this point
-MOMENTUM_PIPS      = 10    # Minimum pip movement expected by momentum check
+SIGNAL_TTL_HOURS   = 48    # 48h TTL — database garbage collection (not a trading stop)
+STALLED_CHECK_HOURS = 4    # If open 4h AND PnL negative → close (stalled trade)
 SESSION_MIN_MINUTES = 120  # Minimum session time remaining for new signal
+
+# ATR% regime filter (v2.7.0 — Kimi research, derived from April 2026 GBPUSD data)
+ATR_PCT_LOOKBACK   = 100   # 100 × 1H bars = ~4 trading days
+ATR_PCT_THRESHOLD  = 0.85  # Block bottom ~30% of compressed-volatility bars
 
 # Permanently blocked — data confirmed no edge regardless of conditions
 _PERMANENTLY_BLOCKED_PAIRS = frozenset(["EURUSD", "EURGBP", "GBPAUD", "GBPCAD"])
@@ -189,7 +189,7 @@ def _default_config() -> Dict:
         "use_sentiment": False,
         "settings": {
             "aggressive": {
-                "threshold": 55, "min_adx": 15,
+                "threshold": 55, "min_adx": 20,
                 "rsi_oversold": 30, "rsi_overbought": 70,
                 "min_risk_reward": 1.2,  # TP1/SL = 2.5/2.0 = 1.25
                 "atr_stop_multiplier": ATR_STOP_MULT,
@@ -197,7 +197,7 @@ def _default_config() -> Dict:
                 "max_correlated_signals": 2,
             },
             "conservative": {
-                "threshold": 57, "min_adx": 17,
+                "threshold": 57, "min_adx": 20,
                 "rsi_oversold": 30, "rsi_overbought": 70,
                 "min_risk_reward": 1.2,
                 "atr_stop_multiplier": ATR_STOP_MULT,
@@ -211,12 +211,12 @@ def _default_config() -> Dict:
             "_note": "v2.5.0: Session end guard also added — no new signals if <2h remain in session."
         },
         "exit_rules": {
-            "time_stop_minutes": TIME_STOP_MINUTES,
-            "momentum_check_minutes": MOMENTUM_MINUTES,
-            "momentum_min_pips": MOMENTUM_PIPS,
+            "signal_ttl_hours": SIGNAL_TTL_HOURS,
+            "stalled_check_hours": STALLED_CHECK_HOURS,
             "session_min_remaining_minutes": SESSION_MIN_MINUTES,
-            "_note": "v2.5.0: TP1 at 2.5x ATR (partial lock), then 2h time stop on remainder. "
-                     "45-min momentum check exits dead trades. No session entry if <2h remain."
+            "friday_kill_utc_hour": 21,
+            "_note": "v2.7.0: Time stop removed. Exits: TP1(2.5xATR) | SL(2.0xATR) | "
+                     "EMA20 structural invalidation | 4h stall (neg PnL) | 48h TTL | Friday 21:00 UTC kill."
         },
         "mtf_settings": {
             "require_4h": True,
@@ -474,7 +474,7 @@ def _load_economic_calendar() -> List[Dict]:
         except Exception as e:
             log.warning(f"Calendar cache read failed: {e} — fetching fresh")
     try:
-        resp = requests.get(_FF_CALENDAR_URL, timeout=10, headers={"User-Agent": "TradeBeacon/2.5.0"})
+        resp = requests.get(_FF_CALENDAR_URL, timeout=10, headers={"User-Agent": "TradeBeacon/2.7.0"})
         log.info(f"Calendar: FF HTTP {resp.status_code} — {len(resp.content)} bytes")
         if resp.status_code != 200:
             log.warning(f"Calendar: FF returned {resp.status_code} — no news filtering")
@@ -694,6 +694,66 @@ def rsi(s, p=14):      return RSIIndicator(s, window=p).rsi()
 def adx_calc(h, l, c): return ADXIndicator(h, l, c, window=14).adx()
 def atr_calc(h, l, c): return AverageTrueRange(h, l, c, window=14).average_true_range()
 def get_spread(pair):  return SPREADS.get(pair.replace("=X",""), 0.0002)
+
+def atr_pct_regime_filter(df: pd.DataFrame, pair: str,
+                           lookback: int = ATR_PCT_LOOKBACK,
+                           threshold: float = ATR_PCT_THRESHOLD) -> bool:
+    """
+    ATR% volatility regime filter — v2.7.0 (Kimi research, April 2026 data).
+
+    Blocks signals when realized volatility is too compressed for ATR-based
+    stop structures to be viable. Prevents stop-hunting on days where ADX
+    reads 'strong trend' but ATR is so tight that normal noise hits stops.
+
+    Example caught: April 14 2026 — ADX 36-51 (screaming trend) but ATR%
+    ratio 0.69-0.76. A 2.0x ATR stop was only ~13 pips — easily hunted.
+
+    Returns True (allow signal) if ATR% ratio >= threshold.
+    Returns False (block signal) if volatility is compressed.
+
+    Threshold 0.85 = block bottom ~30% of compressed bars (derived from
+    March-April 2026 GBPUSD 1H distribution).
+    """
+    try:
+        if len(df) < lookback + 14:
+            log.debug(f"ATR% filter: insufficient data ({len(df)} bars) — allowing")
+            return True
+
+        if isinstance(df.columns, pd.MultiIndex):
+            df = df.copy()
+            df.columns = df.columns.get_level_values(0)
+
+        high  = ensure_series(df["High"])
+        low   = ensure_series(df["Low"])
+        close = ensure_series(df["Close"])
+
+        # True Range components
+        prev_close = close.shift(1)
+        tr = pd.concat([
+            high - low,
+            (high - prev_close).abs(),
+            (low  - prev_close).abs(),
+        ], axis=1).max(axis=1)
+
+        # ATR(14) via EWM — consistent with ta library
+        atr14    = tr.ewm(alpha=1/14, min_periods=14).mean()
+        atr_pct  = atr14 / close
+        atr_ma   = atr_pct.rolling(window=lookback, min_periods=lookback).mean()
+
+        current_ratio = float(atr_pct.iloc[-1]) / float(atr_ma.iloc[-1]) \
+                        if float(atr_ma.iloc[-1]) > 0 else 1.0
+
+        pair_clean = pair.replace("=X", "")
+        if current_ratio < threshold:
+            log.info(f"  ATR% BLOCKED: {pair_clean} ratio={current_ratio:.3f} < {threshold} "
+                     f"(volatility compressed — stops too tight)")
+            return False
+        log.debug(f"  ATR% OK: {pair_clean} ratio={current_ratio:.3f} >= {threshold}")
+        return True
+
+    except Exception as e:
+        log.warning(f"ATR% regime filter failed ({e}) — allowing signal")
+        return True
 
 # ═════════════════════════════════════════════════════════════════════════════
 # MULTI-TIMEFRAME ANALYSIS — v2.5.0 (above signal timeframe only)
@@ -1168,19 +1228,37 @@ def optimize_thresholds_if_needed(config: Dict) -> Dict:
     return oc
 
 # ═════════════════════════════════════════════════════════════════════════════
-# SIGNAL RESOLUTION — v2.5.0 LAYERED EXIT SYSTEM
+# SIGNAL RESOLUTION — v2.7.0 STRUCTURAL EXIT SYSTEM
 # ═════════════════════════════════════════════════════════════════════════════
+
+def _get_ema20_from_1m(df_1m: pd.DataFrame) -> Optional[float]:
+    """Compute EMA20 from 1-minute data for structural exit check."""
+    try:
+        close = ensure_series(df_1m["Close"])
+        if len(close) < 20:
+            return None
+        return float(EMAIndicator(close, window=20).ema_indicator().iloc[-1])
+    except Exception:
+        return None
+
+def _is_friday_kill_time(now: datetime) -> bool:
+    """Friday 21:00 UTC kill switch — never carry over weekend."""
+    return now.weekday() == 4 and now.hour >= 21  # Friday = weekday 4
 
 def resolve_active_signals():
     """
-    v2.5.0 exit logic — three resolution paths per open signal:
+    v2.7.0 exit logic — four resolution paths per open signal:
 
-    1. TP1 hit (2.5x ATR) → WIN. Partial lock achieved.
-    2. SL hit (2.0x ATR)  → LOSS.
-    3. Time stop (2h)     → TIMED_EXIT. Record actual pips at market price.
-    4. Momentum check (45min, +10 pips) → MOMENTUM_EXIT if stalled.
+    1. TP1 hit (2.5x ATR from entry)    → WIN
+    2. SL hit  (2.0x ATR from entry)    → LOSS
+    3. EMA20 structural invalidation    → STRUCTURAL_EXIT
+       BUY: 1H bar closes below EMA20 → trend structure broken
+       SELL: 1H bar closes above EMA20 → trend structure broken
+    4. 4-hour stall (open 4h+ AND negative PnL) → STALL_EXIT
+    5. 48-hour TTL                      → EXPIRED (garbage collection)
+    6. Friday 21:00 UTC                 → WEEKEND_CLOSE
 
-    All paths record actual pips vs entry, not theoretical target.
+    All paths record actual pips at exit price.
     """
     df_file = Path("signal_state/dashboard_state.json")
     if not df_file.exists(): return 0
@@ -1205,6 +1283,7 @@ def resolve_active_signals():
 
     resolved, active = 0, []
     now = datetime.now(timezone.utc)
+    friday_kill = _is_friday_kill_time(now)
 
     for sig in signals:
         if sig.get("status") != "OPEN":
@@ -1220,98 +1299,116 @@ def resolve_active_signals():
         if sid and sid in already_recorded:
             log.debug(f"Skipping {sid} — already in history"); continue
 
-        # Parse exit timestamps from signal metadata
         try:
-            entry_time       = datetime.fromisoformat(sig.get("timestamp","").replace("Z","+00:00"))
-            time_stop_at     = datetime.fromisoformat(sig.get("time_stop_at","").replace("Z","+00:00")) \
-                               if sig.get("time_stop_at") else entry_time + timedelta(minutes=TIME_STOP_MINUTES)
-            momentum_at      = datetime.fromisoformat(sig.get("momentum_check_at","").replace("Z","+00:00")) \
-                               if sig.get("momentum_check_at") else entry_time + timedelta(minutes=MOMENTUM_MINUTES)
-            momentum_min_pips = sig.get("momentum_min_pips", MOMENTUM_PIPS)
+            entry_time = datetime.fromisoformat(sig.get("timestamp","").replace("Z","+00:00"))
         except Exception:
-            entry_time        = now - timedelta(minutes=5)
-            time_stop_at      = entry_time + timedelta(minutes=TIME_STOP_MINUTES)
-            momentum_at       = entry_time + timedelta(minutes=MOMENTUM_MINUTES)
-            momentum_min_pips = MOMENTUM_PIPS
+            entry_time = now - timedelta(hours=1)
+
+        # Parse TTL and stall timestamps
+        try:
+            ttl_at = datetime.fromisoformat(sig.get("ttl_at","").replace("Z","+00:00")) \
+                     if sig.get("ttl_at") else entry_time + timedelta(hours=SIGNAL_TTL_HOURS)
+            stall_check_at = datetime.fromisoformat(sig.get("stall_check_at","").replace("Z","+00:00")) \
+                             if sig.get("stall_check_at") else entry_time + timedelta(hours=STALLED_CHECK_HOURS)
+        except Exception:
+            ttl_at         = entry_time + timedelta(hours=SIGNAL_TTL_HOURS)
+            stall_check_at = entry_time + timedelta(hours=STALLED_CHECK_HOURS)
 
         try:
             yf_pair = f"{pair.replace('=X','')}=X"
-            df = yf.download(yf_pair, interval="1m", period="1d", progress=False, auto_adjust=True)
-            if df is None or df.empty:
+            df_1m = yf.download(yf_pair, interval="1m", period="2d",
+                                progress=False, auto_adjust=True)
+            if df_1m is None or df_1m.empty:
                 active.append(sig); continue
-            if isinstance(df.columns, pd.MultiIndex):
-                df.columns = df.columns.get_level_values(0)
+            if isinstance(df_1m.columns, pd.MultiIndex):
+                df_1m.columns = df_1m.columns.get_level_values(0)
 
-            close_val = df["Close"].iloc[-1]
+            close_val = df_1m["Close"].iloc[-1]
             if hasattr(close_val, 'iloc'): close_val = close_val.iloc[0]
             curr = float(close_val)
 
-            # Get price window: entry_time → time_stop_at (upper bound REQUIRED)
-            # BUG FIX: old code only applied `idx >= entry_time` (no upper bound).
-            # Resolution runs every 15min so by the time it fires, the full day's
-            # 1-min bars are present. Without the upper bound, price action AFTER
-            # the 2h time stop is incorrectly credited as TP1 hits.
-            # Fix: apply both bounds → entry_time to time_stop_at.
+            # Build resolution window: entry → now (no upper bound — structural exit needs current price)
             try:
-                idx = df.index
+                idx = df_1m.index
                 if not hasattr(idx, 'tz') or idx.tz is None:
                     idx = idx.tz_localize("UTC")
                 elif str(idx.tz) != "UTC":
                     idx = idx.tz_convert("UTC")
-                # Upper bound = time_stop_at (hard 2h window), capped at now
-                upper = min(time_stop_at, now)
-                mask = (idx >= entry_time) & (idx <= upper)
-                window_df = df[mask.values] if mask.any() else df
-                log.debug(f"  Resolution window: {entry_time.strftime('%H:%M')} → {upper.strftime('%H:%M')} UTC | {len(window_df)} bars")
-            except Exception as e:
-                log.warning(f"  Resolution window filter failed ({e}) — using full day data")
-                window_df = df
+                mask       = idx >= entry_time
+                window_df  = df_1m[mask.values] if mask.any() else df_1m
+            except Exception:
+                window_df = df_1m
 
-            period_high = float(window_df["High"].max()) if not window_df.empty else curr
-            period_low  = float(window_df["Low"].min())  if not window_df.empty else curr
+            period_high = float(window_df["High"].max())  if not window_df.empty else curr
+            period_low  = float(window_df["Low"].min())   if not window_df.empty else curr
             if hasattr(period_high, 'iloc'): period_high = float(period_high.iloc[0])
             if hasattr(period_low,  'iloc'): period_low  = float(period_low.iloc[0])
 
-            outcome = None
+            outcome    = None
             exit_price = curr
 
-            # ── 1. Check SL ───────────────────────────────────────────────
-            if direction == "BUY" and period_low <= sl:
-                outcome, exit_price = "LOSS", sl
-            elif direction == "SELL" and period_high >= sl:
-                outcome, exit_price = "LOSS", sl
+            # ── 1. Friday weekend kill ─────────────────────────────────────
+            if friday_kill:
+                log.info(f"  WEEKEND CLOSE: {pair} — Friday 21:00 UTC kill switch")
+                outcome    = "WEEKEND_CLOSE"
+                exit_price = curr
 
-            # ── 2. Check TP1 ──────────────────────────────────────────────
+            # ── 2. SL hit ─────────────────────────────────────────────────
+            if not outcome:
+                if direction == "BUY"  and period_low  <= sl: outcome, exit_price = "LOSS", sl
+                elif direction == "SELL" and period_high >= sl: outcome, exit_price = "LOSS", sl
+
+            # ── 3. TP1 hit ────────────────────────────────────────────────
             if not outcome and tp1 > 0:
-                if direction == "BUY"  and period_high >= tp1: outcome, exit_price = "WIN", tp1
-                elif direction == "SELL" and period_low <= tp1: outcome, exit_price = "WIN", tp1
+                if   direction == "BUY"  and period_high >= tp1: outcome, exit_price = "WIN", tp1
+                elif direction == "SELL" and period_low  <= tp1: outcome, exit_price = "WIN", tp1
 
-            # ── 3. Momentum check (45 min) ───────────────────────────────
-            if not outcome and now >= momentum_at:
-                pip_move = price_to_pips(pair,
-                    (curr - entry) if direction == "BUY" else (entry - curr))
-                if pip_move < momentum_min_pips:
-                    log.info(f"  MOMENTUM EXIT: {pair} only {pip_move:.1f} pips in {MOMENTUM_MINUTES}min — dead trade")
-                    outcome    = "MOMENTUM_EXIT"
+            # ── 4. EMA20 structural invalidation ──────────────────────────
+            if not outcome:
+                ema20 = _get_ema20_from_1m(window_df)
+                if ema20 is not None:
+                    structural_break = (
+                        (direction == "BUY"  and curr < ema20) or
+                        (direction == "SELL" and curr > ema20)
+                    )
+                    if structural_break:
+                        hours_open = (now - entry_time).total_seconds() / 3600
+                        log.info(f"  STRUCTURAL EXIT: {pair} {direction} — "
+                                 f"price crossed EMA20 after {hours_open:.1f}h "
+                                 f"(curr={curr:.5f} ema20={ema20:.5f})")
+                        outcome    = "STRUCTURAL_EXIT"
+                        exit_price = curr
+
+            # ── 5. 4-hour stall (open 4h+ AND negative PnL) ───────────────
+            if not outcome and now >= stall_check_at:
+                pip_pnl = price_to_pips(pair,
+                    curr - entry if direction == "BUY" else entry - curr)
+                if pip_pnl < 0:
+                    hours_open = (now - entry_time).total_seconds() / 3600
+                    log.info(f"  STALL EXIT: {pair} — open {hours_open:.1f}h, "
+                             f"PnL={pip_pnl:.1f} pips (negative after 4h = dead trade)")
+                    outcome    = "STALL_EXIT"
                     exit_price = curr
 
-            # ── 4. Time stop (2 hours) ────────────────────────────────────
-            if not outcome and now >= time_stop_at:
-                log.info(f"  TIME STOP: {pair} — 2h elapsed, closing at market")
-                outcome    = "TIME_EXIT"
+            # ── 6. 48-hour TTL (garbage collection) ───────────────────────
+            if not outcome and now >= ttl_at:
+                log.info(f"  TTL EXPIRED: {pair} — 48h elapsed, clearing signal state")
+                outcome    = "EXPIRED"
                 exit_price = curr
 
             if outcome:
                 pips = price_to_pips(pair, abs(exit_price - entry))
                 if outcome == "LOSS":
                     pips = -pips
-                elif outcome in ("TIME_EXIT","MOMENTUM_EXIT"):
+                elif outcome in ("STRUCTURAL_EXIT","STALL_EXIT","WEEKEND_CLOSE","EXPIRED"):
                     pips = price_to_pips(pair,
                         exit_price - entry if direction == "BUY" else entry - exit_price)
 
-                # Map to WIN/LOSS for tracker (TIME_EXIT/MOMENTUM_EXIT become WIN or LOSS based on pips)
-                if outcome in ("TIME_EXIT","MOMENTUM_EXIT"):
+                # Map to WIN/LOSS for tracker
+                if outcome in ("STRUCTURAL_EXIT","STALL_EXIT","WEEKEND_CLOSE"):
                     track_outcome = "WIN" if pips > 0 else ("LOSS" if pips < 0 else "EXPIRED")
+                elif outcome == "EXPIRED":
+                    track_outcome = "EXPIRED"
                 else:
                     track_outcome = outcome
 
@@ -1334,7 +1431,7 @@ def resolve_active_signals():
                     already_recorded.add(sid)
                     resolved += 1
                     icon = "✅" if track_outcome=="WIN" else ("❌" if track_outcome=="LOSS" else "⏱")
-                    log.info(f"{icon} {pair} {direction} {outcome} ({pips:+.1f}p) exit_reason={outcome}")
+                    log.info(f"{icon} {pair} {direction} {outcome} ({pips:+.1f}p)")
             else:
                 active.append(sig)
 
@@ -1647,6 +1744,10 @@ def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
     if round(a, 1) < min_a:
         log.info(f"{pair.replace('=X','')} skipped: ADX {a:.1f} < {min_a}"); return None, ok
 
+    # ── 2b. ATR% volatility regime filter (v2.7.0) ───────────────────────
+    if not atr_pct_regime_filter(df, pair):
+        return None, ok
+
     # ── 3. Scoring (7 components — same logic, now on 1h bars) ───────────
     bull = bear = 0
     full_bull = e12>e26>e200;  full_bear = e12<e26<e200
@@ -1763,17 +1864,16 @@ def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
         log.info(f"  BLOCKED: R:R {rr:.2f} < {min_rr}"); return None, ok
     if rr > 5: return None, ok  # unrealistic with tight 2.5x TP1
 
-    # ── 12. Exit timestamps ───────────────────────────────────────────────
+    # ── 12. Exit timestamps — v2.7.0 ─────────────────────────────────────
     now              = datetime.now(timezone.utc)
-    time_stop_mins   = CONFIG.get("exit_rules",{}).get("time_stop_minutes", TIME_STOP_MINUTES)
-    momentum_mins    = CONFIG.get("exit_rules",{}).get("momentum_check_minutes", MOMENTUM_MINUTES)
-    momentum_pips    = CONFIG.get("exit_rules",{}).get("momentum_min_pips", MOMENTUM_PIPS)
-    time_stop_at     = now + timedelta(minutes=time_stop_mins)
-    momentum_check_at = now + timedelta(minutes=momentum_mins)
+    ttl_hours        = CONFIG.get("exit_rules",{}).get("signal_ttl_hours", SIGNAL_TTL_HOURS)
+    stalled_hours    = CONFIG.get("exit_rules",{}).get("stalled_check_hours", STALLED_CHECK_HOURS)
+    ttl_at           = now + timedelta(hours=ttl_hours)
+    stall_check_at   = now + timedelta(hours=stalled_hours)
 
     val_cfg      = CONFIG.get("advanced",{}).get("validation",{})
     session_exp  = val_cfg.get("session_expiry_minutes",{})
-    expiry_mins  = session_exp.get(session, 120)
+    expiry_mins  = session_exp.get(session, 480)   # default 8h — allows macro trend room
     expires      = now + timedelta(minutes=expiry_mins)
 
     sid = generate_deterministic_signal_id(pair.replace("=X",""), direction, curr, session, now.strftime("%Y%m%d"))
@@ -1794,14 +1894,12 @@ def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
         "spread":     round(spread,5),
         "timestamp":  now.isoformat(),
         "status":     "OPEN",
-        # v2.5.0 exit fields
-        "time_stop_at":       time_stop_at.isoformat(),
-        "momentum_check_at":  momentum_check_at.isoformat(),
-        "momentum_min_pips":  momentum_pips,
-        "time_stop_minutes":  time_stop_mins,
-        "exit_mode":          "tp1_time_stop",
+        # v2.7.0 exit fields (structural + TTL — no arbitrary time stop)
+        "ttl_at":           ttl_at.isoformat(),
+        "stall_check_at":   stall_check_at.isoformat(),
+        "exit_mode":        "structural_ema20",
         # ──
-        "hold_time":           "1H-2H",  # v2.5.0 — max 2 hours
+        "hold_time":           "1H-48H",  # v2.7.0 — structural exit, up to 48h TTL
         "eligible_modes":      calculate_eligible_modes(diff, a, CONFIG),
         "freshness":           calculate_signal_freshness(now),
         "sentiment_applied":   False,
@@ -1817,10 +1915,10 @@ def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
             "generated_at":           now.isoformat(),
             "expires_at":             expires.isoformat(),
             "session_active":         session in ("EUROPEAN","US"),
-            "signal_generator_version": "2.5.0",
+            "signal_generator_version": "2.7.0",
             "atr_stop_multiplier":    atr_stop,
             "atr_tp1_multiplier":     atr_tp1,
-            "exit_architecture":      f"SL={atr_stop}xATR | TP1={atr_tp1}xATR | TimeStop={time_stop_mins}min",
+            "exit_architecture":      f"SL={atr_stop}xATR | TP1={atr_tp1}xATR | EMA20-structural | 4h-stall | 48h-TTL",
             "mtf_summary": {
                 "4h":             mtf_trends.get("4h"),
                 "1d":             mtf_trends.get("1d"),
@@ -1930,27 +2028,26 @@ def filter_expired_signals(signals):
         if status == "ACTIVE": sig["status"] = "OPEN"; status = "OPEN"
         if status != "OPEN": continue
         try:
-            # v2.5.0: also check time stop
-            time_stop_at = sig.get("time_stop_at")
-            if time_stop_at:
+            # v2.7.0: Check TTL (48h) instead of old 2h time_stop_at
+            ttl_at_str = sig.get("ttl_at")
+            if ttl_at_str:
                 try:
-                    ts_dt = datetime.fromisoformat(time_stop_at.replace("Z","+00:00"))
-                    if now >= ts_dt:
-                        # Time stop elapsed — record as expired and close
+                    ttl_dt = datetime.fromisoformat(ttl_at_str.replace("Z","+00:00"))
+                    if now >= ttl_dt:
                         sid = sig.get("signal_id","")
                         if PERFORMANCE_TRACKER and sid and sid not in already_recorded:
-                            entry = sig.get("entry_price",0)
-                            direction = sig.get("direction","BUY")
                             PERFORMANCE_TRACKER.record_trade(
                                 signal_id=sid, pair=sig.get("pair",""),
-                                direction=direction, entry_price=entry, exit_price=entry,
+                                direction=sig.get("direction","BUY"),
+                                entry_price=sig.get("entry_price",0),
+                                exit_price=sig.get("entry_price",0),
                                 sl=sig.get("sl",0), tp=sig.get("tp1",sig.get("tp",0)),
                                 outcome="EXPIRED", pips=0,
                                 confidence=sig.get("confidence"), score=sig.get("score"),
                                 session=sig.get("session"), entry_time=sig.get("timestamp"),
                                 exit_time=now.isoformat(), tier=sig.get("tier"),
                                 eligible_modes=sig.get("eligible_modes"),
-                                exit_reason="time_stop_expired")
+                                exit_reason="ttl_expired")
                             already_recorded.add(sid)
                         continue
                 except Exception: pass
@@ -1961,7 +2058,7 @@ def filter_expired_signals(signals):
                 is_exp = now >= datetime.fromisoformat(exp.replace("Z","+00:00"))
             else:
                 st = datetime.fromisoformat(sig["timestamp"].replace("Z","+00:00"))
-                is_exp = (now-st).total_seconds() >= CONFIG.get("advanced",{}).get("validation",{}).get("max_signal_age_seconds",3600)
+                is_exp = (now-st).total_seconds() >= 172800  # 48h fallback
 
             if not is_exp:
                 active.append(sig)
@@ -2087,10 +2184,12 @@ def write_dashboard_state(signals, downloads, news_calls=0, mkt_calls=0,
         "pick_of_the_day": pick_of_the_day,
         "system": {"last_update": datetime.now(timezone.utc).isoformat(),
                    "signal_only_mode": SIGNAL_ONLY_MODE,
-                   "version": "2.5.0",
+                   "version": "2.7.0",
                    "gemini_active": GEMINI_API_KEY != "",
                    "timeframe": INTERVAL,
-                   "exit_mode": f"TP1={ATR_TP1_MULT}xATR | TimeStop={TIME_STOP_MINUTES}min | Momentum={MOMENTUM_MINUTES}min",
+                   "exit_mode": f"TP1={ATR_TP1_MULT}xATR | EMA20-structural | 4h-stall | 48h-TTL",
+                   "adx_min": opt_cfg["settings"]["aggressive"]["min_adx"],
+                   "atr_pct_threshold": ATR_PCT_THRESHOLD,
                    "european_session_start": f"{CONFIG.get('sessions',{}).get('european_start_hour',9):02d}:{CONFIG.get('sessions',{}).get('european_start_minute',30):02d} UTC",
                    "permanently_blocked": sorted(list(_PERMANENTLY_BLOCKED_PAIRS))},
     }
@@ -2115,9 +2214,11 @@ def write_health_check(signals, downloads, news, mkt, can_trade, pause, mode, ge
                        "marketaux": "ok" if mkt>0 else "disabled",
                        "gemini": "ok" if GEMINI_API_KEY else "disabled",
                        "finbert_hf": "ok" if HF_API_KEY else "disabled"},
-        "system_info": {"mode": mode, "pairs_monitored": len(PAIRS), "version": "2.5.0",
+        "system_info": {"mode": mode, "pairs_monitored": len(PAIRS), "version": "2.7.0",
                         "timeframe": INTERVAL, "gemini_engine": gemini_engine,
-                        "exit_mode": f"TP1={ATR_TP1_MULT}xATR | {TIME_STOP_MINUTES}min time stop",
+                        "exit_mode": f"TP1={ATR_TP1_MULT}xATR | EMA20-structural | 4h-stall | 48h-TTL",
+                        "adx_min": CONFIG["settings"]["aggressive"]["min_adx"],
+                        "atr_pct_threshold": ATR_PCT_THRESHOLD,
                         "permanently_blocked": sorted(list(_PERMANENTLY_BLOCKED_PAIRS)),
                         "european_session_start": f"{CONFIG.get('sessions',{}).get('european_start_hour',9):02d}:{CONFIG.get('sessions',{}).get('european_start_minute',30):02d} UTC"},
     }
@@ -2170,12 +2271,12 @@ def cleanup_legacy_signals():
                 try:
                     if datetime.fromisoformat(ts.replace("Z","+00:00")).date() < today: continue
                 except Exception: pass
-            # v2.5.0: respect time_stop_at for cleanup
-            time_stop_at = sig.get("time_stop_at","")
-            if time_stop_at:
+            # v2.7.0: use ttl_at (48h) instead of old time_stop_at (2h)
+            ttl_at = sig.get("ttl_at","")
+            if ttl_at:
                 try:
-                    ts_dt = datetime.fromisoformat(time_stop_at.replace("Z","+00:00"))
-                    if now > ts_dt + timedelta(minutes=30): continue  # grace period
+                    ttl_dt = datetime.fromisoformat(ttl_at.replace("Z","+00:00"))
+                    if now > ttl_dt + timedelta(hours=1): continue  # 1h grace after TTL
                     cleaned.append(sig)
                 except Exception: cleaned.append(sig)
             else:
@@ -2183,7 +2284,7 @@ def cleanup_legacy_signals():
                 if exp:
                     try:
                         exp_time = datetime.fromisoformat(exp.replace("Z","+00:00"))
-                        if now < exp_time or (now-exp_time).total_seconds() < 7200:
+                        if now < exp_time or (now-exp_time).total_seconds() < 172800:
                             cleaned.append(sig)
                     except Exception: pass
                 else:
@@ -2235,8 +2336,11 @@ def main():
     opt_mode = opt_cfg["mode"]
 
     eu_start = f"{CONFIG.get('sessions',{}).get('european_start_hour',9):02d}:{CONFIG.get('sessions',{}).get('european_start_minute',30):02d}"
-    log.info("Trade Beacon v2.5.0-1H-EXIT | LAYERED EXIT EDITION")
-    log.info(f"Timeframe: 1H | SL={ATR_STOP_MULT}xATR | TP1={ATR_TP1_MULT}xATR | TimeStop={TIME_STOP_MINUTES}min | MomentumCheck={MOMENTUM_MINUTES}min")
+    log.info("Trade Beacon v2.7.0-SMART-EXIT | SMART EXIT EDITION")
+    log.info(f"Timeframe: 1H | SL={ATR_STOP_MULT}xATR | TP1={ATR_TP1_MULT}xATR | "
+             f"Exits: EMA20-structural | 4h-stall | 48h-TTL | Fri-21UTC-kill")
+    log.info(f"ADX threshold: {opt_cfg['settings']['aggressive']['min_adx']} | "
+             f"ATR% regime filter: {ATR_PCT_THRESHOLD} threshold / {ATR_PCT_LOOKBACK}-bar lookback")
     log.info(f"Permanently blocked: {sorted(_PERMANENTLY_BLOCKED_PAIRS)}")
     log.info(f"European session: starts {eu_start} UTC")
     log.info(f"Gemini USD gate: {'ACTIVE (2.5 Flash)' if GEMINI_API_KEY else 'DISABLED'}")
@@ -2272,7 +2376,7 @@ def main():
                     new_signals.append(sig)
                     log.info(f"{clean} - Score: {sig['score']} [{sig['tier']}] ({'+'.join(sig['eligible_modes'])}) "
                              f"RR:{sig['risk_reward']:.2f} | MTF:{'FULL' if sig.get('mtf_confirmed') else 'PARTIAL'} | "
-                             f"Exit: TP1@{sig.get('tp1',0):.5f} | TimeStop:{TIME_STOP_MINUTES}min")
+                             f"TP1@{sig.get('tp1',0):.5f} | EMA20-structural exit")
             except Exception as e:
                 log.error(f"{pair.replace('=X','')} failed: {e}")
 
@@ -2338,8 +2442,8 @@ def main():
     if all_new:
         mb = split_signals_by_mode(all_new)
         print("\n" + "="*100)
-        print("TRADE BEACON v2.5.0-1H-EXIT — LAYERED EXIT EDITION")
-        print(f"Exit: TP1={ATR_TP1_MULT}xATR (partial) | SL={ATR_STOP_MULT}xATR | TimeStop={TIME_STOP_MINUTES}min | DeadTrade={MOMENTUM_MINUTES}min check")
+        print("TRADE BEACON v2.7.0-SMART-EXIT — SMART EXIT EDITION")
+        print(f"Exit: TP1={ATR_TP1_MULT}xATR | SL={ATR_STOP_MULT}xATR | EMA20-structural | 4h-stall | 48h-TTL | Fri-21UTC-kill")
         print("="*100)
         for label, key, icon in [("AGGRESSIVE","aggressive","⚡"),("CONSERVATIVE","conservative","🛡️")]:
             sigs = mb[key]
@@ -2348,7 +2452,7 @@ def main():
                 print("-"*100)
                 df = pd.DataFrame(sigs)
                 cols = ["signal_id","pair","direction","score","tier","risk_reward","mtf_confirmed",
-                        "time_stop_at","momentum_check_at","tp1","sl","gemini_usd_bias"]
+                        "ttl_at","stall_check_at","tp1","sl","gemini_usd_bias"]
                 available = [c for c in cols if c in df.columns]
                 print(df[available].to_string(index=False))
         print("="*100+"\n")
@@ -2356,7 +2460,7 @@ def main():
         log.info("signals.csv written")
 
     mark_success()
-    log.info("Run completed — v2.5.0-1H-EXIT — LAYERED EXIT EDITION")
+    log.info("Run completed — v2.7.0-SMART-EXIT — SMART EXIT EDITION")
 
 
 if __name__ == "__main__":

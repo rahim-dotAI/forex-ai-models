@@ -126,10 +126,7 @@
     .metric-item-value.hl { color: var(--orange); }
     .metric-item-value.green { color: var(--green); }
     /* Time stop bar */
-    .timestop-bar { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px 14px; margin: 12px 0; display: flex; align-items: center; gap: 10px; }
-    .timestop-progress { flex: 1; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
-    .timestop-fill { height: 100%; border-radius: 2px; transition: width 1s linear; }
-    .timestop-label { font-size: 10px; font-family: 'Orbitron', monospace; font-weight: 700; white-space: nowrap; }
+    /* v2.7.0: timestop-bar removed — replaced by TTL countdown */
     .footer-card { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 6px; }
     .time { font-size: 11px; color: var(--text-dim); font-family: 'Orbitron', monospace; display: flex; align-items: center; gap: 6px; }
     .session { padding: 4px 10px; background: rgba(79,172,254,0.1); border: 1px solid rgba(79,172,254,0.3); border-radius: 6px; font-size: 10px; font-weight: 900; color: var(--blue); letter-spacing: 0.5px; }
@@ -239,7 +236,7 @@
           <div class="brand-icon"><i data-lucide="activity"></i></div>
           <div class="brand-text">
             <h1>TRADE BEACON</h1>
-            <p>MARKET INTELLIGENCE v2.5.0-1H-EXIT</p>
+            <p>MARKET INTELLIGENCE v2.7.0-SMART-EXIT</p>
           </div>
         </div>
         <div class="header-stats">
@@ -393,8 +390,8 @@
       <p><strong style="color:var(--text-dim);">PAST PERFORMANCE</strong> is not indicative of future results. Statistics meaningful only after 100+ resolved trades.</p>
     </div>
     <div style="margin-top:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.04);">
-      <div style="font-size:10px;color:var(--text-muted);">TRADE BEACON v2.5.0-1H-EXIT &nbsp;·&nbsp; SIGNAL-ONLY MODE &nbsp;·&nbsp; NO AUTO-EXECUTION</div>
-      <div style="font-size:10px;color:var(--text-muted);">1H Signals · TP1=2.5xATR · SL=2.0xATR · 2H TimeStop · 45min MomentumCheck · MTF: 4H+Daily+Weekly · All times UTC</div>
+      <div style="font-size:10px;color:var(--text-muted);">TRADE BEACON v2.7.0-SMART-EXIT &nbsp;·&nbsp; SIGNAL-ONLY MODE &nbsp;·&nbsp; NO AUTO-EXECUTION</div>
+      <div style="font-size:10px;color:var(--text-muted);">1H Signals · TP1=2.5xATR · SL=2.0xATR · EMA20-Structural Exit · 4h-Stall · 48h-TTL · Fri-Kill · ADX≥20 · ATR%-Filter · MTF: 4H+Daily+Weekly · All times UTC</div>
     </div>
   </div>
 
@@ -408,19 +405,19 @@
       'expectancy': { title: 'Expectancy', body: 'Average pips per trade.<br><span style="font-family:monospace;font-size:11px;color:var(--yellow)">(WR × Avg Win) − (LR × Avg Loss)</span>' },
       'today': { title: 'Signals Today', body: 'Number of unique pairs that received a new signal today (UTC).' },
       'session': { title: 'Current Session', body: 'Active forex session:<br><div class="tip-row"><span class="tip-key">ASIAN</span><span>00:00–09:30 UTC — BLOCKED</span></div><div class="tip-row"><span class="tip-key">EUROPEAN</span><span>09:30–13:00 UTC — Active</span></div><div class="tip-row"><span class="tip-key">OVERLAP</span><span>13:00–16:00 UTC — BLOCKED</span></div><div class="tip-row"><span class="tip-key">US</span><span>16:00–21:00 UTC — Active</span></div><div class="tip-row"><span class="tip-key">LATE_US</span><span>21:00–00:00 UTC — High threshold</span></div>' },
-      'modes': { title: 'Signal Modes', body: '<div class="tip-row"><span class="tip-key">AGGR</span><span><strong>Aggressive</strong> — Score ≥55. More signals.</span></div><div class="tip-row"><span class="tip-key">CONS</span><span><strong>Conservative</strong> — Score ≥57. Stricter.</span></div><div class="tip-row"><span class="tip-key">EXIT</span><span>v2.5.0: TP1 at 2.5xATR, 2h time stop, 45min momentum check. All signals close within 2 hours maximum.</span></div>' },
+      'modes': { title: 'Signal Modes', body: '<div class="tip-row"><span class="tip-key">AGGR</span><span><strong>Aggressive</strong> — Score ≥55, ADX ≥20. More signals.</span></div><div class="tip-row"><span class="tip-key">CONS</span><span><strong>Conservative</strong> — Score ≥57, ADX ≥20. Stricter.</span></div><div class="tip-row"><span class="tip-key">EXIT</span><span>v2.7.0: TP1 at 2.5xATR, then EMA20 structural exit OR 4h stall OR 48h TTL. No arbitrary time stop.</span></div>' },
       'tier-badge': { title: 'Signal Tier', body: '<div class="tip-row"><span class="tip-key" style="color:#fbbf24">A+</span><span>Score ≥80 — Elite</span></div><div class="tip-row"><span class="tip-key" style="color:var(--red)">A</span><span>Score 72-79 — BLOCKED (0% WR)</span></div><div class="tip-row"><span class="tip-key" style="color:var(--blue)">B</span><span>Score 55-71 — Active</span></div><div class="tip-row"><span class="tip-key" style="color:#6b7280">C</span><span>Score &lt;55 — BLOCKED</span></div>' },
-      'exit-col': { title: 'Exit Reason', body: '<div class="tip-row"><span class="tip-key" style="color:var(--green)">TP1</span><span>Price hit TP1 target (2.5xATR) — WIN</span></div><div class="tip-row"><span class="tip-key" style="color:var(--red)">SL</span><span>Price hit stop loss (2.0xATR) — LOSS</span></div><div class="tip-row"><span class="tip-key" style="color:var(--blue)">TIME</span><span>2h time stop fired — closed at market</span></div><div class="tip-row"><span class="tip-key" style="color:var(--yellow)">MOM</span><span>45-min momentum check — dead trade exit</span></div>' },
-      'mtf-col': { title: 'MTF Status', body: 'v2.5.0: Checks above 1h signal timeframe only. ✓ = 4H+Daily confirmed. ~ = partial.' },
+      'exit-col': { title: 'Exit Reason', body: '<div class="tip-row"><span class="tip-key" style="color:var(--green)">TP1</span><span>Price hit TP1 target (2.5xATR) — WIN</span></div><div class="tip-row"><span class="tip-key" style="color:var(--red)">SL</span><span>Price hit stop loss (2.0xATR) — LOSS</span></div><div class="tip-row"><span class="tip-key" style="color:var(--blue)">EMA20</span><span>1H close crossed EMA20 — structural trend broken</span></div><div class="tip-row"><span class="tip-key" style="color:var(--yellow)">STALL</span><span>Open 4h+ with negative PnL — dead trade exit</span></div><div class="tip-row"><span class="tip-key" style="color:var(--text-muted)">TTL</span><span>48h elapsed — garbage collection close</span></div>' },
+      'mtf-col': { title: 'MTF Status', body: 'v2.7.0: Checks above 1h signal timeframe only. ✓ = 4H+Daily confirmed. ~ = partial.' },
       'perf-tier': { title: 'Performance by Tier', body: 'Win rate and pips by score tier. A+ (≥80) and B (55-71) are active tiers.' },
       'perf-session': { title: 'Performance by Session', body: 'Win rate per session. US historically best. ASIAN and OVERLAP blocked. Session end guard prevents entries <2h before close.' },
-      'exit-reason': { title: 'Exit Reason Breakdown', body: '<strong>tp1_hit</strong> — Price reached TP1 (2.5xATR). WIN.<br><strong>TIME_EXIT</strong> — 2-hour time stop fired. WIN or LOSS at market.<br><strong>MOMENTUM_EXIT</strong> — 45-min check, <10 pips movement. Near-zero expected.<br><strong>sl_hit</strong> — Stop loss hit. LOSS.<br>Goal: tp1_hit and TIME_EXIT trending positive.' },
-      'mtf-confirm': { title: 'MTF Confirmation', body: 'v2.5.0: 4H + Daily + Weekly MTF. 30m and 1H removed — signal now on 1h chart.<br><strong>Daily is decisive</strong> — blocked entire March 23 -318 pip day.<br>Fully confirmed = 4H + Daily + Weekly all agree.' },
+      'exit-reason': { title: 'Exit Reason Breakdown', body: '<strong>tp1_hit</strong> — Price reached TP1 (2.5xATR). WIN.<br><strong>structural_exit</strong> — 1H close crossed EMA20 — trend broken. WIN or LOSS at market.<br><strong>stall_exit</strong> — Open 4h+ with negative PnL — dead trade.<br><strong>sl_hit</strong> — Stop loss hit. LOSS.<br><strong>ttl_expired</strong> — 48h database cleanup.<br><strong>weekend_close</strong> — Friday 21:00 UTC kill.' },
+      'mtf-confirm': { title: 'MTF Confirmation', body: 'v2.7.0: 4H + Daily + Weekly MTF. 30m and 1H removed — signal now on 1h chart.<br><strong>Daily is decisive</strong> — blocked March 23 -318 pip day.<br>Fully confirmed = 4H + Daily + Weekly all agree.' },
       'gemini-bias': { title: 'Gemini USD Bias', body: 'Win rate of USD pair signals classified as BULLISH or BEARISH by Gemini 2.5 Flash.<br>NEUTRAL = blocked (not shown). Free tier: 250 req/day.' },
-      'score-meter': { title: 'Signal Score', body: '7 components: EMA structure (25pts), RSI extremes (20pts), ADX strength (20pts), RSI pullback (15pts), EMA momentum (10pts), EMA crossover (8pts), session bonus (3pts). Now scored on 1H bars.' },
-      'signal-rr': { title: 'Risk:Reward Ratio', body: 'v2.5.0: TP1 = 2.5xATR, SL = 2.0xATR. R:R ≈ 1.25. Breakeven WR = 44%.<br>Remainder closed by 2h time stop.' },
-      'signal-mtf': { title: 'MTF Status', body: 'v2.5.0: Only 4H, Daily, Weekly shown (above 1h signal timeframe).<br>🟢 = agrees | ⬜ = inconclusive | Daily disagreement always blocks.' },
-      'time-stop': { title: 'Time Stop', body: 'v2.5.0: Signal closes automatically 2 hours after entry regardless of price. Prevents entropy accumulation from long holds. Signal edge expires by hour 3+.' },
+      'score-meter': { title: 'Signal Score', body: '7 components: EMA structure (25pts), RSI extremes (20pts), ADX strength (20pts), RSI pullback (15pts), EMA momentum (10pts), EMA crossover (8pts), session bonus (3pts). Scored on 1H bars. Minimum ADX=20.' },
+      'signal-rr': { title: 'Risk:Reward Ratio', body: 'v2.7.0: TP1 = 2.5xATR, SL = 2.0xATR. R:R ≈ 1.25. Breakeven WR = 44%.<br>Exit via EMA20 structural cross, 4h stall, or 48h TTL — no arbitrary time stop.' },
+      'signal-mtf': { title: 'MTF Status', body: 'v2.7.0: Only 4H, Daily, Weekly shown (above 1h signal timeframe).<br>🟢 = agrees | ⬜ = inconclusive | Daily disagreement always blocks.' },
+      'atr-filter': { title: 'ATR% Regime Filter', body: 'v2.7.0: Blocks signals when volatility is compressed relative to its 100-bar average.<br>Threshold=0.85 — blocks bottom ~30% of compressed bars.<br>Prevents stop-hunting on days like Apr 14 (ADX=40 but ATR% ratio=0.72 → 13-pip effective stop).' },
     };
 
     const tooltip  = document.getElementById('globalTooltip');
@@ -467,7 +464,7 @@
       try { mode = localStorage.getItem('tbMode') || 'aggressive'; } catch(e) {}
       updateModeBtns(); checkMarketStatus(); load();
       setInterval(load, 30000); initFilters(); updateSess(); setInterval(updateSess, 60000);
-      setInterval(updateTimeStopBars, 10000);
+      // v2.7.0: updateTimeStopBars removed — structural exits don't need countdown timers
     });
 
     const FOREX_HOLIDAYS = {
@@ -628,21 +625,22 @@
       let col='#6b7280';
       if(sc>=80)col='#fbbf24'; else if(sc>=55)col='#4facfe';
       const tp1=s.tp1||s.tp;
-      // Time stop progress
-      let tsHtml='';
-      if (s.time_stop_at) {
-        const entry=new Date(s.timestamp), stop=new Date(s.time_stop_at);
-        const total=(stop-entry)/1000, elapsed=(Date.now()-entry)/1000;
-        const pct=Math.min(100,Math.max(0,(elapsed/total)*100));
-        const remaining=Math.max(0,Math.round((stop-Date.now())/60000));
-        const fillColor=pct>75?'var(--red)':pct>50?'var(--yellow)':'var(--green)';
-        tsHtml=`<div class="timestop-bar" data-stop="${s.time_stop_at}" data-start="${s.timestamp}">
-          <i data-lucide="timer" style="width:12px;height:12px;color:${fillColor};flex-shrink:0;"></i>
-          <div class="timestop-progress"><div class="timestop-fill" style="width:${pct}%;background:${fillColor};"></div></div>
-          <span class="timestop-label" style="color:${fillColor};">${remaining}m left</span>
-          <span class="info-icon" data-tip="time-stop">i</span>
+
+      // v2.7.0: TTL countdown (replaces time stop bar)
+      let ttlHtml='';
+      if (s.ttl_at) {
+        const ttlMs = new Date(s.ttl_at) - Date.now();
+        const ttlH  = Math.max(0, Math.floor(ttlMs/3600000));
+        const ttlM  = Math.max(0, Math.floor((ttlMs%3600000)/60000));
+        const ttlColor = ttlH < 4 ? 'var(--yellow)' : 'var(--green)';
+        ttlHtml = `<div style="display:flex;align-items:center;gap:6px;margin:8px 0 4px;padding:6px 10px;background:rgba(0,242,169,0.04);border:1px solid rgba(0,242,169,0.15);border-radius:8px;">
+          <i data-lucide="clock" style="width:12px;height:12px;color:${ttlColor};flex-shrink:0;"></i>
+          <span style="font-size:10px;color:${ttlColor};font-family:'Orbitron',monospace;font-weight:700;">
+            TTL: ${ttlH}h ${ttlM}m · EMA20 structural exit active
+          </span>
         </div>`;
       }
+
       const mtfBadges=buildMtfBadges(s.mtf_confirmed||s.htf_confirmed, s.mtf_details);
       const geminiHtml=buildGeminiBadge(s.gemini_usd_bias);
 
@@ -653,7 +651,7 @@
         <span class="signal-tier tier-${getTier(s.tier||'C')}">${s.tier||'C'}</span>
         <div class="pair">${s.pair}</div>
         <div class="dir dir-${s.direction.toLowerCase()}"><i data-lucide="${s.direction==='BUY'?'arrow-up':'arrow-down'}" style="width:14px;height:14px"></i>${s.direction}</div>
-        ${tsHtml}
+        ${ttlHtml}
         <div class="section-title"><i data-lucide="trending-up" style="width:14px;height:14px"></i>ENTRY LEVELS</div>
         <div class="metrics-grid">
           <div class="metric-item"><div class="metric-item-label">ENTRY</div><div class="metric-item-value">${s.entry_price?.toFixed(5)||'N/A'}</div></div>
@@ -666,7 +664,7 @@
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
             ${mtfBadges}
             ${geminiHtml}
-            <div style="padding:4px 10px;background:rgba(79,172,254,0.08);border:1px solid rgba(79,172,254,0.2);border-radius:6px;font-size:10px;font-weight:900;color:var(--blue);font-family:'Orbitron',monospace;">⏱ 2H STOP</div>
+            <div style="padding:4px 10px;background:rgba(0,242,169,0.08);border:1px solid rgba(0,242,169,0.2);border-radius:6px;font-size:10px;font-weight:900;color:var(--green);font-family:'Orbitron',monospace;" data-tip="atr-filter">ATR% ✓</div>
             <div class="session">${s.session||'N/A'}</div>
           </div>
         </div>
@@ -674,7 +672,7 @@
     }
 
     function buildMtfBadges(confirmed, mtf) {
-      // v2.5.0: Only 4H, 1D, 1WK — 30M and 1H removed (signal is on 1h chart)
+      // v2.7.0: Only 4H, 1D, 1WK — 30M and 1H removed (signal is on 1h chart)
       const tfs = [{key:'1wk',label:'1W'},{key:'1d',label:'1D'},{key:'4h',label:'4H'}];
       const hasDetails = mtf && Object.values(mtf).some(v=>v!==null&&v!==undefined);
       if (!hasDetails) {
@@ -686,7 +684,6 @@
         const val=mtf[key];
         if (val===null||val===undefined)
           return `<span style="padding:2px 5px;border-radius:4px;font-size:9px;font-weight:700;background:rgba(255,255,255,0.04);color:var(--text-muted);font-family:'Orbitron',monospace;">${label}</span>`;
-        const green=(val==='BULL'||val==='BEAR');
         return `<span style="padding:2px 5px;border-radius:4px;font-size:9px;font-weight:900;background:rgba(0,242,169,0.1);color:var(--green);border:1px solid rgba(0,242,169,0.2);font-family:'Orbitron',monospace;" title="${label}: ${val}">✓${label}</span>`;
       }).join('');
       const overallColor=confirmed?'var(--green)':'var(--yellow)';
@@ -697,22 +694,6 @@
       if (!bias) return '';
       const icon=bias==='BULLISH'?'↑':bias==='BEARISH'?'↓':'—';
       return `<div style="padding:4px 10px;background:rgba(79,172,254,0.08);border:1px solid rgba(79,172,254,0.25);border-radius:6px;font-size:10px;font-weight:900;font-family:'Orbitron',monospace;color:var(--blue);" data-tip="gemini-bias">🤖 USD ${icon}</div>`;
-    }
-
-    function updateTimeStopBars() {
-      document.querySelectorAll('.timestop-bar[data-stop]').forEach(bar => {
-        const start=new Date(bar.dataset.start), stop=new Date(bar.dataset.stop);
-        const total=(stop-start)/1000, elapsed=(Date.now()-start)/1000;
-        const pct=Math.min(100,Math.max(0,(elapsed/total)*100));
-        const remaining=Math.max(0,Math.round((stop-Date.now())/60000));
-        const fillColor=pct>75?'var(--red)':pct>50?'var(--yellow)':'var(--green)';
-        const fill=bar.querySelector('.timestop-fill');
-        const label=bar.querySelector('.timestop-label');
-        const icon=bar.querySelector('svg');
-        if(fill) fill.style.width=pct+'%', fill.style.background=fillColor;
-        if(label) label.textContent=remaining+'m left', label.style.color=fillColor;
-        if(icon) icon.style.color=fillColor;
-      });
     }
 
     /* ── PAGINATION ── */
@@ -735,12 +716,16 @@
       _filteredSigs=sigs; updatePairFilter(sigs); _renderHistoryPage();
     }
     function _getExitBadge(s) {
-      const r=s.exit_reason||'';
-      if(r==='tp1_hit'||s.status==='WIN')         return '<span class="exit-badge exit-tp1">TP1</span>';
-      if(r==='TIME_EXIT')                           return '<span class="exit-badge exit-time">TIME</span>';
-      if(r==='MOMENTUM_EXIT')                       return '<span class="exit-badge exit-mom">MOM</span>';
+      const r=(s.exit_reason||'').toLowerCase();
+      if(r==='tp1_hit'||s.status==='WIN')          return '<span class="exit-badge exit-tp1">TP1</span>';
+      if(r==='structural_exit')                     return '<span class="exit-badge exit-time">EMA20</span>';
+      if(r==='stall_exit')                          return '<span class="exit-badge exit-mom">STALL</span>';
+      if(r==='weekend_close')                       return '<span class="exit-badge exit-mom">FRI</span>';
+      if(r==='ttl_expired'||s.status==='EXPIRED')  return '<span class="exit-badge exit-exp">TTL</span>';
       if(r==='sl_hit'||s.status==='LOSS')          return '<span class="exit-badge exit-sl">SL</span>';
-      if(s.status==='EXPIRED')                      return '<span class="exit-badge exit-exp">EXP</span>';
+      // legacy v2.5.0
+      if(r.includes('time'))                        return '<span class="exit-badge exit-time">TIME†</span>';
+      if(r.includes('momentum'))                    return '<span class="exit-badge exit-mom">MOM†</span>';
       return '<span class="exit-badge exit-exp">—</span>';
     }
     function _renderHistoryPage(){
@@ -844,11 +829,26 @@
     function renderExitReason(er){
       const c=document.getElementById('exitAnalytics');
       if(!er||Object.keys(er).length===0){
-        c.innerHTML='<p style="color:var(--text-muted);text-align:center;padding:20px">No exit data yet.<br><span style="font-size:12px">Populates as v2.5.0 signals resolve.</span></p>';return;
+        c.innerHTML='<p style="color:var(--text-muted);text-align:center;padding:20px">No exit data yet.<br><span style="font-size:12px">Populates as v2.7.0 signals resolve.</span></p>';return;
       }
-      const order=['tp1_hit','TIME_EXIT','MOMENTUM_EXIT','sl_hit','EXPIRED'];
-      const labels={'tp1_hit':'✅ TP1 Hit','TIME_EXIT':'⏱ Time Stop','MOMENTUM_EXIT':'💤 Momentum Exit','sl_hit':'❌ SL Hit','EXPIRED':'⏳ Expired'};
-      const colors={'tp1_hit':'var(--green)','TIME_EXIT':'var(--blue)','MOMENTUM_EXIT':'var(--yellow)','sl_hit':'var(--red)','EXPIRED':'var(--text-muted)'};
+      // v2.7.0 exit types + legacy aliases
+      const order=['tp1_hit','structural_exit','stall_exit','sl_hit','weekend_close','ttl_expired','momentum_exit_legacy','time_exit_legacy'];
+      const labels={
+        'tp1_hit':              '✅ TP1 Hit (2.5xATR)',
+        'structural_exit':      '📉 EMA20 Structural Exit',
+        'stall_exit':           '💤 4h Stall Exit',
+        'sl_hit':               '❌ SL Hit (2.0xATR)',
+        'weekend_close':        '📅 Friday Kill Switch',
+        'ttl_expired':          '⏳ TTL Expired (48h)',
+        'momentum_exit_legacy': '💤 Momentum Exit (legacy v2.5)',
+        'time_exit_legacy':     '⏱ Time Stop (legacy v2.5)',
+      };
+      const colors={
+        'tp1_hit':'var(--green)', 'structural_exit':'var(--blue)',
+        'stall_exit':'var(--yellow)', 'sl_hit':'var(--red)',
+        'weekend_close':'var(--yellow)', 'ttl_expired':'var(--text-muted)',
+        'momentum_exit_legacy':'var(--text-muted)', 'time_exit_legacy':'var(--text-muted)',
+      };
       const sorted=[...order.filter(k=>er[k]),...Object.keys(er).filter(k=>!order.includes(k))];
       c.innerHTML=sorted.map(key=>{
         const d=er[key]||{trades:0,win_rate:0,total_pips:0};
@@ -860,7 +860,7 @@
 
     function renderMtfConfirmed(mtfData){
       const c=document.getElementById('mtfAnalytics');
-      if(!mtfData||(!mtfData.fully_confirmed&&!mtfData.partial_or_none)){c.innerHTML='<p style="color:var(--text-muted);text-align:center;padding:20px">No MTF data yet.<br><span style="font-size:12px">v2.5.0: 4H + Daily + Weekly only.</span></p>';return;}
+      if(!mtfData||(!mtfData.fully_confirmed&&!mtfData.partial_or_none)){c.innerHTML='<p style="color:var(--text-muted);text-align:center;padding:20px">No MTF data yet.<br><span style="font-size:12px">v2.7.0: 4H + Daily + Weekly only.</span></p>';return;}
       c.innerHTML=[['fully_confirmed','✓ Fully Confirmed','var(--green)'],['partial_or_none','~ Partial / None','var(--yellow)']].map(([key,label,col])=>{const d=mtfData[key]||{trades:0,win_rate:0,total_pips:0};const wr=d.win_rate||0,pips=d.total_pips||0;return`<div class="analytics-item"><div><span style="font-size:13px;font-weight:800;color:${col};">${label}</span><span style="font-size:12px;color:var(--text-dim);margin-left:8px;">${d.trades} trades</span></div><div><div class="analytics-value" style="color:${wr>=44?'var(--green)':'var(--text)'};text-align:right">${wr.toFixed(1)}%</div><div style="font-size:11px;color:${pips>=0?'var(--green)':'var(--red)'};text-align:right;font-family:'Orbitron',monospace;">${pips>=0?'+':''}${pips.toFixed(1)} pips</div></div></div><div class="progress"><div class="progress-bar" style="width:${wr}%"></div></div>`;}).join('');
     }
 
@@ -960,7 +960,7 @@
       if(score>=75)why.push(`Score <strong style="color:var(--orange)">${score}</strong> — strong 1H momentum.`);
       if(best.adx>=25)why.push(`ADX ${best.adx?.toFixed(1)} confirms trend on 1H chart.`);
       if(best.gemini_usd_bias)why.push(`🤖 Gemini: USD <strong style="color:var(--blue)">${best.gemini_usd_bias}</strong>.`);
-      if(best.time_stop_at){const stop=new Date(best.time_stop_at);why.push(`⏱ Closes by ${stop.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',timeZone:'UTC'})} UTC.`);}
+      if(best.ttl_at){const ttl=new Date(best.ttl_at);const h=Math.max(0,Math.floor((ttl-Date.now())/3600000));why.push(`⏳ TTL: ${h}h remaining · EMA20 structural exit active.`);}
       document.getElementById('podReason').innerHTML=why.length>0?why.join(' '):`Highest composite 1H score today. MTF and technicals aligned for ${direction} on ${pair}.`;
       const geminiEl=document.getElementById('podGemini');
       if(best.gemini_usd_bias){geminiEl.style.display='block';geminiEl.innerHTML=`🤖 Gemini 2.5 Flash: USD macro sentiment is <strong>${best.gemini_usd_bias.toLowerCase()}</strong>.`;}else{geminiEl.style.display='none';}

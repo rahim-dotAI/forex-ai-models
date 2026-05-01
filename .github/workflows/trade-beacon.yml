@@ -61,7 +61,7 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 concurrency:
-  group: trade-beacon-v2.7.0-${{ github.ref }}-${{ github.event_name }}
+  group: trade-beacon-singleton
   cancel-in-progress: false
 
 permissions:

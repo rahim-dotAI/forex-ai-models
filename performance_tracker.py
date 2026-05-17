@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+"""
 Performance Tracker v2.7.1-SIGNAL-FLOW — Aligned with Trade Beacon v2.7.1
 ============================================================================
 

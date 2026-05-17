@@ -1,6 +1,6 @@
-name: Trade Beacon v2.7.0-SMART-EXIT – Forex Signal Generator
+name: Trade Beacon v2.7.1-SIGNAL-FLOW – Forex Signal Generator
 
-# CHANGES v2.7.0-SMART-EXIT:
+# CHANGES v2.7.1-SIGNAL-FLOW:
 # - SMART EXIT EDITION: 1H timeframe + partial TP + 2h time stop + momentum check
 # - Signal timeframe: 15m → 1h (filters noise, aligns with signal edge window)
 # - SL: 2.5x → 2.0x ATR (1h ATR is larger; tighter multiplier, appropriate pip distance)
@@ -241,7 +241,7 @@ jobs:
             echo "📸 Created config baseline snapshot"
           fi
 
-          echo "✅ Configuration valid (v2.7.0-SMART-EXIT)"
+          echo "✅ Configuration valid (v2.7.1-SIGNAL-FLOW)"
 
       - name: Reset performance history (DESTRUCTIVE)
         if: github.event.inputs.reset_performance == 'YES'
@@ -340,11 +340,11 @@ jobs:
         if: steps.market_check.outputs.should_run == 'true'
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "📋 ACTIVE CONFIGURATION — v2.7.0-SMART-EXIT"
+          echo "📋 ACTIVE CONFIGURATION — v2.7.1-SIGNAL-FLOW"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo ""
 
-          echo "[v2.7.0 Changes — Smart Exit]"
+          echo "[v2.7.1 Changes — Signal Flow]"
           echo "  Timeframe:       1H (was 15m)"
           echo "  SL:              $(jq -r '.settings.aggressive.atr_stop_multiplier // 2.0' config.json)x ATR"
           echo "  TP1:             $(jq -r '.settings.aggressive.atr_tp1_multiplier // 2.5' config.json)x ATR (partial profit lock)"
@@ -364,7 +364,7 @@ jobs:
           echo "  Min R:R:      $(jq -r '.settings.aggressive.min_risk_reward // 1.2' config.json) (TP1/SL = 2.5/2.0)"
           echo ""
 
-          echo "[MTF Settings — v2.7.0]"
+          echo "[MTF Settings — v2.7.1]"
           echo "  Require 4h:     $(jq -r '.mtf_settings.require_4h // true' config.json) (required)"
           echo "  Require Daily:  $(jq -r '.mtf_settings.require_daily // true' config.json) ← DECISIVE FILTER"
           echo "  Require Weekly: $(jq -r '.mtf_settings.require_weekly // false' config.json) (bonus only)"
@@ -406,7 +406,8 @@ jobs:
 
           echo "[Active Pair Caps]"
           echo "  GBPUSD: max $(jq -r '.advanced.pair_limits.GBPUSD // 5' config.json) (BUY-only)"
-          echo "  GBPJPY: max $(jq -r '.advanced.pair_limits.GBPJPY // 1' config.json)"
+          echo "  GBPJPY: max $(jq -r '.advanced.pair_limits.GBPJPY // 1' config.json) (EU 09:30-15:00 + US)"
+          echo "  USDJPY: max $(jq -r '.advanced.pair_limits.USDJPY // 3' config.json) (US only + Gemini gate)"
           echo "  USD pairs: US session only + Gemini gate"
           echo ""
 
@@ -418,7 +419,7 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
-      - name: Run Trade Beacon v2.7.0-SMART-EXIT
+      - name: Run Trade Beacon v2.7.1-SIGNAL-FLOW
         if: steps.market_check.outputs.should_run == 'true'
         env:
           NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
@@ -427,7 +428,7 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           BROWSERLESS_TOKEN: ${{ secrets.BROWSERLESS_TOKEN }}
         run: |
-          echo "🚀 Starting Trade Beacon v2.7.0-SMART-EXIT..."
+          echo "🚀 Starting Trade Beacon v2.7.1-SIGNAL-FLOW..."
           python $ENTRY_SCRIPT
           EXIT_CODE=$?
 
@@ -492,7 +493,7 @@ jobs:
         if: always()
         run: |
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          echo "📊 TRADE BEACON v2.7.0-SMART-EXIT PERFORMANCE SUMMARY"
+          echo "📊 TRADE BEACON v2.7.1-SIGNAL-FLOW PERFORMANCE SUMMARY"
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
           if [ -f signal_state/signal_history.json ]; then
@@ -586,7 +587,7 @@ jobs:
       - name: Commit state changes
         if: steps.market_check.outputs.should_run == 'true'
         run: |
-          git config user.name  "Trade Beacon v2.7.0 [bot]"
+          git config user.name  "Trade Beacon v2.7.1 [bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git add signal_state/*.json signal_state/last_run.txt signal_state/last_success.txt \
@@ -601,10 +602,10 @@ jobs:
             CONS=$(jq -r    '.active_signals_by_mode.conservative // 0' signal_state/dashboard_state.json 2>/dev/null || echo "0")
             SESSION=$(jq -r '.session // "UNKNOWN"'                     signal_state/dashboard_state.json 2>/dev/null || echo "UNKNOWN")
 
-            git commit -m "📊 Trade Beacon v2.7.0-SMART-EXIT [$TIMESTAMP]
+            git commit -m "📊 Trade Beacon v2.7.1-SIGNAL-FLOW [$TIMESTAMP]
 
             Session: $SESSION | Signals: $TOTAL (Agg: $AGG, Cons: $CONS)
-            Exit: TP1@2.5xATR | EMA20-structural | 4h-stall | 48h-TTL
+            Exit: TP1@2.5xATR | EMA20-structural | 4h-stall | 48h-TTL | GBPJPY-EU
             Run: #${{ github.run_number }}
 
             [skip ci]"
@@ -636,7 +637,7 @@ jobs:
         uses: actions/upload-artifact@v6
         if: steps.market_check.outputs.should_run == 'true'
         with:
-          name: trade-beacon-v2.7.0-run-${{ github.run_number }}
+          name: trade-beacon-v2.7.1-run-${{ github.run_number }}
           path: |
             signal_state/
             signals.csv

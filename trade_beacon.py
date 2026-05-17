@@ -1,5 +1,5 @@
 """
-Trade Beacon v2.7.0-SMART-EXIT — Forex Signal Generator
+Trade Beacon v2.7.1-SIGNAL-FLOW — Forex Signal Generator
 RESEARCH-BACKED EXIT OVERHAUL: ADX 20 + ATR% Regime Filter + Structural Exits
 
 CHANGES v2.7.0-SMART-EXIT (research from Claude + ChatGPT + Kimi + Gemini):
@@ -115,7 +115,7 @@ SESSION_MIN_MINUTES = 120  # Minimum session time remaining for new signal
 
 # ATR% regime filter (v2.7.0 — Kimi research, derived from April 2026 GBPUSD data)
 ATR_PCT_LOOKBACK   = 100   # 100 × 1H bars = ~4 trading days
-ATR_PCT_THRESHOLD  = 0.85  # Block bottom ~30% of compressed-volatility bars
+ATR_PCT_THRESHOLD  = 0.75  # Block bottom ~25% of compressed-volatility bars (lowered from 0.85 — May 2026 vol)
 
 # Permanently blocked — data confirmed no edge regardless of conditions
 _PERMANENTLY_BLOCKED_PAIRS = frozenset(["EURUSD", "EURGBP", "GBPAUD", "GBPCAD"])
@@ -197,7 +197,7 @@ def _default_config() -> Dict:
                 "max_correlated_signals": 2,
             },
             "conservative": {
-                "threshold": 57, "min_adx": 20,
+                "threshold": 50, "min_adx": 20,
                 "rsi_oversold": 30, "rsi_overbought": 70,
                 "min_risk_reward": 1.2,
                 "atr_stop_multiplier": ATR_STOP_MULT,
@@ -243,12 +243,12 @@ def _default_config() -> Dict:
                 "LATE_US":  {"all_major_pairs": 0},
             },
             "session_thresholds": {
-                "ASIAN": 999, "EUROPEAN": 48, "US": 48, "LATE_US": 60, "OVERLAP": 999,
+                "ASIAN": 999, "EUROPEAN": 999, "US": 48, "LATE_US": 999, "OVERLAP": 999,
             },
             "pair_limits": {
-                "GBPUSD": 5, "GBPJPY": 1,
+                "GBPUSD": 5, "GBPJPY": 1, "USDJPY": 3,
                 "GBPAUD": 0, "GBPCAD": 0,
-                "NZDUSD": 1, "EURGBP": 0, "EURUSD": 0, "default": 3,
+                "NZDUSD": 0, "EURGBP": 0, "EURUSD": 0, "default": 0,
             },
             "validation": {
                 "max_signal_age_seconds": 3600,  # 1h signal — valid for 1 hour before expiry check
@@ -264,7 +264,7 @@ def _default_config() -> Dict:
                 "enabled": True,
                 "restricted_pairs": ["AUDUSD","USDCAD","USDCHF","USDJPY","NZDUSD","EURJPY"],
                 "allowed_sessions": ["US"],
-                "min_score": 60,
+                "min_score": 55,
                 "blackout_before_minutes": 45,
                 "blackout_after_minutes": 30,
                 "sentiment_gate": True,
@@ -1797,6 +1797,11 @@ def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
 
     # ── 4. Session gate ───────────────────────────────────────────────────
     sess_thresh = CONFIG.get("advanced",{}).get("session_thresholds",{}).get(session, min_t)
+    # GBPJPY European exception: genuine liquidity 09:30-15:00 UTC from Asian-European overlap
+    pair_clean_sess = pair.replace("=X","").upper()
+    if pair_clean_sess == "GBPJPY" and session == "EUROPEAN":
+        sess_thresh = 55  # lower than US threshold — London hours have JPY momentum carry-over
+        log.info(f"  GBPJPY European session exception — threshold overridden to 55")
     if diff < sess_thresh:
         log.info(f"  BLOCKED: {diff} < session threshold {sess_thresh} ({session})"); return None, ok
     if diff < min_t:
@@ -1915,7 +1920,7 @@ def generate_signal(pair: str) -> Tuple[Optional[Dict], bool]:
             "generated_at":           now.isoformat(),
             "expires_at":             expires.isoformat(),
             "session_active":         session in ("EUROPEAN","US"),
-            "signal_generator_version": "2.7.0",
+            "signal_generator_version": "2.7.1",
             "atr_stop_multiplier":    atr_stop,
             "atr_tp1_multiplier":     atr_tp1,
             "exit_architecture":      f"SL={atr_stop}xATR | TP1={atr_tp1}xATR | EMA20-structural | 4h-stall | 48h-TTL",
@@ -2336,7 +2341,7 @@ def main():
     opt_mode = opt_cfg["mode"]
 
     eu_start = f"{CONFIG.get('sessions',{}).get('european_start_hour',9):02d}:{CONFIG.get('sessions',{}).get('european_start_minute',30):02d}"
-    log.info("Trade Beacon v2.7.0-SMART-EXIT | SMART EXIT EDITION")
+    log.info("Trade Beacon v2.7.1-SIGNAL-FLOW | SMART EXIT EDITION")
     log.info(f"Timeframe: 1H | SL={ATR_STOP_MULT}xATR | TP1={ATR_TP1_MULT}xATR | "
              f"Exits: EMA20-structural | 4h-stall | 48h-TTL | Fri-21UTC-kill")
     log.info(f"ADX threshold: {opt_cfg['settings']['aggressive']['min_adx']} | "
@@ -2407,7 +2412,7 @@ def main():
     elite = select_high_potential(new_signals)
     for s in elite:
         s["estimated_win_rate"] = quick_micro_backtest(s)
-    pass_ids = {s["signal_id"] for s in elite if s.get("estimated_win_rate",0) >= 0.65}
+    pass_ids = {s["signal_id"] for s in elite if s.get("estimated_win_rate",0) >= 0.45}
     new_signals = [s for s in new_signals if s.get("tier") not in ("A+","A") or s["signal_id"] in pass_ids]
     elite_ids = {s["signal_id"] for s in elite}
     for s in new_signals:
@@ -2442,7 +2447,7 @@ def main():
     if all_new:
         mb = split_signals_by_mode(all_new)
         print("\n" + "="*100)
-        print("TRADE BEACON v2.7.0-SMART-EXIT — SMART EXIT EDITION")
+        print("TRADE BEACON v2.7.1-SIGNAL-FLOW — SMART EXIT EDITION")
         print(f"Exit: TP1={ATR_TP1_MULT}xATR | SL={ATR_STOP_MULT}xATR | EMA20-structural | 4h-stall | 48h-TTL | Fri-21UTC-kill")
         print("="*100)
         for label, key, icon in [("AGGRESSIVE","aggressive","⚡"),("CONSERVATIVE","conservative","🛡️")]:
@@ -2460,7 +2465,7 @@ def main():
         log.info("signals.csv written")
 
     mark_success()
-    log.info("Run completed — v2.7.0-SMART-EXIT — SMART EXIT EDITION")
+    log.info("Run completed — v2.7.1-SIGNAL-FLOW — SMART EXIT EDITION")
 
 
 if __name__ == "__main__":

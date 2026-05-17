@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-05-15T21:46:08.637200+00:00",
+  "timestamp": "2026-05-17T22:01:25.712343+00:00",
   "active_signals": 0,
   "active_signals_by_mode": {
     "aggressive": 0,
@@ -10578,7 +10578,7 @@
   ],
   "api_usage": {
     "yfinance": {
-      "successful_downloads": 11
+      "successful_downloads": 4
     },
     "sentiment": {
       "enabled": true,
@@ -11116,64 +11116,18 @@
     }
   },
   "equity_curve": [],
-  "pair_prices": {
-    "GBPUSD": 1.33239,
-    "AUDUSD": 0.71531,
-    "NZDUSD": 0.58401,
-    "USDCAD": 1.3749,
-    "USDCHF": 0.786,
-    "EURJPY": 184.56,
-    "GBPJPY": 211.52901
-  },
+  "pair_prices": {},
   "upcoming_events": [],
-  "pick_of_the_day": {
-    "id": "GBPJPY_SELL_dd7d5663f2f1",
-    "signal_id": "GBPJPY_SELL_dd7d5663f2f1",
-    "pair": "GBPJPY",
-    "direction": "SELL",
-    "entry_price": 211.51401,
-    "exit_price": 212.07526,
-    "sl": 212.07526,
-    "tp": 210.81244,
-    "tp1": 210.81244,
-    "status": "LOSS",
-    "pips": -56.12499999999727,
-    "confidence": "MODERATE",
-    "score": 63,
-    "session": "US",
-    "tier": "B",
-    "eligible_modes": [
-      "conservative",
-      "aggressive"
-    ],
-    "sentiment_applied": false,
-    "sentiment_score": 0.0,
-    "sentiment_adjustment": 0.0,
-    "gemini_engine": null,
-    "estimated_win_rate": null,
-    "risk_reward": 1.25,
-    "adx": 60.3,
-    "rsi": 32.9,
-    "atr": 0.28063,
-    "htf_confirmed": false,
-    "mtf_details": null,
-    "gemini_usd_bias": null,
-    "exit_reason": "LOSS",
-    "exit_mode": "structural_ema20",
-    "ttl_at": null,
-    "stall_check_at": null,
-    "timestamp": "2026-05-15T16:01:37.754719+00:00",
-    "exit_time": "2026-05-15T16:15:56.747588+00:00"
-  },
+  "pick_of_the_day": null,
   "system": {
-    "last_update": "2026-05-15T21:46:08.637248+00:00",
+    "last_update": "2026-05-17T22:01:25.712395+00:00",
     "signal_only_mode": true,
     "version": "2.7.0",
     "gemini_active": true,
     "timeframe": "1h",
     "exit_mode": "TP1=2.5xATR | EMA20-structural | 4h-stall | 48h-TTL",
     "adx_min": 20,
-    "atr_pct_threshold": 0.85,
+    "atr_pct_threshold": 0.75,
     "european_session_start": "09:30 UTC",
     "permanently_blocked": [
       "EURGBP",

@@ -236,7 +236,7 @@
           <div class="brand-icon"><i data-lucide="activity"></i></div>
           <div class="brand-text">
             <h1>TRADE BEACON</h1>
-            <p>MARKET INTELLIGENCE v2.7.0-SMART-EXIT</p>
+            <p>MARKET INTELLIGENCE v2.7.1-SIGNAL-FLOW</p>
           </div>
         </div>
         <div class="header-stats">
@@ -390,7 +390,7 @@
       <p><strong style="color:var(--text-dim);">PAST PERFORMANCE</strong> is not indicative of future results. Statistics meaningful only after 100+ resolved trades.</p>
     </div>
     <div style="margin-top:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.04);">
-      <div style="font-size:10px;color:var(--text-muted);">TRADE BEACON v2.7.0-SMART-EXIT &nbsp;·&nbsp; SIGNAL-ONLY MODE &nbsp;·&nbsp; NO AUTO-EXECUTION</div>
+      <div style="font-size:10px;color:var(--text-muted);">TRADE BEACON v2.7.1-SIGNAL-FLOW &nbsp;·&nbsp; SIGNAL-ONLY MODE &nbsp;·&nbsp; NO AUTO-EXECUTION</div>
       <div style="font-size:10px;color:var(--text-muted);">1H Signals · TP1=2.5xATR · SL=2.0xATR · EMA20-Structural Exit · 4h-Stall · 48h-TTL · Fri-Kill · ADX≥20 · ATR%-Filter · MTF: 4H+Daily+Weekly · All times UTC</div>
     </div>
   </div>
@@ -404,8 +404,8 @@
       'pips': { title: 'Total Pips', body: 'Cumulative profit or loss in pips across all resolved trades.' },
       'expectancy': { title: 'Expectancy', body: 'Average pips per trade.<br><span style="font-family:monospace;font-size:11px;color:var(--yellow)">(WR × Avg Win) − (LR × Avg Loss)</span>' },
       'today': { title: 'Signals Today', body: 'Number of unique pairs that received a new signal today (UTC).' },
-      'session': { title: 'Current Session', body: 'Active forex session:<br><div class="tip-row"><span class="tip-key">ASIAN</span><span>00:00–09:30 UTC — BLOCKED</span></div><div class="tip-row"><span class="tip-key">EUROPEAN</span><span>09:30–13:00 UTC — Active</span></div><div class="tip-row"><span class="tip-key">OVERLAP</span><span>13:00–16:00 UTC — BLOCKED</span></div><div class="tip-row"><span class="tip-key">US</span><span>16:00–21:00 UTC — Active</span></div><div class="tip-row"><span class="tip-key">LATE_US</span><span>21:00–00:00 UTC — High threshold</span></div>' },
-      'modes': { title: 'Signal Modes', body: '<div class="tip-row"><span class="tip-key">AGGR</span><span><strong>Aggressive</strong> — Score ≥55, ADX ≥20. More signals.</span></div><div class="tip-row"><span class="tip-key">CONS</span><span><strong>Conservative</strong> — Score ≥57, ADX ≥20. Stricter.</span></div><div class="tip-row"><span class="tip-key">EXIT</span><span>v2.7.0: TP1 at 2.5xATR, then EMA20 structural exit OR 4h stall OR 48h TTL. No arbitrary time stop.</span></div>' },
+      'session': { title: 'Current Session', body: 'Active forex session:<br><div class="tip-row"><span class="tip-key">ASIAN</span><span>00:00–09:30 UTC — BLOCKED</span></div><div class="tip-row"><span class="tip-key">EUROPEAN</span><span>09:30–13:00 UTC — BLOCKED</span></div><div class="tip-row"><span class="tip-key">OVERLAP</span><span>13:00–16:00 UTC — BLOCKED</span></div><div class="tip-row"><span class="tip-key">US</span><span>13:00–19:00 UTC — Active (GBPUSD · GBPJPY · USDJPY)</span></div><div class="tip-row"><span class="tip-key">LATE_US</span><span>19:00–00:00 UTC — BLOCKED</span></div>' },
+      'modes': { title: 'Signal Modes', body: '<div class="tip-row"><span class="tip-key">AGGR</span><span><strong>Aggressive</strong> — Score ≥55, ADX ≥20. More signals.</span></div><div class="tip-row"><span class="tip-key">CONS</span><span><strong>Conservative</strong> — Score ≥50, ADX ≥20. Stricter.</span></div><div class="tip-row"><span class="tip-key">EXIT</span><span>v2.7.0: TP1 at 2.5xATR, then EMA20 structural exit OR 4h stall OR 48h TTL. No arbitrary time stop.</span></div>' },
       'tier-badge': { title: 'Signal Tier', body: '<div class="tip-row"><span class="tip-key" style="color:#fbbf24">A+</span><span>Score ≥80 — Elite</span></div><div class="tip-row"><span class="tip-key" style="color:var(--red)">A</span><span>Score 72-79 — BLOCKED (0% WR)</span></div><div class="tip-row"><span class="tip-key" style="color:var(--blue)">B</span><span>Score 55-71 — Active</span></div><div class="tip-row"><span class="tip-key" style="color:#6b7280">C</span><span>Score &lt;55 — BLOCKED</span></div>' },
       'exit-col': { title: 'Exit Reason', body: '<div class="tip-row"><span class="tip-key" style="color:var(--green)">TP1</span><span>Price hit TP1 target (2.5xATR) — WIN</span></div><div class="tip-row"><span class="tip-key" style="color:var(--red)">SL</span><span>Price hit stop loss (2.0xATR) — LOSS</span></div><div class="tip-row"><span class="tip-key" style="color:var(--blue)">EMA20</span><span>1H close crossed EMA20 — structural trend broken</span></div><div class="tip-row"><span class="tip-key" style="color:var(--yellow)">STALL</span><span>Open 4h+ with negative PnL — dead trade exit</span></div><div class="tip-row"><span class="tip-key" style="color:var(--text-muted)">TTL</span><span>48h elapsed — garbage collection close</span></div>' },
       'mtf-col': { title: 'MTF Status', body: 'v2.7.0: Checks above 1h signal timeframe only. ✓ = 4H+Daily confirmed. ~ = partial.' },
@@ -417,7 +417,7 @@
       'score-meter': { title: 'Signal Score', body: '7 components: EMA structure (25pts), RSI extremes (20pts), ADX strength (20pts), RSI pullback (15pts), EMA momentum (10pts), EMA crossover (8pts), session bonus (3pts). Scored on 1H bars. Minimum ADX=20.' },
       'signal-rr': { title: 'Risk:Reward Ratio', body: 'v2.7.0: TP1 = 2.5xATR, SL = 2.0xATR. R:R ≈ 1.25. Breakeven WR = 44%.<br>Exit via EMA20 structural cross, 4h stall, or 48h TTL — no arbitrary time stop.' },
       'signal-mtf': { title: 'MTF Status', body: 'v2.7.0: Only 4H, Daily, Weekly shown (above 1h signal timeframe).<br>🟢 = agrees | ⬜ = inconclusive | Daily disagreement always blocks.' },
-      'atr-filter': { title: 'ATR% Regime Filter', body: 'v2.7.0: Blocks signals when volatility is compressed relative to its 100-bar average.<br>Threshold=0.85 — blocks bottom ~30% of compressed bars.<br>Prevents stop-hunting on days like Apr 14 (ADX=40 but ATR% ratio=0.72 → 13-pip effective stop).' },
+      'atr-filter': { title: 'ATR% Regime Filter', body: 'v2.7.0: Blocks signals when volatility is compressed relative to its 100-bar average.<br>Threshold=0.75 — blocks bottom ~25% of compressed bars (May 2026 vol regime).<br>Prevents stop-hunting on days like Apr 14 (ADX=40 but ATR% ratio=0.72 → 13-pip effective stop).' },
     };
 
     const tooltip  = document.getElementById('globalTooltip');

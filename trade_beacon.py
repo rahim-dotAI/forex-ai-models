@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Trade Beacon v2.7.1-SIGNAL-FLOW — Forex Signal Generator
 RESEARCH-BACKED EXIT OVERHAUL: ADX 20 + ATR% Regime Filter + Structural Exits

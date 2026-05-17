@@ -1,9 +1,9 @@
-"""
-Performance Tracker v2.7.0-SMART-EXIT — Aligned with Trade Beacon v2.7.0
+Performance Tracker v2.7.1-SIGNAL-FLOW — Aligned with Trade Beacon v2.7.1
 ============================================================================
 
-CHANGELOG v2.7.0-SMART-EXIT:
-- Version bumped to 2.7.0-SMART-EXIT
+CHANGELOG v2.7.1-SIGNAL-FLOW:
+- Version bumped to 2.7.1-SIGNAL-FLOW
+- Aligned with v2.7.1: threshold 50, ATR% 0.75, USDJPY re-enabled, micro-backtest 0.45
 - normalize_exit_reason updated: STRUCTURAL_EXIT, STALL_EXIT, WEEKEND_CLOSE,
   TTL_EXPIRED added. TIME_EXIT/MOMENTUM_EXIT preserved as legacy aliases.
 - record_trade: time_stop_at replaced by ttl_at + stall_check_at params
@@ -25,7 +25,7 @@ import pandas as pd
 
 log = logging.getLogger("performance-tracker")
 
-TRACKER_VERSION = "2.7.0-SMART-EXIT"
+TRACKER_VERSION = "2.7.1-SIGNAL-FLOW"
 
 
 def safe_int(val: Any, default: int = 0) -> int:

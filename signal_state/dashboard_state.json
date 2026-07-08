@@ -1,11 +1,11 @@
 {
-  "timestamp": "2026-07-07T22:59:58.382111+00:00",
+  "timestamp": "2026-07-08T00:07:08.022710+00:00",
   "active_signals": 0,
   "active_signals_by_mode": {
     "aggressive": 0,
     "conservative": 0
   },
-  "session": "LATE_US",
+  "session": "ASIAN",
   "mode": "conservative",
   "sentiment_enabled": true,
   "sentiment_engine": "gemini-2.5-flash",
@@ -19,7 +19,7 @@
   "market_state": {
     "volatility": "CALM",
     "sentiment_bias": "MIXED",
-    "session": "LATE_US"
+    "session": "ASIAN"
   },
   "signals_by_mode": {
     "aggressive": [],
@@ -11312,72 +11312,41 @@
   },
   "equity_curve": [],
   "pair_prices": {
-    "USDJPY": 162.183,
-    "GBPUSD": 1.3354,
-    "AUDUSD": 0.69295,
-    "NZDUSD": 0.56786,
-    "USDCAD": 1.4197,
-    "USDCHF": 0.80851,
-    "EURJPY": 184.994,
-    "GBPJPY": 216.545
+    "USDJPY": 162.33299,
+    "GBPUSD": 1.3349,
+    "AUDUSD": 0.6929,
+    "NZDUSD": 0.56815,
+    "USDCAD": 1.42025,
+    "USDCHF": 0.80894,
+    "EURJPY": 185.12199,
+    "GBPJPY": 216.67799
   },
   "upcoming_events": [
     {
       "title": "Official Cash Rate",
       "currency": "NZD",
       "utc_time": "02:00 UTC",
-      "mins_to": 180,
+      "mins_to": 112,
       "passed": false
     },
     {
       "title": "RBNZ Rate Statement",
       "currency": "NZD",
       "utc_time": "02:00 UTC",
-      "mins_to": 180,
+      "mins_to": 112,
+      "passed": false
+    },
+    {
+      "title": "RBNZ Press Conference",
+      "currency": "NZD",
+      "utc_time": "03:00 UTC",
+      "mins_to": 172,
       "passed": false
     }
   ],
-  "pick_of_the_day": {
-    "id": "GBPJPY_BUY_a84142ba2f30",
-    "signal_id": "GBPJPY_BUY_a84142ba2f30",
-    "pair": "GBPJPY",
-    "direction": "BUY",
-    "entry_price": 216.464,
-    "exit_price": 216.04147,
-    "sl": 216.04147,
-    "tp": 216.99217,
-    "tp1": 216.99217,
-    "status": "LOSS",
-    "pips": -42.252999999999474,
-    "confidence": "MODERATE",
-    "score": 55,
-    "session": "US",
-    "tier": "B",
-    "eligible_modes": [
-      "conservative",
-      "aggressive"
-    ],
-    "sentiment_applied": false,
-    "sentiment_score": 0.0,
-    "sentiment_adjustment": 0.0,
-    "gemini_engine": null,
-    "estimated_win_rate": null,
-    "risk_reward": 1.25,
-    "adx": 29.9,
-    "rsi": 43.9,
-    "atr": 0.21127,
-    "htf_confirmed": false,
-    "mtf_details": null,
-    "gemini_usd_bias": null,
-    "exit_reason": "LOSS",
-    "exit_mode": "structural_ema20",
-    "ttl_at": null,
-    "stall_check_at": null,
-    "timestamp": "2026-07-07T16:11:58.970931+00:00",
-    "exit_time": "2026-07-07T18:20:15.635086+00:00"
-  },
+  "pick_of_the_day": null,
   "system": {
-    "last_update": "2026-07-07T22:59:58.382176+00:00",
+    "last_update": "2026-07-08T00:07:08.022782+00:00",
     "signal_only_mode": true,
     "version": "2.7.0",
     "gemini_active": true,
